@@ -5,10 +5,12 @@
 #include "DenseMatrix.h"
 #include "Linalg.h"
 
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 
 
 int main(int argc, char **argv){
+
+  using namespace FortranLinalg;
 
   //Command line parsing
   TCLAP::CmdLine cmd("", ' ', "1");

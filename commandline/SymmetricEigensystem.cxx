@@ -9,7 +9,8 @@
 
 
 
-void save(SymmetricEigensystem<Precision> &es, char *file){
+void save(FortranLinalg::SymmetricEigensystem<Precision> &es, char *file){
+  using namespace FortranLinalg;
   std::cout << "info: " << es.info << std::endl;
   std::cout << "nEigenvectors found: " << es.nEigenvectors << std::endl;
   
@@ -26,6 +27,7 @@ void save(SymmetricEigensystem<Precision> &es, char *file){
 
 
 int main(int argc, char **argv){
+  using namespace FortranLinalg;
   if(argc < 4){
     std::cout << "Usage: " << std::endl;
     std::cout << "matrixFile N  outputFile [evalsOnly il ih]" << std::endl;

@@ -8,7 +8,7 @@
 
 #include "DenseMatrix.h"
 #include "Geometry.h"
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 #include "SquaredEuclideanMetric.h"
 #include "LinalgIO.h"
 
@@ -53,7 +53,7 @@ int main(int argc, char **argv){
 
 
 
-  //COmpute nearest neighbors
+  //Compute nearest neighbors
   DenseMatrix<Precision> knnDist(K+1, X.N());
   DenseMatrix<int> knn(K+1, X.N());
   SquaredEuclideanMetric<Precision> sl2;

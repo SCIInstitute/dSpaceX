@@ -7,7 +7,7 @@
 #include <math.h>
 
 #include "DenseMatrix.h"
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 #include "LinalgIO.h"
 
 
@@ -36,7 +36,7 @@ int main(int argc, char **argv){
 
 
 
-  DenseMatrix<Precision> X = LinalgIO<Precision>::readMatrix(mArg.getValue());
+  FortranLinalg::DenseMatrix<Precision> X = FortranLinalg::LinalgIO<Precision>::readMatrix(mArg.getValue());
 
   std::string out = oArg.getValue();
 
