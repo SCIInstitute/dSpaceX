@@ -1,0 +1,1 @@
+C++ implementation of sampling and permutation methods. Can be used in R packages when defining USE_R_RNG.
