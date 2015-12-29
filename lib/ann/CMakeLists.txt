@@ -25,7 +25,7 @@ SET(ANN_SOURCE_FILES
     ANN.cpp                
     bd_pr_search.cpp  
     bd_tree.cpp  
-    kd_dump.cpp
+    #kd_dump.cpp
     kd_pr_search.cpp  
     kd_split.cpp  
     kd_util.cpp
