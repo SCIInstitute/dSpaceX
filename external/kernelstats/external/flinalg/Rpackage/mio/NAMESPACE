@@ -1,0 +1,12 @@
+useDynLib("mio")
+
+export(
+  "read.matrix.double",
+  "read.matrix.int",
+  "write.matrix.double",
+  "write.matrix.int",
+  "read.vector.double",
+  "read.vector.int",
+  "write.vector.double",
+  "write.vector.int"
+)
