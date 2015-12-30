@@ -8,7 +8,7 @@
 
 
 template <typename TPrecision>
-class Geometry{
+class Distance{
   
   public:
     static FortranLinalg::DenseMatrix<TPrecision> computeDistances(FortranLinalg::Matrix<TPrecision> &data, 
