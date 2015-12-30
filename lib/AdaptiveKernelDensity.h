@@ -6,7 +6,7 @@
 #include "DenseMatrix.h"
 #include "Kernel.h"
 #include "Linalg.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "SquaredEuclideanMetric.h"
 
 template<typename TPrecision>
@@ -26,7 +26,7 @@ class AdaptiveKernelDensity{
     //returns unnormalized density
     double p(int j, int leaveout = -1 ){
 
-      Geometry<TPrecision>::computeKNN(X, j, nn, nnd, l2metric);
+      Distance<TPrecision>::computeKNN(X, j, nn, nnd, l2metric);
       TPrecision wsum = 0;
       int start = 0;
       TPrecision d = nnd(knn-1+start);
@@ -37,7 +37,7 @@ class AdaptiveKernelDensity{
     };
 
     double p(DenseVector<TPrecision> &x){
-      Geometry<TPrecision>::computeKNN(X, x, nn, nnd, l2metric);
+      Distance<TPrecision>::computeKNN(X, x, nn, nnd, l2metric);
       TPrecision wsum = 0;
       TPrecision d = nnd(knn-1);
       for(int i=0; i < knn; i++){
