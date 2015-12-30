@@ -4,7 +4,7 @@
 #include "BlockCEM.h"
 #include "DenseMatrix.h"
 
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 
 //#include "EnableFloatingPointExceptions.h"
 

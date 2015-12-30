@@ -2,7 +2,7 @@
 #define FASTCEM_H
 
 
-#include "Geometry.h"
+#include "Distance.h"
 #include "Random.h"
 #include "Matrix.h"
 #include "EuclideanMetric.h"
@@ -403,7 +403,7 @@ class FastCEM{
             
       DenseVector<int> knn =  DenseVector<int>(knnY+1);
       DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnY+1);
-      Geometry<TPrecision>::computeKNN(lambdaY, y, knn, knnD, sl2metric);
+      Distance<TPrecision>::computeKNN(lambdaY, y, knn, knnD, sl2metric);
 
 
       for(unsigned int i=0; i < knnD.N(); i++){
@@ -773,7 +773,7 @@ class FastCEM{
       using namespace FortranLinalg;
      
      //Block hessian matrix
-     DenseMatrix<TPrecision> T[lambdaZ.M()];
+      std::vector< DenseMatrix<TPrecision> > T(lambdaZ.M());
      for(unsigned int i=0; i<lambdaZ.M(); i++){
        T[i] = DenseMatrix<TPrecision>(Y.M(), lambdaZ.M());     
        Linalg<TPrecision>::Zero(T[i]);
@@ -788,11 +788,11 @@ class FastCEM{
      //Kernel gradients
      DenseMatrix<TPrecision> kg(lambdaZ.M(), knnX+1);
      //Kernel hessians
-     DenseMatrix<TPrecision> kh[knnX+1];
+     std::vector< DenseMatrix<TPrecision> > kh(knnX+1);
            
     // DenseVector<int> knn =  DenseVector<int>(knnX+1);
     // DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-    // Geometry<TPrecision>::computeKNN(lambdafY, x, knn, knnD, sl2metric);
+    // Distance<TPrecision>::computeKNN(lambdafY, x, knn, knnD, sl2metric);
 
      //Precomputed sums of kernel value
      TPrecision sumk = 0;
@@ -879,8 +879,8 @@ class FastCEM{
      }
      
      //Block trace of TgInv
-     DenseMatrix<TPrecision> TgInv[lambdaZ.M()];
-     DenseMatrix<TPrecision> QTgInv[lambdaZ.M()];
+     std::vector< DenseMatrix<TPrecision> > TgInv( lambdaZ.M() );
+     std::vector< DenseMatrix<TPrecision> > QTgInv( lambdaZ.M() );
      for(unsigned int i=0; i < lambdaZ.M(); i++){
       TgInv[i] = Linalg<TPrecision>::Multiply(T[i], gInv);
       QTgInv[i] = Linalg<TPrecision>::Multiply(Q, TgInv[i]);
@@ -1001,7 +1001,7 @@ class FastCEM{
 
       KNNY = DenseMatrix<int>(knnY+1, lambdaZ.N() );
       KNNYD = DenseMatrix<TPrecision>(knnY+1, lambdaZ.N() );
-      Geometry<TPrecision>::computeKNN(lambdaY, KNNY, KNNYD, sl2metric);
+      Distance<TPrecision>::computeKNN(lambdaY, KNNY, KNNYD, sl2metric);
       
       KY = DenseMatrix<TPrecision>(knnY+1, lambdaZ.N() );
 //      kernelX = GaussianKernel<TPrecision>( lambdaZ.M());
@@ -1053,7 +1053,7 @@ class FastCEM{
     //update nearest nieghbors of f(Y) for faster gradient computation
     void updateKNNX(){
       unsigned int N = Y.N();
-      Geometry<TPrecision>::computeKNN(lambdafY, KNNX, KNNXD, sl2metric);
+      Distance<TPrecision>::computeKNN(lambdafY, KNNX, KNNXD, sl2metric);
       //sX = 0;
       //for(unsigned int i = 0; i < KNNXD.N(); i++){
       //  sX += sqrt(KNNXD(1, i));
@@ -1087,7 +1087,7 @@ class FastCEM{
       using namespace FortranLinalg;
       DenseMatrix<int> KNNX =  DenseMatrix<int>(knnX+1, lambdafY.N());
       DenseMatrix<TPrecision> KNNXD = DenseMatrix<TPrecision>(knnX+1, lambdafY.N());
-      Geometry<TPrecision>::computeKNN(lambdafY, KNNX, KNNXD, sl2metric);
+      Distance<TPrecision>::computeKNN(lambdafY, KNNX, KNNXD, sl2metric);
 
       TPrecision sigma = 0;
       for(unsigned int i=0; i<KNNXD.N(); i++){
@@ -1130,7 +1130,7 @@ class FastCEM{
       DenseMatrix<int> KNNZ =  DenseMatrix<int>(knnY+1, lambdaY.N());
       DenseMatrix<TPrecision> KNNZD = DenseMatrix<TPrecision>(knnY+1, lambdaY.N());
 
-      Geometry<TPrecision>::computeKNN(lambdaZ, KNNZ, KNNZD, sl2metric);
+      Distance<TPrecision>::computeKNN(lambdaZ, KNNZ, KNNZD, sl2metric);
 
       TPrecision sigma = 0;
       for(unsigned int i=0; i<KNNZD.N(); i++){
@@ -1319,7 +1319,7 @@ class FastCEM{
             
       //DenseVector<int> knn =  DenseVector<int>(knnX+1);
       //DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-      //Geometry<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
+      //Distance<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
 
       //Setup linear system
       for(unsigned int i2=0; i2 < lambdafY.N(); i2++){
@@ -1477,7 +1477,7 @@ class FastCEM{
       /*
       DenseVector<int> knn =  DenseVector<int>(knnX+1);
       DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-      Geometry<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
+      Distance<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
 */
 
       //Setup linear system

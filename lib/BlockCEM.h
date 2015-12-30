@@ -1,8 +1,8 @@
 #ifndef BLOCKCEM_H
 #define BLOCKCEM_H
 
-
-#include "Geometry.h"
+#include "ANN/ANN.h"
+#include "Distance.h"
 #include "Random.h"
 #include "Matrix.h"
 #include "EuclideanMetric.h"
@@ -785,7 +785,7 @@ class BlockCEM{
            
     // DenseVector<int> knn =  DenseVector<int>(knnX+1);
     // DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-    // Geometry<TPrecision>::computeKNN(X, x, knn, knnD, sl2metric);
+    // Distance<TPrecision>::computeKNN(X, x, knn, knnD, sl2metric);
 
      //Precomputed sums of kernel value
      TPrecision sumk = 0;
@@ -977,7 +977,7 @@ class BlockCEM{
       using namespace FortranLinalg;
       DenseMatrix<int> KNNX =  DenseMatrix<int>(knnX+1, X.N());
       DenseMatrix<TPrecision> KNNXD = DenseMatrix<TPrecision>(knnX+1, X.N());
-      Geometry<TPrecision>::computeKNN(X, KNNX, KNNXD, sl2metric);
+      Distance<TPrecision>::computeKNN(X, KNNX, KNNXD, sl2metric);
 
       TPrecision sigma = 0;
       for(unsigned int i=0; i<KNNXD.N(); i++){
@@ -1465,7 +1465,7 @@ class BlockCEM{
             
       //DenseVector<int> knn =  DenseVector<int>(knnX+1);
       //DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-      //Geometry<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
+      //Distance<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
 
       //Setup linear system
       for(unsigned int i2=0; i2 < X.N(); i2++){
@@ -1623,7 +1623,7 @@ class BlockCEM{
       /*
       DenseVector<int> knn =  DenseVector<int>(knnX+1);
       DenseVector<TPrecision> knnD = DenseVector<TPrecision>(knnX+1);
-      Geometry<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
+      Distance<TPrecision>::computeKNN(fY, x, knn, knnD, sl2metric);
 */
 
       //Setup linear system
