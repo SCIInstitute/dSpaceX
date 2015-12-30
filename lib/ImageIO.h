@@ -24,7 +24,7 @@
 
 #include "ImageVectorConverter.h"
 
-#include <list>
+#include <vector>
 
 template <typename TImage>
 class ImageIO{
@@ -106,7 +106,7 @@ class ImageIO{
   //read data matrix from images
   static FortranLinalg::DenseMatrix<Precision> readDataMatrix(ImageVectorConverter<Image> &converter, 
                                     std::string imageFileList) {
-      std::list<std::string> files =
+      std::vector<std::string> files =
         IO<Precision>::readStringList(imageFileList);
       return readDataMatrix(converter, files);
   };
@@ -114,13 +114,13 @@ class ImageIO{
 
   //read data matrix from images
   static FortranLinalg::DenseMatrix<Precision> readDataMatrix(ImageVectorConverter<Image> &converter, 
-                                    std::list<std::string> &imageFiles) {
+                                    std::vector<std::string> &imageFiles) {
 
     int D = converter.getD();
     FortranLinalg::DenseMatrix<Precision> data( D, imageFiles.size() );
 
     long column = 0;
-    for(std::list<std::string>::iterator fileIt = imageFiles.begin(); fileIt !=
+    for(std::vector<std::string>::iterator fileIt = imageFiles.begin(); fileIt !=
       imageFiles.end(); ++fileIt){
     
       ImageReaderPointer imageReader = ImageReader::New();
