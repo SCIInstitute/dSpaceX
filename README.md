@@ -1,3 +1,3 @@
 C++ utility classes for different metrics. 
 
-Depends on FLinalg
+Depends on FLinalg and Utils
