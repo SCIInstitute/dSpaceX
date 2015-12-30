@@ -8,7 +8,9 @@ PROJECT(FLinalg)
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
-INCLUDE_DIRECTORIES(. config lib external/utils/lib)
+INCLUDE_DIRECTORIES(lib)
+ADD_SUBDIRECTORY(external/utils)
+
 ADD_SUBDIRECTORY(commandline)
 ADD_SUBDIRECTORY(Rpackage)
 
