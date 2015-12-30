@@ -5,7 +5,7 @@ PROJECT(R)
 ############## cem package ##############
 
 ADD_CUSTOM_TARGET(R_cems 
-    COMMAND rsync -aC ${Rcode_SOURCE_DIR}/cems . 
+    COMMAND rsync -aC ${R_SOURCE_DIR}/cems . 
     COMMAND rsync -aC ${DIAT_LIB_DIR}/ann/ ./cems/src 
     COMMAND cp 
     ${DIAT_LIB_DIR}/statistics/Random.h
