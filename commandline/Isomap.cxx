@@ -15,6 +15,7 @@
 Precision MAX = std::numeric_limits<Precision>::max();
 
 int main(int argc, char **argv){
+  using namespace FortranLinalg;
   if(argc < 6){
     std::cout << "Usage:" << std::endl;
     std::cout << argv[0] << " dataMatrixHeader outputFile ndims neighborhoodtype [params]" << std::endl;;

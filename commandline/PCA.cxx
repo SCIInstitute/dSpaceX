@@ -16,14 +16,14 @@ int main(int argc, char **argv){
   int ndims = atoi(argv[2]);
   char *outputFile = argv[3];
 
-  DenseMatrix<Precision> data = LinalgIO<Precision>::readMatrix(dataFile);
+  FortranLinalg::DenseMatrix<Precision> data = FortranLinalg::LinalgIO<Precision>::readMatrix(dataFile);
   
 
   PCA<Precision> pca(data, ndims, true);
 
-  DenseMatrix<Precision> proj = pca.project(data, false);
+  FortranLinalg::DenseMatrix<Precision> proj = pca.project(data, false);
   
-  LinalgIO<Precision>::writeMatrix(outputFile, proj);
+  FortranLinalg::LinalgIO<Precision>::writeMatrix(outputFile, proj);
 
   
   return 0;

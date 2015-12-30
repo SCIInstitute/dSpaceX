@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES( lib
                      external/kernelstats/external/flinalg/lib
                      external/kernelstats/external/metrics/lib
                      external/utils/lib 
+                     external/graph/lib 
                      external/annmod/lib/ann
                      external/annmod/lib/
                      ${ANN_INCLUDE_FILES} 

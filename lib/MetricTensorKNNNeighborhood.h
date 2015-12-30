@@ -3,12 +3,14 @@
 
 #include "Neighborhood.h"
 #include "EpsilonNeighborhood.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "PCA.h"
 #include "MahalanobisMetric2.h"
 #include "EuclideanMetric.h"
 
 #include "SparseMatrix.h"
+
+#include <vector>
 
 template <typename TPrecision>
 class MetricTensorKNNNeighborhood : public Neighborhood<TPrecision>{
@@ -21,20 +23,20 @@ class MetricTensorKNNNeighborhood : public Neighborhood<TPrecision>{
 
    
 
-    SparseMatrix<TPrecision> generateNeighborhood(Matrix<TPrecision> &data){
-      
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+      using namespace FortranLinalg;
       
       //knn 
       DenseMatrix<int> knns(knn, data.N());
       DenseMatrix<TPrecision> knnDists(knn, data.N());
-      Geometry<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
+      Distance<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
 
       //complete adjancy matrix
       SparseMatrix<TPrecision> adj(data.N(), data.N(), val);
 
       //Metric tensors J = G^T*G
       //save G fro creating mahalanobis distance metric afterwards
-      DenseMatrix<TPrecision> J[data.N()];
+      std::vector< DenseMatrix<TPrecision> > J(data.N());
 
       //Compute Metric Tensor at each point
       DenseMatrix<TPrecision> ndata(data.M(), knn);
@@ -98,7 +100,7 @@ class MetricTensorKNNNeighborhood : public Neighborhood<TPrecision>{
           
           //Compute new weighted adjacencies
           MahalanobisMetric2<TPrecision> mahal(JTmp);
-          Geometry<TPrecision>::computeKNN(data, i, nn, nnDists, mahal);
+          Distance<TPrecision>::computeKNN(data, i, nn, nnDists, mahal);
           typename SparseMatrix<TPrecision>::SparseEntry *entry = adj.getEntries(i); 
           for(int k=1; k < knn; k++){
             entry->operator[](nn(k)) = nnDists(k);

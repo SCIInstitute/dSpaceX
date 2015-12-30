@@ -5,7 +5,7 @@
 
 #include "Linalg.h"
 
-#include "Geometry.h"
+#include "Distance.h"
 
 #include "DenseMatrix.h"
 #include "DenseVector.h"
@@ -21,7 +21,7 @@ class MetricMDS{
         &metric, unsigned int ndims){
       using namespace FortranLinalg;
       DenseMatrix<TPrecision> distances(data.N(), data.N());
-      Geometry<TPrecision>::computeDistances(data, metric, distances);
+      Distance<TPrecision>::computeDistances(data, metric, distances);
       DenseMatrix<TPrecision> result = embed(distances, ndims);
       distances.deallocate();
       return result;

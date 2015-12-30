@@ -3,7 +3,7 @@
 
 #include "Neighborhood.h"
 #include "EpsilonNeighborhood.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "PCA.h"
 #include "MahalanobisMetric.h"
 #include "EuclideanMetric.h"
@@ -22,8 +22,8 @@ class TangentEpsilonNeighborhood : public Neighborhood<TPrecision>{
 
    
 
-    SparseMatrix<TPrecision> generateNeighborhood(Matrix<TPrecision> &data){
-      
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+      using namespace FortranLinalg;
       
       DenseVector<TPrecision> dists(data.N());
       SparseMatrix<TPrecision> adjTmp = epsn.generateNeighborhood(data);
@@ -55,7 +55,7 @@ class TangentEpsilonNeighborhood : public Neighborhood<TPrecision>{
 
 
         MahalanobisMetric<TPrecision> mahal(pca.ev);
-        Geometry<TPrecision>::computeDistances(data, i, mahal, dists); 
+        Distance<TPrecision>::computeDistances(data, i, mahal, dists); 
         typename SparseMatrix<TPrecision>::SparseEntry *entry = adj.getEntries(i); 
         for(unsigned int k=0; k< dists.N(); k++){
           if(k !=i && dists(k) < eps){

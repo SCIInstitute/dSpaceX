@@ -6,35 +6,36 @@ PROJECT(R)
 
 ADD_CUSTOM_TARGET(R_cems 
     COMMAND rsync -aC ${R_SOURCE_DIR}/cems . 
-    COMMAND rsync -aC ${DIMRED_SORCE_DIR}/external/annmod/lib ./cems/src 
+    COMMAND rsync -aC ${CMAKE_SOURCE_DIR}/external/annmod/lib/ann/ ./cems/src 
     COMMAND cp 
-    ${DIMRED_SOURCE_DIR}/external/utils/lib/Random.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/Matrix.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/DenseMatrix.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/Vector.h 
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/DenseVector.h
-    ${DIMRED_SOURCE_DIR}/external/metrics/lib/Metric.h
-    ${DIMRED_SOURCE_DIR}/external/metrics/lib/EuclideanMetric.h 
-    ${DIMRED_SOURCE_DIR}/external/metrics/lib/SquaredEuclideanMetric.h 
-    ${DIMRED_SOURCE_DIR}/external/utils/lib/Geometry.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/Linalg.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/LapackDefs.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/SymmetricEigensystem.h
-    ${DIMRED_SOURCE_DIR}/external/flinalg/lib/SymmetricDenseMatrix.h
-    ${DIMRED_SOURCE_DIR}/external/kernelstats/lib/Kernel.h
-    ${DIMRED_SOURCE_DIR}/external/kernelstats/lib/GaussianKernel.h
-    ${DIMRED_SOURCE_DIR}/external/kernelstats/lib/MahalanobisKernel.h
-    ${DIMRED_SOURCE_DIR}/external/kernelstats/lib/KernelDensity.h
-    ${DIMRED_SOURCE_DIR}/lib/CEM.h
-    ${DIMRED_SOURCE_DIR}/lib/FastCEM.h
-    ${DIMRED_SOURCE_DIR}/BlockCEM.h
-    ${DIMRED_SOURCE_DIR}/lib/CEMRegression.h
-    ${DIMRED_SOURCE_DIR}/external/utils/lib/Heap.h
-    ${DIMRED_SOURCE_DIR}/external/utils/lib/MaxHeap.h
-    ${DIMRED_SOURCE_DIR}/external/utils/lib/MinHeap.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/Random.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Matrix.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/DenseMatrix.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Vector.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/DenseVector.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/Metric.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/EuclideanMetric.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/SquaredEuclideanMetric.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/Distance.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Linalg.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/LapackDefs.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/SymmetricEigensystem.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/SymmetricDenseMatrix.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/Kernel.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/GaussianKernel.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/MahalanobisKernel.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/KernelDensity.h
+    ${CMAKE_SOURCE_DIR}/lib/CEM.h
+    ${CMAKE_SOURCE_DIR}/lib/FastCEM.h
+    ${CMAKE_SOURCE_DIR}/lib/BlockCEM.h
+    ${CMAKE_SOURCE_DIR}/lib/CEMRegression.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/Heap.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/MaxHeap.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/MinHeap.h
     ./cems/src
     COMMAND rm ./cems/src/CMakeLists.txt
     COMMAND rm ./cems/src/perf.cpp
+    COMMAND rm ./cems/src/kd_dump.cpp
     COMMAND rm ./cems/R/cemr* 
     COMMAND rm ./cems/R/cem.old* 
     COMMAND rm ./cems/src/cems-* 

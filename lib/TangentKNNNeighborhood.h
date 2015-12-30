@@ -2,7 +2,7 @@
 #define TANGENTKNNNEIGHBORHOOD_H
 
 #include "Neighborhood.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "PCA.h"
 #include "MahalanobisMetric.h"
 #include "EuclideanMetric.h"
@@ -20,12 +20,12 @@ class TangentKNNNeighborhood : public Neighborhood<TPrecision>{
 
    
 
-    SparseMatrix<TPrecision> generateNeighborhood(Matrix<TPrecision> &data){
-      
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+      using namespace FortranLinalg;
       //knn 
       DenseMatrix<int> knns(knn, data.N());
       DenseMatrix<TPrecision> knnDists(knn, data.N());
-      Geometry<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
+      Distance<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
 
       //complete adjancy matrix
       SparseMatrix<TPrecision> adj(data.N(), data.N(), val);
@@ -56,7 +56,7 @@ class TangentKNNNeighborhood : public Neighborhood<TPrecision>{
 
 
         MahalanobisMetric<TPrecision> mahal(pca.ev);
-        Geometry<TPrecision>::computeKNN(data, i, nn, nnDists, mahal);
+        Distance<TPrecision>::computeKNN(data, i, nn, nnDists, mahal);
         typename SparseMatrix<TPrecision>::SparseEntry *entry = adj.getEntries(i); 
         for(int k=1; k < knn; k++){
               entry->operator[](nn(k)) = nnDists(k);
