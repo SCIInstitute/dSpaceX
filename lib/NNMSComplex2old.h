@@ -4,6 +4,7 @@
 #define NNMSCOMPLEXR2_H
 
 #include "Distance.h"
+#include "ANNWrapper.h"
 #include "EuclideanMetric.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"

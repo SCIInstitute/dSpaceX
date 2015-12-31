@@ -10,27 +10,28 @@ PROJECT(R)
 
 ADD_CUSTOM_TARGET(R_msr 
     COMMAND rsync -aC ${R_SOURCE_DIR}/msr . 
-    COMMAND rsync -aC ${CMAKE_LIB_DIR}/ann/ ./msr/src 
+    COMMAND rsync -aC ${CMAKE_SOURCE_DIR}/external/annmod/lib/ann/ ./msr/src 
     COMMAND cp 
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/DenseMatrix.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/EuclideanMetric.h 
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Distance.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/KernelDensity.h 
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Linalg.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/LapackDefs.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Matrix.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Metric.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/SquaredEuclideanMetric.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Vector.h 
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/DenseVector.h
-    ${CMAKE_LIB_DIR}/lib/GaussianKernel.h
-    ${CMAKE_LIB_DIR}/external/utils/lib/Heap.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Kernel.h
-    ${CMAKE_LIB_DIR}/external/utils/lib/MaxHeap.h
-    ${CMAKE_LIB_DIR}/external/utils/lib/MinHeap.h
-    ${CMAKE_LIB_DIR}/lib/NNMSComplex.h
-    ${CMAKE_LIB_DIR}/lib/NNMSComplex2old.h
-    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/LinalgIO.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/Distance.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/Metric.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/SquaredEuclideanMetric.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/metrics/lib/EuclideanMetric.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/DenseMatrix.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Linalg.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Vector.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/DenseVector.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/LapackDefs.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/Matrix.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/external/flinalg/lib/LinalgIO.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/GaussianKernel.h
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/KernelDensity.h 
+    ${CMAKE_SOURCE_DIR}/external/kernelstats/lib/Kernel.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/Heap.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/MaxHeap.h
+    ${CMAKE_SOURCE_DIR}/external/utils/lib/MinHeap.h
+    ${CMAKE_SOURCE_DIR}/external/annmod/lib/ANNWrapper.h
+    ${CMAKE_SOURCE_DIR}/lib/NNMSComplex.h
+    ${CMAKE_SOURCE_DIR}/lib/NNMSComplex2old.h
     ./msr/src
     COMMAND rm ./msr/src/CMakeLists.txt
     COMMAND rm ./msr/src/perf.cpp

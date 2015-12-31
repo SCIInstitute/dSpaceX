@@ -10,6 +10,8 @@
 
 int main(int argc, char **argv){
 
+  using namespace FortranLinalg;
+
   //Command line parsing
   TCLAP::CmdLine cmd("Nearest neighbor Morse-Smale approximation tool", ' ', "1");
 

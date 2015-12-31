@@ -175,7 +175,7 @@ class NNMSComplexR2{
       DenseMatrix<TPrecision> KNND(knn, X.N());
 
       //Compute nearest neighbors
-      Geometry<TPrecision>::computeANN(X, KNN, KNND, eps);
+      ANNWrapper<TPrecision>::computeANN(X, KNN, KNND, eps);
 
 
       DenseVector<TPrecision> ys;

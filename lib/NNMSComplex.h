@@ -134,7 +134,7 @@ class NNMSComplex{
       KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, X.N());
 
       //Compute nearest nieghbors
-      //Distance<TPrecision>::computeANN(X, KNN, KNND, eps);
+      //ANNWrapper<TPrecision>::computeANN(X, KNN, KNND, eps);
       SquaredEuclideanMetric<TPrecision> dist;
       Distance<TPrecision>::computeKNN(X, KNN, KNND, dist);
       
