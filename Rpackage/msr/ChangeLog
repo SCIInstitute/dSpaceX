@@ -1,0 +1,24 @@
+## msr version 0.4.4 - S. Gerber - November 2015 ##
+-- More minor cran check complaints fixed 
+
+## msr version 0.4.3 - S. Gerber - May 2015 ##
+-- Fixed warning
+
+## msr version 0.4.1 - S. Gerber - July 2012 ##
+--Citations updated and CITATION file for corresponding JSS article added
+
+## msr version 0.4 - S. Gerber - March. 28. 2012 ##
+- Added graph based ms decomposition
+- fixed notes and warnings
+
+
+## msr version 0.3 - S. Gerber - Nov. 10. 2011 ##
+- Added package help file
+- Added alternative color-map
+
+
+## msr version 0.2 - S. Gerber - Nov. 5. 2011 ##
+- Fixed notes and warnings from CRAN builds
+- Added diagonal function data set
+- Added test of Morse-Smale computation
+

@@ -1,0 +1,20 @@
+citHeader("To cite msr in publications use:")
+
+citEntry(entry = "Article",
+  title        = "Data Analysis with the Morse-Smale Complex: The {msr} Package for {R}",
+  author       = personList(as.person("Samuel Gerber"),
+                   as.person("Kristin Potter")),
+  journal      = "Journal of Statistical Software",
+  year         = "2012",
+  volume       = "50",
+  number       = "2",
+  pages        = "1--22",
+  url          = "http://www.jstatsoft.org/v50/i02/",
+
+  textVersion  =
+  paste("Samuel Gerber, Kristin Potter (2012).",
+        "Data Analysis with the Morse-Smale Complex: The msr Package for R.",
+        "Journal of Statistical Software, 50(2), 1-22.",
+        "URL http://www.jstatsoft.org/v50/i02/.")
+)
+
