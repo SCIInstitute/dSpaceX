@@ -3,34 +3,34 @@ IF(COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW)
 ENDIF(COMMAND CMAKE_POLICY)
 
-PROJECT(Rcode)
+PROJECT(R)
 
 
 ######## msr package #########
 
 ADD_CUSTOM_TARGET(R_msr 
-    COMMAND rsync -aC ${Rcode_SOURCE_DIR}/msr . 
-    COMMAND rsync -aC ${DIAT_LIB_DIR}/ann/ ./msr/src 
+    COMMAND rsync -aC ${R_SOURCE_DIR}/msr . 
+    COMMAND rsync -aC ${CMAKE_LIB_DIR}/ann/ ./msr/src 
     COMMAND cp 
-    ${DIAT_LIB_DIR}/linalg/DenseMatrix.h
-    ${DIAT_LIB_DIR}/metrics/EuclideanMetric.h 
-    ${DIAT_LIB_DIR}/utils/Geometry.h
-    ${DIAT_LIB_DIR}/statistics/KernelDensity.h 
-    ${DIAT_LIB_DIR}/linalg/Linalg.h
-    ${DIAT_LIB_DIR}/linalg/LapackDefs.h
-    ${DIAT_LIB_DIR}/linalg/Matrix.h
-    ${DIAT_LIB_DIR}/metrics/Metric.h
-    ${DIAT_LIB_DIR}/metrics/SquaredEuclideanMetric.h
-    ${DIAT_LIB_DIR}/linalg/Vector.h 
-    ${DIAT_LIB_DIR}/linalg/DenseVector.h
-    ${DIAT_LIB_DIR}/statistics/GaussianKernel.h
-    ${DIAT_LIB_DIR}/datastructures/heap/Heap.h
-    ${DIAT_LIB_DIR}/statistics/Kernel.h
-    ${DIAT_LIB_DIR}/datastructures/heap/MaxHeap.h
-    ${DIAT_LIB_DIR}/datastructures/heap/MinHeap.h
-    ${DIAT_LIB_DIR}/topology/NNMSComplex.h
-    ${DIAT_LIB_DIR}/topology/NNMSComplex2old.h
-    ${DIAT_LIB_DIR}/io/LinalgIO.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/DenseMatrix.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/EuclideanMetric.h 
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Distance.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/KernelDensity.h 
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Linalg.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/LapackDefs.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Matrix.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Metric.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/SquaredEuclideanMetric.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/Vector.h 
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/lib/DenseVector.h
+    ${CMAKE_LIB_DIR}/lib/GaussianKernel.h
+    ${CMAKE_LIB_DIR}/external/utils/lib/Heap.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/metrics/lib/Kernel.h
+    ${CMAKE_LIB_DIR}/external/utils/lib/MaxHeap.h
+    ${CMAKE_LIB_DIR}/external/utils/lib/MinHeap.h
+    ${CMAKE_LIB_DIR}/lib/NNMSComplex.h
+    ${CMAKE_LIB_DIR}/lib/NNMSComplex2old.h
+    ${CMAKE_LIB_DIR}/external/kernelstats/external/flinalg/LinalgIO.h
     ./msr/src
     COMMAND rm ./msr/src/CMakeLists.txt
     COMMAND rm ./msr/src/perf.cpp
