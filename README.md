@@ -1,4 +1,5 @@
 A few dimension reduction methods:
+
 * PCA
 * MDS
 * Isomap with various ways for computing nearest neighbors
