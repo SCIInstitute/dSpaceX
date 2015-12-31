@@ -10,7 +10,7 @@
 #include "KernelDensity.h"
 #include "GaussianKernel.h"
 
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 
 #include <list>
 #include <set>
@@ -24,21 +24,23 @@
 
 Precision MAX = std::numeric_limits<Precision>::max();
 
-DenseVector<unsigned int> extremaIndex;
-DenseVector<unsigned int> cells;
-DenseMatrix<unsigned int> edges;
-DenseVector<unsigned int> extrema;
-DenseVector<Precision> persistance;
-DenseVector<int> merge;
-DenseVector<bool> isMax;
+FortranLinalg::DenseVector<unsigned int> extremaIndex;
+FortranLinalg::DenseVector<unsigned int> cells;
+FortranLinalg::DenseMatrix<unsigned int> edges;
+FortranLinalg::DenseVector<unsigned int> extrema;
+FortranLinalg::DenseVector<Precision> persistance;
+FortranLinalg::DenseVector<int> merge;
+FortranLinalg::DenseVector<bool> isMax;
 
-DenseMatrix<Precision> Xall;
-DenseVector<Precision> yall;
-
-
+FortranLinalg::DenseMatrix<Precision> Xall;
+FortranLinalg::DenseVector<Precision> yall;
 
 
-void parseMS(std::string &filename){  
+
+
+void parseMS(std::string &filename){
+  using namespace FortranLinalg;
+
   std::ifstream file;
   file.open(filename.c_str());
 
@@ -168,6 +170,7 @@ void parseMS(std::string &filename){
 
 
 void parseGeometry(std::string &filename){
+  using namespace FortranLinalg;
   std::ifstream file;
   file.open(filename.c_str());
 
@@ -223,7 +226,7 @@ void parseGeometry(std::string &filename){
 
 
 void simplify(Precision pLevel){
-
+  using namespace FortranLinalg;
 
 
   unsigned int mergeIndex = edges.N()+1;
@@ -372,6 +375,8 @@ void simplify(Precision pLevel){
 
 int main(int argc, char **argv){
 
+  using namespace FortranLinalg;
+
   //Command line parsing
   TCLAP::CmdLine cmd("MS-Regression", ' ', "1");
 
@@ -441,7 +446,7 @@ int main(int argc, char **argv){
     }
 
 
-    std::vector<unsigned int> Xi[edges.N()];
+    std::vector< std::vector<unsigned int> > Xi( edges.N() );
 
     for(unsigned int cellIndex = 0; cellIndex < edges.N(); ++cellIndex){
       for(unsigned int i=0; i< cells.N(); i++){

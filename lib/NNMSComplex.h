@@ -8,7 +8,7 @@
 #ifndef NNMSCOMPLEX_H
 #define NNMSCOMPLEX_H
 
-#include "Geometry.h"
+#include "Distance.h"
 #include "EuclideanMetric.h"
 #include "SquaredEuclideanMetric.h"
 #include "DenseMatrix.h"
@@ -134,9 +134,9 @@ class NNMSComplex{
       KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, X.N());
 
       //Compute nearest nieghbors
-      //Geometry<TPrecision>::computeANN(X, KNN, KNND, eps);
+      //Distance<TPrecision>::computeANN(X, KNN, KNND, eps);
       SquaredEuclideanMetric<TPrecision> dist;
-      Geometry<TPrecision>::computeKNN(X, KNN, KNND, dist);
+      Distance<TPrecision>::computeKNN(X, KNN, KNND, dist);
       
       runMS(smooth, sigma2);      
       KNN.deallocate();

@@ -1,6 +1,6 @@
 #include "Precision.h"
 
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 
 #include "NNMSComplex.h"
 
@@ -9,6 +9,7 @@
 
 
 int main(int argc, char **argv){
+  using namespace FortranLinalg;
 
   //Command line parsing
   TCLAP::CmdLine cmd("Nearest neighbor Morse-Smale approximation tool", ' ', "1");

@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "SquaredEuclideanMetric.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "GaussianKernel.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
@@ -16,8 +16,9 @@ template<typename TPrecision>
 class KernelRegression{
       
   public:
-    KernelRegression(DenseMatrix<TPrecision> &data, DenseMatrix<TPrecision>
+    KernelRegression(FortranLinalg::DenseMatrix<TPrecision> &data, FortranLinalg::DenseMatrix<TPrecision>
         &labels, GaussianKernel<TPrecision> &k):X(data), y(labels), kernel(k){
+      using namespace FortranLinalg;
       dCut = kernel.getKernelParam() * 4;
       dCut = dCut*dCut;
       tmp = DenseVector<TPrecision>(X.M()); 
@@ -28,8 +29,9 @@ class KernelRegression{
 
 
 
-    TPrecision evaluate( DenseVector<TPrecision> &yValue, DenseVector<TPrecision> &out, 
-                         DenseVector<TPrecision> &sdev ){
+    TPrecision evaluate( FortranLinalg::DenseVector<TPrecision> &yValue, FortranLinalg::DenseVector<TPrecision> &out, 
+                         FortranLinalg::DenseVector<TPrecision> &sdev ){
+      using namespace FortranLinalg;
       Linalg<TPrecision>::Zero(out);
 
       TPrecision sd = 0;
@@ -72,21 +74,22 @@ class KernelRegression{
 
     
     
-    DenseVector<TPrecision> project(Vector<TPrecision> &dataPoint, int knn, TPrecision psigma){
-      DenseVector<TPrecision> projected(y.M);
+    FortranLinalg::DenseVector<TPrecision> project(FortranLinalg::Vector<TPrecision> &dataPoint, int knn, TPrecision psigma){
+      FortranLinalg::DenseVector<TPrecision> projected(y.M);
       project(dataPoint, knn, projected, psigma);  
       return projected; 
     };
 
     
     
-    void project(DenseVector<TPrecision> &dataPoint, int knn,
-        DenseVector<TPrecision> &projected, TPrecision psigma){
+    void project(FortranLinalg::DenseVector<TPrecision> &dataPoint, int knn,
+        FortranLinalg::DenseVector<TPrecision> &projected, TPrecision psigma){
+        using namespace FortranLinalg;
         
         DenseVector<int> nn(knn);
         DenseVector<TPrecision> dists(knn);
         
-        Geometry<TPrecision>::computeKNN(X, dataPoint, nn, dists, metric);
+        Distance<TPrecision>::computeKNN(X, dataPoint, nn, dists, metric);
 
         for(int i=0; i<y.M; i++){
           projected(i) = 0;
@@ -115,10 +118,10 @@ class KernelRegression{
   private:
     SquaredEuclideanMetric<Precision> metric;
  
-    DenseMatrix<TPrecision> X;
-    DenseMatrix<TPrecision> y;
-    DenseVector<TPrecision> tmp;
-    DenseVector<TPrecision> w;
+    FortranLinalg::DenseMatrix<TPrecision> X;
+    FortranLinalg::DenseMatrix<TPrecision> y;
+    FortranLinalg::DenseVector<TPrecision> tmp;
+    FortranLinalg::DenseVector<TPrecision> w;
 
     GaussianKernel<TPrecision> &kernel;
 

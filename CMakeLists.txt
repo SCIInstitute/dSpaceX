@@ -13,6 +13,7 @@ INCLUDE_DIRECTORIES( lib
                      external/kernelstats/lib 
                      external/kernelstats/external/flinalg/lib
                      external/kernelstats/external/metrics/lib
+                     external/utils/lib
                     )
 
 ADD_SUBDIRECTORY(commandline)

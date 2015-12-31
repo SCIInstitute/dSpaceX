@@ -1,6 +1,6 @@
 #include "Precision.h"
 
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 
 #include "NNMSComplex2old.h"
 
