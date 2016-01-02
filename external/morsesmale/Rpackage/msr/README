@@ -1,0 +1,29 @@
+The R package builds on an interface to the C++ Morse-Smale complex computation as
+first described in:
+
+Gerber S, Bremer PT, Pascucci V, Whitaker R (2010). 
+“Visual Exploration of High Dimensional Scalar Functions.” 
+IEEE Transactions on Visualization and Computer Graphics, 16(6), 1271–1280.
+
+
+The main functionality is implemented in NNMSComplex.h and was implemented by S.
+Gerber. The code uses the ANN library by David Mount and Sunil Arya distributed
+under the LGPL license.  For detailed information on ANN see
+http://www.cs.umd.edu/~mount/ANN.
+
+
+
+On this basic functionality the exploratory visualization approach in 
+
+Gerber S, Bremer PT, Pascucci V, Whitaker R (2010). 
+“Visual Exploration of High Dimensional Scalar Functions.” 
+IEEE Transactions on Visualization and Computer Graphics, 16(6), 1271–1280.
+
+and the regression approach in
+
+Morse-Smale Regression
+Submitted.
+
+are implemented.
+
+

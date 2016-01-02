@@ -1,0 +1,48 @@
+useDynLib("msr")
+
+importFrom("glmnet", "cv.glmnet")
+importFrom("glmnet", "glmnet")
+importFrom("e1071", "svm")
+importFrom("grDevices", "colorRamp", "dev.list", "dev.new", "dev.set",
+             "rgb")
+importFrom("graphics", "axis", "lines", "par")
+importFrom("stats", "BIC", "dist", "formula", "lm", "loess", "median",
+             "model.matrix", "prcomp", "predict", "rnorm", "runif",
+             "step", "var")
+
+import(
+ "rgl", 
+ "RColorBrewer",
+ "colorspace"
+)
+
+export(
+  "msc.sublevels",
+  "msc.level.ind",
+  "msc.nn", 
+  "msc.nn.kd", 
+  "msc.nn.svm", 
+  "msc.graph", 
+  "msc.lm", 
+  "msc.elnet", 
+  "msc.slm",
+  "msc.slm.elnet"
+)
+
+S3method("plot", "msc")
+S3method("plot", "mscPlot")
+S3method("predict", "msr")
+S3method("predict", "msr.elnet")
+S3method("predict", "msc.svm")
+S3method("predict", "msc.kd")
+S3method("predict", "msc.lm")
+S3method("predict", "msc.elnet")
+S3method("predict", "msc.slm")
+S3method("predict", "msc.slm.elnet")
+S3method("model.matrix", "msr")
+S3method("model.matrix", "msr.elnet")
+S3method("model.matrix", "msc.slm")
+S3method("model.matrix", "msc")
+S3method("model.matrix", "msc.kd")
+S3method("model.matrix", "msc.svm")
+
