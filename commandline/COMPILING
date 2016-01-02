@@ -1,0 +1,21 @@
+Source code for the paper
+-------------------------
+
+Samuel Gerber, Peer-Timo Bremer, Valerio Pascucci, Ross Whitaker
+"Visual Exploration of High Dimensional Scalar Functions"
+IEEE Transactions on Visualization and Computer Graphics to appear, Proceedings of VIS 2010
+
+
+To compile HDViz and HDVizProcessing you will need the following libraries:
+
+blas
+lapack
+gfortran
+opengl
+glut
+freetype
+
+for HDVizImagePCA you additioanlly need ITK.
+
+
+Compiling is easiest with CMAKE using the inlcuded CMakeLists.txt file.
