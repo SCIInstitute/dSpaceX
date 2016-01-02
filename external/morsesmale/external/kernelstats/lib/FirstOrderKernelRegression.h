@@ -4,7 +4,7 @@
 #include <math.h>
 
 #include "SquaredEuclideanMetric.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "GaussianKernel.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
@@ -91,7 +91,7 @@ FortranLinalg::Matrix<TPrecision> &J, double *sse=NULL){
     FortranLinalg::DenseMatrix<TPrecision> ls(FortranLinalg::DenseVector<TPrecision> &x, TPrecision *sse=NULL){
       FortranLinalg::DenseVector<int> knn(A.M());
       FortranLinalg::DenseVector<TPrecision> knnDist(A.M());
-      Geometry<TPrecision>::computeKNN(X, x, knn, knnDist, sl2metric);
+      Distance<TPrecision>::computeKNN(X, x, knn, knnDist, sl2metric);
 
      TPrecision wsum = 0; 
      for(unsigned int i=0; i < A.M(); i++){

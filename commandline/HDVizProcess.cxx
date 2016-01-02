@@ -6,7 +6,7 @@
 #include "DenseVector.h"
 #include "PCA.h"
 //#include "EnableFloatingPointExceptions.h"
-#include "CmdLine.h"
+#include <tclap/CmdLine.h>
 #include "KNNNeighborhood.h"
 #include "Isomap.h"
 #include "FirstOrderKernelRegression.h"

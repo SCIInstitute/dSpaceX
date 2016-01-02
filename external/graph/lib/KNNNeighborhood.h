@@ -2,7 +2,7 @@
 #define KNNNEIGHBORHOOD_H
 
 #include "Neighborhood.h"
-#include "Geometry.h"
+#include "Distance.h"
 #include "EuclideanMetric.h"
 
 #include "SparseMatrix.h"
@@ -26,7 +26,7 @@ class KNNNeighborhood : public Neighborhood<TPrecision>{
       //knn 
       DenseMatrix<int> knns(knn, data.N());
       DenseMatrix<TPrecision> knnDists(knn, data.N());
-      Geometry<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
+      Distance<TPrecision>::computeKNN(data, knns, knnDists, euclideanMetric);  
 
       //complete adjancy matrix
       SparseMatrix<TPrecision> adj(data.N(), data.N(), val);

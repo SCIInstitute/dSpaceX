@@ -1,7 +1,7 @@
 #ifndef DISPLAYIMAGEPCA_H
 #define DISPLAYIMAGEPCA_H
 
-#include "config/Config.h"
+#include "MyConfig.h"
 #include "ImageVectorConverter.h"
 #include "ImageIO.h"
 #include "PCA.h"
@@ -28,9 +28,9 @@ class DisplayImagePCA : public Display{
     Precision gImin, gImax;
     PCA<TPrecision> *pca;
     int oldSelectedCell;
-    DenseMatrix<TPrecision> pcaR;
-    DenseMatrix<TPrecision> pcaRstd;
-    DenseMatrix<TPrecision> pcagR;
+    FortranLinalg::DenseMatrix<TPrecision> pcaR;
+    FortranLinalg::DenseMatrix<TPrecision> pcaRstd;
+    FortranLinalg::DenseMatrix<TPrecision> pcagR;
 
     unsigned int slice[3];
     int sliceIndex;
@@ -96,16 +96,17 @@ class DisplayImagePCA : public Display{
     //_________ range plotering
     void display(){ 
      
+      using namespace FortranLinalg;
       if(oldSelectedCell != data->selectedCell){
         oldSelectedCell = data->selectedCell;
         pcaR.deallocate();
         pcaR = pca->unproject(data->R[data->selectedCell]);
         
-        DenseVector<Precision> tmp = Linalg<TPrecision>::Max(pcaR);
-        Imax =Linalg<TPrecision>::Max(tmp);
-        tmp.deallocate();
-        tmp = Linalg<TPrecision>::Min(pcaR);
-        Imin =Linalg<TPrecision>::Min(tmp);
+        //DenseVector<Precision> tmp = Linalg<TPrecision>::RowMax(pcaR);
+        Imax = Linalg<TPrecision>::MaxAll(pcaR);
+        //tmp.deallocate();
+        //tmp = Linalg<TPrecision>::RowMin(pcaR);
+        Imin =Linalg<TPrecision>::MinAll(pcaR);
 
         pcaRstd.deallocate();
         pcaRstd = pca->unproject(data->Rvar[data->selectedCell], false);
@@ -113,15 +114,15 @@ class DisplayImagePCA : public Display{
         pcagR.deallocate();
         pcagR = pca->unproject(data->gradR[data->selectedCell], false);
         
-        tmp = Linalg<TPrecision>::Max(pcagR);
-        gImax = Linalg<TPrecision>::Max(tmp);
-        tmp = Linalg<TPrecision>::Min(pcagR);
-        gImin = Linalg<TPrecision>::Min(tmp);
+        //tmp = Linalg<TPrecision>::Max(pcagR);
+        gImax = Linalg<TPrecision>::MaxAll(pcagR);
+        //tmp = Linalg<TPrecision>::Min(pcagR);
+        gImin = Linalg<TPrecision>::MinAll(pcagR);
 
         gImax = std::max(fabs(gImin), gImax);
         gImin = -gImax;
 
-        tmp.deallocate();
+        //tmp.deallocate();
       }
 
       
@@ -242,7 +243,7 @@ class DisplayImagePCA : public Display{
     }
 
     bool loadAdditionalData(){  
-
+      using namespace FortranLinalg;
       try{
         mask = ImageIO<Image>::readImage("mask.mhd");
         converter = new Converter(mask);
