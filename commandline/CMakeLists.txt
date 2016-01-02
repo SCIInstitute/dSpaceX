@@ -6,6 +6,7 @@ FIND_PACKAGE(GLUT)
 FIND_PACKAGE(OpenGL)
 FIND_PACKAGE(FreeType)
 FIND_PACKAGE(FTGL)
+#FIND_PACKAGE(GLE)
 
 
 option(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
@@ -28,7 +29,7 @@ INCLUDE_DIRECTORIES(${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build}  ${FREE
 
 ADD_EXECUTABLE(HDViz HDViz.cpp )
 TARGET_LINK_LIBRARIES (HDViz 
-    mygle 
+  #${GLE_LIBRARIES} 
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
@@ -40,7 +41,7 @@ SET_TARGET_PROPERTIES(HDViz PROPERTIES COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_
 if(BUILD_HDVIZ_IMAGE)
 ADD_EXECUTABLE(HDViz_3D HDViz.cpp )
 TARGET_LINK_LIBRARIES (HDViz_3D 
-    mygle 
+  #${GLE_LIBRARIES} 
     gfortran
     blas
     lapack   
@@ -53,7 +54,7 @@ TARGET_LINK_LIBRARIES (HDViz_3D
 
 ADD_EXECUTABLE(HDViz_2D HDViz.cpp )
 TARGET_LINK_LIBRARIES (HDViz_2D 
-    mygle 
+  #${GLE_LIBRARIES} 
     gfortran
     blas
     lapack   
@@ -72,69 +73,15 @@ endif(BUILD_HDVIZ_IMAGE)
 if(BUILD_HDVIZPORCESSING)
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
+LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cxx)
 TARGET_LINK_LIBRARIES (HDVizProcessing 
     blas
     lapack    
     gfortran
-    myann 
+    ANN 
 )
 endif(BUILD_HDVIZPORCESSING)
 
-ADD_CUSTOM_TARGET(HDViz_release 
-    COMMAND rsync -aC ${HDViz_SOURCE_DIR}/ ./hdviz_src/
-    COMMAND rsync -aC ${DIAT_LIB_DIR}/gle/ ./hdviz_src/gle/ 
-    COMMAND rsync -aC ${DIAT_LIB_DIR}/ann/ ./hdviz_src/ann/ 
-    COMMAND cp 
-${DIAT_SOURCE_DIR}/cmake_modules/*
-${DIAT_LIB_DIR}/linalg/DenseMatrix.h
-${DIAT_LIB_DIR}/metrics/EuclideanMetric.h 
-${DIAT_LIB_DIR}/metrics/SquaredEuclideanMetric.h 
-${DIAT_LIB_DIR}/utils/Geometry.h
-${DIAT_LIB_DIR}/statistics/UKR.h 
-${DIAT_LIB_DIR}/statistics/Isomap.h 
-${DIAT_LIB_DIR}/statistics/MetricMDS.h 
-${DIAT_LIB_DIR}/linalg/Linalg.h
-${DIAT_LIB_DIR}/linalg/LapackDefs.h
-${DIAT_LIB_DIR}/linalg/Matrix.h   
-${DIAT_LIB_DIR}/metrics/Metric.h
-${DIAT_LIB_DIR}/linalg/Vector.h 
-${DIAT_LIB_DIR}/linalg/DenseVector.h
-${DIAT_LIB_DIR}/linalg/SparseMatrix.h
-${DIAT_LIB_DIR}/linalg/SymmetricDenseMatrix.h
-${DIAT_LIB_DIR}/statistics/GaussianKernel.h
-${DIAT_LIB_DIR}/statistics/Random.h
-${DIAT_LIB_DIR}/datastructures/heap/Heap.h 
-${DIAT_LIB_DIR}/statistics/Kernel.h
-${DIAT_LIB_DIR}/statistics/KernelDensity.h
-${DIAT_LIB_DIR}/statistics/KernelRegression.h
-${DIAT_LIB_DIR}/statistics/KernelInterpolator.h
-${DIAT_LIB_DIR}/statistics/FirstOrderKernelRegression.h
-${DIAT_LIB_DIR}/datastructures/heap/MaxHeap.h
-${DIAT_LIB_DIR}/datastructures/heap/MinHeap.h
-${DIAT_LIB_DIR}/datastructures/graph/Neighborhood.h
-${DIAT_LIB_DIR}/datastructures/graph/KNNNeighborhood.h
-${DIAT_LIB_DIR}/datastructures/graph/GraphAlgorithms.h
-${DIAT_LIB_DIR}/topology/NNMSComplex.h 
-${DIAT_LIB_DIR}/io/LinalgIO.h
-${DIAT_LIB_DIR}/io/ImageIO.h
-${DIAT_LIB_DIR}/utils/ImageVectorConverter.h
-${DIAT_LIB_DIR}/statistics/PCA.h
-${DIAT_LIB_DIR}/linalg/SymmetricEigensystem.h   
-./hdviz_src/   
-    COMMAND rsync -aC ${DIAT_SOURCE_DIR}/tools/config/ ./hdviz_src/config/
-    COMMAND rsync -aC ${DIAT_SOURCE_DIR}/lib/tclap/ ./hdviz_src/tclap/
-    COMMAND mv ./hdviz_src/CMakeListsRelease.txt ./hdviz_src/CMakeLists.txt
-    COMMAND tar -c hdviz_src > hdviz_src.tar
-)
 
-ADD_CUSTOM_TARGET(HDViz_bins
-  COMMAND rsync -aC HDVizProcessing ./hdviz_bin/
-  COMMAND rsync -aC ${HDViz_SOURCE_DIR}/README ./hdviz_bin/
-  COMMAND rsync -aC ${HDViz_SOURCE_DIR}/COMPILING ./hdviz_bin/
-  COMMAND rsync -aC HDViz ./hdviz_bin/
-  COMMAND rsync -aC ${HDViz_SOURCE_DIR}/examples/ ./hdviz_bin/examples/
-  COMMAND tar -c hdviz_bin > hdviz_bin.tar)
-
-ADD_DEPENDENCIES(HDViz_bins HDViz HDVizProcessing)
 

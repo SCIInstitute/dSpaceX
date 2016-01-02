@@ -14,7 +14,7 @@
 #include <FTGL/ftgl.h>
 #endif
 
-#include "gle.h"
+#include <gle.h>
 
 #include <string>
 

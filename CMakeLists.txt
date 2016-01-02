@@ -6,18 +6,19 @@ ENDIF(COMMAND CMAKE_POLICY)
 PROJECT(HDVis)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/")
-find_package(Eigen3 REQUIRED)
 
 
 
 INCLUDE_DIRECTORIES(
+                     external/graph/lib 
+                     external/imageutils/lib 
                      external/morsesmale/external/annmod/lib 
                      external/morsesmale/external/annmod/lib/ann 
                      external/morsesmale/external/utils/lib 
                      external/morsesmale/external/kernelstats/lib 
                      external/morsesmale/external/kernelstats/external/metrics/lib 
                      external/morsesmale/external/kernelstats/external/flinalg/lib 
-                     ${EIGEN3_INCLUDE_DIR} 
+                     ${ANN_INCLUDE_FILES} 
                      )
 ADD_SUBDIRECTORY(commandline)
 
