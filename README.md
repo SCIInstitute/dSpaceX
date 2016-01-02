@@ -1,15 +1,18 @@
 # High dimensional function visualization
 
-Software for the paper
+Software for the paper.
 
 Samuel Gerber, Peer-Timo Bremer, Valerio Pascucci, Ross Whitaker
 "Visual Exploration of High Dimensional Scalar Functions"
 IEEE Transactions on Visualization and Computer Graphics to appear, Proceedings of VIS 2010
 
+An R-package that is capable of a similar visualizations is available the MorseSmaleComplex project.
 
 The software consist of two binaries
+
 1. HDVizProcessing
 2. HDViz
+
 The first is for processing a given data set for visualization and the seconf
 for the actual visualization.
 
