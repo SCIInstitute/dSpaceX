@@ -5,11 +5,12 @@ ENDIF(COMMAND CMAKE_POLICY)
 
 PROJECT(HDVis)
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/")
 
 
 
 INCLUDE_DIRECTORIES(
+                     external/gle/lib 
                      external/graph/lib 
                      external/imageutils/lib 
                      external/morsesmale/external/annmod/lib 
@@ -20,5 +21,6 @@ INCLUDE_DIRECTORIES(
                      external/morsesmale/external/kernelstats/external/flinalg/lib 
                      ${ANN_INCLUDE_FILES} 
                      )
+ADD_SUBDIRECTORY(external/gle)
 ADD_SUBDIRECTORY(commandline)
 

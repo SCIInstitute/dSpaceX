@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include "SquaredEuclideanMetric.h"
-#include "Geometry.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
 
