@@ -1,0 +1,25 @@
+useDynLib("cems")
+
+
+importFrom("vegan", "isomap")
+importFrom("rgl", "qmesh3d", "rgl.open", "rgl.bg", "plot3d", "material3d",
+           "wire3d", "spheres3d", "shade3d") 
+importFrom("plotrix", "draw.arc", "draw.circle")
+importFrom("grDevices", "col2rgb", "dev.cur", "dev.list", "dev.new",
+            "dev.set", "heat.colors", "rgb", "xy.coords")  
+importFrom("graphics", "axis", "close.screen", "identify", "image",
+             "layout", "legend", "lines", "locator", "par", "plot",
+             "points", "screen", "segments", "split.screen")
+importFrom("stats", "dist", "loess", "predict", "rnorm", "runif")
+
+export(
+  "cem",
+  "cem.optimize",
+  "cem.geodesic",
+  "cem.example.arc",
+  "cem.example.sr",
+  "swissroll"  
+)
+
+S3method("predict", "cem")
+

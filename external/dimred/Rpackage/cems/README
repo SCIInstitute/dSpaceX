@@ -1,0 +1,19 @@
+This R package implements the appraoch to compute principal curves and
+manifolds as described in:
+
+Samuel Gerber, Tolga Tasdizen, Ross Whitaker,
+Dimensionality Reduction and Principal Surfaces via Kernel Map Manifolds, 
+In Proceedings of the 2009 International Conference on Computer Vison (ICCV 2009).
+
+Samuel Gerber and Ross Whitaker,
+Conditional Expectation Curves, 
+Submitted 2011.
+
+The code uses the ANN library by David Mount and Sunil Arya distributed
+under the LGPL license.  For detailed information on ANN see
+http://www.cs.umd.edu/~mount/ANN.
+
+
+
+
+

@@ -1,0 +1,15 @@
+
+## cems version 0.3 - S. Gerber - March. 27. 2014 ##
+- Fixed fast version of CEMS algorithm
+- Added geodesic and curvature computations
+
+## cems version 0.2 - S. Gerber - June. 9. 2013 ##
+- Updated to fast version of CEMS algorithm
+
+## cems version 0.1 - S. Gerber - Nov. 5. 2011 ##
+- Added README and ChangeLog
+- Added package help alias
+- Added optimization of orthogonality instead of projection distance and
+  autmatic bandwidth slection
+- Added example functions to regenerate results in the "Conditional Expectation
+  Curve" paper
