@@ -1,5 +1,7 @@
 # High dimensional function visualization
 
+![hdviz.png](https://bitbucket.org/repo/R6ok4n/images/4162517882-hdviz.png)
+
 Software for the paper.
 
 Samuel Gerber, Peer-Timo Bremer, Valerio Pascucci, Ross Whitaker
