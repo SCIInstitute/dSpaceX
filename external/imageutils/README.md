@@ -1,0 +1,1 @@
+A few classes to convert images to vectors and deal with image neighborhoods. Requires ITK, Eigen and FLinalg.
