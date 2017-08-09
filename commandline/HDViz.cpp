@@ -191,27 +191,27 @@ int main(int argc, char **argv){
     if(boxArg.getValue()){
       auxD = new DisplayRange<Precision>(&data, fontname);
     } else {
-      auxD = NULL;
+      auxD = nullptr;
     }
 
  
     if (curvesArg.getValue()) {
       auxD2 = new DisplayCurves<Precision>(&data, fontname);
       if (!auxD2->loadAdditionalData()) {
-        auxD2 = NULL;
+        auxD2 = nullptr;
       }
     } else{
-      auxD2 = NULL;
+      auxD2 = nullptr;
     }
 
  
     if (molArg.getValue()) {
       auxD3 = new DisplayMolecule<Precision>(&data, fontname);
       if (!auxD3->loadAdditionalData()) {
-        auxD3 = NULL;
+        auxD3 = nullptr;
       }
     } else {
-      auxD3 = NULL;
+      auxD3 = nullptr;
     }
     #endif 
 
@@ -227,7 +227,7 @@ int main(int argc, char **argv){
     data.addWindow(mainWindow);
 
  
-    if(auxD != NULL){ 
+    if(auxD != nullptr){ 
       glutInitWindowSize(500, 500); 
       int auxWindow = glutCreateWindow(auxD->title().c_str());
       glutDisplayFunc(display2);
@@ -240,7 +240,7 @@ int main(int argc, char **argv){
       data.addWindow(auxWindow);
     }
 
-    if(auxD2 != NULL){
+    if(auxD2 != nullptr){
       glutInitWindowSize(500, 500); 
       int auxWindow2 = glutCreateWindow(auxD2->title().c_str());
       glutDisplayFunc(display3);
@@ -252,7 +252,7 @@ int main(int argc, char **argv){
       data.addWindow(auxWindow2);
     }
 
-    if(auxD3 != NULL){
+    if(auxD3 != nullptr){
       glutInitWindowSize(500, 500); 
       int auxWindow3 = glutCreateWindow(auxD3->title().c_str());
       glutDisplayFunc(display4);
