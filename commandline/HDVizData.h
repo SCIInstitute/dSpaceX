@@ -9,6 +9,10 @@
 #include "Precision.h"
 
 
+#define LAYOUT_ISOMAP  0
+#define LAYOUT_PCA  1
+#define LAYOUT_PCA2  2
+
 class HDVizData{
   public:
     HDVizData();
@@ -22,12 +26,6 @@ class HDVizData{
     void setPersistenceLevel(int pl, bool update = true);
     void addWindow(int w);
     void setLayout(int l);
-  
-
-#define LAYOUT_ISOMAP  0
-#define LAYOUT_PCA  1
-#define LAYOUT_PCA2  2
-
   
 
     FortranLinalg::DenseVector<std::string> names;
