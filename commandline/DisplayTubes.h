@@ -277,6 +277,7 @@ class DisplayTubes : public Display{
     
       
       setFontSize(width/50.f);
+			glEnable(GL_BLEND);
       glRasterPos3f(0, 0, 0.7f);
       font.Render("f(x)");
             

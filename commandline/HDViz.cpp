@@ -138,7 +138,6 @@ void printHelp(){
 
 
 int main(int argc, char **argv){	
-  
   //Command line parsing
   TCLAP::CmdLine cmd("HDViz", ' ', "1");
 
@@ -170,7 +169,7 @@ int main(int argc, char **argv){
   
   //GL stuff
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE|GLUT_DEPTH|GLUT_STENCIL);
+  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_STENCIL);
 
 
 
@@ -190,12 +189,13 @@ try{
 
 #ifdef DIMENSION
 
+  // std::cout << "DIMENSION defined as \"" << DIMENSION << "\"" << std::endl;
   auxD = new DisplayImagePCA<Image, Precision>(&data, fontname);
   if( !auxD->loadAdditionalData() ) return 1;
 
 #else
  
-
+  // std::cout << "DIMENSION not defined." << std::endl;
  
   if(boxArg.getValue()){
     auxD = new DisplayRange<Precision>(&data, fontname);
