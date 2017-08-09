@@ -1,7 +1,4 @@
 #include "Precision.h"
-
-
-
 #include "Display.h"
 #include "DisplayTubes.h"
 #ifdef DIMENSION
@@ -12,13 +9,7 @@
 #include "DisplayMolecule.h"
 
 #include "HDVizData.h"
-
-
-
 #include <tclap/CmdLine.h>
-
-
-
 
 #include <iostream>
 #include <iomanip>
@@ -32,81 +23,71 @@
 Display *mainD, *auxD, *auxD2, *auxD3;
 
 
-
-
-void display1(void){
+void display1(void) {
   mainD->display();
 };
 
-void mouse1(int button, int state, int x, int y){
+void mouse1(int button, int state, int x, int y) {
   mainD->mouse(button, state, x, y);
 }
 
-void motion1(int x, int y){
+void motion1(int x, int y) {
   mainD->motion(x, y);
 }
 
-void keyboard1(unsigned char key, int x, int y){
+void keyboard1(unsigned char key, int x, int y) {
   mainD->keyboard(key, x, y);
 }
 
-void reshape1(int w, int h){
+void reshape1(int w, int h) {
   mainD->reshape(w, h);
 }
 
-
-
-
-
-void display2(void){
+void display2(void) {
   auxD->display();
 };
 
-void mouse2(int button, int state, int x, int y){
+void mouse2(int button, int state, int x, int y) {
   auxD->mouse(button, state, x, y);
 }
 
-void motion2(int x, int y){
+void motion2(int x, int y) {
   auxD->motion(x, y);
 }
 
-void keyboard2(unsigned char key, int x, int y){
+void keyboard2(unsigned char key, int x, int y) {
   auxD->keyboard(key, x, y);
 }
 
-void reshape2(int w, int h){
+void reshape2(int w, int h) {
   auxD->reshape(w, h);
 }
 
-
-void display3(void){
+void display3(void) {
   auxD2->display();
 };
 
-void mouse3(int button, int state, int x, int y){
+void mouse3(int button, int state, int x, int y) {
   auxD2->mouse(button, state, x, y);
 }
 
-void motion3(int x, int y){
+void motion3(int x, int y) {
   auxD2->motion(x, y);
 }
 
-void keyboard3(unsigned char key, int x, int y){
+void keyboard3(unsigned char key, int x, int y) {
   auxD2->keyboard(key, x, y);
 }
 
-void reshape3(int w, int h){
+void reshape3(int w, int h) {
   auxD2->reshape(w, h);
 }
 
-
-
-
-void display4(void){
+void display4(void) {
   auxD3->display();
 };
 
-void mouse4(int button, int state, int x, int y){
+void mouse4(int button, int state, int x, int y) {
   auxD3->mouse(button, state, x, y);
 }
 
@@ -114,30 +95,22 @@ void motion4(int x, int y){
   auxD3->motion(x, y);
 }
 
-void keyboard4(unsigned char key, int x, int y){
+void keyboard4(unsigned char key, int x, int y) {
   auxD3->keyboard(key, x, y);
 }
 
-void reshape4(int w, int h){
+void reshape4(int w, int h) {
   auxD3->reshape(w, h);
 }
 
-
-
-
-
-void printHelp(){
+void printHelp() {
 	std::cout << mainD->title() << " Window" << std::endl << std::endl;
   mainD->printHelp();	
   std::cout <<  std::endl << std::endl;
-
-//  std::cout << auxD->title() << " Window" << std::endl << std::endl;
-//  auxD->printHelp();
-
 }
 
 
-int main(int argc, char **argv){	
+int main(int argc, char **argv) {	
   //Command line parsing
   TCLAP::CmdLine cmd("HDViz", ' ', "1");
 
@@ -153,14 +126,13 @@ int main(int argc, char **argv){
       "Display domain as molecule", false);
   cmd.add(molArg);
      
-  TCLAP::ValueArg<std::string>  fontArg("f", "font", 
+  TCLAP::ValueArg<std::string> fontArg("f", "font", 
       "Absolute path of a ttf font", false, "", "");
   cmd.add(fontArg);
   
-  try{
+  try {
 	  cmd.parse( argc, argv );
-	} 
-  catch (TCLAP::ArgException &e){ 
+	} catch (TCLAP::ArgException &e) { 
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 
     return -1;
   }
@@ -171,7 +143,7 @@ int main(int argc, char **argv){
 
 
   //Load data
-  try{ 
+  try { 
     HDVizData data;
 
     std::string fontname = fontArg.getValue();
@@ -184,11 +156,13 @@ int main(int argc, char **argv){
 
     #ifdef DIMENSION    
     auxD = new DisplayImagePCA<Image, Precision>(&data, fontname);
-    if( !auxD->loadAdditionalData() ) return 1;
+    if (!auxD->loadAdditionalData()) {
+      return 1;
+    }
 
     #else
    
-    if(boxArg.getValue()){
+    if (boxArg.getValue()) {
       auxD = new DisplayRange<Precision>(&data, fontname);
     } else {
       auxD = nullptr;
