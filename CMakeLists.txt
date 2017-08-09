@@ -21,6 +21,7 @@ INCLUDE_DIRECTORIES(
                      external/morsesmale/external/kernelstats/lib 
                      external/morsesmale/external/kernelstats/external/metrics/lib 
                      external/morsesmale/external/kernelstats/external/flinalg/lib 
+										 external/morsesmale/external/kernelstats/external/flinalg/commandline/
                      ${ANN_INCLUDE_FILES} 
                      )
 ADD_SUBDIRECTORY(external/gle)
