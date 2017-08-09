@@ -1,4 +1,5 @@
 #include "Precision.h"
+
 #include "Display.h"
 #include "DisplayTubes.h"
 #ifdef DIMENSION
@@ -23,21 +24,6 @@
 Display *mainD, *auxD, *auxD2, *auxD3;
 
 
-void display1(void) {
-  mainD->display();
-};
-
-void mouse1(int button, int state, int x, int y) {
-  mainD->mouse(button, state, x, y);
-}
-
-void motion1(int x, int y) {
-  mainD->motion(x, y);
-}
-
-void keyboard1(unsigned char key, int x, int y) {
-  mainD->keyboard(key, x, y);
-}
 
 void reshape1(int w, int h) {
   mainD->reshape(w, h);
@@ -192,11 +178,22 @@ int main(int argc, char **argv) {
  
     glutInitWindowSize(1000, 1000); 
     int mainWindow = glutCreateWindow(mainD->title().c_str());
-    glutDisplayFunc(display1);
-    glutReshapeFunc(reshape1);
-    glutMouseFunc(mouse1);
-  	glutMotionFunc(motion1);
-    glutKeyboardFunc(keyboard1);
+    glutDisplayFunc([]() { 
+      mainD->display(); 
+    });
+    glutReshapeFunc([](int w, int h) {
+      mainD->reshape(w, h);
+    });
+    glutMouseFunc([](int button, int state, int x, int y) {
+      mainD->mouse(button, state, x, y);
+    });
+  	glutMotionFunc([](int x, int y) {
+      mainD->motion(x, y);
+    });
+    glutKeyboardFunc([](unsigned char key, int x, int y) {
+      mainD->keyboard(key, x, y);
+    });
+    
     mainD->init();
     data.addWindow(mainWindow);
 
