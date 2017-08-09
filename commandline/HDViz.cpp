@@ -164,132 +164,111 @@ int main(int argc, char **argv){
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 
     return -1;
   }
-
-
   
   //GL stuff
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_STENCIL);
 
 
-
   //Load data
-try{ 
- HDVizData data;
+  try{ 
+    HDVizData data;
 
+    std::string fontname = fontArg.getValue();
+    if (fontname.size() == 0){
+      fontname= MAKE_STRING(FONTNAME);
+    }
 
+    //Windows
+    mainD = new DisplayTubes<Precision>(&data, fontname);
 
-  std::string fontname = fontArg.getValue();
-  if(fontname.size() == 0){
-    fontname= MAKE_STRING(FONTNAME);
-  }
+    #ifdef DIMENSION    
+    auxD = new DisplayImagePCA<Image, Precision>(&data, fontname);
+    if( !auxD->loadAdditionalData() ) return 1;
 
-  //Windows
-  mainD = new DisplayTubes<Precision>(&data, fontname);
-
-#ifdef DIMENSION
-
-  // std::cout << "DIMENSION defined as \"" << DIMENSION << "\"" << std::endl;
-  auxD = new DisplayImagePCA<Image, Precision>(&data, fontname);
-  if( !auxD->loadAdditionalData() ) return 1;
-
-#else
- 
-  // std::cout << "DIMENSION not defined." << std::endl;
- 
-  if(boxArg.getValue()){
-    auxD = new DisplayRange<Precision>(&data, fontname);
-  }
-  else{
-    auxD = NULL;
-  }
+    #else
+   
+    if(boxArg.getValue()){
+      auxD = new DisplayRange<Precision>(&data, fontname);
+    } else {
+      auxD = NULL;
+    }
 
  
-  if(curvesArg.getValue()){
-    auxD2 = new DisplayCurves<Precision>(&data, fontname);
-    if(!auxD2->loadAdditionalData()){
+    if (curvesArg.getValue()) {
+      auxD2 = new DisplayCurves<Precision>(&data, fontname);
+      if (!auxD2->loadAdditionalData()) {
+        auxD2 = NULL;
+      }
+    } else{
       auxD2 = NULL;
     }
-  }
-  else{
-    auxD2 = NULL;
-  }
 
  
-  if(molArg.getValue()){
-    auxD3 = new DisplayMolecule<Precision>(&data, fontname);
-    if(!auxD3->loadAdditionalData()){
+    if (molArg.getValue()) {
+      auxD3 = new DisplayMolecule<Precision>(&data, fontname);
+      if (!auxD3->loadAdditionalData()) {
+        auxD3 = NULL;
+      }
+    } else {
       auxD3 = NULL;
     }
-  }
-  else{
-    auxD3 = NULL;
-  }
-#endif 
-
-
-  
-  glutInitWindowSize(1000, 1000); 
-  int mainWindow = glutCreateWindow(mainD->title().c_str());
-  glutDisplayFunc(display1);
-  glutReshapeFunc(reshape1);
-  glutMouseFunc(mouse1);
-	glutMotionFunc(motion1);
-  glutKeyboardFunc(keyboard1);
-  mainD->init();
-  data.addWindow(mainWindow);
-
-
+    #endif 
 
  
-  if(auxD != NULL){ 
-    glutInitWindowSize(500, 500); 
-    int auxWindow = glutCreateWindow(auxD->title().c_str());
-    glutDisplayFunc(display2);
-    glutReshapeFunc(reshape2);
-    glutMouseFunc(mouse2);
-    glutMotionFunc(motion2);
-    glutKeyboardFunc(keyboard2);
-    auxD->init();
+    glutInitWindowSize(1000, 1000); 
+    int mainWindow = glutCreateWindow(mainD->title().c_str());
+    glutDisplayFunc(display1);
+    glutReshapeFunc(reshape1);
+    glutMouseFunc(mouse1);
+  	glutMotionFunc(motion1);
+    glutKeyboardFunc(keyboard1);
+    mainD->init();
+    data.addWindow(mainWindow);
 
-    data.addWindow(auxWindow);
-  }
+ 
+    if(auxD != NULL){ 
+      glutInitWindowSize(500, 500); 
+      int auxWindow = glutCreateWindow(auxD->title().c_str());
+      glutDisplayFunc(display2);
+      glutReshapeFunc(reshape2);
+      glutMouseFunc(mouse2);
+      glutMotionFunc(motion2);
+      glutKeyboardFunc(keyboard2);
+      auxD->init();
 
-  if(auxD2 != NULL){
-    glutInitWindowSize(500, 500); 
-    int auxWindow2 = glutCreateWindow(auxD2->title().c_str());
-    glutDisplayFunc(display3);
-    glutReshapeFunc(reshape3);
-    glutMouseFunc(mouse3);
-    glutMotionFunc(motion3);
-    glutKeyboardFunc(keyboard3);
-    auxD2->init();
-    data.addWindow(auxWindow2);
-  }
+      data.addWindow(auxWindow);
+    }
 
+    if(auxD2 != NULL){
+      glutInitWindowSize(500, 500); 
+      int auxWindow2 = glutCreateWindow(auxD2->title().c_str());
+      glutDisplayFunc(display3);
+      glutReshapeFunc(reshape3);
+      glutMouseFunc(mouse3);
+      glutMotionFunc(motion3);
+      glutKeyboardFunc(keyboard3);
+      auxD2->init();
+      data.addWindow(auxWindow2);
+    }
 
-  if(auxD3 != NULL){
-    glutInitWindowSize(500, 500); 
-    int auxWindow3 = glutCreateWindow(auxD3->title().c_str());
-    glutDisplayFunc(display4);
-    glutReshapeFunc(reshape4);
-    glutMouseFunc(mouse4);
-    glutMotionFunc(motion4);
-    glutKeyboardFunc(keyboard4);
-    auxD3->init();
-    data.addWindow(auxWindow3);
-  }
+    if(auxD3 != NULL){
+      glutInitWindowSize(500, 500); 
+      int auxWindow3 = glutCreateWindow(auxD3->title().c_str());
+      glutDisplayFunc(display4);
+      glutReshapeFunc(reshape4);
+      glutMouseFunc(mouse4);
+      glutMotionFunc(motion4);
+      glutKeyboardFunc(keyboard4);
+      auxD3->init();
+      data.addWindow(auxWindow3);
+    }
 
-  printHelp();
-
-
-  glutMainLoop();
-
-}
-catch (std::bad_alloc& ba)
-  {
+    printHelp();
+    glutMainLoop();
+  } catch (std::bad_alloc& ba) {
     std::cout << ba.what() << std::endl;
-}
+  }
 
   return 0;
 }
