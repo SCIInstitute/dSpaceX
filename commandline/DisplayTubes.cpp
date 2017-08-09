@@ -26,8 +26,6 @@ DisplayTubes<TPrecision>::DisplayTubes(HDVizData *d,std::string fontname):data(d
   rotationAxis = 0;
 
   initState();
-
-
   setFontSize(20);
 };
 
@@ -130,17 +128,13 @@ void DisplayTubes<TPrecision>::display(void){
     oldN = data->edges.N();
     initState(); 
   }
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW); 	
   glLoadIdentity();
 
-
   GLfloat view_light_pos[] = {5, -30, -15, 1};
   glLightfv(GL_LIGHT0, GL_POSITION, view_light_pos);
-
-
-
 
   glScalef(zoom, zoom, zoom);
   glTranslatef(tx,ty, 5); 
@@ -161,15 +155,11 @@ void DisplayTubes<TPrecision>::display(void){
     sy = (Precision)height/width;
   }
 
-
-
   glLoadIdentity(); 
   glTranslatef(-4*sx+0.7, -4*sy+0.7, 0);  
   glRotatef(rotation[0], 1, 0, 0);
   glRotatef(rotation[1], 0, 1, 0); 
   glRotatef(rotation[2], 0, 0, 1); 
-
-
 
   glDisable(GL_LIGHTING); 	
   glColor3f(0, 0, 0);
@@ -179,13 +169,10 @@ void DisplayTubes<TPrecision>::display(void){
   glVertex3f(0, 0, 0.5);
   glEnd();  
 
-
-  
   setFontSize(width/50.f);
 	glEnable(GL_BLEND);
   glRasterPos3f(0, 0, 0.7f);
   font.Render("f(x)");
-        
   
   glColor3f(0.5, 0.5, 0.5);
   glLineWidth(2.f);
@@ -196,7 +183,6 @@ void DisplayTubes<TPrecision>::display(void){
   glVertex3f(0.5, 0, 0);
   glEnd();   
   
- 
   glRasterPos3f(0, 0.7f, 0);
   font.Render("p1");
 
@@ -205,183 +191,171 @@ void DisplayTubes<TPrecision>::display(void){
 
 
   //draw persistance graph
+  if (drawOverlay) {
+    glDisable(GL_DEPTH_TEST);
+    glLoadIdentity(); 
+    glTranslatef(-1.5, -4*sy+0.5, 0);  
 
-  if(drawOverlay){
+    Precision pmax = 1; 
+    Precision emax = data->pSorted.N()+1;
+    glColor3f(1, 0, 0);
+    int curL = data->getPersistanceLevel();
+    Precision prev = 0;
+    Precision next = data->pSorted(curL);
+    if (curL!=0) {
+      prev = data->pSorted(curL-1);
+    }
+    if (next>1) {
+      next =1;
+    } 
 
-  glDisable(GL_DEPTH_TEST);
-  glLoadIdentity(); 
-  glTranslatef(-1.5, -4*sy+0.5, 0);  
+    Precision s = sx*5;
+    Precision hs = 1.5;
+    glBegin(GL_QUADS);
+    glVertex2f(0 + prev/pmax*s, hs-curL/emax*hs);
+    glVertex2f(0 + next/pmax*s, hs-curL/emax*hs);
+    glVertex2f(0 + next/pmax*s, 0);
+    glVertex2f(0 + prev/pmax*s, 0);
+    glEnd();
 
+    glColor3f(0.5, 0.5, 0.5);
+    glLineWidth(2.f);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(0, hs, 0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(s, 0, 0);      
+    glVertex3f(s/2.f, 0.05, 0);
+    glVertex3f(s/2.f, -0.05, 0);
+    glEnd();       
 
-
-  Precision pmax = 1; 
-  Precision emax = data->pSorted.N()+1;
-  glColor3f(1, 0, 0);
-  int curL = data->getPersistanceLevel();
-  Precision prev = 0;
-  Precision next = data->pSorted(curL);
-  if(curL!=0){
-    prev = data->pSorted(curL-1);
-  }
-  if(next>1){
-    next =1;
-  } 
-
-  Precision s = sx*5;
-  Precision hs = 1.5;
-  glBegin(GL_QUADS);
-  glVertex2f(0 + prev/pmax*s, hs-curL/emax*hs);
-  glVertex2f(0 + next/pmax*s, hs-curL/emax*hs);
-  glVertex2f(0 + next/pmax*s, 0);
-  glVertex2f(0 + prev/pmax*s, 0);
-  glEnd();
-
-
-  glColor3f(0.5, 0.5, 0.5);
-  glLineWidth(2.f);
-  glBegin(GL_LINES);
-  glVertex3f(0, 0, 0);
-  glVertex3f(0, hs, 0);
-  glVertex3f(0, 0, 0);
-  glVertex3f(s, 0, 0);      
-  glVertex3f(s/2.f, 0.05, 0);
-  glVertex3f(s/2.f, -0.05, 0);
-  glEnd();       
-  
-
-  glColor3f(1.f, 0, 0);
-  glLineWidth(2.f);
-  glBegin(GL_LINES);
-  prev =0;
-  for(unsigned int i=0; i<data->pSorted.N()-1; i++){
-    glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
-    prev = data->pSorted(i);
-    glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
-  }   
-  glVertex2f(0 + prev/pmax*s, 2/emax*hs);
-  glVertex2f(s, 2/emax*hs);
-  glEnd(); 
+    glColor3f(1.f, 0, 0);
+    glLineWidth(2.f);
+    glBegin(GL_LINES);
+    prev =0;
+    for(unsigned int i=0; i<data->pSorted.N()-1; i++){
+      glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
+      prev = data->pSorted(i);
+      glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
+    }   
+    glVertex2f(0 + prev/pmax*s, 2/emax*hs);
+    glVertex2f(s, 2/emax*hs);
+    glEnd(); 
 
 
-  //labels
-  glColor3f(0, 0, 0);
+    //labels
+    glColor3f(0, 0, 0);
 
-  setFontSize(width/50.f);
-  Precision l = font.Advance("0.0")/width*dw;
-  glRasterPos2f(0-l/2.f, -0.15);
-  font.Render("0.0");
+    setFontSize(width/50.f);
+    Precision l = font.Advance("0.0")/width*dw;
+    glRasterPos2f(0-l/2.f, -0.15);
+    font.Render("0.0");
 
-  l = font.Advance("0.5")/width*dw;
-  glRasterPos2f(s/2.f-l/2.f, -0.15);
-  font.Render("0.5");
+    l = font.Advance("0.5")/width*dw;
+    glRasterPos2f(s/2.f-l/2.f, -0.15);
+    font.Render("0.5");
 
-  l = font.Advance("1.0")/width*dw;
-  glRasterPos2f(s-l/2.f, -0.15);
-  font.Render("1.0");
+    l = font.Advance("1.0")/width*dw;
+    glRasterPos2f(s-l/2.f, -0.15);
+    font.Render("1.0");
 
- 
-  //glRasterPos2f(0-l, 2/emax*hs);
-  //font.Render("2");
-
-  glRasterPos2f(0-l, hs);
-  std::stringstream ss123;
-  ss123 << emax;
-  font.Render( ss123.str().c_str() );
-
-  //Write info
-  glLoadIdentity(); 
-  glTranslatef(-4*sx+0.2, 4*sy-0.4, 0); 
- 
-  glRasterPos2f(0, 0); 
-  setFontSize(20);
-  std::stringstream sse;
-  sse << "Value: ";
-  sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-  sse << data->yc[data->selectedCell](data->selectedPoint) ;
-  font.Render(sse.str().c_str());
-
-  glRasterPos2f(0, -0.2f); 
-  std::stringstream ssv;
-  ssv << "Input std: ";
-  ssv << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-  ssv << (data->yw[data->selectedCell](data->selectedPoint)-0.03) * data->zmax/0.3;
-  font.Render(ssv.str().c_str());
-  
-  glRasterPos2f(0, -0.4f);       
-  std::stringstream sss;
-  sss << "Density: ";
-  sss << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-  sss << data->yd[data->selectedCell](data->selectedPoint);
-  font.Render(sss.str().c_str());
-
-
-  //draw color map      
-  glLoadIdentity(); 
-  glTranslatef(4*sx-0.7, 4*sy-2.3, 0);  
    
+    //glRasterPos2f(0-l, 2/emax*hs);
+    //font.Render("2");
 
-  glBegin(GL_QUAD_STRIP);
-  std::vector<Precision> color =
-    data->colormap.getColor(data->efmin);
-  glColor3f(color[0], color[1], color[2]);
-  glVertex2f(0, 0);
-  glVertex2f(0.4, 0);
+    glRasterPos2f(0-l, hs);
+    std::stringstream ss123;
+    ss123 << emax;
+    font.Render( ss123.str().c_str() );
 
-  color =
-    data->colormap.getColor((data->efmin+data->efmax)/2.f);
-  glColor3f(color[0], color[1], color[2]);
-  glVertex2f(0, 1);
-  glVertex2f(0.4, 1);      
-  
-  color =
-    data->colormap.getColor(data->efmax);
-  glColor3f(color[0], color[1], color[2]);
-  glVertex2f(0, 2);
-  glVertex2f(0.4, 2);
-  glEnd(); 
+    //Write info
+    glLoadIdentity(); 
+    glTranslatef(-4*sx+0.2, 4*sy-0.4, 0); 
+   
+    glRasterPos2f(0, 0); 
+    setFontSize(20);
+    std::stringstream sse;
+    sse << "Value: ";
+    sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+    sse << data->yc[data->selectedCell](data->selectedPoint) ;
+    font.Render(sse.str().c_str());
 
-  glColor3f(0, 0, 0);
-  setFontSize(20.f);
-  
-  
-  std::stringstream ssmin;
-  ssmin << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-  ssmin << data->efmin ;
-  l = font.Advance(ssmin.str().c_str())/width*dw;
-  glRasterPos2f(0 - l - 0.03, 0.03);
-  font.Render(ssmin.str().c_str());
-  
-  std::stringstream ssmax;
-  ssmax << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-  ssmax << data->efmax ;
-  l = font.Advance(ssmax.str().c_str())/width*dw;
-  glRasterPos2f(0 - l - 0.03, 2.03);
-  font.Render(ssmax.str().c_str());
+    glRasterPos2f(0, -0.2f); 
+    std::stringstream ssv;
+    ssv << "Input std: ";
+    ssv << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+    ssv << (data->yw[data->selectedCell](data->selectedPoint)-0.03) * data->zmax/0.3;
+    font.Render(ssv.str().c_str());
+    
+    glRasterPos2f(0, -0.4f);       
+    std::stringstream sss;
+    sss << "Density: ";
+    sss << std::setiosflags(std::ios::fixed) << std::setprecision(4);
+    sss << data->yd[data->selectedCell](data->selectedPoint);
+    font.Render(sss.str().c_str());
 
-  glBegin(GL_LINES);
-  glVertex2f(-0.15, 2);
-  glVertex2f(0.4, 2);
-  glVertex2f(0, data->z[data->selectedCell](data->selectedPoint)*2);
-  glVertex2f(0.4, data->z[data->selectedCell](data->selectedPoint)*2);
-  glVertex2f(-0.15, 0);
-  glVertex2f(0.4, 0);
-  glEnd();
+
+    //draw color map      
+    glLoadIdentity(); 
+    glTranslatef(4*sx-0.7, 4*sy-2.3, 0);  
+     
+
+    glBegin(GL_QUAD_STRIP);
+    std::vector<Precision> color =
+      data->colormap.getColor(data->efmin);
+    glColor3f(color[0], color[1], color[2]);
+    glVertex2f(0, 0);
+    glVertex2f(0.4, 0);
+
+    color = data->colormap.getColor((data->efmin+data->efmax)/2.f);
+    glColor3f(color[0], color[1], color[2]);
+    glVertex2f(0, 1);
+    glVertex2f(0.4, 1);      
+    
+    color = data->colormap.getColor(data->efmax);
+    glColor3f(color[0], color[1], color[2]);
+    glVertex2f(0, 2);
+    glVertex2f(0.4, 2);
+    glEnd(); 
+
+    glColor3f(0, 0, 0);
+    setFontSize(20.f);
+    
+    
+    std::stringstream ssmin;
+    ssmin << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+    ssmin << data->efmin ;
+    l = font.Advance(ssmin.str().c_str())/width*dw;
+    glRasterPos2f(0 - l - 0.03, 0.03);
+    font.Render(ssmin.str().c_str());
+    
+    std::stringstream ssmax;
+    ssmax << std::setiosflags(std::ios::fixed) << std::setprecision(2);
+    ssmax << data->efmax ;
+    l = font.Advance(ssmax.str().c_str())/width*dw;
+    glRasterPos2f(0 - l - 0.03, 2.03);
+    font.Render(ssmax.str().c_str());
+
+    glBegin(GL_LINES);
+    glVertex2f(-0.15, 2);
+    glVertex2f(0.4, 2);
+    glVertex2f(0, data->z[data->selectedCell](data->selectedPoint)*2);
+    glVertex2f(0.4, data->z[data->selectedCell](data->selectedPoint)*2);
+    glVertex2f(-0.15, 0);
+    glVertex2f(0.4, 0);
+    glEnd();
   }
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING); 
 
-
-
   glutSwapBuffers();
-
 };
 
-template<typename TPrecision>
-void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y){
-  switch(key)
-  {
 
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
+  switch(key) {
     // quit
     case 27:   
     case 'q':
@@ -493,30 +467,27 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y){
 };
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::mouse(int button, int state, int x, int y){
+void DisplayTubes<TPrecision>::mouse(int button, int state, int x, int y) {
   last_x = x;
   last_y = y;
   mod = glutGetModifiers();
-  if (state == GLUT_DOWN){
-    if(button == GLUT_LEFT_BUTTON && (mod == GLUT_ACTIVE_CTRL || mod  == GLUT_ACTIVE_SHIFT)){
+  if (state == GLUT_DOWN) {
+    if (button == GLUT_LEFT_BUTTON && (mod == GLUT_ACTIVE_CTRL || mod  == GLUT_ACTIVE_SHIFT)) {
       cur_button = button;
       doPick();
-    }
-    else{
+    } else {
       cur_button = button;
     }
-  }
-  else if (button == cur_button){
+  } else if (button == cur_button) {
     cur_button = -1;
   }
-
 };
 
 
 
 // catch mouse move events
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::motion(int x, int y){
+void DisplayTubes<TPrecision>::motion(int x, int y) {
   int dx = x-last_x;
   int dy = y-last_y;
 
@@ -536,34 +507,29 @@ void DisplayTubes<TPrecision>::motion(int x, int y){
       break;
 
     case GLUT_MIDDLE_BUTTON:
-
       zoom += dx*0.01;
       if(zoom < 0){
         zoom = 0;
       }
-
       break;
 
     case GLUT_RIGHT_BUTTON:
       // rotate
-
-      if(mod == GLUT_ACTIVE_CTRL){
+      if (mod == GLUT_ACTIVE_CTRL) {
         data->selectedPoint += (int) dx;
-        if(data->selectedPoint < 0 ){
+        if (data->selectedPoint < 0 ) {
           data->selectedPoint = 0;
         }
-        if(data->selectedPoint >= data->nSamples ){
+        if (data->selectedPoint >= data->nSamples ) {
           data->selectedPoint = data->nSamples-1;
         }
         data->notifyChange();
-      }
-      else{
+      } else {
         Precision rot = rotation[rotationAxis] ;
         rot += dx;
         int r = (int)(rot/360);
         rotation[rotationAxis]= rot - r*360;
       }
-
       break;
   }
   //}
@@ -574,49 +540,46 @@ void DisplayTubes<TPrecision>::motion(int x, int y){
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::setRenderModesFromPeaks(){
-  for(unsigned int i=0; i<selectedPeaks.N(); i++){
+void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
+  for (unsigned int i=0; i<selectedPeaks.N(); i++) {
     selectedPeaks(i) = false;
   }
 
-  for(unsigned int i=0; i<data->edges.N(); i++){
-    if(selectedTubes(i)){
+  for (unsigned int i=0; i<data->edges.N(); i++) {
+    if (selectedTubes(i)) {
       selectedPeaks(data->edges(0, i)) = true;
       selectedPeaks(data->edges(1, i)) = true;
     }
   }
 
-  for(unsigned int i=0; i<data->edges.N(); i++){
+  for (unsigned int i=0; i<data->edges.N(); i++) {
     int e1 =data->edges(0, i);
     int e2 =data->edges(1, i);
-    if(selectedPeaks(e1) && selectedPeaks(e2)) {
+    if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
     }
     else if(selectedPeaks(e1)) {
-      if(data->ef(e1) > data->ef(e2)){
+      if (data->ef(e1) > data->ef(e2)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
-      }
-      else{
+      } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
     }
-    else if(selectedPeaks(e2)) {
-      if(data->ef(e2) > data->ef(e1)){
+    else if (selectedPeaks(e2)) {
+      if (data->ef(e2) > data->ef(e1)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
-      }
-      else{
+      } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
     }
-    else{
+    else {
       renderMode(i) = RENDER_NOTHING;
     }
   }
 }
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::doPick(){
-
+void DisplayTubes<TPrecision>::doPick() {
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
   GLuint selectBuf[BUFSIZE];
@@ -632,18 +595,18 @@ void DisplayTubes<TPrecision>::doPick(){
 
   display();
   GLint hits = glRenderMode(GL_RENDER);
-  if(hits>0){
+  if (hits>0){
     int index = selectBuf[3];
-    if(mod == GLUT_ACTIVE_CTRL){
-      if(index >=0 && index < (int)data->edges.N()){
+    if (mod == GLUT_ACTIVE_CTRL) {
+      if (index >=0 && index < (int)data->edges.N()) {
         selectedCTubes(index) = !selectedCTubes(index);
         std::cout << "Edge: " << index << std::endl;
       }
     }    
-    else if(mod == GLUT_ACTIVE_SHIFT){
-      if(index >=0 && index < (int) data->edges.N()){
+    else if (mod == GLUT_ACTIVE_SHIFT) {
+      if (index >=0 && index < (int) data->edges.N()) {
         selectedTubes(index) = !selectedTubes(index);
-        if(selectedTubes(index)){
+        if (selectedTubes(index)) {
           data->selectedCell = index;
         }
         setRenderModesFromPeaks();
@@ -659,13 +622,12 @@ void DisplayTubes<TPrecision>::doPick(){
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::setupOrtho(int w, int h){  
+void DisplayTubes<TPrecision>::setupOrtho(int w, int h) {
   Precision sx=1;
   Precision sy=1;
-  if(w>h){
+  if (w>h) {
     sx = (Precision)w/h;
-  }
-  else{
+  } else {
     sy = (Precision)h/w;
   }
   glOrtho(-4*sx, 4*sx, -4*sy, 4*sy, 16, -16);
@@ -675,27 +637,27 @@ void DisplayTubes<TPrecision>::setupOrtho(int w, int h){
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
+void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32);
   gleDouble points[data->nSamples+2][3];
   float colors[data->nSamples+2][4];
   gleDouble radii[data->nSamples+2];
 
-  for(unsigned int i=0; i<data->edges.N(); i++){
+  for (unsigned int i=0; i<data->edges.N(); i++) {
 
     /*if(renderMode(i) == RENDER_NOTHING) continue;
       if( renderMode(i) == RENDER_FADE_MIN_TO_MAX || 
       renderMode(i) == RENDER_FADE_MAX_TO_MIN    ){*/
-    if(renderMode(i) != RENDER_TUBE) continue;
+    if (renderMode(i) != RENDER_TUBE) continue;
 
-    for(unsigned int k=0; k<data->L[i].N(); k++){
+    for (unsigned int k=0; k<data->L[i].N(); k++) {
       std::vector<Precision> color = data->colormap.getColor(data->yc[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
       colors[k+1][3] = 1;
 
-      for(unsigned int m=0; m<data->L[i].M(); m++){
+      for (unsigned int m=0; m<data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -703,11 +665,11 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     }     
     radii[0] = radii[1];
     radii[data->nSamples+1] = radii[data->nSamples];
-    for(unsigned int m=0; m<3; m++){
+    for (unsigned int m=0; m<3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
-    for(unsigned int m=0; m<4; m++){
+    for (unsigned int m=0; m<4; m++) {
       colors[0][m] = colors[1][m];
       colors[data->nSamples+1][m] = colors[data->nSamples][m];
     }
@@ -720,8 +682,8 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
 
 
   //Draw extremal points
-  for(unsigned int i=0; i< data->eL.N(); i++){
-    if(selectedPeaks(i)){
+  for (unsigned int i=0; i< data->eL.N(); i++) {
+    if (selectedPeaks(i)) {
       glPushMatrix();
       glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
       std::vector<Precision> color = data->colormap.getColor(data->ef(i));
@@ -731,25 +693,25 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     }
   }  
 
-  if(selectedOnly) return;
+  if (selectedOnly) return;
 
   glEnable(GL_BLEND);
-  for(unsigned int i=0; i<data->edges.N(); i++){
-    if(renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
+  for (unsigned int i=0; i<data->edges.N(); i++) {
+    if (renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
 
-    for(unsigned int k=0; k<data->L[i].N(); k++){
+    for (unsigned int k=0; k<data->L[i].N(); k++) {
       std::vector<Precision> color = data->colormap.getColor(data->yc[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
-      if( renderMode(i) == RENDER_FADE_MIN_TO_MAX){
+      if (renderMode(i) == RENDER_FADE_MIN_TO_MAX) {
         colors[k+1][3] = 1 - k/ (data->L[i].N()-1.f);
       }
-      else if( renderMode(i) == RENDER_FADE_MAX_TO_MIN){
+      else if (renderMode(i) == RENDER_FADE_MAX_TO_MIN) {
         colors[k+1][3] = k/ (data->L[i].N()-1.f);
       }
 
-      for(unsigned int m=0; m<data->L[i].M(); m++){
+      for (unsigned int m=0; m<data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -757,11 +719,11 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     }     
     radii[0] = radii[1];
     radii[data->nSamples+1] = radii[data->nSamples];
-    for(unsigned int m=0; m<3; m++){
+    for (unsigned int m=0; m<3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
-    for(unsigned int m=0; m<4; m++){
+    for (unsigned int m=0; m<4; m++) {
       colors[0][m] = colors[1][m];
       colors[data->nSamples+1][m] = colors[data->nSamples][m];
     }
@@ -779,16 +741,14 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     glePolyCone_c4f(data->nSamples+2, points, colors, radii);
     glPopName();     
     glDepthMask(GL_TRUE);
-
-
   }  
 
   glColor4f(0.9, 0.9, 0.9, 0.1f);
-  for(unsigned int i=0; i<data->edges.N(); i++){
-    if(renderMode(i) != RENDER_NOTHING) continue;
+  for (unsigned int i=0; i<data->edges.N(); i++) {
+    if (renderMode(i) != RENDER_NOTHING) continue;
 
-    for(unsigned int k=0; k<data->L[i].N(); k++){
-      for(unsigned int m=0; m<data->L[i].M(); m++){
+    for (unsigned int k=0; k<data->L[i].N(); k++) {
+      for (unsigned int m=0; m<data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -796,7 +756,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     }     
     radii[0] = radii[1];
     radii[data->nSamples+1] = radii[data->nSamples];
-    for(unsigned int m=0; m<3; m++){
+    for (unsigned int m=0; m<3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
@@ -815,13 +775,11 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
     glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
     glPopName();     
     glDepthMask(GL_TRUE);
-
-
   }   
 
   //Draw extremal points
-  for(unsigned int i=0; i< data->eL.N(); i++){
-    if(!selectedPeaks(i)){    
+  for (unsigned int i=0; i< data->eL.N(); i++) {
+    if (!selectedPeaks(i)) { 
       glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
       glPushName(i);
 
@@ -842,7 +800,6 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
       glDepthMask(GL_TRUE);
-
     }
   }  
 
@@ -850,29 +807,27 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly){
 }
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::renderWidths(){
+void DisplayTubes<TPrecision>::renderWidths() {
   glEnable(GL_STENCIL_TEST);
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
   glStencilFunc(GL_ALWAYS, 1, 1);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60);
 
-
   gleDouble points[data->nSamples+2][3];
   gleDouble radii[data->nSamples+2];
   float colors[data->nSamples+2][4];
 
+  for (unsigned int i=0; i<data->edges.N(); i++) {      
+    if (renderMode(i) != RENDER_TUBE) continue;
 
-  for(unsigned int i=0; i<data->edges.N(); i++){      
-    if( renderMode(i) != RENDER_TUBE) continue;
-
-    if(selectedCTubes(i)){
+    if (selectedCTubes(i)) {
 
       int i1 = data->edges(0, i);
       int i2 = data->edges(1, i);
 
 
-      for(unsigned int k=0; k<data->L[i].N(); k++){     
-        for(unsigned int m=0; m<data->L[i].M(); m++){
+      for (unsigned int k=0; k<data->L[i].N(); k++) {
+        for (unsigned int m=0; m<data->L[i].M(); m++) {
           points[k+1][m] = data->L[i](m, k);
         }
         points[k+1][2] = data->z[i](k);
@@ -880,7 +835,7 @@ void DisplayTubes<TPrecision>::renderWidths(){
       }    
       radii[0] = radii[1];
       radii[data->nSamples+1] = radii[data->nSamples];
-      for(unsigned int m=0; m<3; m++){
+      for (unsigned int m=0; m<3; m++) {
         points[0][m] = points[1][m]+ points[2][m] - points[1][m];
         points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
       }
@@ -936,7 +891,6 @@ void DisplayTubes<TPrecision>::renderWidths(){
   }
 
 
-
   glClear(GL_DEPTH_BUFFER_BIT |GL_STENCIL_BUFFER_BIT);
   glDisable(GL_STENCIL_TEST);  
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);  
@@ -946,27 +900,27 @@ void DisplayTubes<TPrecision>::renderWidths(){
 
   glDisable(GL_LIGHTING);
 
-  for(unsigned int i=0; i<data->edges.N(); i++){    
-    if( renderMode(i) != RENDER_TUBE) continue;
-    if(selectedCTubes(i)){
+  for (unsigned int i=0; i<data->edges.N(); i++) {
+    if ( renderMode(i) != RENDER_TUBE) continue;
+    if (selectedCTubes(i)) {
       int i1 = data->edges(0, i);
       int i2 = data->edges(1, i);      
 
 
-      for(unsigned int k=0; k<data->L[i].N(); k++){
+      for (unsigned int k=0; k<data->L[i].N(); k++) {
         std::vector<Precision> color = data->dcolormap.getColor(data->yd[i](k));
         colors[k+1][0] = color[0];
         colors[k+1][1] = color[1];
         colors[k+1][2] = color[2];
         colors[k+1][3] = 1;
       }    
-      for(unsigned int m=0; m<4; m++){
+      for (unsigned int m=0; m<4; m++){
         colors[0][m] = colors[1][m];
         colors[data->nSamples+1][m] = colors[data->nSamples][m];
       }
 
-      for(unsigned int k=0; k<data->L[i].N(); k++){     
-        for(unsigned int m=0; m<data->L[i].M(); m++){
+      for (unsigned int k=0; k<data->L[i].N(); k++) {
+        for (unsigned int m=0; m<data->L[i].M(); m++) {
           points[k+1][m] = data->L[i](m, k);
         }
         points[k+1][2] = data->z[i](k);
@@ -974,7 +928,7 @@ void DisplayTubes<TPrecision>::renderWidths(){
       }    
       radii[0] = radii[1];
       radii[data->nSamples+1] = radii[data->nSamples];
-      for(unsigned int m=0; m<3; m++){
+      for (unsigned int m=0; m<3; m++) {
         points[0][m] = points[1][m]+ points[2][m] - points[1][m];
         points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
       }
@@ -1004,7 +958,7 @@ void DisplayTubes<TPrecision>::renderWidths(){
       glEnable(GL_DEPTH_TEST);
 
 
-      for(int k=0; k<data->nSamples+2; k++){
+      for (int k=0; k<data->nSamples+2; k++) {
         radii[k] += scale*0.025/zoom;
       }
 
@@ -1014,10 +968,9 @@ void DisplayTubes<TPrecision>::renderWidths(){
 
       glePolyCone_c4f(data->nSamples+2, points, colors, radii);      
 
-      if(data->ef(i1) < data->ef(i2)){
+      if (data->ef(i1) < data->ef(i2)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
-      }
-      else{
+      } else {
         glColor4f(colors[data->nSamples][0], colors[data->nSamples][1], colors[data->nSamples][2],
             colors[data->nSamples][3]);
       }
@@ -1026,10 +979,9 @@ void DisplayTubes<TPrecision>::renderWidths(){
       glutSolidSphere(scale *data->ew(i1) + scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
-      if(data->ef(i2) < data->ef(i1)){
+      if (data->ef(i2) < data->ef(i1)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
-      }
-      else{
+      } else{
         glColor4f(colors[data->nSamples][0], colors[data->nSamples][1], colors[data->nSamples][2],
             colors[data->nSamples][3]);
       }
@@ -1047,23 +999,19 @@ void DisplayTubes<TPrecision>::renderWidths(){
       glPopMatrix();
 
       glClear(GL_STENCIL_BUFFER_BIT);
-
     } 
   }       
 
   glEnable(GL_LIGHTING);	
-
-
   glDisable(GL_STENCIL_TEST);  
-
 }
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::renderExtrema(){
+void DisplayTubes<TPrecision>::renderExtrema() {
   glEnable(GL_STENCIL_TEST);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60);
-  for(unsigned int i=0; i<data->eL.N(); i++){
-    if(selectedPeaks(i) == true){
+  for (unsigned int i=0; i<data->eL.N(); i++) {
+    if (selectedPeaks(i) == true) {
       glColor4f(0.8, 0.8, 0.8, 0.1);
 
       glStencilFunc(GL_ALWAYS, 0x1, 0x1);
@@ -1083,8 +1031,6 @@ void DisplayTubes<TPrecision>::renderExtrema(){
       glDisable(GL_POLYGON_OFFSET_FILL);
       glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-
-
       glEnable(GL_BLEND);
       glDepthFunc(GL_LEQUAL);
 
@@ -1095,7 +1041,6 @@ void DisplayTubes<TPrecision>::renderExtrema(){
 
       glDisable(GL_BLEND);
       glDepthFunc(GL_LESS);
-
 
 
       glDepthMask(GL_TRUE);
@@ -1118,23 +1063,22 @@ void DisplayTubes<TPrecision>::renderExtrema(){
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::renderMS(){
+void DisplayTubes<TPrecision>::renderMS() {
   //draw color tubes and extremal points
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 2);
 
   renderTubes();
 
   //transparent widths
-  if(extremaOnly){
+  if (extremaOnly) {
     renderExtrema(); 
-  }
-  else{
+  } else {
     renderWidths();
   }
 
 
   //Draw selected location
-  if(showPosition){
+  if (showPosition) {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32);
     std::vector<Precision> color =
       data->colormap.getColor(data->yc[data->selectedCell](data->selectedPoint));
@@ -1149,11 +1093,11 @@ void DisplayTubes<TPrecision>::renderMS(){
     gleDouble points[4][3];
     gleDouble radii[4];
     int sIndex = data->selectedPoint-1;
-    if(sIndex<0){
+    if (sIndex<0) {
       sIndex = 1;
     }
     Precision l = 0;
-    for(int m=0; m<2; m++){
+    for (int m=0; m<2; m++) {
       Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
       Precision dir =  p - data->L[data->selectedCell](m, sIndex);
       l += dir*dir;  
@@ -1161,7 +1105,7 @@ void DisplayTubes<TPrecision>::renderMS(){
     Precision tmp = data->z[data->selectedCell](data->selectedPoint)- data->z[data->selectedCell](sIndex);
     l += tmp*tmp;
     l = sqrt(l);
-    for(int m=0; m<2; m++){
+    for (int m=0; m<2; m++) {
       Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
       Precision dir =  p - data->L[data->selectedCell](m, sIndex); 
       points[0][m] = p + dir/l*0.04f; 
@@ -1175,18 +1119,17 @@ void DisplayTubes<TPrecision>::renderMS(){
     points[1][2] = p + dir/l*0.02f; 
     points[2][2] = p - dir/l*0.02f; 
     points[3][2] = p - dir/l*0.04f; 
-    for(int k=0; k< 4; k++){
+    for (int k=0; k< 4; k++) {
       radii[k] = data->yw[data->selectedCell](data->selectedPoint);
     }
     glePolyCone_c4f(4, points, NULL, radii);      
-
   }
 };
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::setFontSize(int fsize){
-  if(fsize<5){
+void DisplayTubes<TPrecision>::setFontSize(int fsize) {
+  if (fsize < 5) {
     fsize = 5;
   }
   font.FaceSize(fsize);
@@ -1194,7 +1137,7 @@ void DisplayTubes<TPrecision>::setFontSize(int fsize){
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::initState(){
+void DisplayTubes<TPrecision>::initState() {
   selectedCTubes.deallocate();
   selectedTubes.deallocate();
   renderMode.deallocate();
@@ -1203,13 +1146,13 @@ void DisplayTubes<TPrecision>::initState(){
   selectedCTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
   selectedTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
   renderMode = FortranLinalg::DenseVector<int>(data->edges.N());
-  for(unsigned int i=0; i < data->edges.N(); i++){
+  for (unsigned int i=0; i < data->edges.N(); i++) {
     selectedCTubes(i) = true;
     selectedTubes(i) = false;
     renderMode(i) = RENDER_TUBE;
   }
   selectedPeaks = FortranLinalg::DenseVector<bool>(data->eL.N());
-  for(unsigned int i=0; i<data->eL.N(); i++){
+  for (unsigned int i=0; i<data->eL.N(); i++) {
     selectedPeaks(i) = true;
   }
 };
