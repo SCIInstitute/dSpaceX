@@ -733,7 +733,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2, 0.1);
-    glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+    glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
     glDisable(GL_POLYGON_OFFSET_FILL);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -767,12 +767,12 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2, 0.1);
-    glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+    glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
     glDisable(GL_POLYGON_OFFSET_FILL);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     glDepthMask(GL_FALSE);
-    glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+    glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
     glPopName();     
     glDepthMask(GL_TRUE);
   }   
@@ -850,7 +850,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(2, 0.1);
 
-      glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+      glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
@@ -872,7 +872,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glDepthMask(GL_FALSE);
       glDepthFunc(GL_LEQUAL);
 
-      glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+      glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
@@ -942,7 +942,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glEnable(GL_BLEND);
       glDisable(GL_DEPTH_TEST);
 
-      glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+      glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
@@ -986,7 +986,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
             colors[data->nSamples][3]);
       }
 
-      glePolyCone_c4f(data->nSamples+2, points, NULL, radii);
+      glePolyCone_c4f(data->nSamples+2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
@@ -1122,7 +1122,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     for (int k=0; k< 4; k++) {
       radii[k] = data->yw[data->selectedCell](data->selectedPoint);
     }
-    glePolyCone_c4f(4, points, NULL, radii);      
+    glePolyCone_c4f(4, points, nullptr, radii);      
   }
 };
 
