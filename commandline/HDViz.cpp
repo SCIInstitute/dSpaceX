@@ -236,7 +236,6 @@ int main(int argc, char **argv){
       glutMotionFunc(motion2);
       glutKeyboardFunc(keyboard2);
       auxD->init();
-
       data.addWindow(auxWindow);
     }
 
