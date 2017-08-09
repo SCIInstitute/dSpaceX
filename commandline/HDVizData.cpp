@@ -1,15 +1,12 @@
 #include "HDVizData.h"
 
 
-HDVizData::HDVizData(){
+HDVizData::HDVizData() {
   layout = LAYOUT_ISOMAP;
-
-  L = NULL;
+  L = nullptr;
   selectedCell  = 0;
   selectedPoint = 0;
-
   nSamples = 50;
-
 
   pSorted = FortranLinalg::LinalgIO<Precision>::readVector("Persistence.data.hdr");
   currentLevel = pSorted.N() - 1;      
@@ -23,89 +20,80 @@ HDVizData::HDVizData(){
   names = FortranLinalg::DenseVector<std::string>(G.M());
   G.deallocate();
 
-
   std::ifstream nfile;
   nfile.open("names.txt");
-  if(!nfile.fail()){
-    for(unsigned int i=0; i<names.N(); i++){
+  if (!nfile.fail()) {
+    for (unsigned int i=0; i<names.N(); i++) {
       getline(nfile, names(i)); 
     }
   }
   nfile.close();
-
-
   loadData();
 };
 
 
-Precision HDVizData::getSelectedCoordinate(int index){
+Precision HDVizData::getSelectedCoordinate(int index) {
   return R[selectedCell](index, selectedPoint);
-
 };
 
-Precision HDVizData::getSelectedVariance(int index){
+Precision HDVizData::getSelectedVariance(int index) {
   return Rvar[selectedCell](index, selectedPoint);
-
 };
 
 
-void HDVizData::notifyChange(){
-  for(unsigned int i = 0; i<windows.size(); i++){
-     glutPostWindowRedisplay(windows[i]);
+void HDVizData::notifyChange() {
+  for (unsigned int i = 0; i<windows.size(); i++) {
+    glutPostWindowRedisplay(windows[i]);
   }
 };
 
-void HDVizData::increasePersistanceLevel(){
+void HDVizData::increasePersistanceLevel() {
   setPersistenceLevel(currentLevel+1);
 };
-
-    
-    
-void HDVizData::decreasePersistanceLevel(){
+   
+void HDVizData::decreasePersistanceLevel() {
   setPersistenceLevel(currentLevel-1);
 };
 
-int HDVizData::getPersistanceLevel(){
+int HDVizData::getPersistanceLevel() {
   return currentLevel;
 };
 
-
-void HDVizData::setPersistenceLevel(int pl, bool update){
+void HDVizData::setPersistenceLevel(int pl, bool update) {
   currentLevel = pl;
-  if(currentLevel > (int) pSorted.N()-1){
+  if (currentLevel > (int) pSorted.N()-1) {
     currentLevel = pSorted.N()-1;
-  }
-  else if(currentLevel < minLevel ){
+  } else if(currentLevel < minLevel ) {
     currentLevel = minLevel;
   }
+
   loadData();
-  if(selectedCell >= (int) edges.N()){
+
+  if (selectedCell >= (int) edges.N()) {
     selectedCell = edges.N() - 1;
   }
-  if(update){
+  if (update) {
     notifyChange();
   }
 }
 
-void HDVizData::addWindow(int w){
+void HDVizData::addWindow(int w) {
   windows.push_back(w);
 };
 
-void HDVizData::setLayout(int l){
+void HDVizData::setLayout(int l) {
   layout = l;
   Lmin.deallocate();
   Lmax.deallocate();
-  if(layout == LAYOUT_ISOMAP){
+  if (layout == LAYOUT_ISOMAP) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("IsoMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("IsoMax.data.hdr");
     loadLayout("_isolayout.data.hdr", "IsoExtremaLayout");
-  }
-  else if(layout == LAYOUT_PCA){
+  } else if (layout == LAYOUT_PCA) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("PCAMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("PCAMax.data.hdr");
     loadLayout("_layout.data.hdr", "ExtremaLayout");
-  }      
-  else {
+  } else {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("PCA2Min.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("PCA2Max.data.hdr");
     loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout");
@@ -113,8 +101,8 @@ void HDVizData::setLayout(int l){
 };
 
 
-void HDVizData::loadLayout(std::string type, std::string extFile){
-  for(unsigned int i=0; i< edges.N(); i++){
+void HDVizData::loadLayout(std::string type, std::string extFile) {
+  for (unsigned int i=0; i < edges.N(); i++) {
     std::stringstream ss1;
     ss1 << "ps_" << currentLevel << "_crystal_" << i << type;
     L[i].deallocate();
@@ -147,7 +135,7 @@ void HDVizData::loadLayout(std::string type, std::string extFile){
   FortranLinalg::Linalg<Precision>::Scale(diff, 0.5f, diff);
   FortranLinalg::Linalg<Precision>::Add(diff, Lmin, diff);
 
-  for(unsigned int i=0; i < edges.N(); i++){
+  for (unsigned int i=0; i < edges.N(); i++) {
     FortranLinalg::Linalg<Precision>::AddColumnwise(L[i], diff, L[i]);
     FortranLinalg::Linalg<Precision>::Scale(L[i], 2.f/r, L[i]);
   }
@@ -158,27 +146,26 @@ void HDVizData::loadLayout(std::string type, std::string extFile){
   nSamples = L[0].N();
 };
 
-void HDVizData::loadData(){
-
-  if(L != NULL){
-  for(unsigned int i=0; i<edges.N(); i++){
-    L[i].deallocate();
-    R[i].deallocate();
-    Rvar[i].deallocate();
-    gradR[i].deallocate();
-    yc[i].deallocate();
-    z[i].deallocate();
-    yw[i].deallocate();
-    yd[i].deallocate();
-  }
-   delete[] L;
-   delete[] R;
-   delete[] Rvar;
-   delete[] gradR;
-   delete[] yc;
-   delete[] z;
-   delete[] yw;
-   delete[] yd;
+void HDVizData::loadData() {
+  if (L != nullptr) {
+    for (unsigned int i=0; i<edges.N(); i++) {
+      L[i].deallocate();
+      R[i].deallocate();
+      Rvar[i].deallocate();
+      gradR[i].deallocate();
+      yc[i].deallocate();
+      z[i].deallocate();
+      yw[i].deallocate();
+      yd[i].deallocate();
+    }
+     delete[] L;
+     delete[] R;
+     delete[] Rvar;
+     delete[] gradR;
+     delete[] yc;
+     delete[] z;
+     delete[] yw;
+     delete[] yd;
   }
 
   //edges
@@ -189,8 +176,6 @@ void HDVizData::loadData(){
 
 
   //read layout information matrices
-
-
   L = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   setLayout(layout);
 
@@ -198,7 +183,6 @@ void HDVizData::loadData(){
   Rvar = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   gradR = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   loadReconstructions();
-
 
 
   //extrema function values
@@ -226,7 +210,6 @@ void HDVizData::loadData(){
   loadColorValues("_fmean.data.hdr");
   loadWidthValues("_mdists.data.hdr");
   loadDensityValues("_spdf.data.hdr");
-
 };
 
 
@@ -247,7 +230,6 @@ void HDVizData::loadColorValues(std::string type){
   colormap = ColorMapper<Precision>(efmin, efmax);
   colormap.set(0, 204.f/255.f, 210.f/255.f, 102.f/255.f, 204.f/255.f,
       41.f/255.f, 204.f/255.f, 0, 5.f/255.f);  
-
 };
 
 
@@ -271,7 +253,6 @@ void HDVizData::loadWidthValues(std::string type){
       }
     }
   }
-
 
   for(unsigned int i=0; i<edges.N(); i++){
     FortranLinalg::Linalg<Precision>::Scale(yw[i], 0.3/zmax, yw[i]);
@@ -304,7 +285,6 @@ void HDVizData::loadDensityValues(std::string type){
   }
   dcolormap = ColorMapper<Precision>(0, zmax); 
   dcolormap.set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
-
 };
 
 void HDVizData::loadReconstructions(){
