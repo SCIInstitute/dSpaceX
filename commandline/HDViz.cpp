@@ -24,71 +24,6 @@
 Display *mainD, *auxD, *auxD2, *auxD3;
 
 
-
-void reshape1(int w, int h) {
-  mainD->reshape(w, h);
-}
-
-void display2(void) {
-  auxD->display();
-};
-
-void mouse2(int button, int state, int x, int y) {
-  auxD->mouse(button, state, x, y);
-}
-
-void motion2(int x, int y) {
-  auxD->motion(x, y);
-}
-
-void keyboard2(unsigned char key, int x, int y) {
-  auxD->keyboard(key, x, y);
-}
-
-void reshape2(int w, int h) {
-  auxD->reshape(w, h);
-}
-
-void display3(void) {
-  auxD2->display();
-};
-
-void mouse3(int button, int state, int x, int y) {
-  auxD2->mouse(button, state, x, y);
-}
-
-void motion3(int x, int y) {
-  auxD2->motion(x, y);
-}
-
-void keyboard3(unsigned char key, int x, int y) {
-  auxD2->keyboard(key, x, y);
-}
-
-void reshape3(int w, int h) {
-  auxD2->reshape(w, h);
-}
-
-void display4(void) {
-  auxD3->display();
-};
-
-void mouse4(int button, int state, int x, int y) {
-  auxD3->mouse(button, state, x, y);
-}
-
-void motion4(int x, int y){
-  auxD3->motion(x, y);
-}
-
-void keyboard4(unsigned char key, int x, int y) {
-  auxD3->keyboard(key, x, y);
-}
-
-void reshape4(int w, int h) {
-  auxD3->reshape(w, h);
-}
-
 void printHelp() {
 	std::cout << mainD->title() << " Window" << std::endl << std::endl;
   mainD->printHelp();	
@@ -196,40 +131,72 @@ int main(int argc, char **argv) {
     
     mainD->init();
     data.addWindow(mainWindow);
-
  
-    if(auxD != nullptr){ 
+    if (auxD != nullptr) { 
       glutInitWindowSize(500, 500); 
       int auxWindow = glutCreateWindow(auxD->title().c_str());
-      glutDisplayFunc(display2);
-      glutReshapeFunc(reshape2);
-      glutMouseFunc(mouse2);
-      glutMotionFunc(motion2);
-      glutKeyboardFunc(keyboard2);
+      glutDisplayFunc([]() {
+        auxD->display();
+      });
+      glutReshapeFunc([](int w, int h) {
+        auxD->reshape(w, h);
+      });
+      glutMouseFunc([](int button, int state, int x, int y) {
+        auxD->mouse(button, state, x, y);
+      });
+      glutMotionFunc([](int x, int y) {
+        auxD->motion(x, y);
+      });
+      glutKeyboardFunc([](unsigned char key, int x, int y) {
+        auxD->keyboard(key, x, y);
+      });
+
       auxD->init();
       data.addWindow(auxWindow);
     }
 
-    if(auxD2 != nullptr){
+    if (auxD2 != nullptr) {
       glutInitWindowSize(500, 500); 
       int auxWindow2 = glutCreateWindow(auxD2->title().c_str());
-      glutDisplayFunc(display3);
-      glutReshapeFunc(reshape3);
-      glutMouseFunc(mouse3);
-      glutMotionFunc(motion3);
-      glutKeyboardFunc(keyboard3);
+      glutDisplayFunc([]() {
+        auxD2->display();
+      });
+      glutReshapeFunc([](int w, int h) {
+        auxD2->reshape(w, h);
+      });
+      glutMouseFunc([](int button, int state, int x, int y) {
+        auxD2->mouse(button, state, x, y);
+      });
+      glutMotionFunc([](int x, int y) {
+        auxD2->motion(x, y);
+      });
+      glutKeyboardFunc([](unsigned char key, int x, int y) {
+        auxD2->keyboard(key, x, y);
+      });
+
       auxD2->init();
       data.addWindow(auxWindow2);
     }
 
-    if(auxD3 != nullptr){
+    if (auxD3 != nullptr) {
       glutInitWindowSize(500, 500); 
       int auxWindow3 = glutCreateWindow(auxD3->title().c_str());
-      glutDisplayFunc(display4);
-      glutReshapeFunc(reshape4);
-      glutMouseFunc(mouse4);
-      glutMotionFunc(motion4);
-      glutKeyboardFunc(keyboard4);
+      glutDisplayFunc([]() {
+        auxD3->display();
+      });
+      glutReshapeFunc([](int w, int h) {
+        auxD3->reshape(w, h);
+      });
+      glutMouseFunc([](int button, int state, int x, int y) {
+        auxD3->mouse(button, state, x, y);
+      });
+      glutMotionFunc([](int x, int y){
+        auxD3->motion(x, y);
+      });
+      glutKeyboardFunc([](unsigned char key, int x, int y) {
+        auxD3->keyboard(key, x, y);
+      });
+      
       auxD3->init();
       data.addWindow(auxWindow3);
     }
