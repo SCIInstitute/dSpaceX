@@ -40,10 +40,10 @@ class NNMSComplex{
     typedef typename map_f_pi::iterator map_f_pi_it;
 
 
-    //Steepest ascending KNNG(0,) and descending KNNG(1, ) neighbors for each point    
+    // Steepest ascending KNNG(0,) and descending KNNG(1, ) neighbors for each point    
     FortranLinalg::DenseMatrix<int> KNNG;
 
-    //Data points
+    // Data points
     FortranLinalg::DenseMatrix<TPrecision> X;
     FortranLinalg::DenseVector<TPrecision> y;
       
@@ -51,23 +51,25 @@ class NNMSComplex{
     FortranLinalg::DenseMatrix<TPrecision> KNND;
     
 
-    //extrema ID for ach point --- max extrema(0, ) and min extrema(1, ) 
+    // Extrema ID for each point --- max extrema(0, ) and min extrema(1, )
     FortranLinalg::DenseMatrix<int> extrema;
 
-    //map of crystals as <max, min> -> crystal ID    
+    // Map of crystals as <max, min> -> crystal ID    
     map_pi_i crystals;
-    //map after merging for reduced set of crystals
+    // Map after merging for reduced set of crystals
     map_pi_i pcrystals;
     
     
-    //inital persistencies for each crystal
+    // Inital persistencies for each crystal
     map_f_pi persistence;
 
-    //extrema ID to index into X
+    // Extrema ID to index into X
     FortranLinalg::DenseVector<int> extremaIndex;
-    //extrema after merging of crystals e.g extrema(i) -> merge(extrema(i))
+
+    // Extrema after merging of crystals e.g extrema(i) -> merge(extrema(i))
     FortranLinalg::DenseVector<int> merge;
-    //number of maxima, first nMax entries in extremaIndex are maxima
+
+    // Number of maxima, first nMax entries in extremaIndex are maxima
     int nMax;
 
 
@@ -251,14 +253,12 @@ class NNMSComplex{
       }
     };
 
-
     //get persistencies
     FortranLinalg::DenseVector<TPrecision> getPersistence(){
       FortranLinalg::DenseVector<TPrecision> pers(persistence.size()+1);
       getPersistence(pers);
       return pers;
     };
-
 
     void getPersistence(FortranLinalg::DenseVector<TPrecision> pers){
       int index = 0;
@@ -268,8 +268,6 @@ class NNMSComplex{
       pers(index) = std::numeric_limits<TPrecision>::max();
     };
 
-
-
     void cleanup(){
       extrema.deallocate();
       merge.deallocate();
@@ -278,17 +276,8 @@ class NNMSComplex{
 
     };
 
-
-
-
-
 private:
-
-
-
     void runMS(bool smooth, double sigma2){
-
-
       int knn = KNN.M();
 
       FortranLinalg::DenseVector<TPrecision> ys;
@@ -318,13 +307,13 @@ private:
       FortranLinalg::Linalg<TPrecision>::Zero(G);
 
 
-      //compute steepest asc/descending neighbors
-      for(unsigned int i=0; i<X.N(); i++){
-        for(unsigned int k=1; k<KNN.M(); k++){
+      // Compute steepest asc/descending neighbors
+      for (unsigned int i=0; i<X.N(); i++) {
+        for (unsigned int k=1; k<KNN.M(); k++) {
           int j = KNN(k, i);
           double d = sqrt(KNND(k, i));
           double g = ys(j) - ys(i);
-          if(d == 0 ){
+          if (d == 0 ) {
             /*if(g > 0){
               g = std::numeric_limits<double>::max(); 
             }
@@ -332,24 +321,21 @@ private:
               g = std::numeric_limits<double>::min(); 
             }*/
             g = 0;
-          }
-          else{
+          } else {
             g = g / d; 
           }
           
-          if(G(0, i) < g){
+          if (G(0, i) < g) {
             G(0, i) = g;
             KNNG(0, i) = j;
-          }
-          else if(G(1, i) > g){
+          } else if (G(1, i) > g) {
             G(1, i) = g;
             KNNG(1, i) = j;
           }          
-          if(G(0, j) < -g){
+          if (G(0, j) < -g) {
             G(0, j) = -g;
             KNNG(0, j) = i;
-          }
-          else if(G(1, j) > -g){
+          } else if(G(1, j) > -g) {
             G(1, j) = -g;
             KNNG(1, j) = i;
           }
@@ -404,32 +390,32 @@ private:
 
 */
 
-          if(extrema(e, i) == -1){
+          if (extrema(e, i) == -1){
             path.clear();
             int prev = i;
-            while(prev != -1 && extrema(e, prev) == -1){
+            while (prev != -1 && extrema(e, prev) == -1) {
               path.push_back(prev);
-              if(e==0){
+              if (e==0) {
                 prev = ascending(prev);
               }
-              else{
+              else {
                 prev = descending(prev);
               }
             }
             int ext = -1;
-            if(prev == -1){
+            if (prev == -1) {
               int extIndex = path.back();
               extremaL.push_back(extIndex);
               ext = nExt;
               nExt++;
-              if(e==0){
+              if (e==0) {
                 nMax++;
               }
             }
-            else{
+            else {
               ext = extrema(e, prev);
             }
-            for(std::list<int>::iterator it = path.begin(); it!=path.end(); ++it){
+            for (std::list<int>::iterator it = path.begin(); it!=path.end(); ++it) {
               extrema(e, *it) = ext;
             }   
           }
@@ -438,7 +424,7 @@ private:
       }
 
 
-      //setup crystals for zero peristence level
+      // Setup crystals for zero peristence level
       int crystalID = 0;
       for(unsigned int i=0; i<extrema.N(); i++){
         std::pair<int, int> id(extrema(0, i), extrema(1, i));
@@ -448,13 +434,11 @@ private:
         }
       }
 
-
-      //Persistence
-
-      //initalize:
-      //-persistence levels: difference between saddle point and extrema of
-      //neighboring crystals 
-      //-merge indices: merging to extrema
+      // Persistence
+      // Initalize:
+      // -persistence levels: difference between saddle point and extrema of
+      //  neighboring crystals 
+      // -merge indices: merging to extrema
       extremaIndex = FortranLinalg::DenseVector<int>(nExt);
       merge = FortranLinalg::DenseVector<int>(nExt);
       int index = 0;
@@ -462,9 +446,9 @@ private:
         extremaIndex(index) = *it;
       }
 
-      //inital persistencies
-      //store as pairs of extrema such thats p.first merges to p.second (e.g.
-      //p.second is the max/min with the larger/smaller function value
+      // Inital persistencies
+      // Store as pairs of extrema such thats p.first merges to p.second (e.g.
+      // p.second is the max/min with the larger/smaller function value
       map_pi_f pinv;
       for(int e=0; e<2; e++){
         for(unsigned int i=0; i < extrema.N(); i++){
@@ -520,8 +504,8 @@ private:
       }
 
 
-      //compute final persistencies - recursively merge smallest persistence
-      //extrema and update remaining peristencies depending on the merge
+      // Compute final persistencies - Recursively merge smallest persistence
+      // Extrema and update remaining peristencies depending on the merge
       for(unsigned int i=0; i<merge.N(); i++){
         merge(i) = i;
       } 
@@ -532,12 +516,12 @@ private:
         map_f_pi_it it = persistence.begin(); 
         std::pair<int, int> p = (*it).second;
 	
-        //store old extrema merging pair and persistence
+        // Store old extrema merging pair and persistence
         std::pair<int, int> pold = p;
         double pers = (*it).first;
 
-        //find new marging pair, based on possible previous merges
-        //make sure that p.first is the less significant extrema as before
+        // Find new marging pair, based on possible previous merges
+        // Make sure that p.first is the less significant extrema as before
         p.first = followChain(p.first);
         p.second = followChain(p.second);
         if(p.first < nMax){
@@ -551,13 +535,13 @@ private:
           }
         }
         
-        //remove current merge pair from list
+        // Remove current merge pair from list
         persistence.erase(it);
 
-        //are the extrema already merged?
+        // Are the extrema already merged?
         if(p.first == p.second) continue;
 
-        //check if there is new merge pair with increased persistence
+        // Check if there is new merge pair with increased persistence
         TPrecision diff = 0;
         if(p.first < nMax) {
           diff = y(extremaIndex(p.first)) - y(extremaIndex(pold.first)) ;
@@ -567,14 +551,14 @@ private:
         }
 
         if( diff > 0  ){
-          //if the persistence increased insert into the persistence list and
-          //merge possible other extrema with smaller persistence values first
+          // If the persistence increased insert into the persistence list and
+          // merge possible other extrema with smaller persistence values first
           double npers = pers + diff;
           persistence[npers] = p;
         }
-        //otherwise merge the pair
+        // Otherwise merge the pair
         else{
-          //check if the pair has not been previously merged
+          // Check if the pair has not been previously merged
           map_pi_f_it invIt = pinv2.find(p);
           if(pinv2.end() == invIt){
             merge(p.first) = p.second;
@@ -585,10 +569,8 @@ private:
       }
       persistence = ptmp;
 
-
-      //initialize to 0 persistence
-      mergePersistence(0);
-  
+      // Initialize to 0 persistence
+      mergePersistence(0);  
     };
 
 
