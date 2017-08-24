@@ -127,24 +127,24 @@ int main(int argc, char **argv){
   cmd.add(pArg);  
   
 
-   TCLAP::ValueArg<int> samplesArg("n","samples",
-      "Number of samples for each regression curve, default = 50", 
-      true, 50,  "integer");
-   cmd.add(samplesArg);  
-   
+  TCLAP::ValueArg<int> samplesArg("n","samples",
+    "Number of samples for each regression curve, default = 50", 
+    true, 50,  "integer");
+  cmd.add(samplesArg);  
+
 
   TCLAP::ValueArg<int> knnArg("k","knn",
       "Number of nearest neighbors for Morse-Smale approximation, default = 50", 
       true, 50,  "integer");
   cmd.add(knnArg); 
 
-    TCLAP::SwitchArg randArg("r", "random", 
-      "Adds 0.0001 * range(f) uniform random noise to f, in case of 0 gradients due to equivivalent values", false); 
-    cmd.add(randArg);
-    
-    TCLAP::ValueArg<double> smoothArg("", "smooth", 
-      "Smooth function values to nearest nieghbor averages", false, 0, "double"); 
-    cmd.add(smoothArg);
+  TCLAP::SwitchArg randArg("r", "random", 
+    "Adds 0.0001 * range(f) uniform random noise to f, in case of 0 gradients due to equivivalent values", false); 
+  cmd.add(randArg);
+
+  TCLAP::ValueArg<double> smoothArg("", "smooth", 
+    "Smooth function values to nearest nieghbor averages", false, 0, "double"); 
+  cmd.add(smoothArg);
     
   try{
 	  cmd.parse( argc, argv );
