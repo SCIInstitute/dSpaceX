@@ -41,6 +41,7 @@ typedef std::map<int, int> map_i_i;
 typedef map_i_i::iterator map_i_i_it; 
 map_i_i exts;
 map_i_i extsOrig;
+
 //coordinate center
 int globalMin = -1;
 
@@ -48,8 +49,6 @@ int globalMin = -1;
 FortranLinalg::DenseVector<int> crystalIDs;
 FortranLinalg::DenseMatrix<int> crystals;
 FortranLinalg::DenseVector<Precision> persistence;
-
-
 FortranLinalg::DenseMatrix<Precision> Xall;
 FortranLinalg::DenseVector<Precision> yall;
 
@@ -64,10 +63,10 @@ void computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
   EuclideanMetric<Precision> &l2, int nExt, int nSamples, unsigned int nP);
 
 
-
-
-// Linearly transform E to fit aligin with Efit
-// Used to align extrema of subsequent persistence levels
+/**
+ * Linearly transform E to fit aligin with Efit
+ * Used to align extrema of subsequent persistence levels
+ */
 void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit){
   using namespace FortranLinalg;
   DenseMatrix<Precision> Eorig(exts.size(), 2);
@@ -100,13 +99,9 @@ void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Pr
 }
 
 
-
-
-
-
-
-
-
+/**
+ * HDVisProcess application entry point.
+ */
 int main(int argc, char **argv){
   
   using namespace FortranLinalg;
@@ -126,18 +121,15 @@ int main(int argc, char **argv){
       true,  "", "");
   cmd.add(fArg);
 
-
   TCLAP::ValueArg<int> pArg("p","persistence",
       "Number of persistence levels to compute; all = -1 , default = 20", 
       true, 20,  "integer");
   cmd.add(pArg);  
   
-
   TCLAP::ValueArg<int> samplesArg("n","samples",
     "Number of samples for each regression curve, default = 50", 
     true, 50,  "integer");
   cmd.add(samplesArg);  
-
 
   TCLAP::ValueArg<int> knnArg("k","knn",
       "Number of nearest neighbors for Morse-Smale approximation, default = 50", 
@@ -152,24 +144,24 @@ int main(int argc, char **argv){
     "Smooth function values to nearest nieghbor averages", false, 0, "double"); 
   cmd.add(smoothArg);
     
-  try{
-	  cmd.parse( argc, argv );
-	} 
+  try {
+    cmd.parse( argc, argv );
+  } 
   catch (TCLAP::ArgException &e){ 
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 
     return -1;
   }
 
-  try{
+  try {
     //Read geometry and function
     Xall = LinalgIO<Precision>::readMatrix(xArg.getValue());
     yall = LinalgIO<Precision>::readVector(fArg.getValue());
 
     //add noise to yall in case of equivivalent values 
-    if(randArg.getValue()){
+    if (randArg.getValue()) {
        Random<Precision> rand;
        double a = 0.00000001 *( Linalg<Precision>::Max(yall) - Linalg<Precision>::Min(yall));
-       for(unsigned int i=0; i<yall.N(); i++){
+       for (unsigned int i=0; i < yall.N(); i++) {
          yall(i) += rand.Uniform() * a;
        }
     }
@@ -183,7 +175,6 @@ int main(int argc, char **argv){
     // Bandwidth for inverse regression
     Precision sigma = sigmaArg.getValue();
     Precision sigmaSmooth = smoothArg.getValue();
-
    
     // Compute Morse-Smale complex
     NNMSComplex<Precision> msComplex(Xall, yall, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth );
@@ -191,7 +182,6 @@ int main(int argc, char **argv){
     // Store persistence levels
     persistence = msComplex.getPersistence();
     
-
     // Save geometry and function
     std::string geomFile = "Geom.data";
     LinalgIO<Precision>::writeMatrix(geomFile, Xall);   
@@ -232,7 +222,6 @@ int main(int argc, char **argv){
     // Compute inverse regression curves and additional information for each
     // crystal
     for (unsigned int nP = start; nP < persistence.N(); nP++){
-
       // Number of extrema in current crystal
       // int nExt = persistence.N() - nP + 1;         // jonbronson commented out 8/16/17
       msComplex.mergePersistence(persistence(nP));
@@ -300,9 +289,9 @@ int main(int argc, char **argv){
       EuclideanMetric<Precision> l2;
 
       // Compute regression for each Morse-Smale crystal
-      for(unsigned int crystalIndex = 0; crystalIndex < crystals.N(); ++crystalIndex){
-        for(unsigned int i=0; i< crystalIDs.N(); i++){
-          if(crystalIDs(i) == (int) crystalIndex){
+      for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); ++crystalIndex) {
+        for (unsigned int i=0; i< crystalIDs.N(); i++) {
+          if (crystalIDs(i) == (int) crystalIndex) {
             Xiorig[crystalIndex].push_back(i);
             Xi[crystalIndex].push_back(i);
             yci[crystalIndex].push_back(yall(i));
@@ -311,8 +300,8 @@ int main(int argc, char **argv){
       }
 
 
-      for (unsigned int a=0; a<crystals.N(); a++){
-        for (unsigned int b=0; b<crystals.N(); b++){
+      for (unsigned int a=0; a<crystals.N(); a++) {
+        for (unsigned int b=0; b<crystals.N(); b++) {
           if(a == b) continue;
           int ea1 = crystals(0, a);
           int ea2 = crystals(1, a);
@@ -344,8 +333,7 @@ int main(int argc, char **argv){
 
  
       // Regression for each crystal of current perssistence level.
-      for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++){
-
+      for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
         // Extract samples and function values from crystalIDs
         DenseMatrix<Precision> X(Xall.M(), Xi[crystalIndex].size());
         DenseMatrix<Precision> y(1, X.N());
@@ -397,13 +385,12 @@ int main(int argc, char **argv){
         DenseMatrix<Precision> gradS(Xall.M(), nSamples);
         DenseVector<Precision> sdev( Xall.M() );
         DenseMatrix<Precision> Svar(Xall.M(), nSamples);
-        for(int k=0; k < nSamples; k++){
+        for (int k=0; k < nSamples; k++) {
           z(0) = zmin + (zmax-zmin) * ( k/ (nSamples-1.f) );
-
           Zp(0, k) = z(0);
           kr.evaluate(z, tmp, gStmp, sdev.data());
           pdist(k) = 0;
-          for(int q=0; q<sdev.N(); q++){
+          for (int q=0; q<sdev.N(); q++) {
             pdist(k) += sdev(q);
             sdev(q) = sqrt(sdev(q));
           }
@@ -440,10 +427,10 @@ int main(int argc, char **argv){
         LinalgIO<Precision>::writeVector(ss6.str(), pdist);
 
         // Compute maximal extrema widths
-        if(eWidths(e2ID) < pdist(0)){
+        if (eWidths(e2ID) < pdist(0)) {
           eWidths(e2ID) = pdist(0); 
         }
-        if(eWidths(e1ID) < pdist(nSamples-1)){
+        if (eWidths(e1ID) < pdist(nSamples-1)) {
           eWidths(e1ID) = pdist(nSamples-1); 
         }
 
@@ -453,7 +440,7 @@ int main(int argc, char **argv){
         
         // Compute function value mean at sampled locations
         DenseVector<Precision> fmean(Zp.N());
-        for(unsigned int i=0; i < Zp.N(); i++){
+        for (unsigned int i=0; i < Zp.N(); i++) {
           fmean(i) = Zp(0, i);
         }
         std::stringstream ss7;
@@ -465,9 +452,9 @@ int main(int argc, char **argv){
 
         // Compute sample density
         DenseVector<Precision> spdf(Zp.N());
-        for(unsigned int i=0; i < Zp.N(); i++){
+        for (unsigned int i=0; i < Zp.N(); i++) {
           Precision sum = 0;
-          for(unsigned int j=0; j < y.N(); j++){
+          for (unsigned int j=0; j < y.N(); j++) {
             Precision k = kernel.f(Zp, i, y, j);
             sum += k;
           } 
@@ -499,7 +486,7 @@ int main(int argc, char **argv){
 
       // Add extremal points to S for computing layout
       int count = 0;
-      for(map_i_i_it it = exts.begin(); it != exts.end(); ++it){ 
+      for (map_i_i_it it = exts.begin(); it != exts.end(); ++it) { 
         count++;
         // std::cout << "Adding extremal point #" << count << std::endl;
         // Average the end points of all curves with that extremea
@@ -536,18 +523,14 @@ int main(int argc, char **argv){
       
 
       S.deallocate();
-      for(unsigned int i=0; i<crystals.N(); i++){ 
+      for (unsigned int i=0; i < crystals.N(); i++) { 
         ScrystalIDs[i].deallocate();
         XcrystalIDs[i].deallocate();
         XpcrystalIDs[i].deallocate();
         ycrystalIDs[i].deallocate();
       }
-
     }
-
-
-  }
-  catch(const char *err){
+  } catch (const char *err) {
     std::cerr << err << std::endl;
   }
   
