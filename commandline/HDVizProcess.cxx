@@ -530,9 +530,7 @@ int main(int argc, char **argv){
         Linalg<Precision>::Scale(out, 1.f/n, out);
         Linalg<Precision>::SetColumn(S, nSamples*crystals.N()+it->second, out);
         out.deallocate();
-
-      }
-      
+      }  
       
       
 
@@ -541,54 +539,49 @@ int main(int argc, char **argv){
 
       ///----- Complete PCA layout 
 
-      //Compute low-d layout of geomtry using PCA  
+      // Compute low-d layout of geomtry using PCA.
       unsigned int dim = 2; 
       PCA<Precision> pca(S, dim);        
       DenseMatrix<Precision> fL = pca.project(S);
-      if(fL.M() < dim){
+      if (fL.M() < dim) {
         DenseMatrix<Precision> fLtmp(dim, fL.N());
         Linalg<Precision>::Zero(fLtmp);
-        for(unsigned int i=0; i<fL.M(); i++){
+        for (unsigned int i=0; i<fL.M(); i++) {
           Linalg<Precision>::SetRow(fLtmp, i, fL, i);
         }
         fL.deallocate();
         fL = fLtmp;
       }
 
-      //Save extremal points location and function value
+      // Save extremal points location and function value.
       DenseMatrix<Precision> E(fL.M(), nExt);
       DenseVector<Precision> Ef(nExt);
-      for(map_i_i_it it = exts.begin(); it != exts.end(); ++it){
+      for (map_i_i_it it = exts.begin(); it != exts.end(); ++it) {
         int eID = it->second;
         int eIndex = it->first;
         Linalg<Precision>::SetColumn(E, eID, fL, crystals.N()*nSamples+eID);
         Ef(eID) = yall(eIndex);
       } 
 
-
-
-      //Align extrema to previous etxrema
-      if(extsOrig.size() != 0){
+      // Align extrema to previous etxrema.
+      if (extsOrig.size() != 0) {
         fit(E, extremaPosPCA);
-      }
-      else{
-        extremaPosPCA = Linalg<Precision>::Copy(E);        
-        
+      } else {
+        extremaPosPCA = Linalg<Precision>::Copy(E);
         DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(E);
         DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(E);
         LinalgIO<Precision>::writeVector("PCAMin.data", Lmin);
         LinalgIO<Precision>::writeVector("PCAMax.data", Lmax);
         Lmin.deallocate();
         Lmax.deallocate();
-
       }
 
 
 
 
 
-      //Save layout for each crystalIDs - stretch to extremal points
-      for(unsigned int i =0; i<crystals.N(); i++){
+      // Save layout for each crystalIDs - stretch to extremal points.
+      for (unsigned int i =0; i<crystals.N(); i++) {
         DenseMatrix<Precision> tmp(fL.M(), nSamples);
         DenseVector<Precision> a(fL.M());
         DenseVector<Precision> b(fL.M());
@@ -647,16 +640,16 @@ int main(int argc, char **argv){
 
 
       DenseMatrix<Precision> Xext(Xall.M(), nExt);
-      for(int i=0;i<nExt; i++){
+      for (int i=0;i<nExt; i++) {
         Linalg<Precision>::SetColumn(Xext, i, S, nSamples*crystals.N()+i);
       }
       int ndim = 2;
-      if(Xext.N() == 2){
+      if (Xext.N() == 2) {
         ndim = 1;
       }
       PCA<Precision> pca2(Xext, ndim);
       DenseMatrix<Precision> pca2L = pca2.project(Xext);
-      if(ndim == 1){
+      if (ndim == 1) {
         DenseMatrix<Precision> tmp(2, 2);
         tmp(0, 0) = pca2L(0, 0);
         tmp(0, 1) = pca2L(0, 1);
@@ -666,11 +659,11 @@ int main(int argc, char **argv){
         pca2L = tmp;
       }
 
-      //Align extrema to previous etxrema
-      if(extsOrig.size() != 0){
+      // Align extrema to previous etxrema.
+      if (extsOrig.size() != 0) {
         fit(pca2L, extremaPosPCA2);
       }
-      else{
+      else {
         extremaPosPCA2 = Linalg<Precision>::Copy(pca2L);       
         DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(pca2L);
         DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(pca2L);
@@ -681,9 +674,9 @@ int main(int argc, char **argv){
       }
 
 
-      //Save layout for each crystal - stretch to extremal points
-      for(unsigned int i =0; i<crystals.N(); i++){ 
-        //do pca for each crystal to preserve strcuture of curve in crystal
+      // Save layout for each crystal - stretch to extremal points.
+      for (unsigned int i =0; i<crystals.N(); i++) { 
+        // Do pca for each crystal to preserve strcuture of curve in crystal.
         PCA<Precision> pca(ScrystalIDs[i], dim);        
         DenseMatrix<Precision> tmp = pca.project(ScrystalIDs[i]);
         DenseVector<Precision> a(pca2L.M());
@@ -696,7 +689,7 @@ int main(int argc, char **argv){
         Linalg<Precision>::Subtract(b, tmp, tmp.N()-1, b);
 
         DenseVector<Precision> stretch(pca2L.M());
-        for(unsigned int j=0; j<tmp.N(); j++){
+        for (unsigned int j=0; j<tmp.N(); j++) {
           Linalg<Precision>::Scale(b, j/(tmp.N()-1.f), stretch);
           Linalg<Precision>::Add(tmp, j, stretch);
         }
@@ -713,29 +706,22 @@ int main(int argc, char **argv){
         pca.cleanup();
       }
 
-
-      //Save extremal points location and function value
+      // Save extremal points location and function value.
       std::stringstream pca2extL;
       pca2extL << "PCA2ExtremaLayout_" << nP <<".data";
       LinalgIO<Precision>::writeMatrix(pca2extL.str(), pca2L);
-
-
       pca2L.deallocate();
-      pca2.cleanup();
-
-
-
-      
+      pca2.cleanup();      
 
       
      //----- Isomap extrema / PCA curves layout 
 
 
-      //Do an isomap layout
+      // Do an isomap layout.
       SparseMatrix<Precision> adj(nExt, nExt, std::numeric_limits<Precision>::max());
-      for(unsigned int i=0; i<crystals.N(); i++){
+      for (unsigned int i=0; i<crystals.N(); i++) {
         Precision dist = 0; 
-        for(int j=1; j< nSamples; j++){
+        for (int j=1; j< nSamples; j++) {
           int index1 = nSamples*i+j;
           int index2 = index1 - 1;
           dist += l2.distance(S, index1, S, index2);
@@ -748,22 +734,17 @@ int main(int argc, char **argv){
       }
 
 
-
-
-
       KNNNeighborhood<Precision> nh(10);
       Isomap<Precision> isomap(&nh, dim);
       DenseMatrix<Precision> isoL = isomap.embedAdj(adj);
 
 
-
-      //Align extrema to previous etxrema
-      if(extsOrig.size() != 0){
+      // Align extrema to previous etxrema
+      if (extsOrig.size() != 0) {
         fit(isoL, extremaPosIso);
       }
-      else{
-        extremaPosIso = Linalg<Precision>::Copy(isoL);        
-        
+      else {
+        extremaPosIso = Linalg<Precision>::Copy(isoL);                
         DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(isoL);
         DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(isoL);
         LinalgIO<Precision>::writeVector("IsoMin.data", Lmin);
@@ -771,14 +752,14 @@ int main(int argc, char **argv){
         Lmin.deallocate();
         Lmax.deallocate();
 
-        //Store original extream indicies
+        // Store original extream indicies.
         extsOrig = exts;
       }
 
 
-      //Save layout for each crystal - stretch to extremal points
+      // Save layout for each crystal - stretch to extremal points.
       for(unsigned int i =0; i<crystals.N(); i++){ 
-        //do pca for each crystal to preserve strcuture of curve in crystal
+        // Do pca for each crystal to preserve strcuture of curve in crystal.
         PCA<Precision> pca(ScrystalIDs[i], dim);        
         DenseMatrix<Precision> tmp = pca.project(ScrystalIDs[i]);
         DenseVector<Precision> a(isoL.M());
@@ -809,7 +790,7 @@ int main(int argc, char **argv){
       }
 
 
-      //Save extremal points location and function value
+      // Save extremal points location and function value
       std::stringstream isoextL;
       isoextL << "IsoExtremaLayout_" << nP <<".data";
       LinalgIO<Precision>::writeMatrix(isoextL.str(), isoL);
@@ -836,5 +817,4 @@ int main(int argc, char **argv){
   }
   
   return 0;
-
 }
