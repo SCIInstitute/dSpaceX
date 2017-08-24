@@ -11,8 +11,8 @@ FIND_PACKAGE(Threads)
 
 set(CMAKE_BUILD_TYPE "Debug")
 
-option(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
-option(BUILD_HDVIZPORCESSING "Build HDViz preprocessing tool" OFF)
+# option(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
+# option(BUILD_HDVIZPORCESSING "Build HDViz preprocessing tool" OFF)
  
 # Use itk.  This sets up include/link directories for us.
 if(BUILD_HDVIZ_IMAGE)
@@ -72,18 +72,18 @@ endif(BUILD_HDVIZ_IMAGE)
 
 
 
-if(BUILD_HDVIZPORCESSING)
-FIND_PACKAGE(LAPACK)
-FIND_PACKAGE(BLAS)
-LINK_DIRECTORIES( ${ANN_LINK_DIR} )
-ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cxx)
-TARGET_LINK_LIBRARIES (HDVizProcessing 
-    blas
-    lapack    
-    gfortran
-    ANN 
-)
-endif(BUILD_HDVIZPORCESSING)
+# if(BUILD_HDVIZPORCESSING)
+# FIND_PACKAGE(LAPACK)
+# FIND_PACKAGE(BLAS)
+# LINK_DIRECTORIES( ${ANN_LINK_DIR} )
+# ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cxx)
+# TARGET_LINK_LIBRARIES (HDVizProcessing 
+#     blas
+#     lapack    
+#     gfortran
+#     ANN 
+# )
+# endif(BUILD_HDVIZPORCESSING)
 
 
 
