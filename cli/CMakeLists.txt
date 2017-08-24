@@ -16,6 +16,7 @@ FIND_PACKAGE(BLAS)
 LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cxx)
 TARGET_LINK_LIBRARIES (HDVizProcessing 
+    hdprocess
     blas
     lapack    
     gfortran

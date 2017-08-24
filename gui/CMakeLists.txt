@@ -43,7 +43,7 @@ if(BUILD_HDVIZ_IMAGE)
 
 ADD_EXECUTABLE(HDViz_3D HDViz.cpp HDVizData.cpp)
 TARGET_LINK_LIBRARIES (HDViz_3D 
-  gle 
+    gle 
     gfortran
     blas
     lapack   

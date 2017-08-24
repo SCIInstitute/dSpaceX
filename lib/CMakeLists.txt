@@ -1,0 +1,8 @@
+PROJECT(HDProcessing)
+
+SET(HDPROCESS_INCLUDE_FILES HDProcessor.h)
+SET(HDPROCESS_INCLUDE_FILES HDProcessor.cpp)
+
+# output library
+ADD_LIBRARY(hdprocess ${HDPROCESS_INCLUDE_FILES} ${HDPROCESS_SOURCE_FILES})
+# TARGET_LINK_LIBRARIES(hdprocess libraryNamehere)

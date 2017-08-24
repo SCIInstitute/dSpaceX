@@ -16,6 +16,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
 ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
+  lib
   external/gle/lib 
   external/dimred/lib 
   external/graph/lib 
@@ -30,8 +31,10 @@ INCLUDE_DIRECTORIES(
   external/morsesmale/external/kernelstats/external/flinalg/commandline/
   ${ANN_INCLUDE_FILES} 
 )
+
 ADD_SUBDIRECTORY(external/gle)
 ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
+ADD_SUBDIRECTORY(lib)
 ADD_SUBDIRECTORY(gui)
 
 if(BUILD_HDVIZPROCESSING)
