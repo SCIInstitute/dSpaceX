@@ -153,11 +153,11 @@ int main(int argc, char **argv){
   }
 
   try {
-    //Read geometry and function
+    // Read geometry and function
     Xall = LinalgIO<Precision>::readMatrix(xArg.getValue());
     yall = LinalgIO<Precision>::readVector(fArg.getValue());
 
-    //add noise to yall in case of equivivalent values 
+    // Add noise to yall in case of equivivalent values 
     if (randArg.getValue()) {
        Random<Precision> rand;
        double a = 0.00000001 *( Linalg<Precision>::Max(yall) - Linalg<Precision>::Min(yall));
