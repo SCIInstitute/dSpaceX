@@ -195,7 +195,7 @@ int main(int argc, char **argv){
     Precision fmax = Linalg<Precision>::Max(yall);
     Precision fmin = Linalg<Precision>::Min(yall);
     Precision frange = fmax - fmin;
-    for(unsigned int i=0; i<persistence.N(); i++){
+    for (unsigned int i=0; i < persistence.N(); i++) {
       pScaled(i) = persistence(i) / frange;
     }
     pScaled(pScaled.N()-1) = 1;
@@ -206,10 +206,10 @@ int main(int argc, char **argv){
     // Read number of persistence levels to compute visualization for
     int nlevels = pArg.getValue();
     int start = 0;
-    if(nlevels > 0){
+    if (nlevels > 0) {
       start = persistence.N() - nlevels;
     }
-    if(start < 0){
+    if (start < 0) {
       start = 0;
     }
 
@@ -232,10 +232,10 @@ int main(int argc, char **argv){
       
       // Find global minimum as refernce point for aligning subsequent persistence
       // levels
-      if (globalMin == -1){
+      if (globalMin == -1) {
         double tmp = std::numeric_limits<Precision>::max();
-        for(unsigned int i=0; i<crystals.N(); i++){
-          if(tmp > yall(crystals(1, i)) ){
+        for (unsigned int i=0; i < crystals.N(); i++) {
+          if (tmp > yall(crystals(1, i))) {
             globalMin = crystals(1, i);
             tmp = yall(globalMin);
           }
@@ -261,8 +261,8 @@ int main(int argc, char **argv){
      
       // Save crystals
       DenseMatrix<int> crystalTmp(crystals.M(), crystals.N());
-      for(unsigned int i=0; i< crystalTmp.N(); i++){
-        for(unsigned int j=0; j< crystalTmp.M(); j++){
+      for (unsigned int i=0; i < crystalTmp.N(); i++) {
+        for (unsigned int j=0; j < crystalTmp.M(); j++) {
           crystalTmp(j, i) = exts[crystals(j, i)];
         }
       } 
@@ -302,26 +302,26 @@ int main(int argc, char **argv){
 
       for (unsigned int a=0; a<crystals.N(); a++) {
         for (unsigned int b=0; b<crystals.N(); b++) {
-          if(a == b) continue;
+          if (a == b) continue;
           int ea1 = crystals(0, a);
           int ea2 = crystals(1, a);
           int eb1 = crystals(0, b);
           int eb2 = crystals(1, b);
           bool touch = false;
           Precision val = 0;
-          if (ea1 == eb1 ){
+          if (ea1 == eb1 ) {
             val = yall(ea1);
             touch = true;
           }
-          if (ea2 == eb2){
+          if (ea2 == eb2) {
             val = yall(ea2);
             touch = true;
           }
           // Add points within sigma of extrema to this points.
-          if (touch){
-            for (unsigned int i=0; i< Xiorig[b].size(); i++){
+          if (touch) {
+            for (unsigned int i=0; i < Xiorig[b].size(); i++) {
               unsigned int index = Xiorig[b][i];
-              if (fabs(val - yall(index)) < 2*sigma){
+              if (fabs(val - yall(index)) < 2*sigma) {
                 Xi[a].push_back(index);
                 yci[a].push_back(val + val - yall(index));
               }
