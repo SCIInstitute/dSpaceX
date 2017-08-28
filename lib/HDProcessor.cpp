@@ -20,8 +20,12 @@ HDProcessor::HDProcessor() {}
 
 /**
  * Process the input data and generate all data files necessary for visualization.
+ * @param[in] domainFilename Filename for matrix containing input sample domain.
+ * @param[in] functionFilename Filename for vector containing input function values.
  * @param[in] knn Number of nearest nieghbor for Morse-Samle complex computation.
  * @param[in] nSamples Number of samples for regression curve. 
+ * @param[in] persistenceArg Number of persistence levels to compute.
+ * @param[in] randArg Whether to apply random noise to input function.
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
