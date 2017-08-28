@@ -419,7 +419,7 @@ void HDProcessor::process(
 
 
 /**
- * Linearly transform E to fit aligin with Efit
+ * Linearly transform E to fit align with Efit
  * Used to align extrema of subsequent persistence levels
  */
 void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit){
@@ -455,6 +455,12 @@ void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::D
 
 /**
  * Compute low-d layout of geomtry using PCA.
+ * TODO:  Return layout result that include:
+ *        - Lmin, Lmax
+ *        - Crystal NP's Layout Matrix
+ *        - Extrema Layout Matrix
+ *        - Extrema Values Matrix
+ * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int nExt, int nSamples, unsigned int nP) {
   using namespace FortranLinalg;
@@ -464,7 +470,7 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
   if (fL.M() < dim) {
     DenseMatrix<Precision> fLtmp(dim, fL.N());
     Linalg<Precision>::Zero(fLtmp);
-    for (unsigned int i=0; i<fL.M(); i++) {
+    for (unsigned int i=0; i < fL.M(); i++) {
       Linalg<Precision>::SetRow(fLtmp, i, fL, i);
     }
     fL.deallocate();
@@ -497,14 +503,14 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
   }
 
   // Save layout for each crystalIDs - stretch to extremal points.
-  for (unsigned int i =0; i<crystals.N(); i++) {
+  for (unsigned int i =0; i < crystals.N(); i++) {
     DenseMatrix<Precision> tmp(fL.M(), nSamples);
     DenseVector<Precision> a(fL.M());
     DenseVector<Precision> b(fL.M());
     Linalg<Precision>::ExtractColumn(E, exts[crystals(1, i)], a );
     Linalg<Precision>::ExtractColumn(E, exts[crystals(0, i)], b );
 
-    for(unsigned int j=0; j<tmp.N(); j++){
+    for (unsigned int j=0; j < tmp.N(); j++){
       Linalg<Precision>::SetColumn(tmp, j, fL, nSamples*i+j);
     }
 
@@ -513,7 +519,7 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
     Linalg<Precision>::Subtract(b, tmp, tmp.N()-1, b);
 
     DenseVector<Precision> stretch(fL.M());
-    for(unsigned int j=0; j<tmp.N(); j++){
+    for (unsigned int j=0; j < tmp.N(); j++){
       Linalg<Precision>::Scale(b, j/(tmp.N()-1.f), stretch);
       Linalg<Precision>::Add(tmp, j, stretch);
     }
@@ -548,13 +554,19 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
 
 /**
  * Compute low-d layout of geomtry using PCA Extrema
+ * TODO:  Return layout result that include:
+ *        - Lmin, Lmax
+ *        - Crystal NP's Layout Matrix
+ *        - Extrema Layout Matrix
+ *        - Extrema Values Matrix
+ * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, int nExt, int nSamples, unsigned int nP) {
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   DenseMatrix<Precision> Xext(Xall.M(), nExt);
-  for (int i=0;i<nExt; i++) {
+  for (int i=0; i < nExt; i++) {
     Linalg<Precision>::SetColumn(Xext, i, S, nSamples*crystals.N()+i);
   }
   int ndim = 2;
@@ -576,8 +588,7 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
   // Align extrema to previous etxrema.
   if (extsOrig.size() != 0) {
     fit(pca2L, extremaPosPCA2);
-  }
-  else {
+  } else {
     extremaPosPCA2 = Linalg<Precision>::Copy(pca2L);       
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(pca2L);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(pca2L);
@@ -634,6 +645,12 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
 
 /**
  * Compute low-d layout of geomtry using Isomap algorithm
+ * TODO:  Return layout result that include:
+ *        - Lmin, Lmax
+ *        - Crystal NP's Layout Matrix
+ *        - Extrema Layout Matrix
+ *        - Extrema Values Matrix
+ * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
@@ -642,9 +659,9 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   SparseMatrix<Precision> adj(nExt, nExt, std::numeric_limits<Precision>::max());
-  for (unsigned int i=0; i<crystals.N(); i++) {
+  for (unsigned int i=0; i < crystals.N(); i++) {
     Precision dist = 0; 
-    for (int j=1; j< nSamples; j++) {
+    for (int j=1; j < nSamples; j++) {
       int index1 = nSamples*i+j;
       int index2 = index1 - 1;
       dist += l2.distance(S, index1, S, index2);
@@ -682,7 +699,7 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
 
 
   // Save layout for each crystal - stretch to extremal points.
-  for (unsigned int i =0; i<crystals.N(); i++) { 
+  for (unsigned int i =0; i < crystals.N(); i++) { 
     // Do pca for each crystal to preserve strcuture of curve in crystal.
     PCA<Precision> pca(ScrystalIDs[i], dim);        
     DenseMatrix<Precision> tmp = pca.project(ScrystalIDs[i]);
@@ -690,13 +707,12 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     DenseVector<Precision> b(isoL.M());
     Linalg<Precision>::ExtractColumn(isoL, exts[crystals(1, i)], a );
     Linalg<Precision>::ExtractColumn(isoL, exts[crystals(0, i)], b );
-
     Linalg<Precision>::Subtract(a, tmp, 0, a);
     Linalg<Precision>::AddColumnwise(tmp, a, tmp);
     Linalg<Precision>::Subtract(b, tmp, tmp.N()-1, b);
 
     DenseVector<Precision> stretch(isoL.M());
-    for(unsigned int j=0; j<tmp.N(); j++){
+    for (unsigned int j=0; j < tmp.N(); j++){
       Linalg<Precision>::Scale(b, j/(tmp.N()-1.f), stretch);
       Linalg<Precision>::Add(tmp, j, stretch);
     }
