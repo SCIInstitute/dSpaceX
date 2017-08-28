@@ -28,6 +28,7 @@ void HDProcessor::process(
   int knnArg, bool randArg, double smoothArg) {
      
   // Read geometry and function
+  // TODO: Move all data loading outside of process method.
   Xall = LinalgIO<Precision>::readMatrix(domainFilename);
   yall = LinalgIO<Precision>::readVector(functionFilename);
 
