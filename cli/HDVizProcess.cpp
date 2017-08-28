@@ -5,11 +5,7 @@
  * HDVisProcess application entry point.
  */
 int main(int argc, char **argv){
-  
-  using namespace FortranLinalg;
-  //Command line parsing
   TCLAP::CmdLine cmd("Compute MS-Complex and summary representation", ' ', "1");
-
   TCLAP::ValueArg<Precision> sigmaArg("s","sigma",
       "Kernel regression bandwith (sigma for Gaussian)", 
       true, 1,  "float");
