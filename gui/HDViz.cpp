@@ -25,7 +25,7 @@ Display *mainD, *auxD, *auxD2, *auxD3;
 
 
 void printHelp() {
-	std::cout << mainD->title() << " Window" << std::endl << std::endl;
+  std::cout << mainD->title() << " Window" << std::endl << std::endl;
   mainD->printHelp();	
   std::cout <<  std::endl << std::endl;
 }
@@ -52,8 +52,8 @@ int main(int argc, char **argv) {
   cmd.add(fontArg);
   
   try {
-	  cmd.parse( argc, argv );
-	} catch (TCLAP::ArgException &e) { 
+    cmd.parse( argc, argv );
+  } catch (TCLAP::ArgException &e) { 
     std::cerr << "error: " << e.error() << " for arg " << e.argId() << std::endl; 
     return -1;
   }
