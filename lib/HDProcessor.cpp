@@ -31,7 +31,7 @@ void HDProcessor::process(
   Xall = LinalgIO<Precision>::readMatrix(domainFilename);
   yall = LinalgIO<Precision>::readVector(functionFilename);
 
-  // Add noise to yall in case of equivivalent values 
+  // Add noise to yall in case of equivalent values 
   if (randArg) {
     addNoise(yall);
   }
