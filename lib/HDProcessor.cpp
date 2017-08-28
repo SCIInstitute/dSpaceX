@@ -33,11 +33,7 @@ void HDProcessor::process(
 
   // Add noise to yall in case of equivivalent values 
   if (randArg) {
-     Random<Precision> rand;
-     double a = 0.00000001 *( Linalg<Precision>::Max(yall) - Linalg<Precision>::Min(yall));
-     for (unsigned int i=0; i < yall.N(); i++) {
-       yall(i) += rand.Uniform() * a;
-     }
+    addNoise(yall);
   }
 
   // Number of samples for regression curve
@@ -415,7 +411,13 @@ void HDProcessor::process(
   }
 }
 
-
+void HDProcessor::addNoise(FortranLinalg::DenseVector<Precision> &v) {
+  Random<Precision> rand;
+  double a = 0.00000001 *( Linalg<Precision>::Max(v) - Linalg<Precision>::Min(v));
+  for (unsigned int i=0; i < v.N(); i++) {
+    v(i) += rand.Uniform() * a;
+  }
+}
 
 /**
  * Linearly transform E to fit align with Efit

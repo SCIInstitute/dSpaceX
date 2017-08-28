@@ -37,6 +37,7 @@ class HDProcessor {
     std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
     EuclideanMetric<Precision> &l2, int nExt, int nSamples, unsigned int nP);
   void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit);
+  void addNoise(FortranLinalg::DenseVector<Precision> &v);
 
   FortranLinalg::DenseVector<int> crystalIDs;
   FortranLinalg::DenseMatrix<int> crystals;
