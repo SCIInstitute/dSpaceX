@@ -59,11 +59,11 @@ int main(int argc, char **argv){
     processor.process(
         xArg.getValue() /* domainFilename */,
         fArg.getValue() /* functionFilename */,
-        sigmaArg.getValue() /* sigma */,
+        knnArg.getValue() /* knn */,        
         samplesArg.getValue() /* samples */,
-        pArg.getValue() /* persistence */,
-        knnArg.getValue() /* knn */,
+        pArg.getValue() /* persistence */,        
         randArg.getValue() /* random */,
+        sigmaArg.getValue() /* sigma */,
         smoothArg.getValue() /* smooth */);
   } catch (const char *err) {
     std::cerr << err << std::endl;

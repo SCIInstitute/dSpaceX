@@ -20,12 +20,16 @@ HDProcessor::HDProcessor() {}
 
 /**
  * Process the input data and generate all data files necessary for visualization.
+ * @param[in] knn Number of nearest nieghbor for Morse-Samle complex computation.
+ * @param[in] nSamples Number of samples for regression curve. 
+ * @param[in] sigma Bandwidth for inverse regression.
+ * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
 void HDProcessor::process(
   const std::string &domainFilename, 
   const std::string &functionFilename, 
-  float sigmaArg, int samplesArg, int persistenceArg, 
-  int knnArg, bool randArg, double smoothArg) {
+  int knn, int nSamples, int persistenceArg, 
+  bool randArg, Precision sigma, Precision sigmaSmooth) {
      
   // Read geometry and function
   // TODO: Move all data loading outside of process method.
@@ -36,17 +40,7 @@ void HDProcessor::process(
   if (randArg) {
     addNoise(yall);
   }
-
-  // Number of samples for regression curve
-  int nSamples = samplesArg;
-  
-  // Number of nearest nieghbor for Morse-Samle complex computation
-  int knn = knnArg;
- 
-  // Bandwidth for inverse regression
-  Precision sigma = sigmaArg;
-  Precision sigmaSmooth = smoothArg;
- 
+     
   // Compute Morse-Smale complex
   NNMSComplex<Precision> msComplex(Xall, yall, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
   
@@ -58,7 +52,6 @@ void HDProcessor::process(
     LinalgIO<Precision>::writeMatrix("Geom.data", Xall);   
     LinalgIO<Precision>::writeVector("Function.data", yall);   
   }
-
 
   // Scale persistence to be in [0,1]
   // TODO: Is this just doing a normalization?

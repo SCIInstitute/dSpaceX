@@ -24,8 +24,8 @@ class HDProcessor {
   HDProcessor();
   void process(const std::string &domainFilename, 
       const std::string &functionFilename, 
-      float sigmaArg, int samplesArg, int persistenceArg, 
-      int knnArg, bool randArg, double smoothArg);
+      int knn, int nSamples, int persistenceArg, bool randArg, 
+      Precision sigmaArg, Precision sigmaSmooth);
 
  private:
   void computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
