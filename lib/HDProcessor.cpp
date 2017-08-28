@@ -101,8 +101,7 @@ void HDProcessor::process(
     crystals.deallocate();
     crystals = msComplex.getCrystals();
     
-    // Find global minimum as refernce point for aligning subsequent persistence
-    // levels
+    // Find global minimum as refernce point for aligning subsequent persistence levels
     if (globalMin == -1) {
       double tmp = std::numeric_limits<Precision>::max();
       for (unsigned int i=0; i < crystals.N(); i++) {
