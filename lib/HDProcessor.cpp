@@ -5,7 +5,6 @@
 #include <set>
 #include <iostream>
 #include <string>
-#include <sstream>
 #include <algorithm>
 #include <iterator>
 
@@ -13,6 +12,7 @@ Precision MAX = std::numeric_limits<Precision>::max();
 
 //coordinate center
 int globalMin = -1;
+bool bShouldWriteFiles = true;
 
 using namespace FortranLinalg;
 
@@ -22,10 +22,10 @@ HDProcessor::HDProcessor() {}
  * Process the input data and generate all data files necessary for visualization.
  */
 void HDProcessor::process(
-    const std::string &domainFilename, 
-    const std::string &functionFilename, 
-    float sigmaArg, int samplesArg, int persistenceArg, 
-    int knnArg, bool randArg, double smoothArg) {
+  const std::string &domainFilename, 
+  const std::string &functionFilename, 
+  float sigmaArg, int samplesArg, int persistenceArg, 
+  int knnArg, bool randArg, double smoothArg) {
      
   // Read geometry and function
   Xall = LinalgIO<Precision>::readMatrix(domainFilename);
@@ -57,24 +57,26 @@ void HDProcessor::process(
   persistence = msComplex.getPersistence();
   
   // Save geometry and function
-  std::string geomFile = "Geom.data";
-  LinalgIO<Precision>::writeMatrix(geomFile, Xall);   
-
-  std::string fFile = "Function.data";
-  LinalgIO<Precision>::writeVector(fFile, yall);   
+  if (bShouldWriteFiles) {
+    LinalgIO<Precision>::writeMatrix("Geom.data", Xall);   
+    LinalgIO<Precision>::writeVector("Function.data", yall);   
+  }
 
 
   // Scale persistence to be in [0,1]
+  // TODO: Is this just doing a normalization?
   DenseVector<Precision> pScaled(persistence.N());
   Precision fmax = Linalg<Precision>::Max(yall);
   Precision fmin = Linalg<Precision>::Min(yall);
   Precision frange = fmax - fmin;
   for (unsigned int i=0; i < persistence.N(); i++) {
-    pScaled(i) = persistence(i) / frange;
+    pScaled(i) = persistence(i) / frange;    // TODO: Shouldn't this also subtract fmin?
   }
-  pScaled(pScaled.N()-1) = 1;
-  std::string psFile = "Persistence.data";
-  LinalgIO<Precision>::writeVector(psFile, pScaled);  
+  pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1?
+  
+  if (bShouldWriteFiles) {
+    LinalgIO<Precision>::writeVector("Persistence.data", pScaled);  
+  }
 
 
   // Read number of persistence levels to compute visualization for
@@ -90,7 +92,9 @@ void HDProcessor::process(
   // Save start persistence
   DenseVector<Precision> pStart(1);
   pStart(0) = start;
-  LinalgIO<Precision>::writeVector("PersistenceStart.data", pStart);  
+  if (bShouldWriteFiles) {
+    LinalgIO<Precision>::writeVector("PersistenceStart.data", pStart);  
+  }
 
 
   // Compute inverse regression curves and additional information for each
@@ -140,9 +144,10 @@ void HDProcessor::process(
         crystalTmp(j, i) = exts[crystals(j, i)];
       }
     } 
-    std::stringstream crystalsFile;
-    crystalsFile << "Crystals_" << nP << ".data";
-    LinalgIO<int>::writeMatrix(crystalsFile.str(), crystalTmp); 
+    if (bShouldWriteFiles) {
+      std::string crystalsFile = "Crystals_" + std::to_string(nP) + ".data";
+      LinalgIO<int>::writeMatrix(crystalsFile, crystalTmp); 
+    }
     crystalTmp.deallocate();   
 
     std::cout << std::endl << "PersistenceLevel: " << nP << std::endl;
@@ -279,26 +284,30 @@ void HDProcessor::process(
       z.deallocate();
       tmp.deallocate();
 
+      std::string crystalPrefix = 
+          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(crystalIndex);
 
-      std::stringstream ss2;
-      ss2 << "ps_" << nP << "_crystal_" << crystalIndex << "_Rs.data";
-      LinalgIO<Precision>::writeMatrix(ss2.str(), ScrystalIDs[crystalIndex]);
+      if (bShouldWriteFiles) {
+        std::string crystalIdFilename = crystalPrefix + "_Rs.data";
+        LinalgIO<Precision>::writeMatrix(crystalIdFilename, ScrystalIDs[crystalIndex]);
+      }
 
-
-      std::stringstream ss2a;
-      ss2a << "ps_" << nP << "_crystal_" << crystalIndex << "_gradRs.data";
-      LinalgIO<Precision>::writeMatrix(ss2a.str(), gradS);
+      if (bShouldWriteFiles) {
+        std::string gradsFilename = crystalPrefix + "_gradRs.data";
+        LinalgIO<Precision>::writeMatrix(gradsFilename, gradS);
+      }
       gradS.deallocate(); 
 
-      std::stringstream ss812;
-      ss812 <<"ps_" << nP << "_crystal_" << crystalIndex << "_Svar.data";
-      LinalgIO<Precision>::writeMatrix(ss812.str(), Svar);
+      if (bShouldWriteFiles) {
+        std::string svarFilename = crystalPrefix + "_Svar.data";
+        LinalgIO<Precision>::writeMatrix(svarFilename, Svar);
+      }
       Svar.deallocate();
      
-
-      std::stringstream ss6;
-      ss6 <<"ps_" << nP << "_crystal_" << crystalIndex << "_mdists.data";
-      LinalgIO<Precision>::writeVector(ss6.str(), pdist);
+      if (bShouldWriteFiles) {
+        std::string mdistFilename = crystalPrefix + "_mdists.data";
+        LinalgIO<Precision>::writeVector(mdistFilename, pdist);
+      }
 
       // Compute maximal extrema widths
       if (eWidths(e2ID) < pdist(0)) {
@@ -317,12 +326,12 @@ void HDProcessor::process(
       for (unsigned int i=0; i < Zp.N(); i++) {
         fmean(i) = Zp(0, i);
       }
-      std::stringstream ss7;
-      ss7 <<"ps_" << nP << "_crystal_" << crystalIndex << "_fmean.data";
-      LinalgIO<Precision>::writeVector(ss7.str(), fmean);
-      fmean.deallocate();
-      
 
+      if (bShouldWriteFiles) {
+        std::string fmeanFilename = crystalPrefix + "_fmean.data";
+        LinalgIO<Precision>::writeVector(fmeanFilename, fmean);
+      }
+      fmean.deallocate();
 
       // Compute sample density
       DenseVector<Precision> spdf(Zp.N());
@@ -334,13 +343,13 @@ void HDProcessor::process(
         } 
         spdf(i) = sum/Xall.N();
       }
-      std::stringstream ss8;
-      ss8 << "ps_" << nP << "_crystal_" << crystalIndex << "_spdf.data";
-      LinalgIO<Precision>::writeVector(ss8.str(), spdf);
+
+      if (bShouldWriteFiles) {
+        std::string spdfFilename = crystalPrefix + "_spdf.data";
+        LinalgIO<Precision>::writeVector(spdfFilename, spdf);
+      }
       spdf.deallocate(); 
-
-
-      
+     
 
       X.deallocate();
       Zp.deallocate();
@@ -352,9 +361,10 @@ void HDProcessor::process(
 
 
     // Save maximal extrema width
-    std::stringstream extw;
-    extw << "ExtremaWidths_" << nP << ".data";
-    LinalgIO<Precision>::writeVector(extw.str(), eWidths);
+    if (bShouldWriteFiles) {
+      std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(nP) + ".data";
+      LinalgIO<Precision>::writeVector(extremaWidthsFilename, eWidths);
+    }
     eWidths.deallocate();
 
 
@@ -478,8 +488,10 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
     extremaPosPCA = Linalg<Precision>::Copy(E);
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(E);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(E);
-    LinalgIO<Precision>::writeVector("PCAMin.data", Lmin);
-    LinalgIO<Precision>::writeVector("PCAMax.data", Lmax);
+    if (bShouldWriteFiles) {
+      LinalgIO<Precision>::writeVector("PCAMin.data", Lmin);
+      LinalgIO<Precision>::writeVector("PCAMax.data", Lmax);
+    }
     Lmin.deallocate();
     Lmax.deallocate();
   }
@@ -506,9 +518,11 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
       Linalg<Precision>::Add(tmp, j, stretch);
     }
 
-    std::stringstream ss;
-    ss <<"ps_" << nP << "_crystal_" << i << "_layout.data";
-    LinalgIO<Precision>::writeMatrix(ss.str(), tmp);
+    if (bShouldWriteFiles) {
+      std::string layoutFilename = 
+          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_layout.data";
+      LinalgIO<Precision>::writeMatrix(layoutFilename, tmp);
+    }
 
     a.deallocate();
     b.deallocate();
@@ -516,14 +530,16 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
     stretch.deallocate();
   }
 
-  std::stringstream extL;
-  extL << "ExtremaLayout_" << nP << ".data";
-  LinalgIO<Precision>::writeMatrix(extL.str(), E);
+  if (bShouldWriteFiles) {
+    std::string extremaLayoutFilename = "ExtremaLayout_" + std::to_string(nP) + ".data";
+    LinalgIO<Precision>::writeMatrix(extremaLayoutFilename, E);
+  }
   E.deallocate();
 
-  std::stringstream extf;
-  extf << "ExtremaValues_" << nP <<".data";
-  LinalgIO<Precision>::writeVector(extf.str(), Ef);
+  if (bShouldWriteFiles) {
+    std::string extremaValuesFilename = "ExtremaValues_" + std::to_string(nP) + ".data";
+    LinalgIO<Precision>::writeVector(extremaValuesFilename, Ef);
+  }
   Ef.deallocate();
 
   pca.cleanup();
@@ -565,8 +581,10 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
     extremaPosPCA2 = Linalg<Precision>::Copy(pca2L);       
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(pca2L);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(pca2L);
-    LinalgIO<Precision>::writeVector("PCA2Min.data", Lmin);
-    LinalgIO<Precision>::writeVector("PCA2Max.data", Lmax);
+    if (bShouldWriteFiles) {
+      LinalgIO<Precision>::writeVector("PCA2Min.data", Lmin);
+      LinalgIO<Precision>::writeVector("PCA2Max.data", Lmax);
+    }
     Lmin.deallocate();
     Lmax.deallocate();
   }
@@ -592,10 +610,11 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
       Linalg<Precision>::Add(tmp, j, stretch);
     }
 
-
-    std::stringstream ss;
-    ss <<"ps_" << nP << "_crystal_" << i << "_pca2layout.data";
-    LinalgIO<Precision>::writeMatrix(ss.str(), tmp);
+    if (bShouldWriteFiles) {
+      std::string pca2LayoutFilename = 
+          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_pca2layout.data";
+      LinalgIO<Precision>::writeMatrix(pca2LayoutFilename, tmp);
+    }
     
     a.deallocate();
     b.deallocate();
@@ -605,9 +624,10 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
   }
 
   // Save extremal points location and function value.
-  std::stringstream pca2extL;
-  pca2extL << "PCA2ExtremaLayout_" << nP <<".data";
-  LinalgIO<Precision>::writeMatrix(pca2extL.str(), pca2L);
+  if (bShouldWriteFiles) {
+    std::string pca2Filename = "PCA2ExtremaLayout_" + std::to_string(nP) + ".data";
+    LinalgIO<Precision>::writeMatrix(pca2Filename, pca2L);
+  }
   pca2L.deallocate();
   pca2.cleanup();         
 }
@@ -649,8 +669,10 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     extremaPosIso = Linalg<Precision>::Copy(isoL);                
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(isoL);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(isoL);
-    LinalgIO<Precision>::writeVector("IsoMin.data", Lmin);
-    LinalgIO<Precision>::writeVector("IsoMax.data", Lmax);
+    if (bShouldWriteFiles) {
+      LinalgIO<Precision>::writeVector("IsoMin.data", Lmin);
+      LinalgIO<Precision>::writeVector("IsoMax.data", Lmax);
+    }
     Lmin.deallocate();
     Lmax.deallocate();
 
@@ -679,10 +701,11 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
       Linalg<Precision>::Add(tmp, j, stretch);
     }
 
-
-    std::stringstream ss;
-    ss <<"ps_" << nP << "_crystal_" << i << "_isolayout.data";
-    LinalgIO<Precision>::writeMatrix(ss.str(), tmp);
+    if (bShouldWriteFiles) {
+      std::string isoLayoutFilename = 
+          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_isolayout.data";
+      LinalgIO<Precision>::writeMatrix(isoLayoutFilename, tmp);
+    }
     
     a.deallocate();
     b.deallocate();
@@ -692,8 +715,9 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
   }
 
   // Save extremal points location and function value
-  std::stringstream isoextL;
-  isoextL << "IsoExtremaLayout_" << nP <<".data";
-  LinalgIO<Precision>::writeMatrix(isoextL.str(), isoL); 
+  if (bShouldWriteFiles) {
+    std::string isoExtremaFilename = "IsoExtremaLayout_" + std::to_string(nP) + ".data";
+    LinalgIO<Precision>::writeMatrix(isoExtremaFilename, isoL); 
+  }
   isoL.deallocate();
 }
