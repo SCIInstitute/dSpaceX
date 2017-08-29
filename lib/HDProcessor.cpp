@@ -20,8 +20,8 @@ HDProcessor::HDProcessor() {}
 
 /**
  * Process the input data and generate all data files necessary for visualization.
- * @param[in] domainFilename Filename for matrix containing input sample domain.
- * @param[in] functionFilename Filename for vector containing input function values.
+ * @param[in] x Matrix containing input sample domain.
+ * @param[in] y Vector containing input function values.
  * @param[in] knn Number of nearest nieghbor for Morse-Samle complex computation.
  * @param[in] nSamples Number of samples for regression curve. 
  * @param[in] persistenceArg Number of persistence levels to compute.
@@ -29,17 +29,16 @@ HDProcessor::HDProcessor() {}
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
-void HDProcessor::process(
-  const std::string &domainFilename, 
-  const std::string &functionFilename, 
+void HDProcessor::process(  
+  FortranLinalg::DenseMatrix<Precision> x,
+  FortranLinalg::DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
   bool randArg, Precision sigma, Precision sigmaSmooth) {
-     
-  // Read geometry and function
-  // TODO: Move all data loading outside of process method.
-  Xall = LinalgIO<Precision>::readMatrix(domainFilename);
-  yall = LinalgIO<Precision>::readVector(functionFilename);
 
+  // Store input data as member variables.
+  Xall = x;
+  yall = y;
+  
   // Add noise to yall in case of equivalent values 
   if (randArg) {
     addNoise(yall);

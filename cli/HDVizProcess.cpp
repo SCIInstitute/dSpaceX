@@ -1,5 +1,12 @@
 #include "HDProcessor.h"
 #include <tclap/CmdLine.h>
+#include "Precision.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
+#include "DenseMatrix.h"
+#include "DenseVector.h"
+
+using namespace FortranLinalg;
 
 /**
  * HDVisProcess application entry point.
@@ -54,11 +61,16 @@ int main(int argc, char **argv){
     return -1;
   }
 
+  // Load Input Data
+  // TODO: Move into a data loading library
+  DenseMatrix<Precision> x = LinalgIO<Precision>::readMatrix(xArg.getValue());
+  DenseVector<Precision> y = LinalgIO<Precision>::readVector(fArg.getValue());
+      
   try {
     HDProcessor processor;
     processor.process(
-        xArg.getValue() /* domainFilename */,
-        fArg.getValue() /* functionFilename */,
+        x /* domain */,
+        y /* function */,
         knnArg.getValue() /* knn */,        
         samplesArg.getValue() /* samples */,
         pArg.getValue() /* persistence */,        

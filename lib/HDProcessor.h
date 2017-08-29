@@ -22,8 +22,8 @@
 class HDProcessor {
  public:
   HDProcessor();
-  void process(const std::string &domainFilename, 
-      const std::string &functionFilename, 
+  void process(FortranLinalg::DenseMatrix<Precision> x,
+      FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
       Precision sigmaArg, Precision sigmaSmooth);
 
