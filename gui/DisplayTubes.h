@@ -56,21 +56,20 @@ class DisplayTubes : public Display{
     int width, height;
     Precision dw, dh;
 
-    TPrecision scale ;
+    TPrecision scale;
 
-    //naviagtion
-    TPrecision zoom ;
-    TPrecision tx ;
-    TPrecision ty ;
+    // Naviagtion
+    TPrecision zoom;
+    TPrecision tx;
+    TPrecision ty;
     TPrecision rotation[3];
-    int rotationAxis ;
-
+    int rotationAxis;
 
     bool showPosition; 
     bool showSamples;
     bool extremaOnly;
 
-    //mouse 
+    // Mouse 
     int last_x;
     int last_y;
     int cur_button;
