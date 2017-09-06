@@ -3,6 +3,7 @@
 const std::string k_defaultPersistenceDataHeaderFilename = "Persistence.data.hdr";
 const std::string k_defaultPersistenceStartHeaderFilename = "PersistenceStart.data.hdr";
 const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
+const std::string k_defaultParameterNamesFilename = "names.txt";
 
 HDVizData::HDVizData() {
   layout = LAYOUT_ISOMAP;
@@ -14,6 +15,7 @@ HDVizData::HDVizData() {
   std::string persistenceDataHeaderFilename = k_defaultPersistenceDataHeaderFilename;
   std::string persistenceStartHeaderFilename = k_defaultPersistenceStartHeaderFilename;
   std::string geomDataHeaderFilename = k_defaultGeomDataHeaderFilename;
+  std::string parameterNamesFilename = k_defaultParameterNamesFilename;
 
   pSorted = FortranLinalg::LinalgIO<Precision>::readVector(persistenceDataHeaderFilename);
   currentLevel = pSorted.N() - 1;      
@@ -29,7 +31,7 @@ HDVizData::HDVizData() {
   G.deallocate();
 
   std::ifstream nfile;
-  nfile.open("names.txt");
+  nfile.open(parameterNamesFilename);
   if (!nfile.fail()) {
     for (unsigned int i=0; i<names.N(); i++) {
       getline(nfile, names(i)); 
