@@ -1,4 +1,5 @@
 #include "HDVizData.h"
+#include <stdexcept>
 
 const std::string k_defaultPersistenceDataHeaderFilename = "Persistence.data.hdr";
 const std::string k_defaultPersistenceStartHeaderFilename = "PersistenceStart.data.hdr";
@@ -6,7 +7,7 @@ const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
 
 HDVizData::HDVizData() {
-  layout = LAYOUT_ISOMAP;
+  layout = HDVizLayout::ISOMAP;
   L = nullptr;
   selectedCell  = 0;
   selectedPoint = 0;
@@ -91,22 +92,24 @@ void HDVizData::addWindow(int w) {
   windows.push_back(w);
 };
 
-void HDVizData::setLayout(int l) {
-  layout = l;
+void HDVizData::setLayout(HDVizLayout layout) {
+  this->layout = layout;
   Lmin.deallocate();
   Lmax.deallocate();
-  if (layout == LAYOUT_ISOMAP) {
+  if (layout == HDVizLayout::ISOMAP) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("IsoMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("IsoMax.data.hdr");
     loadLayout("_isolayout.data.hdr", "IsoExtremaLayout");
-  } else if (layout == LAYOUT_PCA) {
+  } else if (layout == HDVizLayout::PCA) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("PCAMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("PCAMax.data.hdr");
     loadLayout("_layout.data.hdr", "ExtremaLayout");
-  } else {
+  } else if (layout == HDVizLayout::PCA2) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector("PCA2Min.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector("PCA2Max.data.hdr");
     loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout");
+  } else {
+    throw std::invalid_argument("Unrecognized HDVizlayout specified.");
   }
 };
 

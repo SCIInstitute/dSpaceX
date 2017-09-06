@@ -374,17 +374,17 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       break;        
     case 'w':
     case 'W':
-      data->setLayout(LAYOUT_PCA);
+      data->setLayout(HDVizLayout::PCA);
       data->notifyChange();  
       break;
     case 'p':
     case 'P':
-      data->setLayout(LAYOUT_PCA2);
+      data->setLayout(HDVizLayout::PCA2);
       data->notifyChange();  
       break;
     case 'i':
     case 'I':
-      data->setLayout(LAYOUT_ISOMAP);
+      data->setLayout(HDVizLayout::ISOMAP);
       data->notifyChange();  
       break;
     case 'a':

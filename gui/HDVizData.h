@@ -8,10 +8,11 @@
 #include "Display.h"
 #include "Precision.h"
 
-
-#define LAYOUT_ISOMAP  0
-#define LAYOUT_PCA  1
-#define LAYOUT_PCA2  2
+enum class HDVizLayout : char {
+    ISOMAP  = 0,
+    PCA = 1,
+    PCA2 = 2,
+};
 
 class HDVizData{
   public:
@@ -25,7 +26,7 @@ class HDVizData{
     int getPersistanceLevel();
     void setPersistenceLevel(int pl, bool update = true);
     void addWindow(int w);
-    void setLayout(int l);
+    void setLayout(HDVizLayout layout);
   
 
     FortranLinalg::DenseVector<std::string> names;
@@ -92,7 +93,7 @@ class HDVizData{
 
     int minLevel;
     int currentLevel;
-    int layout;
+    HDVizLayout layout;
     std::vector<int> windows;
 };
 
