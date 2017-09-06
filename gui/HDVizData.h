@@ -5,7 +5,6 @@
 #include "DenseMatrix.h"
 #include "Linalg.h"
 #include "colormapper.h" 
-#include "Display.h"
 #include "Precision.h"
 #include <string>
 
