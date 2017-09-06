@@ -145,9 +145,9 @@ void DisplayTubes<TPrecision>::display(void){
 
   renderMS();
 
-  //draw coordinates  
-  Precision sx=1;        // TODO(jonbronson): Shouldn't this be TPrecision?
-  Precision sy=1;        // TODO(jonbronson): Shouldn't this be TPrecision? 
+  // Draw coordinates.
+  Precision sx = 1;    // TODO(jonbronson): Shouldn't this be TPrecision?
+  Precision sy = 1;    // TODO(jonbronson): Shouldn't this be TPrecision? 
   if(width>height){
     sx = (Precision)width/height;
   }
@@ -156,7 +156,7 @@ void DisplayTubes<TPrecision>::display(void){
   }
 
   glLoadIdentity(); 
-  glTranslatef(-4*sx+0.7, -4*sy+0.7, 0);  
+  glTranslatef(-4*sx + 0.7, -4*sy + 0.7, 0);  
   glRotatef(rotation[0], 1, 0, 0);
   glRotatef(rotation[1], 0, 1, 0); 
   glRotatef(rotation[2], 0, 0, 1); 
@@ -190,7 +190,7 @@ void DisplayTubes<TPrecision>::display(void){
   font.Render("p2");
 
 
-  //draw persistance graph
+  // Draw persistance graph.
   if (drawOverlay) {
     glDisable(GL_DEPTH_TEST);
     glLoadIdentity(); 
@@ -202,7 +202,7 @@ void DisplayTubes<TPrecision>::display(void){
     int curL = data->getPersistanceLevel();
     Precision prev = 0;
     Precision next = data->pSorted(curL);
-    if (curL!=0) {
+    if (curL != 0) {
       prev = data->pSorted(curL-1);
     }
     if (next>1) {
@@ -243,7 +243,7 @@ void DisplayTubes<TPrecision>::display(void){
     glEnd(); 
 
 
-    //labels
+    // labels
     glColor3f(0, 0, 0);
 
     setFontSize(width/50.f);
@@ -268,7 +268,7 @@ void DisplayTubes<TPrecision>::display(void){
     ss123 << emax;
     font.Render( ss123.str().c_str() );
 
-    //Write info
+    // Write info
     glLoadIdentity(); 
     glTranslatef(-4*sx+0.2, 4*sy-0.4, 0); 
    
@@ -295,7 +295,7 @@ void DisplayTubes<TPrecision>::display(void){
     font.Render(sss.str().c_str());
 
 
-    //draw color map      
+    // Draw color map.
     glLoadIdentity(); 
     glTranslatef(4*sx-0.7, 4*sy-2.3, 0);  
      
@@ -541,11 +541,11 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
 
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
-  for (unsigned int i=0; i<selectedPeaks.N(); i++) {
+  for (unsigned int i = 0; i < selectedPeaks.N(); i++) {
     selectedPeaks(i) = false;
   }
 
-  for (unsigned int i=0; i<data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
     if (selectedTubes(i)) {
       selectedPeaks(data->edges(0, i)) = true;
       selectedPeaks(data->edges(1, i)) = true;
@@ -557,22 +557,19 @@ void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
     int e2 =data->edges(1, i);
     if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
-    }
-    else if(selectedPeaks(e1)) {
+    } else if(selectedPeaks(e1)) {
       if (data->ef(e1) > data->ef(e2)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
-    }
-    else if (selectedPeaks(e2)) {
+    } else if (selectedPeaks(e2)) {
       if (data->ef(e2) > data->ef(e1)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
-    }
-    else {
+    } else {
       renderMode(i) = RENDER_NOTHING;
     }
   }
@@ -595,7 +592,7 @@ void DisplayTubes<TPrecision>::doPick() {
 
   display();
   GLint hits = glRenderMode(GL_RENDER);
-  if (hits>0){
+  if (hits > 0){
     int index = selectBuf[3];
     if (mod == GLUT_ACTIVE_CTRL) {
       if (index >=0 && index < (int)data->edges.N()) {
@@ -625,7 +622,7 @@ template<typename TPrecision>
 void DisplayTubes<TPrecision>::setupOrtho(int w, int h) {
   Precision sx=1;
   Precision sy=1;
-  if (w>h) {
+  if (w > h) {
     sx = (Precision)w/h;
   } else {
     sy = (Precision)h/w;
@@ -643,21 +640,21 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   float colors[data->nSamples+2][4];
   gleDouble radii[data->nSamples+2];
 
-  for (unsigned int i=0; i<data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
 
     /*if(renderMode(i) == RENDER_NOTHING) continue;
       if( renderMode(i) == RENDER_FADE_MIN_TO_MAX || 
       renderMode(i) == RENDER_FADE_MAX_TO_MIN    ){*/
     if (renderMode(i) != RENDER_TUBE) continue;
 
-    for (unsigned int k=0; k<data->L[i].N(); k++) {
+    for (unsigned int k = 0; k < data->L[i].N(); k++) {
       std::vector<Precision> color = data->colormap.getColor(data->yc[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
       colors[k+1][3] = 1;
 
-      for (unsigned int m=0; m<data->L[i].M(); m++) {
+      for (unsigned int m = 0; m < data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -665,11 +662,11 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
     }     
     radii[0] = radii[1];
     radii[data->nSamples+1] = radii[data->nSamples];
-    for (unsigned int m=0; m<3; m++) {
+    for (unsigned int m = 0; m < 3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
-    for (unsigned int m=0; m<4; m++) {
+    for (unsigned int m = 0; m < 4; m++) {
       colors[0][m] = colors[1][m];
       colors[data->nSamples+1][m] = colors[data->nSamples][m];
     }
@@ -682,7 +679,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
 
   //Draw extremal points
-  for (unsigned int i=0; i< data->eL.N(); i++) {
+  for (unsigned int i = 0; i < data->eL.N(); i++) {
     if (selectedPeaks(i)) {
       glPushMatrix();
       glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
@@ -696,10 +693,10 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   if (selectedOnly) return;
 
   glEnable(GL_BLEND);
-  for (unsigned int i=0; i<data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
     if (renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
 
-    for (unsigned int k=0; k<data->L[i].N(); k++) {
+    for (unsigned int k = 0; k < data->L[i].N(); k++) {
       std::vector<Precision> color = data->colormap.getColor(data->yc[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
@@ -711,7 +708,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
         colors[k+1][3] = k/ (data->L[i].N()-1.f);
       }
 
-      for (unsigned int m=0; m<data->L[i].M(); m++) {
+      for (unsigned int m = 0; m < data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -723,7 +720,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
-    for (unsigned int m=0; m<4; m++) {
+    for (unsigned int m = 0; m < 4; m++) {
       colors[0][m] = colors[1][m];
       colors[data->nSamples+1][m] = colors[data->nSamples][m];
     }
@@ -744,11 +741,11 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   }  
 
   glColor4f(0.9, 0.9, 0.9, 0.1f);
-  for (unsigned int i=0; i<data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
     if (renderMode(i) != RENDER_NOTHING) continue;
 
-    for (unsigned int k=0; k<data->L[i].N(); k++) {
-      for (unsigned int m=0; m<data->L[i].M(); m++) {
+    for (unsigned int k = 0; k < data->L[i].N(); k++) {
+      for (unsigned int m = 0; m < data->L[i].M(); m++) {
         points[k+1][m] = data->L[i](m, k);
       }
       points[k+1][2] = data->z[i](k);
@@ -756,7 +753,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
     }     
     radii[0] = radii[1];
     radii[data->nSamples+1] = radii[data->nSamples];
-    for (unsigned int m=0; m<3; m++) {
+    for (unsigned int m = 0; m < 3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
       points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
     }
@@ -778,7 +775,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   }   
 
   //Draw extremal points
-  for (unsigned int i=0; i< data->eL.N(); i++) {
+  for (unsigned int i = 0; i < data->eL.N(); i++) {
     if (!selectedPeaks(i)) { 
       glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
       glPushName(i);
@@ -826,8 +823,8 @@ void DisplayTubes<TPrecision>::renderWidths() {
       int i2 = data->edges(1, i);
 
 
-      for (unsigned int k=0; k<data->L[i].N(); k++) {
-        for (unsigned int m=0; m<data->L[i].M(); m++) {
+      for (unsigned int k = 0; k < data->L[i].N(); k++) {
+        for (unsigned int m = 0; m < data->L[i].M(); m++) {
           points[k+1][m] = data->L[i](m, k);
         }
         points[k+1][2] = data->z[i](k);
@@ -900,27 +897,27 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
   glDisable(GL_LIGHTING);
 
-  for (unsigned int i=0; i<data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
     if ( renderMode(i) != RENDER_TUBE) continue;
     if (selectedCTubes(i)) {
       int i1 = data->edges(0, i);
       int i2 = data->edges(1, i);      
 
 
-      for (unsigned int k=0; k<data->L[i].N(); k++) {
+      for (unsigned int k = 0; k < data->L[i].N(); k++) {
         std::vector<Precision> color = data->dcolormap.getColor(data->yd[i](k));
         colors[k+1][0] = color[0];
         colors[k+1][1] = color[1];
         colors[k+1][2] = color[2];
         colors[k+1][3] = 1;
       }    
-      for (unsigned int m=0; m<4; m++){
+      for (unsigned int m = 0; m < 4; m++){
         colors[0][m] = colors[1][m];
         colors[data->nSamples+1][m] = colors[data->nSamples][m];
       }
 
-      for (unsigned int k=0; k<data->L[i].N(); k++) {
-        for (unsigned int m=0; m<data->L[i].M(); m++) {
+      for (unsigned int k = 0; k < data->L[i].N(); k++) {
+        for (unsigned int m = 0; m < data->L[i].M(); m++) {
           points[k+1][m] = data->L[i](m, k);
         }
         points[k+1][2] = data->z[i](k);
@@ -928,7 +925,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       }    
       radii[0] = radii[1];
       radii[data->nSamples+1] = radii[data->nSamples];
-      for (unsigned int m=0; m<3; m++) {
+      for (unsigned int m = 0; m < 3; m++) {
         points[0][m] = points[1][m]+ points[2][m] - points[1][m];
         points[data->nSamples+1][m] = points[data->nSamples][m] + points[data->nSamples][m] - points[data->nSamples-1][m];
       }
@@ -1010,7 +1007,7 @@ template<typename TPrecision>
 void DisplayTubes<TPrecision>::renderExtrema() {
   glEnable(GL_STENCIL_TEST);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60);
-  for (unsigned int i=0; i<data->eL.N(); i++) {
+  for (unsigned int i = 0; i < data->eL.N(); i++) {
     if (selectedPeaks(i) == true) {
       glColor4f(0.8, 0.8, 0.8, 0.1);
 
@@ -1097,7 +1094,7 @@ void DisplayTubes<TPrecision>::renderMS() {
       sIndex = 1;
     }
     Precision l = 0;
-    for (int m=0; m<2; m++) {
+    for (int m = 0; m < 2; m++) {
       Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
       Precision dir =  p - data->L[data->selectedCell](m, sIndex);
       l += dir*dir;  
@@ -1105,7 +1102,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     Precision tmp = data->z[data->selectedCell](data->selectedPoint)- data->z[data->selectedCell](sIndex);
     l += tmp*tmp;
     l = sqrt(l);
-    for (int m=0; m<2; m++) {
+    for (int m = 0; m < 2; m++) {
       Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
       Precision dir =  p - data->L[data->selectedCell](m, sIndex); 
       points[0][m] = p + dir/l*0.04f; 
@@ -1119,7 +1116,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     points[1][2] = p + dir/l*0.02f; 
     points[2][2] = p - dir/l*0.02f; 
     points[3][2] = p - dir/l*0.04f; 
-    for (int k=0; k< 4; k++) {
+    for (int k = 0; k < 4; k++) {
       radii[k] = data->yw[data->selectedCell](data->selectedPoint);
     }
     glePolyCone_c4f(4, points, nullptr, radii);      
@@ -1146,13 +1143,13 @@ void DisplayTubes<TPrecision>::initState() {
   selectedCTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
   selectedTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
   renderMode = FortranLinalg::DenseVector<int>(data->edges.N());
-  for (unsigned int i=0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->edges.N(); i++) {
     selectedCTubes(i) = true;
     selectedTubes(i) = false;
     renderMode(i) = RENDER_TUBE;
   }
   selectedPeaks = FortranLinalg::DenseVector<bool>(data->eL.N());
-  for (unsigned int i=0; i<data->eL.N(); i++) {
+  for (unsigned int i = 0; i < data->eL.N(); i++) {
     selectedPeaks(i) = true;
   }
 };
