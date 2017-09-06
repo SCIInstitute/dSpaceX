@@ -1,5 +1,8 @@
 #include "HDVizData.h"
 
+const std::string k_defaultPersistenceDataHeaderFilename = "Persistence.data.hdr";
+const std::string k_defaultPersistenceStartHeaderFilename = "PersistenceStart.data.hdr";
+const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 
 HDVizData::HDVizData() {
   layout = LAYOUT_ISOMAP;
@@ -8,12 +11,17 @@ HDVizData::HDVizData() {
   selectedPoint = 0;
   nSamples = 50;
 
-  pSorted = FortranLinalg::LinalgIO<Precision>::readVector("Persistence.data.hdr");
+  std::string persistenceDataHeaderFilename = k_defaultPersistenceDataHeaderFilename;
+  std::string persistenceStartHeaderFilename = k_defaultPersistenceStartHeaderFilename;
+  std::string geomDataHeaderFilename = k_defaultGeomDataHeaderFilename;
+
+  pSorted = FortranLinalg::LinalgIO<Precision>::readVector(persistenceDataHeaderFilename);
   currentLevel = pSorted.N() - 1;      
-  FortranLinalg::DenseVector<Precision> tmp = FortranLinalg::LinalgIO<Precision>::readVector("PersistenceStart.data.hdr");
+  FortranLinalg::DenseVector<Precision> tmp = 
+      FortranLinalg::LinalgIO<Precision>::readVector(persistenceStartHeaderFilename);
   minLevel = tmp(0);
 
-  FortranLinalg::DenseMatrix<Precision> G = FortranLinalg::LinalgIO<Precision>::readMatrix("Geom.data.hdr");
+  FortranLinalg::DenseMatrix<Precision> G = FortranLinalg::LinalgIO<Precision>::readMatrix(geomDataHeaderFilename);
   Rmin = FortranLinalg::Linalg<Precision>::RowMin(G);
   Rmax = FortranLinalg::Linalg<Precision>::RowMax(G);
   nAll = G.N();
