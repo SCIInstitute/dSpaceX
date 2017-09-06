@@ -116,7 +116,7 @@ void HDVizData::loadLayout(std::string type, std::string extFile) {
     L[i].deallocate();
     L[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss1.str());
   }
-  //extrema layout 
+  // Extrema layout 
   eL.deallocate();
   std::stringstream ss2;
   ss2 << extFile << "_" << currentLevel << ".data.hdr";
@@ -176,14 +176,14 @@ void HDVizData::loadData() {
      delete[] yd;
   }
 
-  //edges
+  // Edges
   edges.deallocate(); 
   std::stringstream ss1; 
   ss1 << "Crystals_" << currentLevel << ".data.hdr";
   edges = FortranLinalg::LinalgIO<int>::readMatrix(m_path + ss1.str());
 
 
-  //read layout information matrices
+  // Read layout information matrices.
   L = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   setLayout(layout);
 
@@ -193,7 +193,7 @@ void HDVizData::loadData() {
   loadReconstructions();
 
 
-  //extrema function values
+  // Extrema function values
   ef.deallocate();      
   std::stringstream ss2; 
   ss2 << "ExtremaValues_" << currentLevel << ".data.hdr";
@@ -209,7 +209,7 @@ void HDVizData::loadData() {
   ew = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss3.str());
 
 
-  //Load color and width informations
+  // Load color and width informations.
   yc = new FortranLinalg::DenseVector<Precision>[edges.N()];
   z = new FortranLinalg::DenseVector<Precision>[edges.N()];
   yw = new FortranLinalg::DenseVector<Precision>[edges.N()];
@@ -310,8 +310,8 @@ void HDVizData::loadReconstructions(){
     Rvar[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss3.str());
   }
 
-  //Rmin = FortranLinalg::Linalg<Precision>::ExtractColumn(R[0], 0);
-  //Rmax = FortranLinalg::Linalg<Precision>::ExtractColumn(R[0], 0);
+  // Rmin = FortranLinalg::Linalg<Precision>::ExtractColumn(R[0], 0);
+  // Rmax = FortranLinalg::Linalg<Precision>::ExtractColumn(R[0], 0);
   Rvmin = FortranLinalg::Linalg<Precision>::ExtractColumn(Rvar[0], 0);
   Rvmax = FortranLinalg::Linalg<Precision>::ExtractColumn(Rvar[0], 0);
   Rsmin = FortranLinalg::Linalg<Precision>::ExtractColumn(R[0], 0);
