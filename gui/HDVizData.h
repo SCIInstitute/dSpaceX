@@ -30,26 +30,26 @@ class HDVizData{
 
     FortranLinalg::DenseVector<std::string> names;
 
-    //number of smaples per cell for rendering
+    // Number of smaples per cell for rendering.
     int nSamples;
 
-    //Morse-Smale edge information
+    // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges; 
 
     FortranLinalg::DenseVector<Precision> pSorted;
 
     unsigned nAll;
 
-    //Extrema Layouts
+    // Extrema Layouts
     FortranLinalg::DenseVector<Precision> ef;
     FortranLinalg::DenseVector<Precision> ez;
     FortranLinalg::DenseVector<Precision> ew;
     FortranLinalg::DenseMatrix<Precision> eL;
 
-    //Cell layouts
+    // Cell layouts
     FortranLinalg::DenseMatrix<Precision> *L;
 
-    //Cell reconstruction
+    // Cell reconstruction
     FortranLinalg::DenseMatrix<Precision> *R;
     FortranLinalg::DenseMatrix<Precision> *Rvar;
     FortranLinalg::DenseMatrix<Precision> *gradR;
@@ -69,13 +69,13 @@ class HDVizData{
     Precision zmax, zmin;
 
 
-    //color/width and transparent width values
+    // color/width and transparent width values
     FortranLinalg::DenseVector<Precision> *yc;
     FortranLinalg::DenseVector<Precision> *z;
     FortranLinalg::DenseVector<Precision> *yw;
     FortranLinalg::DenseVector<Precision> *yd;
 
-    //ColorMapper for each cell
+    // ColorMapper for each cell
     ColorMapper<Precision> colormap;
     ColorMapper<Precision> dcolormap;
 
