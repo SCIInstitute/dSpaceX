@@ -17,14 +17,11 @@ enum class HDVizLayout : char {
 class HDVizData{
   public:
     HDVizData(std::string path);
-    Precision getSelectedCoordinate(int index);
-    Precision getSelectedVariance(int index);
+    Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index);
+    Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
     
-    void increasePersistanceLevel();        
-    void decreasePersistanceLevel();
-    int getPersistanceLevel();
-    void setPersistenceLevel(int pl, bool update = true);
-    void setLayout(HDVizLayout layout);
+    void loadData(int level);
+    void setLayout(HDVizLayout layout, int level);
   
 
     FortranLinalg::DenseVector<std::string> names;
@@ -80,19 +77,18 @@ class HDVizData{
     ColorMapper<Precision> colormap;
     ColorMapper<Precision> dcolormap;
 
-    int selectedCell;
-    int selectedPoint;
+    int getMinPersistenceLevel() { return minLevel; }
+    int getMaxPersistenceLevel() { return maxLevel; }
         
   private:
-    void loadLayout(std::string type, std::string extFile);
-    void loadData();
-    void loadColorValues(std::string type);
-    void loadWidthValues(std::string type);
-    void loadDensityValues(std::string type);
-    void loadReconstructions();
+    void loadLayout(std::string type, std::string extFile, int level);    
+    void loadColorValues(std::string type, int level);
+    void loadWidthValues(std::string type, int level);
+    void loadDensityValues(std::string type, int level);
+    void loadReconstructions(int level);
 
     int minLevel;
-    int currentLevel;
+    int maxLevel;
     HDVizLayout layout;
 };
 

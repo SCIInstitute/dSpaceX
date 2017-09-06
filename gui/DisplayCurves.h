@@ -9,6 +9,7 @@ class DisplayCurves : public Display{
 
   private:
     HDVizData *data;
+    HDVizState *state;
     FTGLPixmapFont font;
     void setFontSize(double fsize){
       fsize *= scale;
@@ -33,8 +34,8 @@ class DisplayCurves : public Display{
 
   public:
 
-    DisplayCurves(HDVizData *d, std::string fontname) : data(d),
-            font(fontname.c_str()){      
+    DisplayCurves(HDVizData *data, HDVizState *state, std::string fontname) : data(data),
+            state(state), font(fontname.c_str()){      
       scale = 1;
       cur_button = -1;
       ty = 0;
@@ -72,7 +73,7 @@ class DisplayCurves : public Display{
       glClear(GL_COLOR_BUFFER_BIT);
 
       glLoadIdentity();
-      int M = data->R[data->selectedCell].M();
+      int M = data->R[state->selectedCell].M();
       Precision h = (Precision) height / M;
 
       setFontSize((int)(h*0.5f));
@@ -225,9 +226,9 @@ class DisplayCurves : public Display{
       glBegin(GL_LINE_STRIP);
       glColor3f(0.1, 0.1, 0.1);
       for(int j=0; j<data->nSamples; j++){
-	      Precision m = data->R[data->selectedCell](i, j);
+	      Precision m = data->R[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[data->selectedCell](j)*w1, b + h5 + m);
+      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m);
       }
       glEnd();        
       
@@ -235,21 +236,21 @@ class DisplayCurves : public Display{
       glBegin(GL_LINE_STRIP);
       glColor3f(0.6, 0.6, 0.6);
       for(int j=0; j<data->nSamples; j++){
-        Precision v = data->Rvar[data->selectedCell](i, j);
+        Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	      Precision m = data->R[data->selectedCell](i, j);
+	      Precision m = data->R[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[data->selectedCell](j)*w1, b + h5 + m + v);
+      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m + v);
       }
       glEnd();       
       
       glBegin(GL_LINE_STRIP);
       for(int j=0; j<data->nSamples; j++){
-        Precision v = data->Rvar[data->selectedCell](i, j);
+        Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	      Precision m = data->R[data->selectedCell](i, j);
+	      Precision m = data->R[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[data->selectedCell](j)*w1, b + h5 + m - v);
+      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m - v);
       }
       glEnd();    
 
@@ -286,17 +287,17 @@ class DisplayCurves : public Display{
      //selected point location      
      std::stringstream ssm;
      ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2) <<
-       data->R[data->selectedCell](i, data->selectedPoint) << " ";
+       data->R[state->selectedCell](i, state->selectedPoint) << " ";
 
      std::stringstream sse;
      sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-     sse << "(" << data->yc[data->selectedCell](data->selectedPoint) << ")";
+     sse << "(" << data->yc[state->selectedCell](state->selectedPoint) << ")";
 
-     Precision v = data->Rvar[data->selectedCell](i, data->selectedPoint);
+     Precision v = data->Rvar[state->selectedCell](i, state->selectedPoint);
      v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	   Precision m = data->R[data->selectedCell](i, data->selectedPoint);
+	   Precision m = data->R[state->selectedCell](i, state->selectedPoint);
      m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
-     Precision wz = data->z[data->selectedCell](data->selectedPoint)*w1;
+     Precision wz = data->z[state->selectedCell](state->selectedPoint)*w1;
 
      a = font.Advance(ssm.str().c_str());
      glRasterPos2f(l+offw1+wz-a, b + h5+m+v+0.004f*h);
@@ -304,7 +305,7 @@ class DisplayCurves : public Display{
 
 
      std::vector<Precision> color =
-        data->colormap.getColor(data->yc[data->selectedCell](data->selectedPoint));
+        data->colormap.getColor(data->yc[state->selectedCell](state->selectedPoint));
      glColor3f(color[0], color[1], color[2]);   
      
      glRasterPos2f(l+offw1+wz, b + h5+m+v+0.004f*h);

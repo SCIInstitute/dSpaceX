@@ -9,6 +9,7 @@ class DisplayRange : public Display{
 
   private:
     HDVizData *data;
+    HDVizState *state;
     FTGLPixmapFont font;
     void setFontSize(int fsize){
       fsize *= scale;
@@ -31,12 +32,11 @@ class DisplayRange : public Display{
 
   public:
 
-    DisplayRange(HDVizData *d, std::string fontname) : data(d),
-            font(fontname.c_str()){
+    DisplayRange(HDVizData *data, HDVizState *state, std::string fontname) : data(data),
+            state(state), font(fontname.c_str()){
       scale = 1;
       cur_button = -1;
       ty = 0;
-
     };
 
     std::string title(){
@@ -71,7 +71,7 @@ class DisplayRange : public Display{
       glClear(GL_COLOR_BUFFER_BIT);
 
       glLoadIdentity();
-      int M = data->R[data->selectedCell].M();
+      int M = data->R[state->selectedCell].M();
       Precision h = (Precision) height / M;
 
       setFontSize((int)(h*0.5f));
@@ -210,7 +210,7 @@ class DisplayRange : public Display{
       Precision glmax = std::max(fabs(data->gRmin(i)), fabs(data->gRmax(i)));
       Precision rlmax = std::max(fabs(data->Rmin(i)), fabs(data->Rmax(i)));
 
-      Precision m = data->R[data->selectedCell](i, data->selectedPoint);
+      Precision m = data->R[state->selectedCell](i, state->selectedPoint);
       m = (m - data->Rmin(i))   / ( data->Rmax(i) - data->Rmin(i) ) * w1;
 
       glColor3f(0.7, 0.7, 0.7);
@@ -229,7 +229,7 @@ class DisplayRange : public Display{
       glEnd();
 
 
-      Precision v = data->Rvar[data->selectedCell](i, data->selectedPoint);
+      Precision v = data->Rvar[state->selectedCell](i, state->selectedPoint);
       v = v / ( data->Rmax(i) - data->Rmin(i) ) * w1 ;
 
 
@@ -243,11 +243,11 @@ class DisplayRange : public Display{
 
 
 
-      Precision gm = data->gradR[data->selectedCell](i, data->selectedPoint);
+      Precision gm = data->gradR[state->selectedCell](i, state->selectedPoint);
       gm = gm  / ( data->Rmax(i) - data->Rmin(i) ) * w1 / (2*std::max(glmax, rlmax));
 
       std::vector<Precision> color =
-        data->colormap.getColor(data->yc[data->selectedCell](data->selectedPoint));
+        data->colormap.getColor(data->yc[state->selectedCell](state->selectedPoint));
       glColor3f(color[0], color[1], color[2]);   
       glLineWidth(3.f); 
       glBegin(GL_LINES);
@@ -263,11 +263,11 @@ class DisplayRange : public Display{
 
       std::stringstream ssm;
       ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2) <<
-        data->R[data->selectedCell](i, data->selectedPoint);
+        data->R[state->selectedCell](i, state->selectedPoint);
 
       std::stringstream sse;
       sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-      sse << "(" << data->yc[data->selectedCell](data->selectedPoint) << ")";
+      sse << "(" << data->yc[state->selectedCell](state->selectedPoint) << ")";
 
 
       std::stringstream ss1;
@@ -322,7 +322,7 @@ class DisplayRange : public Display{
       Precision offw2 = (w-w2)/2.f;
 
 
-      Precision m = data->gradR[data->selectedCell](i, data->selectedPoint);
+      Precision m = data->gradR[state->selectedCell](i, state->selectedPoint);
 
       Precision mmax1 = std::max(fabs(data->Rmin(i)), fabs(data->Rmax(i)));
       Precision mmax2 = std::max(fabs(data->gRmin(i)), fabs(data->gRmax(i)));
@@ -366,7 +366,7 @@ class DisplayRange : public Display{
 
       std::stringstream ssm;
       ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-      ssm << data->gradR[data->selectedCell](i, data->selectedPoint);
+      ssm << data->gradR[state->selectedCell](i, state->selectedPoint);
 
       std::stringstream ss1;
       ss1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << -mmax1;

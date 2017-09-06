@@ -48,6 +48,7 @@ class DisplayMolecule : public Display{
 
 
     HDVizData *data;
+    HDVizState *state;
 
     FTGLPixmapFont font;
     void setFontSize(int fsize){
@@ -61,7 +62,8 @@ class DisplayMolecule : public Display{
 
   public:
 
-    DisplayMolecule(HDVizData *d,std::string fontname):data(d), font(fontname.c_str()){ 
+    DisplayMolecule(HDVizData *data, HDVizState *state, std::string fontname) : data(data), 
+        state(state), font(fontname.c_str()){ 
 
       mod = 0;
       cur_button = -1;
@@ -205,9 +207,9 @@ class DisplayMolecule : public Display{
 
       int index=0;
       for(int i=2; i<data->Rmin.N(); i+=3, index++ ){
-         double x = data->getSelectedCoordinate(i-2);
-         double y = data->getSelectedCoordinate(i-1);
-         double z = data->getSelectedCoordinate(i);
+         double x = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-2);
+         double y = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-1);
+         double z = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i);
          X(0, index) =x;
          X(1, index) =y;
          X(2, index) =z;
@@ -220,15 +222,15 @@ class DisplayMolecule : public Display{
       gleDouble radii[nSamples+2];
       gleDouble radiiW[nSamples+2];
 
-      //int cell = data->selectedCell;
-      //int point = data->selectedPoint;
+      //int cell = state->selectedCell;
+      //int point = state->selectedPoint;
       int nAtoms = data->Rmin.N()/3;
  
       for(int i=0; i<nAtoms; i++){
         int ind = i*3;
-        double x = data->getSelectedVariance(ind);
-        double y = data->getSelectedVariance(ind+1);
-        double z = data->getSelectedVariance(ind+2);
+        double x = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind);
+        double y = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+1);
+        double z = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+2);
         W(0, i) = sqrt( x*x + y*y + z*z );
 
       }
@@ -296,9 +298,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW);
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(ind);
-          double y = data->getSelectedVariance(ind+1);
-          double z = data->getSelectedVariance(ind+2);
+          double x = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind);
+          double y = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+1);
+          double z = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+2);
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
 	  glScaled(0.6+x, 0.6+y, 0.6+z);
@@ -329,9 +331,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW);
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(ind);
-          double y = data->getSelectedVariance(ind+1);
-          double z = data->getSelectedVariance(ind+2);
+          double x = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind);
+          double y = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+1);
+          double z = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+2);
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
           glScaled(0.6+x, 0.6+y, 0.6+z);
@@ -352,9 +354,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW); 
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(ind) + scale*0.1/zoom;
-          double y = data->getSelectedVariance(ind+1)+ scale*0.1/zoom;
-          double z = data->getSelectedVariance(ind+2)+ scale*0.1/zoom;
+          double x = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind) + scale*0.1/zoom;
+          double y = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+1)+ scale*0.1/zoom;
+          double z = data->getSelectedVariance(state->selectedCell, state->selectedPoint, ind+2)+ scale*0.1/zoom;
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
           glScaled(0.6+x, 0.6+y, 0.6+z);

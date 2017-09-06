@@ -2,6 +2,7 @@
 #define DISPLAYTUBES_H
 
 #include "HDVizData.h"
+#include "HDVizState.h"
 #include "Display.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
@@ -21,7 +22,7 @@ template<typename TPrecision>
 class DisplayTubes : public Display{
 
   public:
-    DisplayTubes(HDVizData *d, std::string fontname);    
+    DisplayTubes(HDVizData *data, HDVizState *state, std::string fontname);    
     std::string title();
     void reshape(int w, int h);
     void init();
@@ -30,8 +31,14 @@ class DisplayTubes : public Display{
     void keyboard(unsigned char key, int x, int y);
     void mouse(int button, int state, int x, int y);    
     void motion(int x, int y); // catch mouse move events
+
+    // controller methods
     void addWindow(int w);
     void notifyChange();
+    void increasePersistanceLevel();        
+    void decreasePersistanceLevel();
+    void setPersistenceLevel(int pl, bool update = true);
+    int getPersistanceLevel();
 
   private:
     void initState();
@@ -76,7 +83,9 @@ class DisplayTubes : public Display{
     FortranLinalg::DenseVector<bool> selectedTubes;
 
     HDVizData *data;
+    HDVizState *state;
     FTGLPixmapFont font; 
-    std::vector<int> windows;
+    
+    std::vector<int> windows;    
 };
 #endif

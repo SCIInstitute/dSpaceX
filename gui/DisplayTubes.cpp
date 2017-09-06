@@ -2,8 +2,9 @@
 #include "Precision.h"
 #include <string>
 
-template<typename TPrecision>
-DisplayTubes<TPrecision>::DisplayTubes(HDVizData *d,std::string fontname):data(d), font(fontname.c_str()){ 
+template<typename TPrecision> DisplayTubes<TPrecision>::DisplayTubes(
+    HDVizData *data, HDVizState *state, std::string fontname) : data(data), 
+    state(state), font(fontname.c_str()){ 
   drawOverlay = true;     
   tubesOn = true;
   showPosition = true;
@@ -199,7 +200,7 @@ void DisplayTubes<TPrecision>::display(void){
     Precision pmax = 1; 
     Precision emax = data->pSorted.N()+1;
     glColor3f(1, 0, 0);
-    int curL = data->getPersistanceLevel();
+    int curL = getPersistanceLevel();
     Precision prev = 0;
     Precision next = data->pSorted(curL);
     if (curL != 0) {
@@ -277,21 +278,21 @@ void DisplayTubes<TPrecision>::display(void){
     std::stringstream sse;
     sse << "Value: ";
     sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    sse << data->yc[data->selectedCell](data->selectedPoint) ;
+    sse << data->yc[state->selectedCell](state->selectedPoint) ;
     font.Render(sse.str().c_str());
 
     glRasterPos2f(0, -0.2f); 
     std::stringstream ssv;
     ssv << "Input std: ";
     ssv << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    ssv << (data->yw[data->selectedCell](data->selectedPoint)-0.03) * data->zmax/0.3;
+    ssv << (data->yw[state->selectedCell](state->selectedPoint)-0.03) * data->zmax/0.3;
     font.Render(ssv.str().c_str());
     
     glRasterPos2f(0, -0.4f);       
     std::stringstream sss;
     sss << "Density: ";
     sss << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-    sss << data->yd[data->selectedCell](data->selectedPoint);
+    sss << data->yd[state->selectedCell](state->selectedPoint);
     font.Render(sss.str().c_str());
 
 
@@ -339,8 +340,8 @@ void DisplayTubes<TPrecision>::display(void){
     glBegin(GL_LINES);
     glVertex2f(-0.15, 2);
     glVertex2f(0.4, 2);
-    glVertex2f(0, data->z[data->selectedCell](data->selectedPoint)*2);
-    glVertex2f(0.4, data->z[data->selectedCell](data->selectedPoint)*2);
+    glVertex2f(0, data->z[state->selectedCell](state->selectedPoint)*2);
+    glVertex2f(0.4, data->z[state->selectedCell](state->selectedPoint)*2);
     glVertex2f(-0.15, 0);
     glVertex2f(0.4, 0);
     glEnd();
@@ -374,17 +375,17 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       break;        
     case 'w':
     case 'W':
-      data->setLayout(HDVizLayout::PCA);
+      data->setLayout(HDVizLayout::PCA, state->currentLevel);
       notifyChange();  
       break;
     case 'p':
     case 'P':
-      data->setLayout(HDVizLayout::PCA2);
+      data->setLayout(HDVizLayout::PCA2, state->currentLevel);
       notifyChange();  
       break;
     case 'i':
     case 'I':
-      data->setLayout(HDVizLayout::ISOMAP);
+      data->setLayout(HDVizLayout::ISOMAP, state->currentLevel);
       notifyChange();  
       break;
     case 'a':
@@ -443,25 +444,25 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       drawOverlay = !drawOverlay;    
       break;
     case ']':
-      data->selectedCell++;
-      if((unsigned int) data->selectedCell >= data->edges.N()){
-        data->selectedCell = 0;
+      state->selectedCell++;
+      if((unsigned int) state->selectedCell >= data->edges.N()){
+        state->selectedCell = 0;
       }
       notifyChange();
       break;
     case '[':
-      data->selectedCell--;
-      if(data->selectedCell < 0){
-        data->selectedCell = data->edges.N()-1;
+      state->selectedCell--;
+      if(state->selectedCell < 0){
+        state->selectedCell = data->edges.N()-1;
       }
       notifyChange();
       break;        
     case '>':
-      data->increasePersistanceLevel();
+      increasePersistanceLevel();
       notifyChange();
       break;
     case '<':
-      data->decreasePersistanceLevel();
+      decreasePersistanceLevel();
       notifyChange();
       break;
   }
@@ -518,12 +519,12 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
     case GLUT_RIGHT_BUTTON:
       // rotate
       if (mod == GLUT_ACTIVE_CTRL) {
-        data->selectedPoint += (int) dx;
-        if (data->selectedPoint < 0 ) {
-          data->selectedPoint = 0;
+        state->selectedPoint += (int) dx;
+        if (state->selectedPoint < 0 ) {
+          state->selectedPoint = 0;
         }
-        if (data->selectedPoint >= data->nSamples ) {
-          data->selectedPoint = data->nSamples-1;
+        if (state->selectedPoint >= data->nSamples ) {
+          state->selectedPoint = data->nSamples-1;
         }
         notifyChange();
       } else {
@@ -541,11 +542,17 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
 }
 
 
+/**
+ *
+ */
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::addWindow(int w) {
   windows.push_back(w);
 };
 
+/**
+ *
+ */
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::notifyChange() {
   for (unsigned int i = 0; i < windows.size(); i++) {
@@ -554,6 +561,57 @@ void DisplayTubes<TPrecision>::notifyChange() {
 };
 
 
+
+/**
+ *
+ */
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::increasePersistanceLevel() {
+  setPersistenceLevel(state->currentLevel+1);
+}
+    
+/**
+ *
+ */
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::decreasePersistanceLevel() {
+  setPersistenceLevel(state->currentLevel-1);
+};
+
+/**
+ *
+ */
+template<typename TPrecision>
+int DisplayTubes<TPrecision>::getPersistanceLevel() {
+  return state->currentLevel;
+};
+
+/**
+ *
+ */
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
+  state->currentLevel = pl;
+  if (state->currentLevel > data->getMaxPersistenceLevel()) {
+    state->currentLevel = data->getMaxPersistenceLevel(); 
+  } else if(state->currentLevel < data->getMinPersistenceLevel()) {
+    state->currentLevel = data->getMinPersistenceLevel();
+  }
+
+  data->loadData(state->currentLevel);
+
+  if (state->selectedCell >= (int) data->edges.N()) {
+    state->selectedCell = data->edges.N() - 1;
+  }
+  if (update) {
+    notifyChange();
+  }
+}
+
+
+/**
+ *
+ */
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
   for (unsigned int i = 0; i < selectedPeaks.N(); i++) {
@@ -619,7 +677,7 @@ void DisplayTubes<TPrecision>::doPick() {
       if (index >=0 && index < (int) data->edges.N()) {
         selectedTubes(index) = !selectedTubes(index);
         if (selectedTubes(index)) {
-          data->selectedCell = index;
+          state->selectedCell = index;
         }
         setRenderModesFromPeaks();
         notifyChange();
@@ -1093,46 +1151,46 @@ void DisplayTubes<TPrecision>::renderMS() {
   if (showPosition) {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32);
     std::vector<Precision> color =
-      data->colormap.getColor(data->yc[data->selectedCell](data->selectedPoint));
+      data->colormap.getColor(data->yc[state->selectedCell](state->selectedPoint));
     glColor4f(color[0], color[1], color[2], 0.4); 
     //glColor4f(0, 0, 0, 1);   
     glPushMatrix(); 
-    glTranslatef(data->L[data->selectedCell](0, data->selectedPoint), data->L[data->selectedCell](1,
-          data->selectedPoint), data->z[data->selectedCell](data->selectedPoint));
+    glTranslatef(data->L[state->selectedCell](0, state->selectedPoint), data->L[state->selectedCell](1,
+          state->selectedPoint), data->z[state->selectedCell](state->selectedPoint));
     glutSolidSphere(0.04, 50, 50);  
     glPopMatrix();
 
     gleDouble points[4][3];
     gleDouble radii[4];
-    int sIndex = data->selectedPoint-1;
+    int sIndex = state->selectedPoint-1;
     if (sIndex<0) {
       sIndex = 1;
     }
     Precision l = 0;
     for (int m = 0; m < 2; m++) {
-      Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
-      Precision dir =  p - data->L[data->selectedCell](m, sIndex);
+      Precision p =  data->L[state->selectedCell](m, state->selectedPoint);
+      Precision dir =  p - data->L[state->selectedCell](m, sIndex);
       l += dir*dir;  
     }
-    Precision tmp = data->z[data->selectedCell](data->selectedPoint)- data->z[data->selectedCell](sIndex);
+    Precision tmp = data->z[state->selectedCell](state->selectedPoint)- data->z[state->selectedCell](sIndex);
     l += tmp*tmp;
     l = sqrt(l);
     for (int m = 0; m < 2; m++) {
-      Precision p =  data->L[data->selectedCell](m, data->selectedPoint);
-      Precision dir =  p - data->L[data->selectedCell](m, sIndex); 
+      Precision p =  data->L[state->selectedCell](m, state->selectedPoint);
+      Precision dir =  p - data->L[state->selectedCell](m, sIndex); 
       points[0][m] = p + dir/l*0.04f; 
       points[1][m] = p + dir/l*0.02f; 
       points[2][m] = p - dir/l*0.02f; 
       points[3][m] = p - dir/l*0.04f; 
     }      
-    Precision p =  data->z[data->selectedCell](data->selectedPoint);
-    Precision dir =  p - data->z[data->selectedCell](sIndex); 
+    Precision p =  data->z[state->selectedCell](state->selectedPoint);
+    Precision dir =  p - data->z[state->selectedCell](sIndex); 
     points[0][2] = p + dir/l*0.04f; 
     points[1][2] = p + dir/l*0.02f; 
     points[2][2] = p - dir/l*0.02f; 
     points[3][2] = p - dir/l*0.04f; 
     for (int k = 0; k < 4; k++) {
-      radii[k] = data->yw[data->selectedCell](data->selectedPoint);
+      radii[k] = data->yw[state->selectedCell](state->selectedPoint);
     }
     glePolyCone_c4f(4, points, nullptr, radii);      
   }

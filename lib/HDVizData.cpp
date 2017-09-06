@@ -9,9 +9,7 @@ const std::string k_defaultParameterNamesFilename = "names.txt";
 
 HDVizData::HDVizData(std::string path) {
   layout = HDVizLayout::ISOMAP;
-  L = nullptr;
-  selectedCell  = 0;
-  selectedPoint = 0;
+  L = nullptr;  
   nSamples = 50;
 
   std::string persistenceDataHeaderFilename = k_defaultPersistenceDataHeaderFilename;
@@ -22,7 +20,7 @@ HDVizData::HDVizData(std::string path) {
   std::cout << "Loading Data from: " << m_path << std::endl;
 
   pSorted = FortranLinalg::LinalgIO<Precision>::readVector(m_path + persistenceDataHeaderFilename);
-  currentLevel = pSorted.N() - 1;      
+  maxLevel = pSorted.N() - 1;      
   FortranLinalg::DenseVector<Precision> tmp = 
       FortranLinalg::LinalgIO<Precision>::readVector(m_path + persistenceStartHeaderFilename);
   minLevel = tmp(0);
@@ -43,83 +41,83 @@ HDVizData::HDVizData(std::string path) {
     }
   }
   nfile.close();
-  loadData();
+  loadData(maxLevel);
 };
 
 
-Precision HDVizData::getSelectedCoordinate(int index) {
+Precision HDVizData::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
   return R[selectedCell](index, selectedPoint);
 };
 
-Precision HDVizData::getSelectedVariance(int index) {
+Precision HDVizData::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
   return Rvar[selectedCell](index, selectedPoint);
 };
 
 
-void HDVizData::increasePersistanceLevel() {
-  setPersistenceLevel(currentLevel+1);
-};
+// void HDVizData::increasePersistanceLevel() {
+//   setPersistenceLevel(currentLevel+1);
+// };
    
-void HDVizData::decreasePersistanceLevel() {
-  setPersistenceLevel(currentLevel-1);
-};
+// void HDVizData::decreasePersistanceLevel() {
+//   setPersistenceLevel(currentLevel-1);
+// };
 
-int HDVizData::getPersistanceLevel() {
-  return currentLevel;
-};
+// int HDVizData::getPersistanceLevel() {
+//   return currentLevel;
+// };
 
-void HDVizData::setPersistenceLevel(int pl, bool update) {
-  currentLevel = pl;
-  if (currentLevel > (int) pSorted.N()-1) {
-    currentLevel = pSorted.N()-1;
-  } else if(currentLevel < minLevel ) {
-    currentLevel = minLevel;
-  }
+// void HDVizData::setPersistenceLevel(int pl, bool update) {
+//   currentLevel = pl;
+//   if (currentLevel > (int) pSorted.N()-1) {
+//     currentLevel = pSorted.N()-1;
+//   } else if(currentLevel < minLevel ) {
+//     currentLevel = minLevel;
+//   }
 
-  loadData();
+//   loadData();
 
-  if (selectedCell >= (int) edges.N()) {
-    selectedCell = edges.N() - 1;
-  }
-  // if (update) {
-  //   notifyChange();
-  // }
-}
+//   if (selectedCell >= (int) edges.N()) {
+//     selectedCell = edges.N() - 1;
+//   }
+//   // if (update) {
+//   //   notifyChange();
+//   // }
+// }
 
 
-void HDVizData::setLayout(HDVizLayout layout) {
+void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
   Lmax.deallocate();
   if (layout == HDVizLayout::ISOMAP) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "IsoMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "IsoMax.data.hdr");
-    loadLayout("_isolayout.data.hdr", "IsoExtremaLayout");
+    loadLayout("_isolayout.data.hdr", "IsoExtremaLayout", level);
   } else if (layout == HDVizLayout::PCA) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCAMin.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCAMax.data.hdr");
-    loadLayout("_layout.data.hdr", "ExtremaLayout");
+    loadLayout("_layout.data.hdr", "ExtremaLayout", level);
   } else if (layout == HDVizLayout::PCA2) {
     Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCA2Min.data.hdr");
     Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCA2Max.data.hdr");
-    loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout");
+    loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout", level);
   } else {
     throw std::invalid_argument("Unrecognized HDVizlayout specified.");
   }
 };
 
 
-void HDVizData::loadLayout(std::string type, std::string extFile) {
-  for (unsigned int i=0; i < edges.N(); i++) {
+void HDVizData::loadLayout(std::string type, std::string extFile, int level) {
+  for (unsigned int i = 0; i < edges.N(); i++) {
     std::stringstream ss1;
-    ss1 << "ps_" << currentLevel << "_crystal_" << i << type;
+    ss1 << "ps_" << level << "_crystal_" << i << type;
     L[i].deallocate();
     L[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss1.str());
   }
   // Extrema layout 
   eL.deallocate();
   std::stringstream ss2;
-  ss2 << extFile << "_" << currentLevel << ".data.hdr";
+  ss2 << extFile << "_" << level << ".data.hdr";
 
   eL = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss2.str());  
 
@@ -154,7 +152,7 @@ void HDVizData::loadLayout(std::string type, std::string extFile) {
   nSamples = L[0].N();
 };
 
-void HDVizData::loadData() {
+void HDVizData::loadData(int level) {
   if (L != nullptr) {
     for (unsigned int i=0; i<edges.N(); i++) {
       L[i].deallocate();
@@ -179,24 +177,24 @@ void HDVizData::loadData() {
   // Edges
   edges.deallocate(); 
   std::stringstream ss1; 
-  ss1 << "Crystals_" << currentLevel << ".data.hdr";
+  ss1 << "Crystals_" << level << ".data.hdr";
   edges = FortranLinalg::LinalgIO<int>::readMatrix(m_path + ss1.str());
 
 
   // Read layout information matrices.
   L = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
-  setLayout(layout);
+  setLayout(layout, level);
 
   R = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   Rvar = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   gradR = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
-  loadReconstructions();
+  loadReconstructions(level);
 
 
   // Extrema function values
   ef.deallocate();      
   std::stringstream ss2; 
-  ss2 << "ExtremaValues_" << currentLevel << ".data.hdr";
+  ss2 << "ExtremaValues_" << level << ".data.hdr";
   ef = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss2.str());
   ez.deallocate();
   ez = FortranLinalg::DenseVector<Precision>(ef.N());
@@ -204,7 +202,7 @@ void HDVizData::loadData() {
   efmax = FortranLinalg::Linalg<Precision>::Max(ef);
   
   std::stringstream ss3; 
-  ss3 << "ExtremaWidths_" << currentLevel << ".data.hdr";
+  ss3 << "ExtremaWidths_" << level << ".data.hdr";
   ew.deallocate();
   ew = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss3.str());
 
@@ -215,16 +213,16 @@ void HDVizData::loadData() {
   yw = new FortranLinalg::DenseVector<Precision>[edges.N()];
   yd = new FortranLinalg::DenseVector<Precision>[edges.N()];
 
-  loadColorValues("_fmean.data.hdr");
-  loadWidthValues("_mdists.data.hdr");
-  loadDensityValues("_spdf.data.hdr");
+  loadColorValues("_fmean.data.hdr", level);
+  loadWidthValues("_mdists.data.hdr", level);
+  loadDensityValues("_spdf.data.hdr", level);
 };
 
 
-void HDVizData::loadColorValues(std::string type){ 
+void HDVizData::loadColorValues(std::string type, int level){ 
   for(unsigned int i=0; i<edges.N(); i++){
     std::stringstream ss1;
-    ss1 << "ps_" << currentLevel << "_crystal_" << i << type;
+    ss1 << "ps_" << level << "_crystal_" << i << type;
     yc[i].deallocate();
     yc[i] = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss1.str());
     z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
@@ -242,13 +240,13 @@ void HDVizData::loadColorValues(std::string type){
 
 
 
-void HDVizData::loadWidthValues(std::string type){
+void HDVizData::loadWidthValues(std::string type, int level){
   zmax = std::numeric_limits<Precision>::min();
   zmin = std::numeric_limits<Precision>::max();
 
-  for(unsigned int i=0; i<edges.N(); i++){
+  for(unsigned int i = 0; i < edges.N(); i++){
     std::stringstream ss1;
-    ss1 << "ps_" << currentLevel << "_crystal_" << i << type;
+    ss1 << "ps_" << level << "_crystal_" << i << type;
     yw[i].deallocate();
     yw[i] = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss1.str());    
 
@@ -262,7 +260,7 @@ void HDVizData::loadWidthValues(std::string type){
     }
   }
 
-  for(unsigned int i=0; i<edges.N(); i++){
+  for(unsigned int i = 0; i < edges.N(); i++){
     FortranLinalg::Linalg<Precision>::Scale(yw[i], 0.3/zmax, yw[i]);
     FortranLinalg::Linalg<Precision>::Add(yw[i], 0.03, yw[i]);
   }
@@ -272,13 +270,13 @@ void HDVizData::loadWidthValues(std::string type){
 };
 
 
-void HDVizData::loadDensityValues(std::string type){
+void HDVizData::loadDensityValues(std::string type, int level){
   Precision zmax = std::numeric_limits<Precision>::min();
   Precision zmin = std::numeric_limits<Precision>::max();
 
   for(unsigned int i=0; i<edges.N(); i++){
     std::stringstream ss1;
-    ss1 << "ps_" << currentLevel << "_crystal_" << i << type;
+    ss1 << "ps_" << level << "_crystal_" << i << type;
     yd[i].deallocate();
     yd[i] = FortranLinalg::LinalgIO<Precision>::readVector(m_path + ss1.str());    
 
@@ -295,18 +293,18 @@ void HDVizData::loadDensityValues(std::string type){
   dcolormap.set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
 };
 
-void HDVizData::loadReconstructions(){
+void HDVizData::loadReconstructions(int level){
   for(unsigned int i=0; i< edges.N(); i++){
     std::stringstream ss1;
-    ss1 << "ps_" << currentLevel << "_crystal_" << i << "_Rs.data.hdr";
+    ss1 << "ps_" << level << "_crystal_" << i << "_Rs.data.hdr";
     R[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss1.str());
 
     std::stringstream ss2;
-    ss2 << "ps_" << currentLevel << "_crystal_" << i << "_gradRs.data.hdr";
+    ss2 << "ps_" << level << "_crystal_" << i << "_gradRs.data.hdr";
     gradR[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss2.str());
 
     std::stringstream ss3;
-    ss3 << "ps_" << currentLevel << "_crystal_" << i << "_Svar.data.hdr";
+    ss3 << "ps_" << level << "_crystal_" << i << "_Svar.data.hdr";
     Rvar[i] = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + ss3.str());
   }
 
