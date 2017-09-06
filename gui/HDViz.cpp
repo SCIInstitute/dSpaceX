@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
   
   // GL stuff
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_STENCIL);
+  glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
 
 
   // Load data
