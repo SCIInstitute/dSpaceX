@@ -30,17 +30,16 @@ class HDVizData{
     int nSamples;
 
     // Morse-Smale edge information.
-    FortranLinalg::DenseMatrix<int> edges; 
-
-    FortranLinalg::DenseVector<Precision> pSorted;
+    FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
+    FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
 
     unsigned nAll;
 
     // Extrema Layouts
-    FortranLinalg::DenseVector<Precision> ef;
+    FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
     FortranLinalg::DenseVector<Precision> ez;
-    FortranLinalg::DenseVector<Precision> ew;
-    FortranLinalg::DenseMatrix<Precision> eL;
+    FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
+    FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
 
     // Cell layouts
     FortranLinalg::DenseMatrix<Precision> *L;
@@ -61,7 +60,6 @@ class HDVizData{
 
     FortranLinalg::DenseVector<Precision> Lmin, Lmax;
     Precision efmin, efmax;
-
     Precision zmax, zmin;
 
     // filenames
