@@ -27,9 +27,10 @@ LINK_DIRECTORIES( ${GLE_LINK_DIR} ${ANN_LINK_DIR} )
 INCLUDE_DIRECTORIES(${FTGL_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build}  ${FREETYPE_INCLUDE_DIR_freetype2} ${GLUT_INCLUDE_DIR} ${GLE_INCLUDE_FILES} )
 
 
-ADD_EXECUTABLE(HDViz HDViz.cpp HDVizData.cpp DisplayTubes.cpp)
+ADD_EXECUTABLE(HDViz HDViz.cpp DisplayTubes.cpp)
 TARGET_LINK_LIBRARIES (HDViz 
-  gle 
+    gle 
+    hdprocess
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
@@ -41,12 +42,13 @@ SET_TARGET_PROPERTIES(HDViz PROPERTIES COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_
 
 if(BUILD_HDVIZ_IMAGE)
 
-ADD_EXECUTABLE(HDViz_3D HDViz.cpp HDVizData.cpp)
+ADD_EXECUTABLE(HDViz_3D HDViz.cpp)
 TARGET_LINK_LIBRARIES (HDViz_3D 
     gle 
     gfortran
     blas
     lapack   
+    hdprocess
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
@@ -54,12 +56,13 @@ TARGET_LINK_LIBRARIES (HDViz_3D
     ${ITK_LIBRARIES}
 )
 
-ADD_EXECUTABLE(HDViz_2D HDViz.cpp HDVizData.cpp)
+ADD_EXECUTABLE(HDViz_2D HDViz.cpp)
 TARGET_LINK_LIBRARIES (HDViz_2D 
     gle 
     gfortran
     blas
-    lapack   
+    lapack
+    hdprocess
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
