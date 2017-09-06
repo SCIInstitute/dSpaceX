@@ -54,36 +54,6 @@ Precision HDVizData::getSelectedVariance(int selectedCell, int selectedPoint, in
 };
 
 
-// void HDVizData::increasePersistanceLevel() {
-//   setPersistenceLevel(currentLevel+1);
-// };
-   
-// void HDVizData::decreasePersistanceLevel() {
-//   setPersistenceLevel(currentLevel-1);
-// };
-
-// int HDVizData::getPersistanceLevel() {
-//   return currentLevel;
-// };
-
-// void HDVizData::setPersistenceLevel(int pl, bool update) {
-//   currentLevel = pl;
-//   if (currentLevel > (int) pSorted.N()-1) {
-//     currentLevel = pSorted.N()-1;
-//   } else if(currentLevel < minLevel ) {
-//     currentLevel = minLevel;
-//   }
-
-//   loadData();
-
-//   if (selectedCell >= (int) edges.N()) {
-//     selectedCell = edges.N() - 1;
-//   }
-//   // if (update) {
-//   //   notifyChange();
-//   // }
-// }
-
 
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
