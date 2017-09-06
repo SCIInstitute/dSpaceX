@@ -30,7 +30,7 @@ int main(int argc, char **argv){
 
   TCLAP::ValueArg<std::string> outArg("o" /* flag */, "output_dir" /* name */,
       "The directory to output analysis files to." /* description */,
-      false /* required */, "", "string");
+      false /* required */, "./", "string");
   cmd.add(outArg);
 
   TCLAP::ValueArg<int> pArg("p" /* flag */, "persistence",
@@ -82,7 +82,8 @@ int main(int argc, char **argv){
         pArg.getValue() /* persistence */,        
         randArg.getValue() /* random */,
         sigmaArg.getValue() /* sigma */,
-        smoothArg.getValue() /* smooth */);
+        smoothArg.getValue() /* smooth */,
+        outArg.getValue() /* output_dir */);
   } catch (const char *err) {
     std::cerr << err << std::endl;
   }

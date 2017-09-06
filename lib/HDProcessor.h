@@ -25,7 +25,7 @@ class HDProcessor {
   void process(FortranLinalg::DenseMatrix<Precision> x,
       FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
-      Precision sigmaArg, Precision sigmaSmooth);
+      Precision sigmaArg, Precision sigmaSmooth, std::string output_dir);
 
  private:
   void computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
@@ -55,6 +55,9 @@ class HDProcessor {
 
   // Isomap of regression cruve graphs
   FortranLinalg::DenseMatrix<Precision> extremaPosIso;
+
+  // Output filepath
+  std::string m_path;
 
   // List of extrema and extrema of previous persistence level used to align low
   // dimensional mappings to previous level
