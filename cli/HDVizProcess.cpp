@@ -19,14 +19,19 @@ int main(int argc, char **argv){
   cmd.add(sigmaArg);  
     
   TCLAP::ValueArg<std::string> xArg("x" /* flag */, "domain" /* name */, 
-      "Data points in domain" /* description */, 
-      true /* required */, "", "");
+      "Filename for Data points in domain" /* description */, 
+      true /* required */, "", "string");
   cmd.add(xArg);
 
   TCLAP::ValueArg<std::string> fArg("f" /* flag */, "function" /* name */, 
-      "f(x), function value for each data point in X" /* description */, 
-      true /* required */, "", "");
+      "f(x), Filename for function value for each data point in X" /* description */, 
+      true /* required */, "", "string");
   cmd.add(fArg);
+
+  TCLAP::ValueArg<std::string> outArg("o" /* flag */, "output_dir" /* name */,
+      "The directory to output analysis files to." /* description */,
+      false /* required */, "", "string");
+  cmd.add(outArg);
 
   TCLAP::ValueArg<int> pArg("p" /* flag */, "persistence",
       "Number of persistence levels to compute; all = -1 , default = 20" /* description */, 
@@ -53,6 +58,7 @@ int main(int argc, char **argv){
       "Smooth function values to nearest nieghbor averages" /* description */, 
       false /* required */, 0 /* default */, "double" /* type */); 
   cmd.add(smoothArg);
+
     
   try {
     cmd.parse( argc, argv );    
