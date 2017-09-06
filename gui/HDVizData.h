@@ -7,6 +7,7 @@
 #include "colormapper.h" 
 #include "Display.h"
 #include "Precision.h"
+#include <string>
 
 enum class HDVizLayout : char {
     ISOMAP  = 0,
@@ -16,7 +17,7 @@ enum class HDVizLayout : char {
 
 class HDVizData{
   public:
-    HDVizData();
+    HDVizData(std::string path);
     Precision getSelectedCoordinate(int index);
     Precision getSelectedVariance(int index);
 
@@ -69,6 +70,8 @@ class HDVizData{
 
     Precision zmax, zmin;
 
+    // filenames
+    std::string m_path;
 
     // color/width and transparent width values
     FortranLinalg::DenseVector<Precision> *yc;

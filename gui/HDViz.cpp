@@ -52,6 +52,10 @@ int main(int argc, char **argv) {
   TCLAP::ValueArg<std::string> fontArg("f" /* flag */, "font" /* name */, 
       "Absolute path of a ttf font" /* description */, false /* required */, "", "");
   cmd.add(fontArg);
+
+  TCLAP::ValueArg<std::string> pathArg("p" /* flag */, "path" /* name */,
+      "Path of directory containing input data." /* description */, false /* required */, "", "");
+  cmd.add(pathArg);
   
   try {
     cmd.parse( argc, argv );
@@ -67,7 +71,8 @@ int main(int argc, char **argv) {
 
   // Load data
   try { 
-    HDVizData data;
+    std::string path = pathArg.getValue();
+    HDVizData data(path);
 
     std::string fontname = fontArg.getValue();
     if (fontname.size() == 0){
