@@ -30,25 +30,27 @@ void printHelp() {
   std::cout <<  std::endl << std::endl;
 }
 
-
+/**
+ * HDVis application entry point.
+ */ 
 int main(int argc, char **argv) {	
   //Command line parsing
   TCLAP::CmdLine cmd("HDViz", ' ', "1");
 
-  TCLAP::SwitchArg boxArg("b", "b", 
-      "Display domain with boxplots", false);
+  TCLAP::SwitchArg boxArg("b" /* flag */, "boxplots" /* name */,
+      "Display domain with boxplots" /* description */, false /* required */);
   cmd.add(boxArg);
  
-  TCLAP::SwitchArg curvesArg("c", "curves", 
-      "Display inverse regression curves", false);
+  TCLAP::SwitchArg curvesArg("c" /* flag */, "curves" /* name */, 
+      "Display inverse regression curves" /* description */, false /* required */);
   cmd.add(curvesArg);
   
-  TCLAP::SwitchArg molArg("m", "molecule", 
-      "Display domain as molecule", false);
+  TCLAP::SwitchArg molArg("m" /* flag */, "molecule" /* name */, 
+      "Display domain as molecule" /* description */, false /* required */);
   cmd.add(molArg);
      
-  TCLAP::ValueArg<std::string> fontArg("f", "font", 
-      "Absolute path of a ttf font", false, "", "");
+  TCLAP::ValueArg<std::string> fontArg("f" /* flag */, "font" /* name */, 
+      "Absolute path of a ttf font" /* description */, false /* required */, "", "");
   cmd.add(fontArg);
   
   try {
@@ -58,12 +60,12 @@ int main(int argc, char **argv) {
     return -1;
   }
   
-  //GL stuff
+  // GL stuff
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGBA|GLUT_ALPHA|GLUT_DOUBLE|GLUT_DEPTH|GLUT_STENCIL);
 
 
-  //Load data
+  // Load data
   try { 
     HDVizData data;
 
