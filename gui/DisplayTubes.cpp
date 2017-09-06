@@ -375,17 +375,17 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
     case 'w':
     case 'W':
       data->setLayout(HDVizLayout::PCA);
-      data->notifyChange();  
+      notifyChange();  
       break;
     case 'p':
     case 'P':
       data->setLayout(HDVizLayout::PCA2);
-      data->notifyChange();  
+      notifyChange();  
       break;
     case 'i':
     case 'I':
       data->setLayout(HDVizLayout::ISOMAP);
-      data->notifyChange();  
+      notifyChange();  
       break;
     case 'a':
     case 'A':
@@ -447,20 +447,22 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       if((unsigned int) data->selectedCell >= data->edges.N()){
         data->selectedCell = 0;
       }
-      data->notifyChange();
+      notifyChange();
       break;
     case '[':
       data->selectedCell--;
       if(data->selectedCell < 0){
         data->selectedCell = data->edges.N()-1;
       }
-      data->notifyChange();
+      notifyChange();
       break;        
     case '>':
       data->increasePersistanceLevel();
+      notifyChange();
       break;
     case '<':
       data->decreasePersistanceLevel();
+      notifyChange();
       break;
   }
   glutPostRedisplay();
@@ -523,7 +525,7 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
         if (data->selectedPoint >= data->nSamples ) {
           data->selectedPoint = data->nSamples-1;
         }
-        data->notifyChange();
+        notifyChange();
       } else {
         Precision rot = rotation[rotationAxis] ;
         rot += dx;
@@ -537,6 +539,19 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
   last_y = y;
   glutPostRedisplay();
 }
+
+
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::addWindow(int w) {
+  windows.push_back(w);
+};
+
+template<typename TPrecision>
+void DisplayTubes<TPrecision>::notifyChange() {
+  for (unsigned int i = 0; i < windows.size(); i++) {
+    glutPostWindowRedisplay(windows[i]);
+  }
+};
 
 
 template<typename TPrecision>
@@ -607,7 +622,7 @@ void DisplayTubes<TPrecision>::doPick() {
           data->selectedCell = index;
         }
         setRenderModesFromPeaks();
-        data->notifyChange();
+        notifyChange();
       }
     }
   }  

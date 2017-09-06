@@ -136,8 +136,8 @@ int main(int argc, char **argv) {
       mainD->keyboard(key, x, y);
     });
     
-    mainD->init();
-    data.addWindow(mainWindow);
+    mainD->init();    
+    reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(mainWindow);
  
     if (auxD != nullptr) { 
       glutInitWindowSize(500, 500); 
@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
       });
 
       auxD->init();
-      data.addWindow(auxWindow);
+      reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(auxWindow);
     }
 
     if (auxD2 != nullptr) {
@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
       });
 
       auxD2->init();
-      data.addWindow(auxWindow2);
+      reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(auxWindow2);
     }
 
     if (auxD3 != nullptr) {
@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
       });
       
       auxD3->init();
-      data.addWindow(auxWindow3);
+      reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(auxWindow3);
     }
 
     printHelp();

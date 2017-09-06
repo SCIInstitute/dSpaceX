@@ -30,6 +30,8 @@ class DisplayTubes : public Display{
     void keyboard(unsigned char key, int x, int y);
     void mouse(int button, int state, int x, int y);    
     void motion(int x, int y); // catch mouse move events
+    void addWindow(int w);
+    void notifyChange();
 
   private:
     void initState();
@@ -75,5 +77,6 @@ class DisplayTubes : public Display{
 
     HDVizData *data;
     FTGLPixmapFont font; 
+    std::vector<int> windows;
 };
 #endif

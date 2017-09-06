@@ -56,12 +56,6 @@ Precision HDVizData::getSelectedVariance(int index) {
 };
 
 
-void HDVizData::notifyChange() {
-  for (unsigned int i = 0; i<windows.size(); i++) {
-    glutPostWindowRedisplay(windows[i]);
-  }
-};
-
 void HDVizData::increasePersistanceLevel() {
   setPersistenceLevel(currentLevel+1);
 };
@@ -87,14 +81,11 @@ void HDVizData::setPersistenceLevel(int pl, bool update) {
   if (selectedCell >= (int) edges.N()) {
     selectedCell = edges.N() - 1;
   }
-  if (update) {
-    notifyChange();
-  }
+  // if (update) {
+  //   notifyChange();
+  // }
 }
 
-void HDVizData::addWindow(int w) {
-  windows.push_back(w);
-};
 
 void HDVizData::setLayout(HDVizLayout layout) {
   this->layout = layout;

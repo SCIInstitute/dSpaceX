@@ -20,13 +20,11 @@ class HDVizData{
     HDVizData(std::string path);
     Precision getSelectedCoordinate(int index);
     Precision getSelectedVariance(int index);
-
-    void notifyChange();
+    
     void increasePersistanceLevel();        
     void decreasePersistanceLevel();
     int getPersistanceLevel();
     void setPersistenceLevel(int pl, bool update = true);
-    void addWindow(int w);
     void setLayout(HDVizLayout layout);
   
 
@@ -97,7 +95,6 @@ class HDVizData{
     int minLevel;
     int currentLevel;
     HDVizLayout layout;
-    std::vector<int> windows;
 };
 
 #endif
