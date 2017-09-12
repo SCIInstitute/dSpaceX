@@ -110,10 +110,10 @@ void HDProcessor::process(
  */
 void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex, 
     int start, int nSamples, Precision sigma) {
-  for (unsigned int nP = start; nP < persistence.N(); nP++){
+  for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
     // Number of extrema in current crystal
-    // int nExt = persistence.N() - nP + 1;         // jonbronson commented out 8/16/17
-    msComplex.mergePersistence(persistence(nP));
+    // int nExt = persistence.N() - persistenceLevel + 1;      // jonbronson commented out 8/16/17
+    msComplex.mergePersistence(persistence(persistenceLevel));
     crystalIDs.deallocate();
     crystalIDs = msComplex.getPartitions();
     crystals.deallocate();
@@ -155,12 +155,12 @@ void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex,
       }
     } 
     if (bShouldWriteFiles) {
-      std::string crystalsFile = "Crystals_" + std::to_string(nP) + ".data";
+      std::string crystalsFile = "Crystals_" + std::to_string(persistenceLevel) + ".data";
       LinalgIO<int>::writeMatrix(m_path + crystalsFile, crystalTmp); 
     }
     crystalTmp.deallocate();   
 
-    std::cout << std::endl << "PersistenceLevel: " << nP << std::endl;
+    std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
     std::cout << "# of Crystals: " << crystals.N() << std::endl;
     std::cout << "=================================" << std::endl << std::endl;
 
@@ -294,7 +294,7 @@ void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex,
       tmp.deallocate();
 
       std::string crystalPrefix = 
-          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(crystalIndex);
+          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(crystalIndex);
 
       if (bShouldWriteFiles) {
         std::string crystalIdFilename = crystalPrefix + "_Rs.data";
@@ -371,7 +371,7 @@ void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex,
 
     // Save maximal extrema width
     if (bShouldWriteFiles) {
-      std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(nP) + ".data";
+      std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(persistenceLevel) + ".data";
       LinalgIO<Precision>::writeVector(m_path + extremaWidthsFilename, eWidths);
     }
     eWidths.deallocate();
@@ -406,13 +406,13 @@ void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex,
     }  
     
     //----- Complete PCA layout 
-    computePCALayout(S, nExt, nSamples, nP);      
+    computePCALayout(S, nExt, nSamples, persistenceLevel);      
 
     //----- PCA extrema / PCA curves layout
-    computePCAExtremaLayout(S, ScrystalIDs, nExt, nSamples, nP);
+    computePCAExtremaLayout(S, ScrystalIDs, nExt, nSamples, persistenceLevel);
 
     //----- Isomap extrema / PCA curves layout 
-    computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, nP);     
+    computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, persistenceLevel);     
     
 
     S.deallocate();
@@ -472,13 +472,13 @@ void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::D
  * Compute low-d layout of geomtry using PCA.
  * TODO:  Return layout result that include:
  *        - Lmin, Lmax
- *        - Crystal NP's Layout Matrix
+ *        - Crystal's Layout Matrix
  *        - Extrema Layout Matrix
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
-  int nExt, int nSamples, unsigned int nP) {
+  int nExt, int nSamples, unsigned int persistenceLevel) {
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   PCA<Precision> pca(S, dim);        
@@ -542,7 +542,7 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
 
     if (bShouldWriteFiles) {
       std::string layoutFilename = 
-          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_layout.data";
+          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(i) + "_layout.data";
       LinalgIO<Precision>::writeMatrix(m_path + layoutFilename, tmp);
     }
 
@@ -553,13 +553,13 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
   }
 
   if (bShouldWriteFiles) {
-    std::string extremaLayoutFilename = "ExtremaLayout_" + std::to_string(nP) + ".data";
+    std::string extremaLayoutFilename = "ExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
     LinalgIO<Precision>::writeMatrix(m_path + extremaLayoutFilename, E);
   }
   E.deallocate();
 
   if (bShouldWriteFiles) {
-    std::string extremaValuesFilename = "ExtremaValues_" + std::to_string(nP) + ".data";
+    std::string extremaValuesFilename = "ExtremaValues_" + std::to_string(persistenceLevel) + ".data";
     LinalgIO<Precision>::writeVector(m_path + extremaValuesFilename, Ef);
   }
   Ef.deallocate();
@@ -572,14 +572,14 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
  * Compute low-d layout of geomtry using PCA Extrema
  * TODO:  Return layout result that include:
  *        - Lmin, Lmax
- *        - Crystal NP's Layout Matrix
+ *        - Crystal's Layout Matrix
  *        - Extrema Layout Matrix
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  int nExt, int nSamples, unsigned int nP) {
+  int nExt, int nSamples, unsigned int persistenceLevel) {
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   DenseMatrix<Precision> Xext(Xall.M(), nExt);
@@ -640,7 +640,7 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
 
     if (bShouldWriteFiles) {
       std::string pca2LayoutFilename = 
-          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_pca2layout.data";
+          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(i) + "_pca2layout.data";
       LinalgIO<Precision>::writeMatrix(m_path + pca2LayoutFilename, tmp);
     }
     
@@ -653,7 +653,7 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
 
   // Save extremal points location and function value.
   if (bShouldWriteFiles) {
-    std::string pca2Filename = "PCA2ExtremaLayout_" + std::to_string(nP) + ".data";
+    std::string pca2Filename = "PCA2ExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
     LinalgIO<Precision>::writeMatrix(m_path + pca2Filename, pca2L);
   }
   pca2L.deallocate();
@@ -664,14 +664,14 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
  * Compute low-d layout of geomtry using Isomap algorithm
  * TODO:  Return layout result that include:
  *        - Lmin, Lmax
- *        - Crystal NP's Layout Matrix
+ *        - Crystal's Layout Matrix
  *        - Extrema Layout Matrix
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  int nExt, int nSamples, unsigned int nP) {
+  int nExt, int nSamples, unsigned int persistenceLevel) {
   // Do an isomap layout.
   using namespace FortranLinalg;
 
@@ -738,7 +738,7 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
 
     if (bShouldWriteFiles) {
       std::string isoLayoutFilename = 
-          "ps_" + std::to_string(nP) + "_crystal_" + std::to_string(i) + "_isolayout.data";
+          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(i) + "_isolayout.data";
       LinalgIO<Precision>::writeMatrix(m_path + isoLayoutFilename, tmp);
     }
     
@@ -751,7 +751,7 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
 
   // Save extremal points location and function value
   if (bShouldWriteFiles) {
-    std::string isoExtremaFilename = "IsoExtremaLayout_" + std::to_string(nP) + ".data";
+    std::string isoExtremaFilename = "IsoExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
     LinalgIO<Precision>::writeMatrix(m_path + isoExtremaFilename, isoL); 
   }
   isoL.deallocate();

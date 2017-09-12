@@ -30,13 +30,13 @@ class HDProcessor {
  private:
   void computeInverseRegression(NNMSComplex<Precision> &msComplex, int start, int nSamples, Precision sigma);
   void computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
-    int nExt, int nSamples, unsigned int nP);
+    int nExt, int nSamples, unsigned int persistenceLevel);
   void computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
     std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-    int nExt, int nSamples, unsigned int nP);
+    int nExt, int nSamples, unsigned int persistenceLevel);
   void computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
     std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-    int nExt, int nSamples, unsigned int nP);
+    int nExt, int nSamples, unsigned int persistenceLevel);
   void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit);
   void addNoise(FortranLinalg::DenseVector<Precision> &v);
 
