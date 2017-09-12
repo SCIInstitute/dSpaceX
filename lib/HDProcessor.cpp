@@ -98,6 +98,11 @@ void HDProcessor::process(
 
 
   // Compute inverse regression curves and additional information for each crystal
+  computeInverseRegression(msComplex, start, nSamples, sigma);
+}
+
+void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex, 
+    int start, int nSamples, Precision sigma) {
   for (unsigned int nP = start; nP < persistence.N(); nP++){
     // Number of extrema in current crystal
     // int nExt = persistence.N() - nP + 1;         // jonbronson commented out 8/16/17
