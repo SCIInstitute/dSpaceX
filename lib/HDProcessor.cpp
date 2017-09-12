@@ -401,7 +401,7 @@ void HDProcessor::process(
     computePCAExtremaLayout(S, ScrystalIDs, nExt, nSamples, nP);
 
     //----- Isomap extrema / PCA curves layout 
-    computeIsomapLayout(S, ScrystalIDs, l2, nExt, nSamples, nP);     
+    computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, nP, l2);     
     
 
     S.deallocate();
@@ -466,7 +466,8 @@ void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::D
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
-void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int nExt, int nSamples, unsigned int nP) {
+void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
+  int nExt, int nSamples, unsigned int nP) {
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   PCA<Precision> pca(S, dim);        
@@ -566,7 +567,8 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, int
  * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
-  std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, int nExt, int nSamples, unsigned int nP) {
+  std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
+  int nExt, int nSamples, unsigned int nP) {
   using namespace FortranLinalg;
   unsigned int dim = 2; 
   DenseMatrix<Precision> Xext(Xall.M(), nExt);
@@ -658,7 +660,7 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
  */
 void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  EuclideanMetric<Precision> &l2, int nExt, int nSamples, unsigned int nP) {
+  int nExt, int nSamples, unsigned int nP, EuclideanMetric<Precision> &l2) {
   // Do an isomap layout.
   using namespace FortranLinalg;
   unsigned int dim = 2; 
