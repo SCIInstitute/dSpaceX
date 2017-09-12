@@ -87,7 +87,7 @@ class Distance{
           knn(i) = minHeap.getRootIndex();
           dists(i) = minHeap.extractRoot();
         }
-	delete[] distances;
+	      delete[] distances;
     };
    
 
