@@ -35,8 +35,7 @@ class HDProcessor {
     int nExt, int nSamples, unsigned int nP);
   void computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
     std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-    int nExt, int nSamples, unsigned int nP, 
-    EuclideanMetric<Precision> &l2);
+    int nExt, int nSamples, unsigned int nP);
   void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit);
   void addNoise(FortranLinalg::DenseVector<Precision> &v);
 

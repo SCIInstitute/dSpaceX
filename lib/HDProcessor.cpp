@@ -163,7 +163,6 @@ void HDProcessor::process(
     std::vector< std::vector<unsigned int> > Xi(crystals.N());
     std::vector< std::vector<unsigned int> > Xiorig(crystals.N());
     std::vector< std::vector<Precision> > yci(crystals.N());
-    EuclideanMetric<Precision> l2;
 
     // Compute regression for each Morse-Smale crystal
     for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); ++crystalIndex) {
@@ -401,7 +400,7 @@ void HDProcessor::process(
     computePCAExtremaLayout(S, ScrystalIDs, nExt, nSamples, nP);
 
     //----- Isomap extrema / PCA curves layout 
-    computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, nP, l2);     
+    computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, nP);     
     
 
     S.deallocate();
@@ -660,9 +659,11 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
  */
 void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
   std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  int nExt, int nSamples, unsigned int nP, EuclideanMetric<Precision> &l2) {
+  int nExt, int nSamples, unsigned int nP) {
   // Do an isomap layout.
   using namespace FortranLinalg;
+
+  EuclideanMetric<Precision> metric;
   unsigned int dim = 2; 
   SparseMatrix<Precision> adj(nExt, nExt, std::numeric_limits<Precision>::max());
   for (unsigned int i=0; i < crystals.N(); i++) {
@@ -670,7 +671,7 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     for (int j=1; j < nSamples; j++) {
       int index1 = nSamples*i+j;
       int index2 = index1 - 1;
-      dist += l2.distance(S, index1, S, index2);
+      dist += metric.distance(S, index1, S, index2);
     }       
 
     int index1 = exts[crystals(0, i)];
