@@ -28,7 +28,10 @@ class HDProcessor {
       Precision sigmaArg, Precision sigmaSmooth, std::string output_dir);
 
  private:
-  void computeInverseRegression(NNMSComplex<Precision> &msComplex, int start, int nSamples, Precision sigma);
+  void computeInverseRegression(NNMSComplex<Precision> &msComplex, 
+    int start, int nSamples, Precision sigma);
+  void computeInverseRegressionForLevel(NNMSComplex<Precision> &msComplex, 
+    unsigned int persistenceLevel, int nSamples, Precision sigma);
   void computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
     int nExt, int nSamples, unsigned int persistenceLevel);
   void computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
