@@ -199,8 +199,8 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   }
 
 
-  for (unsigned int a=0; a<crystals.N(); a++) {
-    for (unsigned int b=0; b<crystals.N(); b++) {
+  for (unsigned int a = 0; a < crystals.N(); a++) {
+    for (unsigned int b = 0; b < crystals.N(); b++) {
       if (a == b) continue;
       int ea1 = crystals(0, a);
       int ea2 = crystals(1, a);
@@ -218,7 +218,7 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
       }
       // Add points within sigma of extrema to this points.
       if (touch) {
-        for (unsigned int i=0; i < Xiorig[b].size(); i++) {
+        for (unsigned int i = 0; i < Xiorig[b].size(); i++) {
           unsigned int index = Xiorig[b][i];
           if (fabs(val - yall(index)) < 2*sigma) {
             Xi[a].push_back(index);
