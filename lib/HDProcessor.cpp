@@ -178,16 +178,14 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   std::cout << "=================================" << std::endl << std::endl;
 
   DenseMatrix<Precision> S(Xall.M(), crystals.N()*nSamples + nExt);
-  std::vector< DenseMatrix<Precision> > ScrystalIDs(crystals.N());
-  std::vector< DenseMatrix<Precision> > XcrystalIDs(crystals.N());
-  std::vector< DenseMatrix<Precision> > XpcrystalIDs(crystals.N());
-  std::vector< DenseMatrix<Precision> > ycrystalIDs(crystals.N());
+  std::vector<DenseMatrix<Precision>> ScrystalIDs(crystals.N());  
+  std::vector<DenseMatrix<Precision>> XpcrystalIDs(crystals.N());  
   DenseVector<Precision> eWidths(exts.size());
   Linalg<Precision>::Zero(eWidths);
 
-  std::vector< std::vector<unsigned int> > Xi(crystals.N());
-  std::vector< std::vector<unsigned int> > Xiorig(crystals.N());
-  std::vector< std::vector<Precision> > yci(crystals.N());
+  std::vector<std::vector<unsigned int>> Xi(crystals.N());
+  std::vector<std::vector<unsigned int>> Xiorig(crystals.N());
+  std::vector<std::vector<Precision>> yci(crystals.N());
 
   // Compute regression for each Morse-Smale crystal
   for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); ++crystalIndex) {
@@ -232,155 +230,10 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   }
 
 
-
-  // Regression for each crystal of current perssistence level.
+  // Regression for each crystal of current persistence level.
   for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
-    // Extract samples and function values from crystalIDs
-    DenseMatrix<Precision> X(Xall.M(), Xi[crystalIndex].size());
-    DenseMatrix<Precision> y(1, X.N());
-    for (unsigned int i=0; i< X.N(); i++){
-      unsigned int index = Xi[crystalIndex][i];
-      Linalg<Precision>::SetColumn(X, i, Xall, index);
-      y(0, i) = yci[crystalIndex][i];
-    }
-    XcrystalIDs[crystalIndex] = Linalg<Precision>::Copy(X);
-    ycrystalIDs[crystalIndex] = Linalg<Precision>::Copy(y);
-
-
-    // Compute Rgeression curve
-    std::cout << "Computing regression curve for crystalID " << crystalIndex << std::endl;
-    std::cout << X.N() << " points" << std::endl;
-
-    GaussianKernel<Precision> kernel(sigma, 1);
-    FirstOrderKernelRegression<Precision> kr(X, y, kernel, 1000);
-       
-    /*      
-      //Get locations
-      DenseMatrix<Precision> Zend = y;
-      DenseVector<Precision> yv(1);
-      DenseVector<Precision> tmp(Xall.M());
-      DenseMatrix<Precision> Xp(X.M(), X.N());
-      for (unsigned int k=0; k<X.N(); k++) {
-         yv(0) = y(0, k);
-         kr.evaluate(yv, tmp);
-         Linalg<Precision>::SetColumn(Xp, k, tmp);
-      }
-      XpcrystalIDs[crystalIndex] = Xp;
-    */
-
-    // Compute min and max function value
-    int e1 = crystals(0, crystalIndex);
-    int e2 = crystals(1, crystalIndex);
-    int e1ID = exts[e1];
-    int e2ID = exts[e2];
-    Precision zmax = yall(e1);
-    Precision zmin = yall(e2);
-
-    // Create samples (regressed in input space) between min and max function values
-    DenseVector<Precision> z(1);
-    DenseVector<Precision> pdist(nSamples);
-    DenseVector<Precision> tmp(Xall.M());
-    DenseMatrix<Precision> Zp(1, nSamples);
-    ScrystalIDs[crystalIndex] = DenseMatrix<Precision>(Xall.M(), nSamples);
-    DenseMatrix<Precision> gStmp(Xall.M(), 1);
-    DenseMatrix<Precision> gradS(Xall.M(), nSamples);
-    DenseVector<Precision> sdev( Xall.M() );
-    DenseMatrix<Precision> Svar(Xall.M(), nSamples);
-    for (int k=0; k < nSamples; k++) {
-      z(0) = zmin + (zmax-zmin) * ( k/ (nSamples-1.f) );
-      Zp(0, k) = z(0);
-      kr.evaluate(z, tmp, gStmp, sdev.data());
-      pdist(k) = 0;
-      for (int q=0; q<sdev.N(); q++) {
-        pdist(k) += sdev(q);
-        sdev(q) = sqrt(sdev(q));
-      }
-      pdist(k) = sqrt(pdist(k));
-      
-      Linalg<Precision>::SetColumn(S, crystalIndex*nSamples + k, tmp);
-      Linalg<Precision>::SetColumn(ScrystalIDs[crystalIndex], k, tmp);
-      Linalg<Precision>::SetColumn(Svar, k, sdev);
-      Linalg<Precision>::SetColumn(gradS, k, gStmp, 0);
-    }
-    sdev.deallocate();
-    z.deallocate();
-    tmp.deallocate();
-
-    std::string crystalPrefix = 
-        "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(crystalIndex);
-
-    if (bShouldWriteFiles) {
-      std::string crystalIdFilename = crystalPrefix + "_Rs.data";
-      LinalgIO<Precision>::writeMatrix(m_path + crystalIdFilename, ScrystalIDs[crystalIndex]);
-    }
-
-    if (bShouldWriteFiles) {
-      std::string gradsFilename = crystalPrefix + "_gradRs.data";
-      LinalgIO<Precision>::writeMatrix(m_path + gradsFilename, gradS);
-    }
-    gradS.deallocate(); 
-
-    if (bShouldWriteFiles) {
-      std::string svarFilename = crystalPrefix + "_Svar.data";
-      LinalgIO<Precision>::writeMatrix(m_path + svarFilename, Svar);
-    }
-    Svar.deallocate();
-   
-    if (bShouldWriteFiles) {
-      std::string mdistFilename = crystalPrefix + "_mdists.data";
-      LinalgIO<Precision>::writeVector(m_path + mdistFilename, pdist);
-    }
-
-    // Compute maximal extrema widths
-    if (eWidths(e2ID) < pdist(0)) {
-      eWidths(e2ID) = pdist(0); 
-    }
-    if (eWidths(e1ID) < pdist(nSamples-1)) {
-      eWidths(e1ID) = pdist(nSamples-1); 
-    }
-
-    pdist.deallocate();
-
-
-    
-    // Compute function value mean at sampled locations
-    DenseVector<Precision> fmean(Zp.N());
-    for (unsigned int i=0; i < Zp.N(); i++) {
-      fmean(i) = Zp(0, i);
-    }
-
-    if (bShouldWriteFiles) {
-      std::string fmeanFilename = crystalPrefix + "_fmean.data";
-      LinalgIO<Precision>::writeVector(m_path + fmeanFilename, fmean);
-    }
-    fmean.deallocate();
-
-    // Compute sample density
-    DenseVector<Precision> spdf(Zp.N());
-    for (unsigned int i=0; i < Zp.N(); i++) {
-      Precision sum = 0;
-      for (unsigned int j=0; j < y.N(); j++) {
-        Precision k = kernel.f(Zp, i, y, j);
-        sum += k;
-      } 
-      spdf(i) = sum/Xall.N();
-    }
-
-    if (bShouldWriteFiles) {
-      std::string spdfFilename = crystalPrefix + "_spdf.data";
-      LinalgIO<Precision>::writeVector(m_path + spdfFilename, spdf);
-    }
-    spdf.deallocate(); 
-   
-
-    X.deallocate();
-    Zp.deallocate();
-    y.deallocate();
+    computeRegressionForCrystal(crystalIndex, persistenceLevel, sigma, nSamples, Xi, yci, ScrystalIDs, S, eWidths);
   }
-  // end of regression  loop
-
-
-
 
   // Save maximal extrema width
   if (bShouldWriteFiles) {
@@ -388,6 +241,7 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
     LinalgIO<Precision>::writeVector(m_path + extremaWidthsFilename, eWidths);
   }
   eWidths.deallocate();
+
 
 
   // Add extremal points to S for computing layout
@@ -431,10 +285,158 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   S.deallocate();
   for (unsigned int i=0; i < crystals.N(); i++) { 
     ScrystalIDs[i].deallocate();
-    XcrystalIDs[i].deallocate();
-    XpcrystalIDs[i].deallocate();
-    ycrystalIDs[i].deallocate();
+    XpcrystalIDs[i].deallocate();    
   }
+}
+
+/**
+ * Computes regression curves for each crystal of specified persistence level.
+ */
+void HDProcessor::computeRegressionForCrystal(
+    unsigned int crystalIndex, unsigned int persistenceLevel, Precision sigma, int nSamples, 
+    std::vector<std::vector<unsigned int>> &Xi,
+    std::vector<std::vector<Precision>> &yci,
+    std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs,
+    FortranLinalg::DenseMatrix<Precision> &S,
+    FortranLinalg::DenseVector<Precision> &eWidths) {
+  // Extract samples and function values from crystalIDs
+  DenseMatrix<Precision> X(Xall.M(), Xi[crystalIndex].size());
+  DenseMatrix<Precision> y(1, X.N());
+  for (unsigned int i=0; i< X.N(); i++){
+    unsigned int index = Xi[crystalIndex][i];
+    Linalg<Precision>::SetColumn(X, i, Xall, index);
+    y(0, i) = yci[crystalIndex][i];
+  }  
+  
+  // Compute Rgeression curve
+  std::cout << "Computing regression curve for crystalID " << crystalIndex << std::endl;
+  std::cout << X.N() << " points" << std::endl;
+
+  GaussianKernel<Precision> kernel(sigma, 1);
+  FirstOrderKernelRegression<Precision> kr(X, y, kernel, 1000);
+     
+  /*      
+    //Get locations
+    DenseMatrix<Precision> Zend = y;
+    DenseVector<Precision> yv(1);
+    DenseVector<Precision> tmp(Xall.M());
+    DenseMatrix<Precision> Xp(X.M(), X.N());
+    for (unsigned int k=0; k<X.N(); k++) {
+       yv(0) = y(0, k);
+       kr.evaluate(yv, tmp);
+       Linalg<Precision>::SetColumn(Xp, k, tmp);
+    }
+    XpcrystalIDs[crystalIndex] = Xp;
+  */
+
+  // Compute min and max function value
+  int e1 = crystals(0, crystalIndex);
+  int e2 = crystals(1, crystalIndex);
+  int e1ID = exts[e1];
+  int e2ID = exts[e2];
+  Precision zmax = yall(e1);
+  Precision zmin = yall(e2);
+
+  // Create samples (regressed in input space) between min and max function values
+  DenseVector<Precision> z(1);
+  DenseVector<Precision> pdist(nSamples);
+  DenseVector<Precision> tmp(Xall.M());
+  DenseMatrix<Precision> Zp(1, nSamples);
+  ScrystalIDs[crystalIndex] = DenseMatrix<Precision>(Xall.M(), nSamples);
+  DenseMatrix<Precision> gStmp(Xall.M(), 1);
+  DenseMatrix<Precision> gradS(Xall.M(), nSamples);
+  DenseVector<Precision> sdev( Xall.M() );
+  DenseMatrix<Precision> Svar(Xall.M(), nSamples);
+  for (int k=0; k < nSamples; k++) {
+    z(0) = zmin + (zmax-zmin) * ( k/ (nSamples-1.f) );
+    Zp(0, k) = z(0);
+    kr.evaluate(z, tmp, gStmp, sdev.data());
+    pdist(k) = 0;
+    for (int q=0; q<sdev.N(); q++) {
+      pdist(k) += sdev(q);
+      sdev(q) = sqrt(sdev(q));
+    }
+    pdist(k) = sqrt(pdist(k));
+    
+    Linalg<Precision>::SetColumn(S, crystalIndex*nSamples + k, tmp);
+    Linalg<Precision>::SetColumn(ScrystalIDs[crystalIndex], k, tmp);
+    Linalg<Precision>::SetColumn(Svar, k, sdev);
+    Linalg<Precision>::SetColumn(gradS, k, gStmp, 0);
+  }
+  sdev.deallocate();
+  z.deallocate();
+  tmp.deallocate();
+
+  std::string crystalPrefix = 
+      "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(crystalIndex);
+
+  if (bShouldWriteFiles) {
+    std::string crystalIdFilename = crystalPrefix + "_Rs.data";
+    LinalgIO<Precision>::writeMatrix(m_path + crystalIdFilename, ScrystalIDs[crystalIndex]);
+  }
+
+  if (bShouldWriteFiles) {
+    std::string gradsFilename = crystalPrefix + "_gradRs.data";
+    LinalgIO<Precision>::writeMatrix(m_path + gradsFilename, gradS);
+  }
+  gradS.deallocate(); 
+
+  if (bShouldWriteFiles) {
+    std::string svarFilename = crystalPrefix + "_Svar.data";
+    LinalgIO<Precision>::writeMatrix(m_path + svarFilename, Svar);
+  }
+  Svar.deallocate();
+ 
+  if (bShouldWriteFiles) {
+    std::string mdistFilename = crystalPrefix + "_mdists.data";
+    LinalgIO<Precision>::writeVector(m_path + mdistFilename, pdist);
+  }
+
+  // Compute maximal extrema widths
+  if (eWidths(e2ID) < pdist(0)) {
+    eWidths(e2ID) = pdist(0); 
+  }
+  if (eWidths(e1ID) < pdist(nSamples-1)) {
+    eWidths(e1ID) = pdist(nSamples-1); 
+  }
+
+  pdist.deallocate();
+
+
+  
+  // Compute function value mean at sampled locations
+  DenseVector<Precision> fmean(Zp.N());
+  for (unsigned int i=0; i < Zp.N(); i++) {
+    fmean(i) = Zp(0, i);
+  }
+
+  if (bShouldWriteFiles) {
+    std::string fmeanFilename = crystalPrefix + "_fmean.data";
+    LinalgIO<Precision>::writeVector(m_path + fmeanFilename, fmean);
+  }
+  fmean.deallocate();
+
+  // Compute sample density
+  DenseVector<Precision> spdf(Zp.N());
+  for (unsigned int i=0; i < Zp.N(); i++) {
+    Precision sum = 0;
+    for (unsigned int j=0; j < y.N(); j++) {
+      Precision k = kernel.f(Zp, i, y, j);
+      sum += k;
+    } 
+    spdf(i) = sum/Xall.N();
+  }
+
+  if (bShouldWriteFiles) {
+    std::string spdfFilename = crystalPrefix + "_spdf.data";
+    LinalgIO<Precision>::writeVector(m_path + spdfFilename, spdf);
+  }
+  spdf.deallocate(); 
+ 
+
+  X.deallocate();
+  Zp.deallocate();
+  y.deallocate();
 }
 
 void HDProcessor::addNoise(FortranLinalg::DenseVector<Precision> &v) {

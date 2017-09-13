@@ -32,6 +32,13 @@ class HDProcessor {
     int start, int nSamples, Precision sigma);
   void computeInverseRegressionForLevel(NNMSComplex<Precision> &msComplex, 
     unsigned int persistenceLevel, int nSamples, Precision sigma);
+  void computeRegressionForCrystal(unsigned int crystalIndex, unsigned int persistenceLevel, 
+    Precision sigma, int nSamples,
+    std::vector<std::vector<unsigned int>> &Xi,
+    std::vector<std::vector<Precision>> &yci, 
+    std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDS,
+    FortranLinalg::DenseMatrix<Precision> &S,
+    FortranLinalg::DenseVector<Precision> &eWidths);
   void computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
     int nExt, int nSamples, unsigned int persistenceLevel);
   void computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
