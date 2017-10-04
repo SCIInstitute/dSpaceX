@@ -37,12 +37,12 @@ class HDVizData{
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
-    FortranLinalg::DenseVector<Precision> ez;
+    FortranLinalg::DenseVector<Precision> ez;   // Extrema z-axis coordintes
     FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
     FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
 
     // Cell layouts
-    FortranLinalg::DenseMatrix<Precision> *L;
+    FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
 
     // Cell reconstruction
     FortranLinalg::DenseMatrix<Precision> *R;
@@ -66,10 +66,10 @@ class HDVizData{
     std::string m_path;
 
     // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision> *yc;
-    FortranLinalg::DenseVector<Precision> *z;
-    FortranLinalg::DenseVector<Precision> *yw;
-    FortranLinalg::DenseVector<Precision> *yd;
+    FortranLinalg::DenseVector<Precision> *yc;   // value / color
+    FortranLinalg::DenseVector<Precision> *z;    // point positions
+    FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
+    FortranLinalg::DenseVector<Precision> *yd;   // density
 
     // ColorMapper for each cell
     ColorMapper<Precision> colormap;
