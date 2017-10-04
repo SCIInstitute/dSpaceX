@@ -7,6 +7,39 @@
  /**
   * All output data generated from the HDProcessor. 
   */
-struct HDProcessor {
+struct HDProcessResult {
   
+  // pSorted    = Persistence.data.hdr
+  // minLevel   = PersistenceStart.data.hdr
+  // G(eometry) = Geom.data.hdr
+  // parameterNames = names.txt     
+
+  // loadData
+  //          Crystals_[level].data.hdr 
+  //          ExtremaValues_[level].data.hdr
+  //          ExtremaWidths_[level].data.hdr
+    
+  // loadLayouts
+  // Lmin     IsoMin.data.hdr
+  // Lmax     IsoMax.data.hdr
+  // L[i] =   ps_[level]_crystal_[i]_isolayout.data.hdr
+  //          IsoExtremaLayout_[level].data.hdr
+  // Lmin     PCAMin.data.hdr
+  // Lmax     PCAMax.data.hdr
+  // L[i] =   ps_[level]_crystal_[i]_layout.data.hdr
+  //          ExtremaLayout_[level].data.hdr
+  // Lmin     PCA2Min.data.hdr
+  // Lmin     PCA2Max.data.hdr
+  // L[i] =   ps_[level]_crystal_[i]_pca2layout.data.hdr
+  //          PCA2ExtremaLayout_[level].data.hdr
+    
+        
+  // loadColorValues    // ps_[level]_crystal_[i]_fmean.data.hdr
+  // loadWidthValues    // ps_[level]_crystal_[i]_mdists.data.hdr
+  // loadDensityValues  // ps_[level]_crystal_[i]_spdf.data.hdr
+
+  // Reconstructions 
+  // R =                // ps_[level]_crystal_[i]_Rs.data.hdr";
+  // gradR =            // ps_[level]_crystal_[i]_gradRs.data.hdr";
+  // Rvar =             // ps_[level]_crystal_[i]_Svar.data.hdr"; 
 };
