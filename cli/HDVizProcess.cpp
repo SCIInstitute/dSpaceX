@@ -72,9 +72,10 @@ int main(int argc, char **argv){
   DenseMatrix<Precision> x = LinalgIO<Precision>::readMatrix(xArg.getValue());
   DenseVector<Precision> y = LinalgIO<Precision>::readVector(fArg.getValue());
       
+  HDProcessResult *result = nullptr;
   try {
     HDProcessor processor;
-    processor.process(
+    result = processor.process(
         x /* domain */,
         y /* function */,
         knnArg.getValue() /* knn */,        
@@ -86,6 +87,10 @@ int main(int argc, char **argv){
         outArg.getValue() /* output_dir */);
   } catch (const char *err) {
     std::cerr << err << std::endl;
+  }
+
+  if (result != nullptr) {
+    std::cout << "Successfully returned process result." << std::endl;
   }
   
   return 0;

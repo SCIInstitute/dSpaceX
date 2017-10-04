@@ -9,10 +9,11 @@
   */
 struct HDProcessResult {
   
-  // pSorted    = Persistence.data.hdr
-  // minLevel   = PersistenceStart.data.hdr
-  // G(eometry) = Geom.data.hdr
-  // parameterNames = names.txt     
+  // pScaled/pSorted = Persistence.data.hdr
+  // minLevel        = PersistenceStart.data.hdr
+  // X / G(eometry)  = Geom.data.hdr
+  // Y / QoI         = Function.data.hdr
+  // parameterNames  = names.txt     
 
   // loadData
   //          Crystals_[level].data.hdr 

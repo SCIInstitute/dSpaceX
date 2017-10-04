@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HDProcessResult.h"
 #include "Precision.h"
 #include "PCA.h"
 #include "Linalg.h"
@@ -22,7 +23,7 @@
 class HDProcessor {
  public:
   HDProcessor();
-  void process(FortranLinalg::DenseMatrix<Precision> x,
+  HDProcessResult* process(FortranLinalg::DenseMatrix<Precision> x,
       FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
       Precision sigmaArg, Precision sigmaSmooth, std::string output_dir);
@@ -69,6 +70,9 @@ class HDProcessor {
 
   // Output filepath
   std::string m_path;
+
+  // Member variable storing process result as its built;
+  HDProcessResult *m_result = nullptr;
 
   // List of extrema and extrema of previous persistence level used to align low
   // dimensional mappings to previous level

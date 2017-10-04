@@ -30,11 +30,13 @@ HDProcessor::HDProcessor() {}
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  * @param[in] output_dir Output directory for analysis files.
  */
-void HDProcessor::process(  
+HDProcessResult* HDProcessor::process(  
   FortranLinalg::DenseMatrix<Precision> x,
   FortranLinalg::DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
   bool randArg, Precision sigma, Precision sigmaSmooth, std::string output_dir) {
+
+  m_result = new HDProcessResult();
 
   if (!output_dir.empty() && *output_dir.rbegin() != '/') {
     output_dir += '/';
@@ -99,6 +101,11 @@ void HDProcessor::process(
 
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
+
+  // detach and return processed result
+  HDProcessResult *result = m_result;
+  m_result = nullptr;
+  return result;
 }
 
 /**
@@ -291,6 +298,8 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
 
 /**
  * Computes regression curves for each crystal of specified persistence level.
+ * TODO(jonbronson):  We will need an abstraction for computing regression that
+ *                    doesn't rely on using the X matrix of samples.
  */
 void HDProcessor::computeRegressionForCrystal(
     unsigned int crystalIndex, unsigned int persistenceLevel, Precision sigma, int nSamples, 
@@ -304,7 +313,7 @@ void HDProcessor::computeRegressionForCrystal(
   DenseMatrix<Precision> y(1, X.N());
   for (unsigned int i=0; i< X.N(); i++){
     unsigned int index = Xi[crystalIndex][i];
-    Linalg<Precision>::SetColumn(X, i, Xall, index);
+    Linalg<Precision>::SetColumn(X, i, Xall, index);  
     y(0, i) = yci[crystalIndex][i];
   }  
   
