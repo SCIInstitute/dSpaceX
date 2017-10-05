@@ -148,6 +148,12 @@ int main(int argc, char **argv){
 
       std::string PCAExtremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data";
       LinalgIO<Precision>::writeVector(path + PCAExtremaValuesFilename, result->PCAExtremaValues[level]);      
+
+      for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+        std::string PCALayoutFilename = 
+            "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_layout.data";
+        LinalgIO<Precision>::writeMatrix(path + PCALayoutFilename, result->PCALayout[level][crystalIndex]);
+      }
     }
   }
   
