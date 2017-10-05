@@ -104,6 +104,8 @@ HDProcessResult* HDProcessor::process(
   m_result->mdists.resize(persistence.N());
   m_result->fmean.resize(persistence.N());
   m_result->spdf.resize(persistence.N());
+  m_result->PCAExtremaLayout.resize(persistence.N());
+  m_result->PCAExtremaValues.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -565,16 +567,12 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
     stretch.deallocate();
   }
 
-  if (bShouldWriteFiles) {
-    std::string extremaLayoutFilename = "ExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<Precision>::writeMatrix(m_path + extremaLayoutFilename, E);
-  }
+  // Store ExtremaLayout in Result Object
+  m_result->PCAExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(E);
   E.deallocate();
 
-  if (bShouldWriteFiles) {
-    std::string extremaValuesFilename = "ExtremaValues_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<Precision>::writeVector(m_path + extremaValuesFilename, Ef);
-  }
+  // Store ExtremaValues in Result Object
+  m_result->PCAExtremaValues[persistenceLevel] = Linalg<Precision>::Copy(Ef);  
   Ef.deallocate();
 
   pca.cleanup();

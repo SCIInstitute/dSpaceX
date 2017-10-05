@@ -133,12 +133,22 @@ int main(int argc, char **argv){
         LinalgIO<Precision>::writeVector(path + spdfFilename, result->spdf[level][crystalIndex]);
       }
     }
+
+    // Output Layout Data
     LinalgIO<Precision>::writeVector(path + "PCAMin.data", result->LminPCA);
     LinalgIO<Precision>::writeVector(path + "PCAMax.data", result->LmaxPCA);
     LinalgIO<Precision>::writeVector(path + "PCA2Min.data", result->LminPCA2);
     LinalgIO<Precision>::writeVector(path + "PCA2Max.data", result->LmaxPCA2);
     LinalgIO<Precision>::writeVector(path + "IsoMin.data", result->LminIso);
     LinalgIO<Precision>::writeVector(path + "IsoMax.data", result->LmaxIso);
+
+    for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
+      std::string PCAExtremaLayoutFilename = "ExtremaLayout_" + std::to_string(level) + ".data";
+      LinalgIO<Precision>::writeMatrix(path + PCAExtremaLayoutFilename, result->PCAExtremaLayout[level]);
+
+      std::string PCAExtremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data";
+      LinalgIO<Precision>::writeVector(path + PCAExtremaValuesFilename, result->PCAExtremaValues[level]);      
+    }
   }
   
   return 0;

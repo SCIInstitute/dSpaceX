@@ -21,10 +21,10 @@ struct HDProcessResult {
     
   // Layout Data 
   FortranLinalg::DenseVector<Precision> LminPCA;       // PCAMin.data.hdr
-  FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr
+  FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr  
+  std::vector<FortranLinalg::DenseMatrix<Precision>> PCAExtremaLayout; // PCA_ExtremaLayout_[level].data.hdr
+  std::vector<FortranLinalg::DenseVector<Precision>> PCAExtremaValues; // PCA_ExtremaValues_[level].data.hdr
   // L_PCA[i] =   ps_[level]_crystal_[i]_layout.data.hdr
-  //          PCA_ExtremaLayout_[level].data.hdr
-  //          PCA_ExtremaValues_[level].data.hdr
   
   FortranLinalg::DenseVector<Precision> LminPCA2;       // PCA2Min.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA2;       // PCA2Max.data.hdr
