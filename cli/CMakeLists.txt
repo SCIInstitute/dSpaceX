@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 PROJECT(HDVizProcessing)
 
-set(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_BUILD_TYPE "Debug")
 
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)

@@ -121,7 +121,16 @@ int main(int argc, char **argv){
         LinalgIO<Precision>::writeMatrix(path + gradFilename, result->gradR[level][crystalIndex]);
 
         std::string rvarFilename = crystalFilePrefix + "_Svar.data";
-        LinalgIO<Precision>::writeMatrix(path + rvarFilename, result->Rvar[level][crystalIndex]);        
+        LinalgIO<Precision>::writeMatrix(path + rvarFilename, result->Rvar[level][crystalIndex]);
+
+        std::string mdistsFilename = crystalFilePrefix + "_mdists.data";
+        LinalgIO<Precision>::writeVector(path + mdistsFilename, result->mdists[level][crystalIndex]);
+
+        std::string fmeanFilename = crystalFilePrefix + "_fmean.data";
+        LinalgIO<Precision>::writeVector(path + fmeanFilename, result->fmean[level][crystalIndex]);
+
+        std::string spdfFilename = crystalFilePrefix + "_spdf.data";
+        LinalgIO<Precision>::writeVector(path + spdfFilename, result->spdf[level][crystalIndex]);
       }
     }
 

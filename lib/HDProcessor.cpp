@@ -101,6 +101,9 @@ HDProcessResult* HDProcessor::process(
   m_result->R.resize(persistence.N());
   m_result->gradR.resize(persistence.N());
   m_result->Rvar.resize(persistence.N());
+  m_result->mdists.resize(persistence.N());
+  m_result->fmean.resize(persistence.N());
+  m_result->spdf.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -243,6 +246,9 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   m_result->R[persistenceLevel].resize(crystals.N());
   m_result->gradR[persistenceLevel].resize(crystals.N());
   m_result->Rvar[persistenceLevel].resize(crystals.N());
+  m_result->mdists[persistenceLevel].resize(crystals.N());  
+  m_result->fmean[persistenceLevel].resize(crystals.N());  
+  m_result->spdf[persistenceLevel].resize(crystals.N());  
 
   // Regression for each crystal of current persistence level.
   for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
@@ -386,14 +392,10 @@ void HDProcessor::computeRegressionForCrystal(
   m_result->R[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(ScrystalIDs[crystalIndex]);
   m_result->gradR[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(gradS);
   m_result->Rvar[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(Svar);
+  m_result->mdists[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(pdist);
 
   gradS.deallocate(); 
   Svar.deallocate();
- 
-  if (bShouldWriteFiles) {
-    std::string mdistFilename = crystalPrefix + "_mdists.data";
-    LinalgIO<Precision>::writeVector(m_path + mdistFilename, pdist);
-  }
 
   // Compute maximal extrema widths
   if (eWidths(e2ID) < pdist(0)) {
@@ -404,8 +406,6 @@ void HDProcessor::computeRegressionForCrystal(
   }
 
   pdist.deallocate();
-
-
   
   // Compute function value mean at sampled locations
   DenseVector<Precision> fmean(Zp.N());
@@ -413,13 +413,11 @@ void HDProcessor::computeRegressionForCrystal(
     fmean(i) = Zp(0, i);
   }
 
-  if (bShouldWriteFiles) {
-    std::string fmeanFilename = crystalPrefix + "_fmean.data";
-    LinalgIO<Precision>::writeVector(m_path + fmeanFilename, fmean);
-  }
+  // Store means in result object.
+  m_result->fmean[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fmean);
   fmean.deallocate();
 
-  // Compute sample density
+  // Compute sample density.
   DenseVector<Precision> spdf(Zp.N());
   for (unsigned int i=0; i < Zp.N(); i++) {
     Precision sum = 0;
@@ -430,10 +428,8 @@ void HDProcessor::computeRegressionForCrystal(
     spdf(i) = sum/Xall.N();
   }
 
-  if (bShouldWriteFiles) {
-    std::string spdfFilename = crystalPrefix + "_spdf.data";
-    LinalgIO<Precision>::writeVector(m_path + spdfFilename, spdf);
-  }
+  // Store sample density in result object.
+  m_result->spdf[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(spdf);  
   spdf.deallocate(); 
  
 

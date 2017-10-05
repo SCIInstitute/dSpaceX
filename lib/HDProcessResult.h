@@ -37,9 +37,12 @@ struct HDProcessResult {
   //          PCA2ExtremaLayout_[level].data.hdr
     
         
-  // loadColorValues    // ps_[level]_crystal_[i]_fmean.data.hdr
-  // loadWidthValues    // ps_[level]_crystal_[i]_mdists.data.hdr
-  // loadDensityValues  // ps_[level]_crystal_[i]_spdf.data.hdr
+  // loadColorValues    
+  std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> fmean;  // ps_[level]_crystal_[i]_fmean.data.hdr
+  // loadWidthValues    
+  std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> mdists; // ps_[level]_crystal_[i]_mdists.data.hdr
+  // loadDensityValues  
+  std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> spdf;   // ps_[level]_crystal_[i]_spdf.data.hdr
 
   // Reconstructions 
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> R;     // ps_[level]_crystal_[i]_Rs.data.hdr"; CrystalIds
