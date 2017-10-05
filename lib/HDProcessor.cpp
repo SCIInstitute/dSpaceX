@@ -98,6 +98,7 @@ HDProcessResult* HDProcessor::process(
   // Resize Stores for Saving Persistence Level information
   m_result->crystals.resize(persistence.N());
   m_result->extremaWidths.resize(persistence.N());
+  m_result->R.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -236,6 +237,8 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
     }
   }
 
+  // Resize Stores for Regression Information
+  m_result->R[persistenceLevel].resize(crystals.N());
 
   // Regression for each crystal of current persistence level.
   for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
@@ -375,10 +378,8 @@ void HDProcessor::computeRegressionForCrystal(
   std::string crystalPrefix = 
       "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(crystalIndex);
 
-  if (bShouldWriteFiles) {
-    std::string crystalIdFilename = crystalPrefix + "_Rs.data";
-    LinalgIO<Precision>::writeMatrix(m_path + crystalIdFilename, ScrystalIDs[crystalIndex]);
-  }
+  // Store Regression Info in Results
+  m_result->R[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(ScrystalIDs[crystalIndex]);
 
   if (bShouldWriteFiles) {
     std::string gradsFilename = crystalPrefix + "_gradRs.data";

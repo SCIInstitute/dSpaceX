@@ -110,6 +110,12 @@ int main(int argc, char **argv){
 
       std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(level) + ".data";
       LinalgIO<Precision>::writeVector(path + extremaWidthsFilename, result->extremaWidths[level]);
+
+      for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+        std::string crystalIdFilename = 
+            "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_Rs.data";
+        LinalgIO<Precision>::writeMatrix(path + crystalIdFilename, result->R[level][crystalIndex]);
+      }
     }
 
   }

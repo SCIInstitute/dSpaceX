@@ -2,6 +2,7 @@
 
 #include "Precision.h"
 #include "Linalg.h"
+#include <vector>
 
 
  /**
@@ -41,7 +42,7 @@ struct HDProcessResult {
   // loadDensityValues  // ps_[level]_crystal_[i]_spdf.data.hdr
 
   // Reconstructions 
-  // R =                // ps_[level]_crystal_[i]_Rs.data.hdr";
+  std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> R; // ps_[level]_crystal_[i]_Rs.data.hdr"; CrystalIds
   // gradR =            // ps_[level]_crystal_[i]_gradRs.data.hdr";
   // Rvar =             // ps_[level]_crystal_[i]_Svar.data.hdr"; 
 };
