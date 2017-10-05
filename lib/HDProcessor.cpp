@@ -94,6 +94,9 @@ HDProcessResult* HDProcessor::process(
 
   // Store Min Level (Starting Level)
   m_result->minLevel = Linalg<Precision>::Copy(pStart);
+
+  // Create Store for Saving Crystals at each Persistence Level
+  m_result->crystals.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -170,10 +173,10 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
       crystalTmp(j, i) = exts[crystals(j, i)];
     }
   } 
-  if (bShouldWriteFiles) {
-    std::string crystalsFile = "Crystals_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<int>::writeMatrix(m_path + crystalsFile, crystalTmp); 
-  }
+
+  // Store Crystals in Result
+  m_result->crystals[persistenceLevel] = Linalg<int>::Copy(crystalTmp);
+
   crystalTmp.deallocate();   
 
   std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;

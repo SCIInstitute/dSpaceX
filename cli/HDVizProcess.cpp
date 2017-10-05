@@ -104,6 +104,10 @@ int main(int argc, char **argv){
     LinalgIO<Precision>::writeVector(path + "Function.data", result->Y);   
     LinalgIO<Precision>::writeVector(path + "Persistence.data", result->scaledPersistence);
     LinalgIO<Precision>::writeVector(path + "PersistenceStart.data", result->minLevel);
+    for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
+      std::string crystalsFilename = "Crystals_" + std::to_string(level) + ".data";
+      LinalgIO<int>::writeMatrix(path + crystalsFilename, result->crystals[level]);
+    }
   }
   
   return 0;
