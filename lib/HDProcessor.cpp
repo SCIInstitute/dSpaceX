@@ -61,11 +61,7 @@ HDProcessResult* HDProcessor::process(
   
   // Save geometry and function
   m_result->X = Linalg<Precision>::Copy(Xall);
-  m_result->Y = Linalg<Precision>::Copy(yall);
-  if (bShouldWriteFiles) {
-    // LinalgIO<Precision>::writeMatrix(m_path + "Geom.data", Xall);   
-    // LinalgIO<Precision>::writeVector(m_path + "Function.data", yall);   
-  }
+  m_result->Y = Linalg<Precision>::Copy(yall);  
 
   // Scale persistence to be in [0,1]
   // TODO: Is this just doing a normalization?
@@ -78,10 +74,9 @@ HDProcessResult* HDProcessor::process(
   }
   pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1?
   
-  if (bShouldWriteFiles) {
-    LinalgIO<Precision>::writeVector(m_path + "Persistence.data", pScaled);  
-  }
-
+  // Store Scled Persistence Data
+  m_result->scaledPersistence = Linalg<Precision>::Copy(pScaled);
+  
 
   // Read number of persistence levels to compute visualization for
   int nlevels = persistenceArg;
@@ -96,11 +91,10 @@ HDProcessResult* HDProcessor::process(
   // Save start persistence
   DenseVector<Precision> pStart(1);
   pStart(0) = start;
-  if (bShouldWriteFiles) {
-    LinalgIO<Precision>::writeVector(m_path + "PersistenceStart.data", pStart);  
-  }
 
-
+  // Store Min Level (Starting Level)
+  m_result->minLevel = Linalg<Precision>::Copy(pStart);
+  
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
 

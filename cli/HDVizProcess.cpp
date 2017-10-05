@@ -93,12 +93,17 @@ int main(int argc, char **argv){
   if (result != nullptr) {
     std::cout << "Successfully returned process result." << std::endl;
 
+    // Fix output path if necessary.
     std::string path = outArg.getValue();
     if (!path.empty() && *path.rbegin() != '/') {
        path += '/';
     }
+
+    // Save result data to disk.
     LinalgIO<Precision>::writeMatrix(path + "Geom.data", result->X);   
     LinalgIO<Precision>::writeVector(path + "Function.data", result->Y);   
+    LinalgIO<Precision>::writeVector(path + "Persistence.data", result->scaledPersistence);
+    LinalgIO<Precision>::writeVector(path + "PersistenceStart.data", result->minLevel);
   }
   
   return 0;

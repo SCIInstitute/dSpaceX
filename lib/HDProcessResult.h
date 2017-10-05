@@ -9,8 +9,8 @@
   */
 struct HDProcessResult {
   
-  // persistencScaled = Persistence.data.hdr
-  // minLevel         = PersistenceStart.data.hdr
+  FortranLinalg::DenseVector<Precision> scaledPersistence; // Persistence.data.hdr
+  FortranLinalg::DenseVector<Precision> minLevel;          // PersistenceStart.data.hdr
   FortranLinalg::DenseMatrix<Precision> X;   // Geom.data.hdr
   FortranLinalg::DenseVector<Precision> Y;   // Function.data.hdr
   // parameterNames   = names.txt     
