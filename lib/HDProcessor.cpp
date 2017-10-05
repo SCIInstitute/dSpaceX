@@ -37,7 +37,6 @@ HDProcessResult* HDProcessor::process(
   // Initialize processing result output object.
   m_result = new HDProcessResult();
 
-
   // Store input data as member variables.
   Xall = x;
   yall = y;
