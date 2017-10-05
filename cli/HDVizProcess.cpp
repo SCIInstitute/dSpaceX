@@ -83,8 +83,7 @@ int main(int argc, char **argv){
         pArg.getValue() /* persistence */,        
         randArg.getValue() /* random */,
         sigmaArg.getValue() /* sigma */,
-        smoothArg.getValue() /* smooth */,
-        outArg.getValue() /* output_dir */);
+        smoothArg.getValue() /* smooth */);
   } catch (const char *err) {
     std::cerr << err << std::endl;
   }
@@ -98,6 +97,7 @@ int main(int argc, char **argv){
     if (!path.empty() && *path.rbegin() != '/') {
        path += '/';
     }
+    std::cout << "Saving all output files to: " << path << std::endl;
 
     // Save result data to disk.
     LinalgIO<Precision>::writeMatrix(path + "Geom.data", result->X);   

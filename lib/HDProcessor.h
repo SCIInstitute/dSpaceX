@@ -26,7 +26,7 @@ class HDProcessor {
   HDProcessResult* process(FortranLinalg::DenseMatrix<Precision> x,
       FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
-      Precision sigmaArg, Precision sigmaSmooth, std::string output_dir);
+      Precision sigmaArg, Precision sigmaSmooth);
 
  private:
   void computeInverseRegression(NNMSComplex<Precision> &msComplex, 

@@ -27,21 +27,16 @@ HDProcessor::HDProcessor() {}
  * @param[in] randArg Whether to apply random noise to input function.
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
- * @param[in] output_dir Output directory for analysis files.
  */
 HDProcessResult* HDProcessor::process(  
   FortranLinalg::DenseMatrix<Precision> x,
   FortranLinalg::DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
-  bool randArg, Precision sigma, Precision sigmaSmooth, std::string output_dir) {
+  bool randArg, Precision sigma, Precision sigmaSmooth) {
 
+  // Initialize processing result output object.
   m_result = new HDProcessResult();
 
-  if (!output_dir.empty() && *output_dir.rbegin() != '/') {
-    output_dir += '/';
-  }
-  m_path = output_dir;
-  std::cout << "Saving all output files to: " << m_path << std::endl;
 
   // Store input data as member variables.
   Xall = x;
