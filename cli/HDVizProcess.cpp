@@ -149,10 +149,24 @@ int main(int argc, char **argv){
       std::string PCAExtremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data";
       LinalgIO<Precision>::writeVector(path + PCAExtremaValuesFilename, result->PCAExtremaValues[level]);      
 
+      std::string PCA2ExtremaLayoutFilename = "PCA2ExtremaLayout_" + std::to_string(level) + ".data";
+      LinalgIO<Precision>::writeMatrix(path + PCA2ExtremaLayoutFilename, result->PCA2ExtremaLayout[level]);
+
+      std::string IsoExtremaFilename = "IsoExtremaLayout_" + std::to_string(level) + ".data";
+      LinalgIO<Precision>::writeMatrix(path + IsoExtremaFilename, result->IsoExtremaLayout[level]);
+
       for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
         std::string PCALayoutFilename = 
             "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_layout.data";
         LinalgIO<Precision>::writeMatrix(path + PCALayoutFilename, result->PCALayout[level][crystalIndex]);
+
+        std::string PCA2LayoutFilename = 
+            "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_pca2layout.data";
+        LinalgIO<Precision>::writeMatrix(path + PCA2LayoutFilename, result->PCA2Layout[level][crystalIndex]);            
+
+        std::string IsoLayoutFilename = 
+          "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_isolayout.data";
+        LinalgIO<Precision>::writeMatrix(path + IsoLayoutFilename, result->IsoLayout[level][crystalIndex]);            
       }
     }
   }

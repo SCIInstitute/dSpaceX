@@ -12,7 +12,6 @@ Precision MAX = std::numeric_limits<Precision>::max();
 
 //coordinate center
 int globalMin = -1;
-bool bShouldWriteFiles = true;
 
 using namespace FortranLinalg;
 
@@ -105,8 +104,13 @@ HDProcessResult* HDProcessor::process(
   m_result->fmean.resize(persistence.N());
   m_result->spdf.resize(persistence.N());
   m_result->PCAExtremaLayout.resize(persistence.N());
-  m_result->PCAExtremaValues.resize(persistence.N());
+  m_result->PCAExtremaValues.resize(persistence.N());  
   m_result->PCALayout.resize(persistence.N());
+  m_result->PCA2ExtremaLayout.resize(persistence.N());
+  m_result->PCA2Layout.resize(persistence.N());
+  m_result->IsoExtremaLayout.resize(persistence.N());
+  m_result->IsoLayout.resize(persistence.N());
+
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -629,9 +633,11 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
     Lmax.deallocate();
   }
 
+  // Resize Layout in Results Object
+  m_result->PCA2Layout[persistenceLevel].resize(crystals.N());
 
   // Save layout for each crystal - stretch to extremal points.
-  for (unsigned int i =0; i<crystals.N(); i++) { 
+  for (unsigned int i = 0; i < crystals.N(); i++) { 
     // Do pca for each crystal to preserve strcuture of curve in crystal.
     PCA<Precision> pca(ScrystalIDs[i], dim);        
     DenseMatrix<Precision> tmp = pca.project(ScrystalIDs[i]);
@@ -650,11 +656,8 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
       Linalg<Precision>::Add(tmp, j, stretch);
     }
 
-    if (bShouldWriteFiles) {
-      std::string pca2LayoutFilename = 
-          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(i) + "_pca2layout.data";
-      LinalgIO<Precision>::writeMatrix(m_path + pca2LayoutFilename, tmp);
-    }
+    // Store layout information in result object.
+    m_result->PCA2Layout[persistenceLevel][i] = Linalg<Precision>::Copy(tmp);    
     
     a.deallocate();
     b.deallocate();
@@ -663,11 +666,8 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
     pca.cleanup();
   }
 
-  // Save extremal points location and function value.
-  if (bShouldWriteFiles) {
-    std::string pca2Filename = "PCA2ExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<Precision>::writeMatrix(m_path + pca2Filename, pca2L);
-  }
+  // Store ExtremaLayout in Result Object
+  m_result->PCA2ExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(pca2L);  
   pca2L.deallocate();
   pca2.cleanup();         
 }
@@ -728,6 +728,8 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     extsOrig = exts;
   }
 
+  // Resize Layout in Results Object
+  m_result->IsoLayout[persistenceLevel].resize(crystals.N());
 
   // Save layout for each crystal - stretch to extremal points.
   for (unsigned int i =0; i < crystals.N(); i++) { 
@@ -748,11 +750,8 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
       Linalg<Precision>::Add(tmp, j, stretch);
     }
 
-    if (bShouldWriteFiles) {
-      std::string isoLayoutFilename = 
-          "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(i) + "_isolayout.data";
-      LinalgIO<Precision>::writeMatrix(m_path + isoLayoutFilename, tmp);
-    }
+    // Store layout information in result object.
+    m_result->IsoLayout[persistenceLevel][i] = Linalg<Precision>::Copy(tmp);
     
     a.deallocate();
     b.deallocate();
@@ -761,10 +760,7 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     pca.cleanup();
   }
 
-  // Save extremal points location and function value
-  if (bShouldWriteFiles) {
-    std::string isoExtremaFilename = "IsoExtremaLayout_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<Precision>::writeMatrix(m_path + isoExtremaFilename, isoL); 
-  }
+  // Store ExtremaLayout in Result Object
+  m_result->IsoExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(isoL);
   isoL.deallocate();
 }

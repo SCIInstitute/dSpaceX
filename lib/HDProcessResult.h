@@ -22,20 +22,20 @@ struct HDProcessResult {
   // Layout Data 
   FortranLinalg::DenseVector<Precision> LminPCA;       // PCAMin.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr  
-  std::vector<FortranLinalg::DenseMatrix<Precision>> PCAExtremaLayout; // PCA_ExtremaLayout_[level].data.hdr
-  std::vector<FortranLinalg::DenseVector<Precision>> PCAExtremaValues; // PCA_ExtremaValues_[level].data.hdr
+  std::vector<FortranLinalg::DenseMatrix<Precision>> PCAExtremaLayout;        // PCA_ExtremaLayout_[level].data.hdr
+  std::vector<FortranLinalg::DenseVector<Precision>> PCAExtremaValues;        // PCA_ExtremaValues_[level].data.hdr
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> PCALayout;  // ps_[level]_crystal_[i]_layout.data.hdr
   
   FortranLinalg::DenseVector<Precision> LminPCA2;       // PCA2Min.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA2;       // PCA2Max.data.hdr
-  // L[i] =   ps_[level]_crystal_[i]_pca2layout.data.hdr
-  //          PCA2ExtremaLayout_[level].data.hdr
+  std::vector<FortranLinalg::DenseMatrix<Precision>> PCA2ExtremaLayout;        // PCA2ExtremaLayout_[level].data.hdr
+  std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> PCA2Layout;  // ps_[level]_crystal_[i]_pca2layout.data.hdr
+  
 
   FortranLinalg::DenseVector<Precision> LminIso;        // IsoMin.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxIso;        // IsoMax.data.hdr
-  // L[i] =   ps_[level]_crystal_[i]_isolayout.data.hdr
-  //          IsoExtremaLayout_[level].data.hdr
-
+  std::vector<FortranLinalg::DenseMatrix<Precision>> IsoExtremaLayout;         // IsoExtremaLayout_[level].data.hdr
+  std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> IsoLayout;   // ps_[level]_crystal_[i]_isolayout.data.hdr
         
   // loadColorValues    
   std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> fmean;  // ps_[level]_crystal_[i]_fmean.data.hdr
