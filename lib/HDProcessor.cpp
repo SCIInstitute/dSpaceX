@@ -95,8 +95,9 @@ HDProcessResult* HDProcessor::process(
   // Store Min Level (Starting Level)
   m_result->minLevel = Linalg<Precision>::Copy(pStart);
 
-  // Create Store for Saving Crystals at each Persistence Level
+  // Resize Stores for Saving Persistence Level information
   m_result->crystals.resize(persistence.N());
+  m_result->extremaWidths.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   computeInverseRegression(msComplex, start, nSamples, sigma);
@@ -241,14 +242,10 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
     computeRegressionForCrystal(crystalIndex, persistenceLevel, sigma, nSamples, Xi, yci, ScrystalIDs, S, eWidths);
   }
 
-  // Save maximal extrema width
-  if (bShouldWriteFiles) {
-    std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(persistenceLevel) + ".data";
-    LinalgIO<Precision>::writeVector(m_path + extremaWidthsFilename, eWidths);
-  }
+  // Store Maximal ExtremaWidths in Result
+  m_result->extremaWidths[persistenceLevel] = Linalg<Precision>::Copy(eWidths);
+
   eWidths.deallocate();
-
-
 
   // Add extremal points to S for computing layout
   int count = 0;

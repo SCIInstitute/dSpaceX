@@ -107,7 +107,11 @@ int main(int argc, char **argv){
     for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
       std::string crystalsFilename = "Crystals_" + std::to_string(level) + ".data";
       LinalgIO<int>::writeMatrix(path + crystalsFilename, result->crystals[level]);
+
+      std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(level) + ".data";
+      LinalgIO<Precision>::writeVector(path + extremaWidthsFilename, result->extremaWidths[level]);
     }
+
   }
   
   return 0;
