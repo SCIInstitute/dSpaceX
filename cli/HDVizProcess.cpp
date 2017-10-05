@@ -89,8 +89,16 @@ int main(int argc, char **argv){
     std::cerr << err << std::endl;
   }
 
+  // Check result and maybe write to disk.
   if (result != nullptr) {
     std::cout << "Successfully returned process result." << std::endl;
+
+    std::string path = outArg.getValue();
+    if (!path.empty() && *path.rbegin() != '/') {
+       path += '/';
+    }
+    LinalgIO<Precision>::writeMatrix(path + "Geom.data", result->X);   
+    LinalgIO<Precision>::writeVector(path + "Function.data", result->Y);   
   }
   
   return 0;

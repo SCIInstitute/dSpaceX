@@ -9,11 +9,11 @@
   */
 struct HDProcessResult {
   
-  // pScaled/pSorted = Persistence.data.hdr
-  // minLevel        = PersistenceStart.data.hdr
-  // X / G(eometry)  = Geom.data.hdr
-  // Y / QoI         = Function.data.hdr
-  // parameterNames  = names.txt     
+  // persistencScaled = Persistence.data.hdr
+  // minLevel         = PersistenceStart.data.hdr
+  FortranLinalg::DenseMatrix<Precision> X;   // Geom.data.hdr
+  FortranLinalg::DenseVector<Precision> Y;   // Function.data.hdr
+  // parameterNames   = names.txt     
 
   // loadData
   //          Crystals_[level].data.hdr 

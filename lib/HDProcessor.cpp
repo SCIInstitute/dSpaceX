@@ -60,9 +60,11 @@ HDProcessResult* HDProcessor::process(
   persistence = msComplex.getPersistence();
   
   // Save geometry and function
+  m_result->X = Linalg<Precision>::Copy(Xall);
+  m_result->Y = Linalg<Precision>::Copy(yall);
   if (bShouldWriteFiles) {
-    LinalgIO<Precision>::writeMatrix(m_path + "Geom.data", Xall);   
-    LinalgIO<Precision>::writeVector(m_path + "Function.data", yall);   
+    // LinalgIO<Precision>::writeMatrix(m_path + "Geom.data", Xall);   
+    // LinalgIO<Precision>::writeVector(m_path + "Function.data", yall);   
   }
 
   // Scale persistence to be in [0,1]
