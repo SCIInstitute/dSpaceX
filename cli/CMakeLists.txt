@@ -13,12 +13,11 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
-LINK_DIRECTORIES( ${ANN_LINK_DIR} )
+
 ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cpp)
 TARGET_LINK_LIBRARIES (HDVizProcessing 
     hdprocess
     blas
     lapack    
     gfortran
-    ANN 
 )
