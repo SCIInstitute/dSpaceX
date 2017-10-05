@@ -133,7 +133,12 @@ int main(int argc, char **argv){
         LinalgIO<Precision>::writeVector(path + spdfFilename, result->spdf[level][crystalIndex]);
       }
     }
-
+    LinalgIO<Precision>::writeVector(path + "PCAMin.data", result->LminPCA);
+    LinalgIO<Precision>::writeVector(path + "PCAMax.data", result->LmaxPCA);
+    LinalgIO<Precision>::writeVector(path + "PCA2Min.data", result->LminPCA2);
+    LinalgIO<Precision>::writeVector(path + "PCA2Max.data", result->LmaxPCA2);
+    LinalgIO<Precision>::writeVector(path + "IsoMin.data", result->LminIso);
+    LinalgIO<Precision>::writeVector(path + "IsoMax.data", result->LmaxIso);
   }
   
   return 0;

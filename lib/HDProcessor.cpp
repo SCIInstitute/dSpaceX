@@ -523,10 +523,10 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
     extremaPosPCA = Linalg<Precision>::Copy(E);
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(E);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(E);
-    if (bShouldWriteFiles) {
-      LinalgIO<Precision>::writeVector(m_path + "PCAMin.data", Lmin);
-      LinalgIO<Precision>::writeVector(m_path + "PCAMax.data", Lmax);
-    }
+    
+    // Copy to results object.
+    m_result->LminPCA = Linalg<Precision>::Copy(Lmin);
+    m_result->LmaxPCA = Linalg<Precision>::Copy(Lmax);
     Lmin.deallocate();
     Lmax.deallocate();
   }
@@ -622,10 +622,10 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
     extremaPosPCA2 = Linalg<Precision>::Copy(pca2L);       
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(pca2L);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(pca2L);
-    if (bShouldWriteFiles) {
-      LinalgIO<Precision>::writeVector(m_path + "PCA2Min.data", Lmin);
-      LinalgIO<Precision>::writeVector(m_path + "PCA2Max.data", Lmax);
-    }
+
+    // Copy to results object.
+    m_result->LminPCA2 = Linalg<Precision>::Copy(Lmin);
+    m_result->LmaxPCA2 = Linalg<Precision>::Copy(Lmax);    
     Lmin.deallocate();
     Lmax.deallocate();
   }
@@ -718,10 +718,10 @@ void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S,
     extremaPosIso = Linalg<Precision>::Copy(isoL);                
     DenseVector<Precision> Lmin = Linalg<Precision>::RowMin(isoL);
     DenseVector<Precision> Lmax = Linalg<Precision>::RowMax(isoL);
-    if (bShouldWriteFiles) {
-      LinalgIO<Precision>::writeVector(m_path + "IsoMin.data", Lmin);
-      LinalgIO<Precision>::writeVector(m_path + "IsoMax.data", Lmax);
-    }
+
+    // Copy to results object.
+    m_result->LminIso = Linalg<Precision>::Copy(Lmin);
+    m_result->LmaxIso = Linalg<Precision>::Copy(Lmax);
     Lmin.deallocate();
     Lmax.deallocate();
 
