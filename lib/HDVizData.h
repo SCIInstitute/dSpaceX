@@ -19,6 +19,8 @@ class HDVizData{
     HDVizData(std::string path);
     Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index);
     Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
+
+    FortranLinalg::DenseMatrix<int>& getEdges();
     
     void loadData(int level);
     void setLayout(HDVizLayout layout, int level);
@@ -30,7 +32,6 @@ class HDVizData{
     int nSamples;
 
     // Morse-Smale edge information.
-    FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
 
     unsigned nAll;
@@ -84,6 +85,9 @@ class HDVizData{
     void loadWidthValues(std::string type, int level);
     void loadDensityValues(std::string type, int level);
     void loadReconstructions(int level);
+
+    // Morse-Smale edge information.
+    FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
 
     int minLevel;
     int maxLevel;

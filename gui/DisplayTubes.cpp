@@ -11,7 +11,7 @@ template<typename TPrecision> DisplayTubes<TPrecision>::DisplayTubes(
   showSamples = false;
   extremaOnly = false;
 
-  oldN = data->edges.N();
+  oldN = data->getEdges().N();
   mod = 0;
   cur_button = -1;
 
@@ -125,8 +125,8 @@ void DisplayTubes<TPrecision>::printHelp(){
 
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::display(void){
-  if((int)data->edges.N() != oldN){
-    oldN = data->edges.N();
+  if((int)data->getEdges().N() != oldN){
+    oldN = data->getEdges().N();
     initState(); 
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -445,7 +445,7 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       break;
     case ']':
       state->selectedCell++;
-      if((unsigned int) state->selectedCell >= data->edges.N()){
+      if((unsigned int) state->selectedCell >= data->getEdges().N()){
         state->selectedCell = 0;
       }
       notifyChange();
@@ -453,7 +453,7 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
     case '[':
       state->selectedCell--;
       if(state->selectedCell < 0){
-        state->selectedCell = data->edges.N()-1;
+        state->selectedCell = data->getEdges().N()-1;
       }
       notifyChange();
       break;        
@@ -600,8 +600,8 @@ void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
 
   data->loadData(state->currentLevel);
 
-  if (state->selectedCell >= (int) data->edges.N()) {
-    state->selectedCell = data->edges.N() - 1;
+  if (state->selectedCell >= (int) data->getEdges().N()) {
+    state->selectedCell = data->getEdges().N() - 1;
   }
   if (update) {
     notifyChange();
@@ -618,16 +618,16 @@ void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
     selectedPeaks(i) = false;
   }
 
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
     if (selectedTubes(i)) {
-      selectedPeaks(data->edges(0, i)) = true;
-      selectedPeaks(data->edges(1, i)) = true;
+      selectedPeaks(data->getEdges()(0, i)) = true;
+      selectedPeaks(data->getEdges()(1, i)) = true;
     }
   }
 
-  for (unsigned int i=0; i<data->edges.N(); i++) {
-    int e1 =data->edges(0, i);
-    int e2 =data->edges(1, i);
+  for (unsigned int i=0; i<data->getEdges().N(); i++) {
+    int e1 =data->getEdges()(0, i);
+    int e2 =data->getEdges()(1, i);
     if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
     } else if(selectedPeaks(e1)) {
@@ -668,13 +668,13 @@ void DisplayTubes<TPrecision>::doPick() {
   if (hits > 0){
     int index = selectBuf[3];
     if (mod == GLUT_ACTIVE_CTRL) {
-      if (index >=0 && index < (int)data->edges.N()) {
+      if (index >=0 && index < (int)data->getEdges().N()) {
         selectedCTubes(index) = !selectedCTubes(index);
         std::cout << "Edge: " << index << std::endl;
       }
     }    
     else if (mod == GLUT_ACTIVE_SHIFT) {
-      if (index >=0 && index < (int) data->edges.N()) {
+      if (index >=0 && index < (int) data->getEdges().N()) {
         selectedTubes(index) = !selectedTubes(index);
         if (selectedTubes(index)) {
           state->selectedCell = index;
@@ -713,7 +713,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   float colors[data->nSamples+2][4];
   gleDouble radii[data->nSamples+2];
 
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
 
     /*if(renderMode(i) == RENDER_NOTHING) continue;
       if( renderMode(i) == RENDER_FADE_MIN_TO_MAX || 
@@ -766,7 +766,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   if (selectedOnly) return;
 
   glEnable(GL_BLEND);
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
     if (renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
 
     for (unsigned int k = 0; k < data->L[i].N(); k++) {
@@ -814,7 +814,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   }  
 
   glColor4f(0.9, 0.9, 0.9, 0.1f);
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
     if (renderMode(i) != RENDER_NOTHING) continue;
 
     for (unsigned int k = 0; k < data->L[i].N(); k++) {
@@ -887,13 +887,13 @@ void DisplayTubes<TPrecision>::renderWidths() {
   gleDouble radii[data->nSamples+2];
   float colors[data->nSamples+2][4];
 
-  for (unsigned int i=0; i<data->edges.N(); i++) {      
+  for (unsigned int i=0; i<data->getEdges().N(); i++) {      
     if (renderMode(i) != RENDER_TUBE) continue;
 
     if (selectedCTubes(i)) {
 
-      int i1 = data->edges(0, i);
-      int i2 = data->edges(1, i);
+      int i1 = data->getEdges()(0, i);
+      int i2 = data->getEdges()(1, i);
 
 
       for (unsigned int k = 0; k < data->L[i].N(); k++) {
@@ -970,11 +970,11 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
   glDisable(GL_LIGHTING);
 
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
     if ( renderMode(i) != RENDER_TUBE) continue;
     if (selectedCTubes(i)) {
-      int i1 = data->edges(0, i);
-      int i2 = data->edges(1, i);      
+      int i1 = data->getEdges()(0, i);
+      int i2 = data->getEdges()(1, i);      
 
 
       for (unsigned int k = 0; k < data->L[i].N(); k++) {
@@ -1213,10 +1213,10 @@ void DisplayTubes<TPrecision>::initState() {
   renderMode.deallocate();
   selectedPeaks.deallocate();
 
-  selectedCTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
-  selectedTubes = FortranLinalg::DenseVector<bool>(data->edges.N());
-  renderMode = FortranLinalg::DenseVector<int>(data->edges.N());
-  for (unsigned int i = 0; i < data->edges.N(); i++) {
+  selectedCTubes = FortranLinalg::DenseVector<bool>(data->getEdges().N());
+  selectedTubes = FortranLinalg::DenseVector<bool>(data->getEdges().N());
+  renderMode = FortranLinalg::DenseVector<int>(data->getEdges().N());
+  for (unsigned int i = 0; i < data->getEdges().N(); i++) {
     selectedCTubes(i) = true;
     selectedTubes(i) = false;
     renderMode(i) = RENDER_TUBE;

@@ -47,13 +47,15 @@ HDVizData::HDVizData(std::string path) {
 
 Precision HDVizData::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
   return R[selectedCell](index, selectedPoint);
-};
+}
 
 Precision HDVizData::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
   return Rvar[selectedCell](index, selectedPoint);
-};
+}
 
-
+FortranLinalg::DenseMatrix<int>& HDVizData::getEdges() {
+  return edges;
+}    
 
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
