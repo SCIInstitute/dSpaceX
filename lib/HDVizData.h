@@ -23,7 +23,7 @@ class HDVizData{
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int>& getEdges();
     FortranLinalg::DenseVector<Precision>& getPersistence();
-    FortranLinalg::DenseVector<std::string> getNames();
+    FortranLinalg::DenseVector<std::string>& getNames();
     int getNumberOfSamples();
    
     
@@ -31,8 +31,8 @@ class HDVizData{
     void setLayout(HDVizLayout layout, int level);
 
     // Extrema Layouts
-    FortranLinalg::DenseVector<Precision> getExtremaValues();
-    FortranLinalg::DenseVector<Precision> ez;   // Extrema z-axis coordintes
+    FortranLinalg::DenseVector<Precision>& getExtremaValues();
+    FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
     FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
     FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
 
@@ -92,6 +92,7 @@ class HDVizData{
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
+    FortranLinalg::DenseVector<Precision> ez;   // Extrema Values normalized [0,1]
 
     // filenames
     std::string m_path;

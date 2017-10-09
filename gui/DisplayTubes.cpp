@@ -759,7 +759,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   for (unsigned int i = 0; i < data->eL.N(); i++) {
     if (selectedPeaks(i)) {
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       std::vector<Precision> color = data->colormap.getColor(data->getExtremaValues()(i));
       glColor4f(color[0], color[1], color[2], 0.3);
       glutSolidSphere(0.028, 100, 100);
@@ -867,7 +867,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       glPolygonOffset(2, 0.1);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
 
@@ -876,7 +876,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
       glDepthMask(GL_FALSE);
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
       glDepthMask(GL_TRUE);
@@ -936,12 +936,12 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
+      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->getExtremaNormalized()(i1)); 
       glutSolidSphere(scale * data->ew(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->ez(i2)); 
+      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->getExtremaNormalized()(i2)); 
       glutSolidSphere(scale * data->ew(i2), 50, 50);
       glPopMatrix();
 
@@ -958,12 +958,12 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
+      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->getExtremaNormalized()(i1)); 
       glutSolidSphere(scale *data->ew(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->ez(i2)); 
+      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->getExtremaNormalized()(i2)); 
       glutSolidSphere(scale *data->ew(i2), 50, 50);
       glPopMatrix();
 
@@ -1031,12 +1031,12 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
+      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->getExtremaNormalized()(i1)); 
       glutSolidSphere(scale *data->ew(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->ez(i2)); 
+      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->getExtremaNormalized()(i2)); 
       glutSolidSphere(scale *data->ew(i2), 50, 50);
       glPopMatrix();
 
@@ -1063,7 +1063,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
             colors[data->getNumberOfSamples()][3]);
       }
       glPushMatrix();
-      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
+      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->getExtremaNormalized()(i1)); 
       glutSolidSphere(scale *data->ew(i1) + scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
@@ -1079,12 +1079,12 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->ez(i1)); 
+      glTranslatef(data->eL(0, i1), data->eL(1, i1), data->getExtremaNormalized()(i1)); 
       glutSolidSphere(scale *data->ew(i1)+ scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->ez(i2)); 
+      glTranslatef(data->eL(0, i2), data->eL(1, i2), data->getExtremaNormalized()(i2)); 
       glutSolidSphere(scale *data->ew(i2)+ scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
@@ -1114,7 +1114,7 @@ void DisplayTubes<TPrecision>::renderExtrema() {
       glPolygonOffset(2, 0.1);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       glutSolidSphere(scale *data->ew(i), 50, 50);
       glPopMatrix();
 
@@ -1125,7 +1125,7 @@ void DisplayTubes<TPrecision>::renderExtrema() {
       glDepthFunc(GL_LEQUAL);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       glutSolidSphere(scale *data->ew(i), 50, 50);
       glPopMatrix();
 
@@ -1138,7 +1138,7 @@ void DisplayTubes<TPrecision>::renderExtrema() {
       glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
 
       glPushMatrix();
-      glTranslatef(data->eL(0, i), data->eL(1, i), data->ez(i)); 
+      glTranslatef(data->eL(0, i), data->eL(1, i), data->getExtremaNormalized()(i)); 
       glutSolidSphere(scale *data->ew(i) + scale*0.015/zoom, 50, 50);
       glPopMatrix();
 

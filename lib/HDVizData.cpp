@@ -62,7 +62,7 @@ FortranLinalg::DenseVector<Precision>& HDVizData::getPersistence() {
   return pSorted;
 }
 
-FortranLinalg::DenseVector<std::string> HDVizData::getNames() {
+FortranLinalg::DenseVector<std::string>& HDVizData::getNames() {
   return m_names;
 }
 
@@ -70,8 +70,12 @@ int HDVizData::getNumberOfSamples() {
   return nSamples;
 }
 
-FortranLinalg::DenseVector<Precision> HDVizData::getExtremaValues() {
+FortranLinalg::DenseVector<Precision>& HDVizData::getExtremaValues() {
   return ef;
+}
+
+FortranLinalg::DenseVector<Precision>& HDVizData::getExtremaNormalized() {
+  return ez;
 }
 
 void HDVizData::setLayout(HDVizLayout layout, int level) {
