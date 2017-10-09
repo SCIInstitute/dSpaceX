@@ -24,17 +24,21 @@ class HDVizData{
     FortranLinalg::DenseMatrix<int>& getEdges();
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
-    int getNumberOfSamples();
-   
-    
-    void loadData(int level);
-    void setLayout(HDVizLayout layout, int level);
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues();
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
     FortranLinalg::DenseVector<Precision>& getExtremaWidths();
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();
+    
+    // Number of samples used for rendering.
+    int getNumberOfSamples();   
+    
+    // Set which persistence level and layout to use.
+    void loadData(int level);
+    void setLayout(HDVizLayout layout, int level);
+
+    
 
     // Cell layouts
     FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
