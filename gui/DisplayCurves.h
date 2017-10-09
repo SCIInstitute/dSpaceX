@@ -225,7 +225,7 @@ class DisplayCurves : public Display{
       glLineWidth(6.f); 
       glBegin(GL_LINE_STRIP);
       glColor3f(0.1, 0.1, 0.1);
-      for(int j=0; j<data->nSamples; j++){
+      for (int j = 0; j < data->getNumberOfSamples(); j++){
 	      Precision m = data->R[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
       	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m);
@@ -235,7 +235,7 @@ class DisplayCurves : public Display{
       glLineWidth(2.f); 
       glBegin(GL_LINE_STRIP);
       glColor3f(0.6, 0.6, 0.6);
-      for(int j=0; j<data->nSamples; j++){
+      for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
 	      Precision m = data->R[state->selectedCell](i, j);
@@ -245,7 +245,7 @@ class DisplayCurves : public Display{
       glEnd();       
       
       glBegin(GL_LINE_STRIP);
-      for(int j=0; j<data->nSamples; j++){
+      for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
 	      Precision m = data->R[state->selectedCell](i, j);

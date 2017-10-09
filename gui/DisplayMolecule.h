@@ -344,7 +344,7 @@ class DisplayMolecule : public Display{
         glEnable(GL_DEPTH_TEST);
 
 
-        for(int k=0; k<data->nSamples+2; k++){
+        for (int k = 0; k < data->getNumberOfSamples()+2; k++){
           radiiW[k] += scale*0.1/zoom;
         }
 

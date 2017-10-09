@@ -23,15 +23,12 @@ class HDVizData{
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int>& getEdges();
     FortranLinalg::DenseVector<Precision>& getPersistence();
+    int getNumberOfSamples();
     
     void loadData(int level);
     void setLayout(HDVizLayout layout, int level);
-  
 
     FortranLinalg::DenseVector<std::string> names;
-
-    // Number of smaples per cell for rendering.
-    int nSamples;
 
     unsigned nAll;
 
@@ -88,6 +85,9 @@ class HDVizData{
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
+    
+    // Number of smaples per cell for rendering.
+    int nSamples;
 
     int minLevel;
     int maxLevel;

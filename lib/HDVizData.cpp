@@ -62,6 +62,10 @@ FortranLinalg::DenseVector<Precision>& HDVizData::getPersistence() {
   return pSorted;
 }
 
+int HDVizData::getNumberOfSamples() {
+  return nSamples;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
