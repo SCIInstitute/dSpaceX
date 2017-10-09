@@ -30,7 +30,7 @@ HDVizData::HDVizData(std::string path) {
       FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + geomDataHeaderFilename);
   Rmin = FortranLinalg::Linalg<Precision>::RowMin(G);
   Rmax = FortranLinalg::Linalg<Precision>::RowMax(G);
-  // nAll = G.N();
+  
   m_names = FortranLinalg::DenseVector<std::string>(G.M());
   G.deallocate();
 
