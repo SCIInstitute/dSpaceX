@@ -6,11 +6,12 @@ const std::string k_defaultPersistenceDataHeaderFilename = "Persistence.data.hdr
 const std::string k_defaultPersistenceStartHeaderFilename = "PersistenceStart.data.hdr";
 const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
+const int k_defaultSamplesCount = 50;
 
 HDVizData::HDVizData(std::string path) {
   layout = HDVizLayout::ISOMAP;
   L = nullptr;  
-  nSamples = 50;
+  nSamples = k_defaultSamplesCount;
 
   std::string persistenceDataHeaderFilename = k_defaultPersistenceDataHeaderFilename;
   std::string persistenceStartHeaderFilename = k_defaultPersistenceStartHeaderFilename;
