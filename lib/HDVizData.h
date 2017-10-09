@@ -86,7 +86,6 @@ class HDVizData{
     int nSamples;
 
     FortranLinalg::DenseVector<std::string> m_names;
-    unsigned nAll;
     int minLevel;
     int maxLevel;
     HDVizLayout layout;
