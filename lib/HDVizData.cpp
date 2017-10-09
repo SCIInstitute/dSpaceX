@@ -82,6 +82,10 @@ FortranLinalg::DenseVector<Precision>& HDVizData::getExtremaWidths() {
   return ew;
 }
 
+FortranLinalg::DenseMatrix<Precision>& HDVizData::getExtremaLayout() {
+  return eL;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

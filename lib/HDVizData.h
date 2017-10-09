@@ -34,7 +34,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision>& getExtremaValues();
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
     FortranLinalg::DenseVector<Precision>& getExtremaWidths();
-    FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
+    FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();
 
     // Cell layouts
     FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
@@ -94,6 +94,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
     FortranLinalg::DenseVector<Precision> ez;   // Extrema Values normalized [0,1]
     FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
+    FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
 
     // filenames
     std::string m_path;
