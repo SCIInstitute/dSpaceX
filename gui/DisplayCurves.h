@@ -323,9 +323,9 @@ class DisplayCurves : public Display{
      //name
      glColor3f(0.1f,0.1f,0.1f);
      setFontSize(h*0.25f);
-     a = font.Advance(data->names(i).c_str());
+     a = font.Advance(data->getNames()(i).c_str());
      glRasterPos2f(l+offw1+w1-a+offw1/2, t - h5);
-     font.Render(data->names(i).c_str());  
+     font.Render(data->getNames()(i).c_str());  
 
 
 

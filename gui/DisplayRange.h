@@ -301,9 +301,9 @@ class DisplayRange : public Display{
       //name
       glColor3f(0.1f,0.1f,0.1f);
       setFontSize((int)(h*0.15f));
-      a = font.Advance(data->names(i).c_str());
+      a = font.Advance(data->getNames()(i).c_str());
       glRasterPos2f(l+offw1+w1+offw1*0.7f-a/2.f, t - h/6.f);
-      font.Render(data->names(i).c_str());  
+      font.Render(data->getNames()(i).c_str());  
 
     };
 

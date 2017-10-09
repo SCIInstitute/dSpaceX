@@ -31,14 +31,14 @@ HDVizData::HDVizData(std::string path) {
   Rmin = FortranLinalg::Linalg<Precision>::RowMin(G);
   Rmax = FortranLinalg::Linalg<Precision>::RowMax(G);
   nAll = G.N();
-  names = FortranLinalg::DenseVector<std::string>(G.M());
+  m_names = FortranLinalg::DenseVector<std::string>(G.M());
   G.deallocate();
 
   std::ifstream nfile;
   nfile.open(m_path + parameterNamesFilename);
   if (!nfile.fail()) {
-    for (unsigned int i=0; i<names.N(); i++) {
-      getline(nfile, names(i)); 
+    for (unsigned int i=0; i < m_names.N(); i++) {
+      getline(nfile, m_names(i)); 
     }
   }
   nfile.close();
@@ -60,6 +60,10 @@ FortranLinalg::DenseMatrix<int>& HDVizData::getEdges() {
 
 FortranLinalg::DenseVector<Precision>& HDVizData::getPersistence() {
   return pSorted;
+}
+
+FortranLinalg::DenseVector<std::string> HDVizData::getNames() {
+  return m_names;
 }
 
 int HDVizData::getNumberOfSamples() {
