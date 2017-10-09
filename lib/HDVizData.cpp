@@ -57,6 +57,10 @@ FortranLinalg::DenseMatrix<int>& HDVizData::getEdges() {
   return edges;
 }    
 
+FortranLinalg::DenseVector<Precision>& HDVizData::getPersistence() {
+  return pSorted;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

@@ -198,13 +198,13 @@ void DisplayTubes<TPrecision>::display(void){
     glTranslatef(-1.5, -4*sy+0.5, 0);  
 
     Precision pmax = 1; 
-    Precision emax = data->pSorted.N()+1;
+    Precision emax = data->getPersistence().N()+1;
     glColor3f(1, 0, 0);
     int curL = getPersistanceLevel();
     Precision prev = 0;
-    Precision next = data->pSorted(curL);
+    Precision next = data->getPersistence()(curL);
     if (curL != 0) {
-      prev = data->pSorted(curL-1);
+      prev = data->getPersistence()(curL-1);
     }
     if (next>1) {
       next =1;
@@ -234,9 +234,9 @@ void DisplayTubes<TPrecision>::display(void){
     glLineWidth(2.f);
     glBegin(GL_LINES);
     prev =0;
-    for(unsigned int i=0; i<data->pSorted.N()-1; i++){
+    for(unsigned int i=0; i<data->getPersistence().N()-1; i++){
       glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
-      prev = data->pSorted(i);
+      prev = data->getPersistence()(i);
       glVertex2f(0 + prev/pmax*s, hs - i/emax*hs);
     }   
     glVertex2f(0 + prev/pmax*s, 2/emax*hs);
