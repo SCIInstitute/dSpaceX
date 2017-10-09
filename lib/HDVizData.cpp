@@ -70,6 +70,10 @@ int HDVizData::getNumberOfSamples() {
   return nSamples;
 }
 
+FortranLinalg::DenseVector<Precision> HDVizData::getExtremaValues() {
+  return ef;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

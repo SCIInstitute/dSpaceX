@@ -31,7 +31,7 @@ class HDVizData{
     void setLayout(HDVizLayout layout, int level);
 
     // Extrema Layouts
-    FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
+    FortranLinalg::DenseVector<Precision> getExtremaValues();
     FortranLinalg::DenseVector<Precision> ez;   // Extrema z-axis coordintes
     FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
     FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
@@ -89,6 +89,9 @@ class HDVizData{
     int minLevel;
     int maxLevel;
     HDVizLayout layout;
+
+    // Extrema Layouts
+    FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
 
     // filenames
     std::string m_path;
