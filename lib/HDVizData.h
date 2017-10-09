@@ -59,8 +59,6 @@ class HDVizData{
     Precision efmin, efmax;
     Precision zmax, zmin;
 
-    // filenames
-    std::string m_path;
 
     // color/width and transparent width values
     FortranLinalg::DenseVector<Precision> *yc;   // value / color
@@ -85,13 +83,16 @@ class HDVizData{
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
-    
+
     // Number of smaples per cell for rendering.
     int nSamples;
 
     int minLevel;
     int maxLevel;
     HDVizLayout layout;
+    
+    // filenames
+    std::string m_path;
 };
 
 #endif
