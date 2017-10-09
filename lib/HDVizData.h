@@ -25,13 +25,10 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string> getNames();
     int getNumberOfSamples();
-    
-
+   
     
     void loadData(int level);
     void setLayout(HDVizLayout layout, int level);
-
-    unsigned nAll;
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
@@ -89,7 +86,7 @@ class HDVizData{
     int nSamples;
 
     FortranLinalg::DenseVector<std::string> m_names;
-
+    unsigned nAll;
     int minLevel;
     int maxLevel;
     HDVizLayout layout;
