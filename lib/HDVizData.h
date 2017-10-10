@@ -21,9 +21,10 @@ class HDVizData{
     Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
 
     // Morse-Smale edge information.
-    FortranLinalg::DenseMatrix<int>& getEdges();
+    FortranLinalg::DenseMatrix<int>& getEdges();    
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
+    FortranLinalg::DenseMatrix<Precision>* getLayout();
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues();
@@ -37,11 +38,7 @@ class HDVizData{
     // Set which persistence level and layout to use.
     void loadData(int level);
     void setLayout(HDVizLayout layout, int level);
-
-    
-
-    // Cell layouts
-    FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
+       
 
     // Cell reconstruction
     FortranLinalg::DenseMatrix<Precision> *R;
@@ -81,10 +78,12 @@ class HDVizData{
     void loadWidthValues(std::string type, int level);
     void loadDensityValues(std::string type, int level);
     void loadReconstructions(int level);
-
+    
+    FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
-    FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
+    // Cell layouts
+    FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
 
     // Number of smaples per cell for rendering.
     int nSamples;

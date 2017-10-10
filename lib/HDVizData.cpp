@@ -58,6 +58,10 @@ FortranLinalg::DenseMatrix<int>& HDVizData::getEdges() {
   return edges;
 }    
 
+FortranLinalg::DenseMatrix<Precision>* HDVizData::getLayout() {
+  return L;
+}
+
 FortranLinalg::DenseVector<Precision>& HDVizData::getPersistence() {
   return pSorted;
 }
