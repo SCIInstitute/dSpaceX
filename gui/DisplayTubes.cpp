@@ -303,17 +303,17 @@ void DisplayTubes<TPrecision>::display(void){
 
     glBegin(GL_QUAD_STRIP);
     std::vector<Precision> color =
-      data->colormap.getColor(data->efmin);
+      data->colormap.getColor(data->getExtremaMinValue());
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 0);
     glVertex2f(0.4, 0);
 
-    color = data->colormap.getColor((data->efmin+data->efmax)/2.f);
+    color = data->colormap.getColor((data->getExtremaMinValue() + data->getExtremaMaxValue())/2.f);
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 1);
     glVertex2f(0.4, 1);      
     
-    color = data->colormap.getColor(data->efmax);
+    color = data->colormap.getColor(data->getExtremaMaxValue());
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 2);
     glVertex2f(0.4, 2);
@@ -325,14 +325,14 @@ void DisplayTubes<TPrecision>::display(void){
     
     std::stringstream ssmin;
     ssmin << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    ssmin << data->efmin ;
+    ssmin << data->getExtremaMinValue();
     l = font.Advance(ssmin.str().c_str())/width*dw;
     glRasterPos2f(0 - l - 0.03, 0.03);
     font.Render(ssmin.str().c_str());
     
     std::stringstream ssmax;
     ssmax << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    ssmax << data->efmax ;
+    ssmax << data->getExtremaMaxValue() ;
     l = font.Advance(ssmax.str().c_str())/width*dw;
     glRasterPos2f(0 - l - 0.03, 2.03);
     font.Render(ssmax.str().c_str());

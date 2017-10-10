@@ -261,13 +261,13 @@ class DisplayCurves : public Display{
           
      
      std::stringstream ss1;
-     ss1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->efmin;
+     ss1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getExtremaMinValue();
      Precision a = font.Advance(ss1.str().c_str());
      glRasterPos2f(l+offw1-a/2, b + h5 - 0.12f*h);
      font.Render(ss1.str().c_str());     
      
      std::stringstream ss2;
-     ss2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->efmax;
+     ss2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getExtremaMaxValue();
      a = font.Advance(ss2.str().c_str());
      glRasterPos2f(l+offw1 +w1 - a/2, b + h5 - 0.12f*h);
      font.Render(ss2.str().c_str());
