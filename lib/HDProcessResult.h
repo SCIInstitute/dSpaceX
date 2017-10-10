@@ -48,4 +48,7 @@ struct HDProcessResult {
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> R;     // ps_[level]_crystal_[i]_Rs.data.hdr"; CrystalIds
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> gradR; // ps_[level]_crystal_[i]_gradRs.data.hdr";
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> Rvar;  // ps_[level]_crystal_[i]_Svar.data.hdr"; 
+
+  // parameter names
+  FortranLinalg::DenseVector<std::string> names;
 };
