@@ -73,7 +73,7 @@ class DisplayCurves : public Display{
       glClear(GL_COLOR_BUFFER_BIT);
 
       glLoadIdentity();
-      int M = data->R[state->selectedCell].M();
+      int M = data->getReconstruction()[state->selectedCell].M();
       Precision h = (Precision) height / M;
 
       setFontSize((int)(h*0.5f));
@@ -226,7 +226,7 @@ class DisplayCurves : public Display{
       glBegin(GL_LINE_STRIP);
       glColor3f(0.1, 0.1, 0.1);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
-	      Precision m = data->R[state->selectedCell](i, j);
+	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
       	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m);
       }
@@ -238,7 +238,7 @@ class DisplayCurves : public Display{
       for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	      Precision m = data->R[state->selectedCell](i, j);
+	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
       	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m + v);
       }
@@ -248,7 +248,7 @@ class DisplayCurves : public Display{
       for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->Rvar[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	      Precision m = data->R[state->selectedCell](i, j);
+	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
       	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m - v);
       }
@@ -287,7 +287,7 @@ class DisplayCurves : public Display{
      //selected point location      
      std::stringstream ssm;
      ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2) <<
-       data->R[state->selectedCell](i, state->selectedPoint) << " ";
+       data->getReconstruction()[state->selectedCell](i, state->selectedPoint) << " ";
 
      std::stringstream sse;
      sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
@@ -295,7 +295,7 @@ class DisplayCurves : public Display{
 
      Precision v = data->Rvar[state->selectedCell](i, state->selectedPoint);
      v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
-	   Precision m = data->R[state->selectedCell](i, state->selectedPoint);
+	   Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
      m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
      Precision wz = data->z[state->selectedCell](state->selectedPoint)*w1;
 

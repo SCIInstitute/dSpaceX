@@ -71,7 +71,7 @@ class DisplayRange : public Display{
       glClear(GL_COLOR_BUFFER_BIT);
 
       glLoadIdentity();
-      int M = data->R[state->selectedCell].M();
+      int M = data->getReconstruction()[state->selectedCell].M();
       Precision h = (Precision) height / M;
 
       setFontSize((int)(h*0.5f));
@@ -210,7 +210,7 @@ class DisplayRange : public Display{
       Precision glmax = std::max(fabs(data->gRmin(i)), fabs(data->gRmax(i)));
       Precision rlmax = std::max(fabs(data->Rmin(i)), fabs(data->Rmax(i)));
 
-      Precision m = data->R[state->selectedCell](i, state->selectedPoint);
+      Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
       m = (m - data->Rmin(i))   / ( data->Rmax(i) - data->Rmin(i) ) * w1;
 
       glColor3f(0.7, 0.7, 0.7);
@@ -263,7 +263,7 @@ class DisplayRange : public Display{
 
       std::stringstream ssm;
       ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2) <<
-        data->R[state->selectedCell](i, state->selectedPoint);
+        data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
 
       std::stringstream sse;
       sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
@@ -304,9 +304,7 @@ class DisplayRange : public Display{
       a = font.Advance(data->getNames()(i).c_str());
       glRasterPos2f(l+offw1+w1+offw1*0.7f-a/2.f, t - h/6.f);
       font.Render(data->getNames()(i).c_str());  
-
     };
-
 
 
 

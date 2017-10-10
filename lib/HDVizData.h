@@ -39,9 +39,8 @@ class HDVizData{
     void loadData(int level);
     void setLayout(HDVizLayout layout, int level);
        
-
     // Cell reconstruction
-    FortranLinalg::DenseMatrix<Precision> *R;
+    FortranLinalg::DenseMatrix<Precision>* getReconstruction();    
     FortranLinalg::DenseMatrix<Precision> *Rvar;
     FortranLinalg::DenseMatrix<Precision> *gradR;
     FortranLinalg::DenseVector<Precision> Rmin; 
@@ -101,6 +100,9 @@ class HDVizData{
 
     // filenames
     std::string m_path;
+
+    // Cell Reconstruction
+    FortranLinalg::DenseMatrix<Precision> *R;
 };
 
 #endif
