@@ -15,5 +15,4 @@ class HDVizState {
   int currentLevel;  
   int selectedCell;
   int selectedPoint;
-
 };

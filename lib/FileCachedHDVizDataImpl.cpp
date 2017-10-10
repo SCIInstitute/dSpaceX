@@ -46,7 +46,9 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
 };
 
 
-Precision FileCachedHDVizDataImpl::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
+Precision FileCachedHDVizDataImpl::getSelectedCoordinate(
+    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return R[selectedCell](index, selectedPoint);
 }
 

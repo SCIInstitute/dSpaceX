@@ -17,7 +17,8 @@ enum class HDVizLayout : char {
 class HDVizData {
   public:
     virtual ~HDVizData(){};
-    virtual Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index) = 0;
+    virtual Precision getSelectedCoordinate(
+        int persistenceLevel, int selectedCell, int selectedPoint, int index) = 0;
     virtual Precision getSelectedVariance(int selectedCell, int selectedPoint, int index) = 0;
 
     // Morse-Smale edge information.

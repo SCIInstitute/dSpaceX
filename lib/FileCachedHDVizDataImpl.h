@@ -11,7 +11,8 @@
 class FileCachedHDVizDataImpl : public HDVizData {
   public:
     FileCachedHDVizDataImpl(std::string path);
-    Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index);
+    Precision getSelectedCoordinate(
+        int persistenceLevel, int selectedCell, int selectedPoint, int index);
     Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
 
     // Morse-Smale edge information.

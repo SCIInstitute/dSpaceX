@@ -207,9 +207,9 @@ class DisplayMolecule : public Display{
 
       int index=0;
       for(int i=2; i<data->getRMin().N(); i+=3, index++ ){
-         double x = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-2);
-         double y = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-1);
-         double z = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i);
+         double x = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i-2);
+         double y = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i-1);
+         double z = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i);
          X(0, index) =x;
          X(1, index) =y;
          X(2, index) =z;

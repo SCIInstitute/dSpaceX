@@ -17,8 +17,8 @@ int SimpleHDVizDataImpl::getNumberOfSamples() {
   return k_defaultSamplesCount;
 }
 
-Precision SimpleHDVizDataImpl::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
-  return 0;  
+Precision SimpleHDVizDataImpl::getSelectedCoordinate(int persistenceLevel, int selectedCell, int selectedPoint, int index) {
+  return m_data->R[persistenceLevel][selectedCell](index, selectedPoint);
 }
 
 Precision SimpleHDVizDataImpl::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
