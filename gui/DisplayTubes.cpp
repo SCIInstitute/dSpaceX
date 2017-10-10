@@ -617,6 +617,9 @@ void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
  */
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
+
+  auto extremaValues = data->getExtremaValues(state->currentLevel);
+
   for (unsigned int i = 0; i < selectedPeaks.N(); i++) {
     selectedPeaks(i) = false;
   }
@@ -634,13 +637,13 @@ void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
     if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
     } else if(selectedPeaks(e1)) {
-      if (data->getExtremaValues(state->currentLevel)(e1) > data->getExtremaValues(state->currentLevel)(e2)) {
+      if (extremaValues(e1) > extremaValues(e2)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
     } else if (selectedPeaks(e2)) {
-      if (data->getExtremaValues(state->currentLevel)(e2) > data->getExtremaValues(state->currentLevel)(e1)) {
+      if (extremaValues(e2) > extremaValues(e1)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
@@ -717,6 +720,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   gleDouble radii[data->getNumberOfSamples()+2];
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
+  auto extremaValues = data->getExtremaValues(state->currentLevel);
 
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
 
@@ -768,7 +772,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
           data->getExtremaLayout()(0, i), 
           data->getExtremaLayout()(1, i), 
           data->getExtremaNormalized()(i)); 
-      std::vector<Precision> color = data->getColorMap().getColor(data->getExtremaValues(state->currentLevel)(i));
+      std::vector<Precision> color = data->getColorMap().getColor(extremaValues(i));
       glColor4f(color[0], color[1], color[2], 0.3);
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
@@ -912,8 +916,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
   float colors[data->getNumberOfSamples() + 2][4];
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
+  auto extremaValues = data->getExtremaValues(state->currentLevel);
 
-  for (unsigned int i=0; i<data->getEdges(state->currentLevel).N(); i++) {      
+  for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
     if (renderMode(i) != RENDER_TUBE) continue;
 
     if (selectedCTubes(i)) {
@@ -1087,7 +1092,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, colors, radii);      
 
-      if (data->getExtremaValues(state->currentLevel)(i1) < data->getExtremaValues(state->currentLevel)(i2)) {
+      if (extremaValues(i1) < extremaValues(i2)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else {
         glColor4f(colors[data->getNumberOfSamples()][0], 
@@ -1103,7 +1108,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glutSolidSphere(scale *data->getExtremaWidths()(i1) + scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
-      if (data->getExtremaValues(state->currentLevel)(i2) < data->getExtremaValues(state->currentLevel)(i1)) {
+      if (extremaValues(i2) < extremaValues(i1)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else{
         glColor4f(colors[data->getNumberOfSamples()][0], 
