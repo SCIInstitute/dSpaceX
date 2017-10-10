@@ -716,6 +716,8 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   float colors[data->getNumberOfSamples()+2][4];
   gleDouble radii[data->getNumberOfSamples()+2];
 
+  auto layout = data->getLayout(state->currentLayout, state->currentLevel);
+
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
 
     /*if(renderMode(i) == RENDER_NOTHING) continue;
@@ -723,15 +725,15 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       renderMode(i) == RENDER_FADE_MAX_TO_MIN    ){*/
     if (renderMode(i) != RENDER_TUBE) continue;
 
-    for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
+    for (unsigned int k = 0; k < layout[i].N(); k++) {
       std::vector<Precision> color = data->getColorMap().getColor(data->getValueColor()[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
       colors[k+1][3] = 1;
 
-      for (unsigned int m = 0; m < data->getLayout(state->currentLayout, state->currentLevel)[i].M(); m++) {
-        points[k+1][m] = data->getLayout(state->currentLayout, state->currentLevel)[i](m, k);
+      for (unsigned int m = 0; m < layout[i].M(); m++) {
+        points[k+1][m] = layout[i](m, k);
       }
       points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
@@ -779,20 +781,20 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
     if (renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
 
-    for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
+    for (unsigned int k = 0; k < layout[i].N(); k++) {
       std::vector<Precision> color = data->getColorMap().getColor(data->getValueColor()[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
       if (renderMode(i) == RENDER_FADE_MIN_TO_MAX) {
-        colors[k+1][3] = 1 - k/ (data->getLayout(state->currentLayout, state->currentLevel)[i].N()-1.f);
+        colors[k+1][3] = 1 - k/ (layout[i].N()-1.f);
       }
       else if (renderMode(i) == RENDER_FADE_MAX_TO_MIN) {
-        colors[k+1][3] = k/ (data->getLayout(state->currentLayout, state->currentLevel)[i].N()-1.f);
+        colors[k+1][3] = k/ (layout[i].N()-1.f);
       }
 
-      for (unsigned int m = 0; m < data->getLayout(state->currentLayout, state->currentLevel)[i].M(); m++) {
-        points[k+1][m] = data->getLayout(state->currentLayout, state->currentLevel)[i](m, k);
+      for (unsigned int m = 0; m < layout[i].M(); m++) {
+        points[k+1][m] = layout[i](m, k);
       }
       points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
@@ -830,9 +832,9 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
     if (renderMode(i) != RENDER_NOTHING) continue;
 
-    for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
-      for (unsigned int m = 0; m < data->getLayout(state->currentLayout, state->currentLevel)[i].M(); m++) {
-        points[k+1][m] = data->getLayout(state->currentLayout, state->currentLevel)[i](m, k);
+    for (unsigned int k = 0; k < layout[i].N(); k++) {
+      for (unsigned int m = 0; m < layout[i].M(); m++) {
+        points[k+1][m] = layout[i](m, k);
       }
       points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
@@ -909,6 +911,8 @@ void DisplayTubes<TPrecision>::renderWidths() {
   gleDouble radii[data->getNumberOfSamples() + 2];
   float colors[data->getNumberOfSamples() + 2][4];
 
+  auto layout = data->getLayout(state->currentLayout, state->currentLevel);
+
   for (unsigned int i=0; i<data->getEdges(state->currentLevel).N(); i++) {      
     if (renderMode(i) != RENDER_TUBE) continue;
 
@@ -917,9 +921,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
       int i1 = data->getEdges(state->currentLevel)(0, i);
       int i2 = data->getEdges(state->currentLevel)(1, i);
 
-      for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
-        for (unsigned int m = 0; m < data->getLayout(state->currentLayout, state->currentLevel)[i].M(); m++) {
-          points[k+1][m] = data->getLayout(state->currentLayout, state->currentLevel)[i](m, k);
+      for (unsigned int k = 0; k < layout[i].N(); k++) {
+        for (unsigned int m = 0; m < layout[i].M(); m++) {
+          points[k+1][m] = layout[i](m, k);
         }
         points[k+1][2] = data->getZ()[i](k);
         radii[k+1] = scale*data->getWidth()[i](k); 
@@ -1013,7 +1017,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       int i2 = data->getEdges(state->currentLevel)(1, i);      
 
 
-      for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
+      for (unsigned int k = 0; k < layout[i].N(); k++) {
         std::vector<Precision> color = data->getDColorMap().getColor(data->getDensity()[i](k));
         colors[k+1][0] = color[0];
         colors[k+1][1] = color[1];
@@ -1025,9 +1029,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
         colors[data->getNumberOfSamples() + 1][m] = colors[data->getNumberOfSamples()][m];
       }
 
-      for (unsigned int k = 0; k < data->getLayout(state->currentLayout, state->currentLevel)[i].N(); k++) {
-        for (unsigned int m = 0; m < data->getLayout(state->currentLayout, state->currentLevel)[i].M(); m++) {
-          points[k+1][m] = data->getLayout(state->currentLayout, state->currentLevel)[i](m, k);
+      for (unsigned int k = 0; k < layout[i].N(); k++) {
+        for (unsigned int m = 0; m < layout[i].M(); m++) {
+          points[k+1][m] = layout[i](m, k);
         }
         points[k+1][2] = data->getZ()[i](k);
         radii[k+1] = scale*data->getWidth()[i](k); 
@@ -1213,6 +1217,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     renderWidths();
   }
 
+  auto layout = data->getLayout(state->currentLayout, state->currentLevel);
 
   //Draw selected location
   if (showPosition) {
@@ -1223,8 +1228,8 @@ void DisplayTubes<TPrecision>::renderMS() {
     //glColor4f(0, 0, 0, 1);   
     glPushMatrix(); 
     glTranslatef(
-        data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](0, state->selectedPoint), 
-        data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](1, state->selectedPoint), 
+        layout[state->selectedCell](0, state->selectedPoint), 
+        layout[state->selectedCell](1, state->selectedPoint), 
         data->getZ()[state->selectedCell](state->selectedPoint));
     glutSolidSphere(0.04, 50, 50);  
     glPopMatrix();
@@ -1237,16 +1242,16 @@ void DisplayTubes<TPrecision>::renderMS() {
     }
     Precision l = 0;
     for (int m = 0; m < 2; m++) {
-      Precision p =  data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](m, state->selectedPoint);
-      Precision dir =  p - data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](m, sIndex);
+      Precision p = layout[state->selectedCell](m, state->selectedPoint);
+      Precision dir = p - layout[state->selectedCell](m, sIndex);
       l += dir*dir;  
     }
     Precision tmp = data->getZ()[state->selectedCell](state->selectedPoint)- data->getZ()[state->selectedCell](sIndex);
     l += tmp*tmp;
     l = sqrt(l);
     for (int m = 0; m < 2; m++) {
-      Precision p =  data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](m, state->selectedPoint);
-      Precision dir =  p - data->getLayout(state->currentLayout, state->currentLevel)[state->selectedCell](m, sIndex); 
+      Precision p = layout[state->selectedCell](m, state->selectedPoint);
+      Precision dir = p - layout[state->selectedCell](m, sIndex); 
       points[0][m] = p + dir/l*0.04f; 
       points[1][m] = p + dir/l*0.02f; 
       points[2][m] = p - dir/l*0.02f; 
