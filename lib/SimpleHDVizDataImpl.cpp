@@ -17,12 +17,14 @@ int SimpleHDVizDataImpl::getNumberOfSamples() {
   return k_defaultSamplesCount;
 }
 
-Precision SimpleHDVizDataImpl::getSelectedCoordinate(int persistenceLevel, int selectedCell, int selectedPoint, int index) {
+Precision SimpleHDVizDataImpl::getSelectedCoordinate(
+    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
   return m_data->R[persistenceLevel][selectedCell](index, selectedPoint);
 }
 
-Precision SimpleHDVizDataImpl::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
-  return 0;
+Precision SimpleHDVizDataImpl::getSelectedVariance(
+    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
+  return m_data->Rvar[persistenceLevel][selectedCell](index, selectedPoint);
 }
 
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  

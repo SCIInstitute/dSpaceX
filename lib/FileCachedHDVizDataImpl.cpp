@@ -52,7 +52,9 @@ Precision FileCachedHDVizDataImpl::getSelectedCoordinate(
   return R[selectedCell](index, selectedPoint);
 }
 
-Precision FileCachedHDVizDataImpl::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
+Precision FileCachedHDVizDataImpl::getSelectedVariance(
+    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return Rvar[selectedCell](index, selectedPoint);
 }
 
