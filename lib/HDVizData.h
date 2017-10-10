@@ -40,7 +40,7 @@ class HDVizData{
     void setLayout(HDVizLayout layout, int level);
        
     // Cell reconstruction
-    FortranLinalg::DenseMatrix<Precision>* getReconstruction();    
+    FortranLinalg::DenseMatrix<Precision>* getReconstruction(/* int persistenceLevel */);    
     FortranLinalg::DenseMatrix<Precision> *Rvar;
     FortranLinalg::DenseMatrix<Precision> *gradR;
     FortranLinalg::DenseVector<Precision> Rmin; 
