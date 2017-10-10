@@ -102,7 +102,13 @@ FortranLinalg::DenseMatrix<Precision>* HDVizData::getGradient() {
   return gradR;
 }
 
+FortranLinalg::DenseVector<Precision>& HDVizData::getRMin() {
+  return Rmin;
+}
 
+FortranLinalg::DenseVector<Precision>& HDVizData::getRMax() {
+  return Rmax;
+}
 
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;

@@ -208,10 +208,10 @@ class DisplayRange : public Display{
       Precision offw1 = (w-w1)/2.f;
 
       Precision glmax = std::max(fabs(data->gRmin(i)), fabs(data->gRmax(i)));
-      Precision rlmax = std::max(fabs(data->Rmin(i)), fabs(data->Rmax(i)));
+      Precision rlmax = std::max(fabs(data->getRMin()(i)), fabs(data->getRMax()(i)));
 
       Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
-      m = (m - data->Rmin(i))   / ( data->Rmax(i) - data->Rmin(i) ) * w1;
+      m = (m - data->getRMin()(i))   / ( data->getRMax()(i) - data->getRMin()(i) ) * w1;
 
       glColor3f(0.7, 0.7, 0.7);
       glLineWidth(2.f); 
@@ -230,7 +230,7 @@ class DisplayRange : public Display{
 
 
       Precision v = data->getVariance()[state->selectedCell](i, state->selectedPoint);
-      v = v / ( data->Rmax(i) - data->Rmin(i) ) * w1 ;
+      v = v / ( data->getRMax()(i) - data->getRMin()(i) ) * w1 ;
 
 
       glColor3f(0.4, 0.4, 0.4);
@@ -244,7 +244,7 @@ class DisplayRange : public Display{
 
 
       Precision gm = data->getGradient()[state->selectedCell](i, state->selectedPoint);
-      gm = gm  / ( data->Rmax(i) - data->Rmin(i) ) * w1 / (2*std::max(glmax, rlmax));
+      gm = gm  / ( data->getRMax()(i) - data->getRMin()(i) ) * w1 / (2*std::max(glmax, rlmax));
 
       std::vector<Precision> color =
         data->colormap.getColor(data->yc[state->selectedCell](state->selectedPoint));
@@ -271,10 +271,10 @@ class DisplayRange : public Display{
 
 
       std::stringstream ss1;
-      ss1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->Rmin(i);
+      ss1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getRMin()(i);
 
       std::stringstream ss2;
-      ss2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->Rmax(i);
+      ss2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getRMax()(i);
 
 
 
@@ -322,7 +322,7 @@ class DisplayRange : public Display{
 
       Precision m = data->getGradient()[state->selectedCell](i, state->selectedPoint);
 
-      Precision mmax1 = std::max(fabs(data->Rmin(i)), fabs(data->Rmax(i)));
+      Precision mmax1 = std::max(fabs(data->getRMin()(i)), fabs(data->getRMax()(i)));
       Precision mmax2 = std::max(fabs(data->gRmin(i)), fabs(data->gRmax(i)));
       Precision mmax = std::max(mmax1, mmax2);
       if(mmax != 0){

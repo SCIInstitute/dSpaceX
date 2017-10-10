@@ -71,8 +71,8 @@ class DisplayMolecule : public Display{
       scale = 1;
 
       //naviagtion
-      double ax = FortranLinalg::Linalg<Precision>::Max(data->Rmax);
-      double in = FortranLinalg::Linalg<Precision>::Min(data->Rmin);
+      double ax = FortranLinalg::Linalg<Precision>::Max(data->getRMax());
+      double in = FortranLinalg::Linalg<Precision>::Min(data->getRMin());
       zoom = 1;
       tx = 0;
       ty = 0;
@@ -81,7 +81,7 @@ class DisplayMolecule : public Display{
       rotation[2] = 0;
       rotationAxis = 0;
 
-      int n = data->Rmax.N()/3;
+      int n = data->getRMax().N()/3;
       FortranLinalg::DenseVector<TPrecision> tmp(n);
       for(int i=0; i<n; i++){
         tmp(i)= i;
@@ -206,7 +206,7 @@ class DisplayMolecule : public Display{
       glTranslatef(0,0, 0.5); 
 
       int index=0;
-      for(int i=2; i<data->Rmin.N(); i+=3, index++ ){
+      for(int i=2; i<data->getRMin().N(); i+=3, index++ ){
          double x = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-2);
          double y = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i-1);
          double z = data->getSelectedCoordinate(state->selectedCell, state->selectedPoint, i);
@@ -224,7 +224,7 @@ class DisplayMolecule : public Display{
 
       //int cell = state->selectedCell;
       //int point = state->selectedPoint;
-      int nAtoms = data->Rmin.N()/3;
+      int nAtoms = data->getRMin().N()/3;
  
       for(int i=0; i<nAtoms; i++){
         int ind = i*3;
