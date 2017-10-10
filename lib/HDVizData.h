@@ -20,7 +20,7 @@ class HDVizData {
     virtual Precision getSelectedVariance(int selectedCell, int selectedPoint, int index) = 0;
 
     // Morse-Smale edge information.
-    virtual FortranLinalg::DenseMatrix<int>& getEdges() = 0;
+    virtual FortranLinalg::DenseMatrix<int>& getEdges(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
     virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
     virtual FortranLinalg::DenseMatrix<Precision>* getLayout() = 0;

@@ -54,7 +54,8 @@ Precision FileCachedHDVizDataImpl::getSelectedVariance(int selectedCell, int sel
   return Rvar[selectedCell](index, selectedPoint);
 }
 
-FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges() {
+FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return edges;
 }    
 

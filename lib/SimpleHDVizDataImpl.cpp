@@ -10,7 +10,7 @@ const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
-  
+  // No work to do.
 };
 
 int SimpleHDVizDataImpl::getNumberOfSamples() {
@@ -25,10 +25,8 @@ Precision SimpleHDVizDataImpl::getSelectedVariance(int selectedCell, int selecte
   return 0;
 }
 
-FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseMatrix<int>();
-  return fake;
+FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  
+  m_data->crystals[persistenceLevel];
 }    
 
 FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getLayout() {
