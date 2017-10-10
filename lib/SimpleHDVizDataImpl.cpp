@@ -57,10 +57,8 @@ FortranLinalg::DenseVector<std::string>& SimpleHDVizDataImpl::getNames() {
   return m_data->names;
 }
 
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaValues() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaValues(int persistenceLevel) {
+  return m_data->extremaValues[persistenceLevel];
 }
 
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized() {

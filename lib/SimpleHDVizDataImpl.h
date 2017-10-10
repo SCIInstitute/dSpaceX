@@ -25,7 +25,7 @@ class SimpleHDVizDataImpl : public HDVizData {
         HDVizLayout layout, int persistenceLevel);
 
     // Extrema Layouts
-    FortranLinalg::DenseVector<Precision>& getExtremaValues();
+    FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
     FortranLinalg::DenseVector<Precision>& getExtremaWidths();
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();

@@ -83,7 +83,9 @@ int FileCachedHDVizDataImpl::getNumberOfSamples() {
   return nSamples;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaValues() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaValues(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return ef;
 }
 

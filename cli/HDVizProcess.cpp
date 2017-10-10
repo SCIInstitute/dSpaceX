@@ -121,6 +121,9 @@ void writeData(HDProcessResult *result, std::string path) {
     std::string crystalsFilename = "Crystals_" + std::to_string(level) + ".data";
     LinalgIO<int>::writeMatrix(path + crystalsFilename, result->crystals[level]);
 
+    std::string ExtremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data";
+    LinalgIO<Precision>::writeVector(path + ExtremaValuesFilename, result->extremaValues[level]);      
+
     std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeVector(path + extremaWidthsFilename, result->extremaWidths[level]);
 
@@ -158,9 +161,6 @@ void writeData(HDProcessResult *result, std::string path) {
   for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
     std::string PCAExtremaLayoutFilename = "ExtremaLayout_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeMatrix(path + PCAExtremaLayoutFilename, result->PCAExtremaLayout[level]);
-
-    std::string PCAExtremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data";
-    LinalgIO<Precision>::writeVector(path + PCAExtremaValuesFilename, result->PCAExtremaValues[level]);      
 
     std::string PCA2ExtremaLayoutFilename = "PCA2ExtremaLayout_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeMatrix(path + PCA2ExtremaLayoutFilename, result->PCA2ExtremaLayout[level]);

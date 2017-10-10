@@ -90,6 +90,7 @@ HDProcessResult* HDProcessor::process(
 
   // Resize Stores for Saving Persistence Level information
   m_result->crystals.resize(persistence.N());
+  m_result->extremaValues.resize(persistence.N());  
   m_result->extremaWidths.resize(persistence.N());
   m_result->R.resize(persistence.N());
   m_result->gradR.resize(persistence.N());
@@ -97,8 +98,7 @@ HDProcessResult* HDProcessor::process(
   m_result->mdists.resize(persistence.N());
   m_result->fmean.resize(persistence.N());
   m_result->spdf.resize(persistence.N());
-  m_result->PCAExtremaLayout.resize(persistence.N());
-  m_result->PCAExtremaValues.resize(persistence.N());  
+  m_result->PCAExtremaLayout.resize(persistence.N());  
   m_result->PCALayout.resize(persistence.N());
   m_result->PCA2ExtremaLayout.resize(persistence.N());
   m_result->PCA2Layout.resize(persistence.N());
@@ -570,8 +570,10 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
   m_result->PCAExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(E);
   E.deallocate();
 
+  // TODO: ExtremaValues are NOT unique to PCA. The construction of Ef and the
+  //       copying of them should be moved out of this method.
   // Store ExtremaValues in Result Object
-  m_result->PCAExtremaValues[persistenceLevel] = Linalg<Precision>::Copy(Ef);  
+  m_result->extremaValues[persistenceLevel] = Linalg<Precision>::Copy(Ef);  
   Ef.deallocate();
 
   pca.cleanup();

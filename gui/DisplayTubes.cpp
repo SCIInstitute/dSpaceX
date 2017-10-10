@@ -634,13 +634,13 @@ void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
     if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
     } else if(selectedPeaks(e1)) {
-      if (data->getExtremaValues()(e1) > data->getExtremaValues()(e2)) {
+      if (data->getExtremaValues(state->currentLevel)(e1) > data->getExtremaValues(state->currentLevel)(e2)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
       }
     } else if (selectedPeaks(e2)) {
-      if (data->getExtremaValues()(e2) > data->getExtremaValues()(e1)) {
+      if (data->getExtremaValues(state->currentLevel)(e2) > data->getExtremaValues(state->currentLevel)(e1)) {
         renderMode(i) =  RENDER_FADE_MAX_TO_MIN;
       } else {
         renderMode(i) =  RENDER_FADE_MIN_TO_MAX;
@@ -768,7 +768,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
           data->getExtremaLayout()(0, i), 
           data->getExtremaLayout()(1, i), 
           data->getExtremaNormalized()(i)); 
-      std::vector<Precision> color = data->getColorMap().getColor(data->getExtremaValues()(i));
+      std::vector<Precision> color = data->getColorMap().getColor(data->getExtremaValues(state->currentLevel)(i));
       glColor4f(color[0], color[1], color[2], 0.3);
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
@@ -1087,7 +1087,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glePolyCone_c4f(data->getNumberOfSamples() + 2, points, colors, radii);      
 
-      if (data->getExtremaValues()(i1) < data->getExtremaValues()(i2)) {
+      if (data->getExtremaValues(state->currentLevel)(i1) < data->getExtremaValues(state->currentLevel)(i2)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else {
         glColor4f(colors[data->getNumberOfSamples()][0], 
@@ -1103,7 +1103,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glutSolidSphere(scale *data->getExtremaWidths()(i1) + scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
-      if (data->getExtremaValues()(i2) < data->getExtremaValues()(i1)) {
+      if (data->getExtremaValues(state->currentLevel)(i2) < data->getExtremaValues(state->currentLevel)(i1)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else{
         glColor4f(colors[data->getNumberOfSamples()][0], 

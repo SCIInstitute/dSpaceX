@@ -17,13 +17,13 @@ struct HDProcessResult {
 
   // loadData
   std::vector<FortranLinalg::DenseMatrix<int>> crystals;            // Crystals_[level].dat.hdr
+  std::vector<FortranLinalg::DenseVector<Precision>> extremaValues; // ExtremaValues_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaWidths; // ExtremaWidths_[level].data.hdr
     
   // Layout Data 
   FortranLinalg::DenseVector<Precision> LminPCA;       // PCAMin.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr  
   std::vector<FortranLinalg::DenseMatrix<Precision>> PCAExtremaLayout;        // PCA_ExtremaLayout_[level].data.hdr
-  std::vector<FortranLinalg::DenseVector<Precision>> PCAExtremaValues;        // PCA_ExtremaValues_[level].data.hdr
   std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> PCALayout;  // ps_[level]_crystal_[i]_layout.data.hdr
   
   FortranLinalg::DenseVector<Precision> LminPCA2;       // PCA2Min.data.hdr
