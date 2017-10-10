@@ -134,6 +134,14 @@ Precision HDVizData::getExtremaMaxValue() {
   return efmax;
 }
 
+Precision HDVizData::getZMin() {
+  return zmin;
+}
+
+Precision HDVizData::getZMax() {
+  return zmax;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

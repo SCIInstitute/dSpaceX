@@ -52,8 +52,8 @@ class HDVizData{
     
     Precision getExtremaMinValue();
     Precision getExtremaMaxValue();
-    Precision zmax, zmin;
-
+    Precision getZMin();
+    Precision getZMax();
 
     // color/width and transparent width values
     FortranLinalg::DenseVector<Precision> *yc;   // value / color
@@ -115,6 +115,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision> Lmin, Lmax;
 
     Precision efmin, efmax;
+    Precision zmin, zmax;
 };
 
 #endif
