@@ -6,6 +6,7 @@
 #include "colormapper.h" 
 #include "Precision.h"
 #include <string>
+#include <vector>
 
 enum class HDVizLayout : char {
     ISOMAP  = 0,
@@ -23,7 +24,8 @@ class HDVizData {
     virtual FortranLinalg::DenseMatrix<int>& getEdges(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
     virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
-    virtual FortranLinalg::DenseMatrix<Precision>* getLayout() = 0;
+    virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
+        HDVizLayout layout, int persistenceLevel) = 0;
 
     // Extrema Layouts
     virtual FortranLinalg::DenseVector<Precision>& getExtremaValues() = 0;

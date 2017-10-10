@@ -29,9 +29,23 @@ FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLe
   m_data->crystals[persistenceLevel];
 }    
 
-FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getLayout() {
-  // TODO: Replace with real implementation  
-  return nullptr;
+std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayout(
+    HDVizLayout layout, int persistenceLevel) {
+  
+  switch (layout) {
+    case HDVizLayout::ISOMAP : 
+      return m_data->IsoLayout[persistenceLevel];
+      break;
+    case HDVizLayout::PCA : 
+      return m_data->PCALayout[persistenceLevel];
+      break;
+    case HDVizLayout::PCA2 :
+      return  m_data->PCA2Layout[persistenceLevel];
+      break;
+    default:
+      throw std::invalid_argument("Unrecognized HDVizlayout specified.");
+      break;
+  }  
 }
 
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getPersistence() {

@@ -10,7 +10,7 @@ const int k_defaultSamplesCount = 50;
 
 FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   layout = HDVizLayout::ISOMAP;
-  L = nullptr;  
+  L = std::vector<FortranLinalg::DenseMatrix<Precision>>(0);
   nSamples = k_defaultSamplesCount;
 
   std::string persistenceDataHeaderFilename = k_defaultPersistenceDataHeaderFilename;
@@ -59,7 +59,11 @@ FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persisten
   return edges;
 }    
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getLayout() {
+std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getLayout(
+    HDVizLayout layout, int persistenceLevel) {
+  // TODO: Add call check to enforce that:
+  //       layout == cachedLayout  &&
+  //       persistenceLevel == cachedPersistenceLevel
   return L;
 }
 
@@ -241,7 +245,7 @@ void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, 
 };
 
 void FileCachedHDVizDataImpl::loadData(int level) {
-  if (L != nullptr) {
+  if (!L.empty()) {
     for (unsigned int i=0; i<edges.N(); i++) {
       L[i].deallocate();
       R[i].deallocate();
@@ -252,14 +256,14 @@ void FileCachedHDVizDataImpl::loadData(int level) {
       yw[i].deallocate();
       yd[i].deallocate();
     }
-     delete[] L;
-     delete[] R;
-     delete[] Rvar;
-     delete[] gradR;
-     delete[] yc;
-     delete[] z;
-     delete[] yw;
-     delete[] yd;
+     
+    delete[] R;
+    delete[] Rvar;
+    delete[] gradR;
+    delete[] yc;
+    delete[] z;
+    delete[] yw;
+    delete[] yd;
   }
 
   // Edges
@@ -269,7 +273,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
 
 
   // Read layout information matrices.
-  L = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
+  L = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
   setLayout(layout, level);
 
   R = new FortranLinalg::DenseMatrix<Precision>[edges.N()];

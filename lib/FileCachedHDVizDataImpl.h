@@ -18,7 +18,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<int>& getEdges(int persistenceLevel);    
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
-    FortranLinalg::DenseMatrix<Precision>* getLayout();
+    std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
+        HDVizLayout layout, int persistenceLevel);
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues();
@@ -73,7 +74,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
     // Cell layouts
-    FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
+    std::vector<FortranLinalg::DenseMatrix<Precision>> L;   // Point Positions
 
     // Number of smaples per cell for rendering.
     int nSamples;
