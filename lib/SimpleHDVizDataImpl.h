@@ -64,6 +64,6 @@ class SimpleHDVizDataImpl : public HDVizData {
     int getMaxPersistenceLevel();
         
   private:
-    
+    HDProcessResult *m_data;
 };
 

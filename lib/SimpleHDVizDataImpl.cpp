@@ -9,7 +9,7 @@ const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
-SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) {
+SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
   
 };
 
