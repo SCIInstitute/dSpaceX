@@ -340,8 +340,8 @@ void DisplayTubes<TPrecision>::display(void){
     glBegin(GL_LINES);
     glVertex2f(-0.15, 2);
     glVertex2f(0.4, 2);
-    glVertex2f(0, data->z[state->selectedCell](state->selectedPoint)*2);
-    glVertex2f(0.4, data->z[state->selectedCell](state->selectedPoint)*2);
+    glVertex2f(0, data->getZ()[state->selectedCell](state->selectedPoint)*2);
+    glVertex2f(0.4, data->getZ()[state->selectedCell](state->selectedPoint)*2);
     glVertex2f(-0.15, 0);
     glVertex2f(0.4, 0);
     glEnd();
@@ -730,7 +730,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       for (unsigned int m = 0; m < data->getLayout()[i].M(); m++) {
         points[k+1][m] = data->getLayout()[i](m, k);
       }
-      points[k+1][2] = data->z[i](k);
+      points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
@@ -791,7 +791,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       for (unsigned int m = 0; m < data->getLayout()[i].M(); m++) {
         points[k+1][m] = data->getLayout()[i](m, k);
       }
-      points[k+1][2] = data->z[i](k);
+      points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
@@ -831,7 +831,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       for (unsigned int m = 0; m < data->getLayout()[i].M(); m++) {
         points[k+1][m] = data->getLayout()[i](m, k);
       }
-      points[k+1][2] = data->z[i](k);
+      points[k+1][2] = data->getZ()[i](k);
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
@@ -919,7 +919,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
         for (unsigned int m = 0; m < data->getLayout()[i].M(); m++) {
           points[k+1][m] = data->getLayout()[i](m, k);
         }
-        points[k+1][2] = data->z[i](k);
+        points[k+1][2] = data->getZ()[i](k);
         radii[k+1] = scale*data->yw[i](k); 
       }    
       radii[0] = radii[1];
@@ -1027,7 +1027,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
         for (unsigned int m = 0; m < data->getLayout()[i].M(); m++) {
           points[k+1][m] = data->getLayout()[i](m, k);
         }
-        points[k+1][2] = data->z[i](k);
+        points[k+1][2] = data->getZ()[i](k);
         radii[k+1] = scale*data->yw[i](k); 
       }    
       radii[0] = radii[1];
@@ -1223,7 +1223,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     glTranslatef(
         data->getLayout()[state->selectedCell](0, state->selectedPoint), 
         data->getLayout()[state->selectedCell](1, state->selectedPoint), 
-        data->z[state->selectedCell](state->selectedPoint));
+        data->getZ()[state->selectedCell](state->selectedPoint));
     glutSolidSphere(0.04, 50, 50);  
     glPopMatrix();
 
@@ -1239,7 +1239,7 @@ void DisplayTubes<TPrecision>::renderMS() {
       Precision dir =  p - data->getLayout()[state->selectedCell](m, sIndex);
       l += dir*dir;  
     }
-    Precision tmp = data->z[state->selectedCell](state->selectedPoint)- data->z[state->selectedCell](sIndex);
+    Precision tmp = data->getZ()[state->selectedCell](state->selectedPoint)- data->getZ()[state->selectedCell](sIndex);
     l += tmp*tmp;
     l = sqrt(l);
     for (int m = 0; m < 2; m++) {
@@ -1250,8 +1250,8 @@ void DisplayTubes<TPrecision>::renderMS() {
       points[2][m] = p - dir/l*0.02f; 
       points[3][m] = p - dir/l*0.04f; 
     }      
-    Precision p =  data->z[state->selectedCell](state->selectedPoint);
-    Precision dir =  p - data->z[state->selectedCell](sIndex); 
+    Precision p =  data->getZ()[state->selectedCell](state->selectedPoint);
+    Precision dir =  p - data->getZ()[state->selectedCell](sIndex); 
     points[0][2] = p + dir/l*0.04f; 
     points[1][2] = p + dir/l*0.02f; 
     points[2][2] = p - dir/l*0.02f; 

@@ -228,7 +228,7 @@ class DisplayCurves : public Display{
       for (int j = 0; j < data->getNumberOfSamples(); j++){
 	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m);
+      	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m);
       }
       glEnd();        
       
@@ -240,7 +240,7 @@ class DisplayCurves : public Display{
         v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
 	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m + v);
+      	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m + v);
       }
       glEnd();       
       
@@ -250,7 +250,7 @@ class DisplayCurves : public Display{
         v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
 	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
-      	glVertex2f(l+offw1+data->z[state->selectedCell](j)*w1, b + h5 + m - v);
+      	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m - v);
       }
       glEnd();    
 
@@ -297,7 +297,7 @@ class DisplayCurves : public Display{
      v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
 	   Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
      m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
-     Precision wz = data->z[state->selectedCell](state->selectedPoint)*w1;
+     Precision wz = data->getZ()[state->selectedCell](state->selectedPoint)*w1;
 
      a = font.Advance(ssm.str().c_str());
      glRasterPos2f(l+offw1+wz-a, b + h5+m+v+0.004f*h);

@@ -146,6 +146,10 @@ FortranLinalg::DenseVector<Precision>* HDVizData::getValueColor() {
   return yc;
 }
 
+FortranLinalg::DenseVector<Precision>* HDVizData::getZ() {
+  return z;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
