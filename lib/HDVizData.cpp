@@ -95,8 +95,14 @@ FortranLinalg::DenseMatrix<Precision>* HDVizData::getReconstruction() {
 }
 
 FortranLinalg::DenseMatrix<Precision>* HDVizData::getVariance() {
-  return R;
+  return Rvar;
 }
+
+FortranLinalg::DenseMatrix<Precision>* HDVizData::getGradient() {
+  return gradR;
+}
+
+
 
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
