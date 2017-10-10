@@ -56,7 +56,7 @@ class HDVizData{
     Precision getZMax();
 
     // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision> *yc;   // value / color
+    FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);
     FortranLinalg::DenseVector<Precision> *z;    // point positions
     FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
     FortranLinalg::DenseVector<Precision> *yd;   // density
@@ -116,6 +116,9 @@ class HDVizData{
 
     Precision efmin, efmax;
     Precision zmin, zmax;
+
+    // color/width and transparent width values
+    FortranLinalg::DenseVector<Precision> *yc;   // value / color
 };
 
 #endif

@@ -142,6 +142,10 @@ Precision HDVizData::getZMax() {
   return zmax;
 }
 
+FortranLinalg::DenseVector<Precision>* HDVizData::getValueColor() {
+  return yc;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

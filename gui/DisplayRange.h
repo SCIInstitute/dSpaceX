@@ -247,7 +247,7 @@ class DisplayRange : public Display{
       gm = gm  / ( data->getRMax()(i) - data->getRMin()(i) ) * w1 / (2*std::max(glmax, rlmax));
 
       std::vector<Precision> color =
-        data->colormap.getColor(data->yc[state->selectedCell](state->selectedPoint));
+        data->colormap.getColor(data->getValueColor()[state->selectedCell](state->selectedPoint));
       glColor3f(color[0], color[1], color[2]);   
       glLineWidth(3.f); 
       glBegin(GL_LINES);
@@ -267,7 +267,7 @@ class DisplayRange : public Display{
 
       std::stringstream sse;
       sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-      sse << "(" << data->yc[state->selectedCell](state->selectedPoint) << ")";
+      sse << "(" << data->getValueColor()[state->selectedCell](state->selectedPoint) << ")";
 
 
       std::stringstream ss1;
