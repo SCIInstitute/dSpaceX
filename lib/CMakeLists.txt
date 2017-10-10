@@ -1,7 +1,7 @@
 PROJECT(HDProcessing)
 
-SET(HDPROCESS_INCLUDE_FILES HDProcessor.h HDVizData.h FileCachedHDVizDataImpl.h)
-SET(HDPROCESS_INCLUDE_FILES HDProcessor.cpp FileCachedHDVizDataImpl.cpp)
+SET(HDPROCESS_INCLUDE_FILES HDProcessor.h HDVizData.h FileCachedHDVizDataImpl.h SimpleHDVizDataImpl.h)
+SET(HDPROCESS_INCLUDE_FILES HDProcessor.cpp FileCachedHDVizDataImpl.cpp SimpleHDVizDataImpl.cpp)
 
 LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 
