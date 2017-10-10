@@ -30,8 +30,7 @@ FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLe
 }    
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayout(
-    HDVizLayout layout, int persistenceLevel) {
-  
+    HDVizLayout layout, int persistenceLevel) {  
   switch (layout) {
     case HDVizLayout::ISOMAP : 
       return m_data->IsoLayout[persistenceLevel];
@@ -49,9 +48,7 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayo
 }
 
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getPersistence() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+  return m_data->scaledPersistence;
 }
 
 FortranLinalg::DenseVector<std::string>& SimpleHDVizDataImpl::getNames() {
