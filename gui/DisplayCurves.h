@@ -236,7 +236,7 @@ class DisplayCurves : public Display{
       glBegin(GL_LINE_STRIP);
       glColor3f(0.6, 0.6, 0.6);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
-        Precision v = data->Rvar[state->selectedCell](i, j);
+        Precision v = data->getVariance()[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
 	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
@@ -246,7 +246,7 @@ class DisplayCurves : public Display{
       
       glBegin(GL_LINE_STRIP);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
-        Precision v = data->Rvar[state->selectedCell](i, j);
+        Precision v = data->getVariance()[state->selectedCell](i, j);
         v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
 	      Precision m = data->getReconstruction()[state->selectedCell](i, j);
       	m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;
@@ -293,7 +293,7 @@ class DisplayCurves : public Display{
      sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
      sse << "(" << data->yc[state->selectedCell](state->selectedPoint) << ")";
 
-     Precision v = data->Rvar[state->selectedCell](i, state->selectedPoint);
+     Precision v = data->getVariance()[state->selectedCell](i, state->selectedPoint);
      v = v / ( data->Rsmax(i) - data->Rsmin(i) ) * hd ;
 	   Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
      m = (m - data->Rsmin(i))   / ( data->Rsmax(i) - data->Rsmin(i) ) * hd;

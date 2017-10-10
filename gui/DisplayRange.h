@@ -229,7 +229,7 @@ class DisplayRange : public Display{
       glEnd();
 
 
-      Precision v = data->Rvar[state->selectedCell](i, state->selectedPoint);
+      Precision v = data->getVariance()[state->selectedCell](i, state->selectedPoint);
       v = v / ( data->Rmax(i) - data->Rmin(i) ) * w1 ;
 
 

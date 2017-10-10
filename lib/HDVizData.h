@@ -41,7 +41,7 @@ class HDVizData{
        
     // Cell reconstruction
     FortranLinalg::DenseMatrix<Precision>* getReconstruction(/* int persistenceLevel */);    
-    FortranLinalg::DenseMatrix<Precision> *Rvar;
+    FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */);
     FortranLinalg::DenseMatrix<Precision> *gradR;
     FortranLinalg::DenseVector<Precision> Rmin; 
     FortranLinalg::DenseVector<Precision> Rmax;
@@ -102,7 +102,8 @@ class HDVizData{
     std::string m_path;
 
     // Cell Reconstruction
-    FortranLinalg::DenseMatrix<Precision> *R;
+    FortranLinalg::DenseMatrix<Precision> *R;      // mean
+    FortranLinalg::DenseMatrix<Precision> *Rvar;   // std-dev
 };
 
 #endif

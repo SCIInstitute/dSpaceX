@@ -94,6 +94,10 @@ FortranLinalg::DenseMatrix<Precision>* HDVizData::getReconstruction() {
   return R;
 }
 
+FortranLinalg::DenseMatrix<Precision>* HDVizData::getVariance() {
+  return R;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
