@@ -9,7 +9,7 @@
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
 
-#include "HDVizData.h"
+#include "FileCachedHDVizData.h"
 #include <tclap/CmdLine.h>
 
 #include <iostream>
@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
   // Load data
   try { 
     std::string path = pathArg.getValue();
-    HDVizData data(path);
-    HDVizState state(&data);
+    HDVizData* data = new FileCachedHDVizData(path);
+    HDVizState state(data);
 
     std::string fontname = fontArg.getValue();
     if (fontname.size() == 0){
@@ -81,10 +81,10 @@ int main(int argc, char **argv) {
     }
 
     //Windows
-    mainD = new DisplayTubes<Precision>(&data, &state, fontname);
+    mainD = new DisplayTubes<Precision>(data, &state, fontname);
 
     #ifdef DIMENSION    
-    auxD = new DisplayImagePCA<Image, Precision>(&data, &state, fontname);
+    auxD = new DisplayImagePCA<Image, Precision>(data, &state, fontname);
     if (!auxD->loadAdditionalData()) {
       return 1;
     }
@@ -92,14 +92,14 @@ int main(int argc, char **argv) {
     #else
    
     if (boxArg.getValue()) {
-      auxD = new DisplayRange<Precision>(&data, &state, fontname);
+      auxD = new DisplayRange<Precision>(data, &state, fontname);
     } else {
       auxD = nullptr;
     }
 
  
     if (curvesArg.getValue()) {
-      auxD2 = new DisplayCurves<Precision>(&data, &state, fontname);
+      auxD2 = new DisplayCurves<Precision>(data, &state, fontname);
       if (!auxD2->loadAdditionalData()) {
         auxD2 = nullptr;
       }
@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
  
     if (molArg.getValue()) {
-      auxD3 = new DisplayMolecule<Precision>(&data, &state, fontname);
+      auxD3 = new DisplayMolecule<Precision>(data, &state, fontname);
       if (!auxD3->loadAdditionalData()) {
         auxD3 = nullptr;
       }

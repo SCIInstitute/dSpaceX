@@ -1,5 +1,4 @@
-#ifndef HDVIZDATA_H
-#define HDVIZDATA_H
+#pragma once
 
 #include "LinalgIO.h"
 #include "DenseMatrix.h"
@@ -14,118 +13,57 @@ enum class HDVizLayout : char {
     PCA2 = 2,
 };
 
-class HDVizData{
+class HDVizData {
   public:
-    HDVizData(std::string path);
-    Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index);
-    Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
+    virtual ~HDVizData(){};
+    virtual Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index) = 0;
+    virtual Precision getSelectedVariance(int selectedCell, int selectedPoint, int index) = 0;
 
     // Morse-Smale edge information.
-    FortranLinalg::DenseMatrix<int>& getEdges();    
-    FortranLinalg::DenseVector<Precision>& getPersistence();
-    FortranLinalg::DenseVector<std::string>& getNames();
-    FortranLinalg::DenseMatrix<Precision>* getLayout();
+    virtual FortranLinalg::DenseMatrix<int>& getEdges() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
+    virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
+    virtual FortranLinalg::DenseMatrix<Precision>* getLayout() = 0;
 
     // Extrema Layouts
-    FortranLinalg::DenseVector<Precision>& getExtremaValues();
-    FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
-    FortranLinalg::DenseVector<Precision>& getExtremaWidths();
-    FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();
+    virtual FortranLinalg::DenseVector<Precision>& getExtremaValues() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getExtremaNormalized() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getExtremaWidths() = 0;
+    virtual FortranLinalg::DenseMatrix<Precision>& getExtremaLayout() = 0;
     
     // Number of samples used for rendering.
-    int getNumberOfSamples();   
+    virtual int getNumberOfSamples() = 0;
     
     // Set which persistence level and layout to use.
-    void loadData(int level);
-    void setLayout(HDVizLayout layout, int level);
+    virtual void loadData(int level) = 0;
+    virtual void setLayout(HDVizLayout layout, int level) = 0;
        
     // Cell reconstruction
-    FortranLinalg::DenseMatrix<Precision>* getReconstruction(/* int persistenceLevel */);    
-    FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */);
-    FortranLinalg::DenseMatrix<Precision>* getGradient(/* int persistenceLevel */);
-    FortranLinalg::DenseVector<Precision>& getRMin();
-    FortranLinalg::DenseVector<Precision>& getRMax(); 
-    FortranLinalg::DenseVector<Precision>& getRsMin(); 
-    FortranLinalg::DenseVector<Precision>& getRsMax();      
-    FortranLinalg::DenseVector<Precision>& getGradientMin();
-    FortranLinalg::DenseVector<Precision>& getGradientMax();
+    virtual FortranLinalg::DenseMatrix<Precision>* getReconstruction(/* int persistenceLevel */) = 0;
+    virtual FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */) = 0;
+    virtual FortranLinalg::DenseMatrix<Precision>* getGradient(/* int persistenceLevel */) = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getRMin() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getRMax() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getRsMin() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getRsMax() = 0;  
+    virtual FortranLinalg::DenseVector<Precision>& getGradientMin() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getGradientMax() = 0;
     
-    Precision getExtremaMinValue();
-    Precision getExtremaMaxValue();
-    Precision getZMin();
-    Precision getZMax();
+    virtual Precision getExtremaMinValue() = 0;
+    virtual Precision getExtremaMaxValue() = 0;
+    virtual Precision getZMin() = 0;
+    virtual Precision getZMax() = 0;
 
     // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);
-    FortranLinalg::DenseVector<Precision>* getZ();    // What is z??
-    FortranLinalg::DenseVector<Precision>* getWidth(); 
-    FortranLinalg::DenseVector<Precision>* getDensity(); 
+    virtual FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */) = 0;
+    virtual FortranLinalg::DenseVector<Precision>* getZ() = 0;    // What is z??
+    virtual FortranLinalg::DenseVector<Precision>* getWidth() = 0; 
+    virtual FortranLinalg::DenseVector<Precision>* getDensity() = 0;
 
     // ColorMapper for each cell
-    ColorMapper<Precision>& getColorMap();
-    ColorMapper<Precision>& getDColorMap();
+    virtual ColorMapper<Precision>& getColorMap() = 0;
+    virtual ColorMapper<Precision>& getDColorMap() = 0;
 
-    int getMinPersistenceLevel(); 
-    int getMaxPersistenceLevel();
-        
-  private:
-    void loadLayout(std::string type, std::string extFile, int level);    
-    void loadColorValues(std::string type, int level);
-    void loadWidthValues(std::string type, int level);
-    void loadDensityValues(std::string type, int level);
-    void loadReconstructions(int level);
-    
-    FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
-    // Morse-Smale edge information.
-    FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr
-    // Cell layouts
-    FortranLinalg::DenseMatrix<Precision> *L;   // Point Positions
-
-    // Number of smaples per cell for rendering.
-    int nSamples;
-
-    FortranLinalg::DenseVector<std::string> m_names;
-    int minLevel;
-    int maxLevel;
-    HDVizLayout layout;
-
-    // Extrema Layouts
-    FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
-    FortranLinalg::DenseVector<Precision> ez;   // Extrema Values normalized [0,1]
-    FortranLinalg::DenseVector<Precision> ew;   // Extrema Widths
-    FortranLinalg::DenseMatrix<Precision> eL;   // Extrema layout 
-
-    // filenames
-    std::string m_path;
-
-    // Cell Reconstruction
-    FortranLinalg::DenseMatrix<Precision> *R;      // mean
-    FortranLinalg::DenseMatrix<Precision> *Rvar;   // std-dev
-    FortranLinalg::DenseMatrix<Precision> *gradR;  // gradient
-    FortranLinalg::DenseVector<Precision> Rmin; 
-    FortranLinalg::DenseVector<Precision> Rmax;
-    FortranLinalg::DenseVector<Precision> Rsmin; 
-    FortranLinalg::DenseVector<Precision> Rsmax;
-    FortranLinalg::DenseVector<Precision> Rvmin;
-    FortranLinalg::DenseVector<Precision> Rvmax;
-    FortranLinalg::DenseVector<Precision> gRmin; 
-    FortranLinalg::DenseVector<Precision> gRmax; 
-    Precision vmax;
-
-    FortranLinalg::DenseVector<Precision> Lmin, Lmax;
-
-    Precision efmin, efmax;
-    Precision zmin, zmax;
-
-    // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision> *yc;   // value / color
-    FortranLinalg::DenseVector<Precision> *z;    // What is this??
-    FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
-    FortranLinalg::DenseVector<Precision> *yd;   // density
-
-    // ColorMapper for each cell
-    ColorMapper<Precision> colormap;
-    ColorMapper<Precision> dcolormap;
+    virtual int getMinPersistenceLevel() = 0;
+    virtual int getMaxPersistenceLevel() = 0;
 };
-
-#endif
