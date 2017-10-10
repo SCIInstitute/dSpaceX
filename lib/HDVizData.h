@@ -46,9 +46,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision>& getRMin();
     FortranLinalg::DenseVector<Precision>& getRMax(); 
     FortranLinalg::DenseVector<Precision>& getRsMin(); 
-    FortranLinalg::DenseVector<Precision>& getRsMax();
-    FortranLinalg::DenseVector<Precision> Rvmin;
-    FortranLinalg::DenseVector<Precision> Rvmax;
+    FortranLinalg::DenseVector<Precision>& getRsMax();  
     Precision vmax;
     FortranLinalg::DenseVector<Precision> gRmin; 
     FortranLinalg::DenseVector<Precision> gRmax; 
@@ -109,6 +107,8 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision> Rmax;
     FortranLinalg::DenseVector<Precision> Rsmin; 
     FortranLinalg::DenseVector<Precision> Rsmax;
+    FortranLinalg::DenseVector<Precision> Rvmin;
+    FortranLinalg::DenseVector<Precision> Rvmax;
 };
 
 #endif
