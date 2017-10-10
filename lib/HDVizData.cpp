@@ -110,6 +110,14 @@ FortranLinalg::DenseVector<Precision>& HDVizData::getRMax() {
   return Rmax;
 }
 
+FortranLinalg::DenseVector<Precision>& HDVizData::getRsMin() {
+  return Rsmin;
+}
+
+FortranLinalg::DenseVector<Precision>& HDVizData::getRsMax() {
+  return Rsmax;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
