@@ -166,6 +166,14 @@ ColorMapper<Precision>& HDVizData::getDColorMap() {
   return dcolormap;
 }
 
+int HDVizData::getMinPersistenceLevel() { 
+  return minLevel; 
+}
+
+int HDVizData::getMaxPersistenceLevel() { 
+  return maxLevel; 
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

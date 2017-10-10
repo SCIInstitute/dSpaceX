@@ -65,8 +65,8 @@ class HDVizData{
     ColorMapper<Precision>& getColorMap();
     ColorMapper<Precision>& getDColorMap();
 
-    int getMinPersistenceLevel() { return minLevel; }
-    int getMaxPersistenceLevel() { return maxLevel; }
+    int getMinPersistenceLevel(); 
+    int getMaxPersistenceLevel();
         
   private:
     void loadLayout(std::string type, std::string extFile, int level);    
