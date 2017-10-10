@@ -292,7 +292,7 @@ void DisplayTubes<TPrecision>::display(void){
     std::stringstream sss;
     sss << "Density: ";
     sss << std::setiosflags(std::ios::fixed) << std::setprecision(4);
-    sss << data->yd[state->selectedCell](state->selectedPoint);
+    sss << data->getDensity()[state->selectedCell](state->selectedPoint);
     font.Render(sss.str().c_str());
 
 
@@ -1012,7 +1012,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
 
       for (unsigned int k = 0; k < data->getLayout()[i].N(); k++) {
-        std::vector<Precision> color = data->dcolormap.getColor(data->yd[i](k));
+        std::vector<Precision> color = data->dcolormap.getColor(data->getDensity()[i](k));
         colors[k+1][0] = color[0];
         colors[k+1][1] = color[1];
         colors[k+1][2] = color[2];

@@ -59,7 +59,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);
     FortranLinalg::DenseVector<Precision>* getZ();    // What is z??
     FortranLinalg::DenseVector<Precision>* getWidth(); 
-    FortranLinalg::DenseVector<Precision> *yd;   // density
+    FortranLinalg::DenseVector<Precision>* getDensity(); 
 
     // ColorMapper for each cell
     ColorMapper<Precision> colormap;
@@ -121,6 +121,7 @@ class HDVizData{
     FortranLinalg::DenseVector<Precision> *yc;   // value / color
     FortranLinalg::DenseVector<Precision> *z;    // What is this??
     FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
+    FortranLinalg::DenseVector<Precision> *yd;   // density
 };
 
 #endif
