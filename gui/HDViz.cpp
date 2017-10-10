@@ -9,7 +9,7 @@
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
 
-#include "FileCachedHDVizData.h"
+#include "FileCachedHDVizDataImpl.h"
 #include <tclap/CmdLine.h>
 
 #include <iostream>
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   // Load data
   try { 
     std::string path = pathArg.getValue();
-    HDVizData* data = new FileCachedHDVizData(path);
+    HDVizData* data = new FileCachedHDVizDataImpl(path);
     HDVizState state(data);
 
     std::string fontname = fontArg.getValue();

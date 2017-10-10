@@ -8,9 +8,9 @@
 #include "Precision.h"
 #include <string>
 
-class FileCachedHDVizData : public HDVizData {
+class FileCachedHDVizDataImpl : public HDVizData {
   public:
-    FileCachedHDVizData(std::string path);
+    FileCachedHDVizDataImpl(std::string path);
     Precision getSelectedCoordinate(int selectedCell, int selectedPoint, int index);
     Precision getSelectedVariance(int selectedCell, int selectedPoint, int index);
 
@@ -121,4 +121,3 @@ class FileCachedHDVizData : public HDVizData {
     ColorMapper<Precision> colormap;
     ColorMapper<Precision> dcolormap;
 };
-

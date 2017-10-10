@@ -1,4 +1,4 @@
-#include "FileCachedHDVizData.h"
+#include "FileCachedHDVizDataImpl.h"
 #include <stdexcept>
 
 const std::string k_defaultPath = "./";
@@ -8,7 +8,7 @@ const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
-FileCachedHDVizData::FileCachedHDVizData(std::string path) {
+FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   layout = HDVizLayout::ISOMAP;
   L = nullptr;  
   nSamples = k_defaultSamplesCount;
@@ -46,135 +46,135 @@ FileCachedHDVizData::FileCachedHDVizData(std::string path) {
 };
 
 
-Precision FileCachedHDVizData::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
+Precision FileCachedHDVizDataImpl::getSelectedCoordinate(int selectedCell, int selectedPoint, int index) {
   return R[selectedCell](index, selectedPoint);
 }
 
-Precision FileCachedHDVizData::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
+Precision FileCachedHDVizDataImpl::getSelectedVariance(int selectedCell, int selectedPoint, int index) {
   return Rvar[selectedCell](index, selectedPoint);
 }
 
-FortranLinalg::DenseMatrix<int>& FileCachedHDVizData::getEdges() {
+FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges() {
   return edges;
 }    
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizData::getLayout() {
+FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getLayout() {
   return L;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getPersistence() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getPersistence() {
   return pSorted;
 }
 
-FortranLinalg::DenseVector<std::string>& FileCachedHDVizData::getNames() {
+FortranLinalg::DenseVector<std::string>& FileCachedHDVizDataImpl::getNames() {
   return m_names;
 }
 
-int FileCachedHDVizData::getNumberOfSamples() {
+int FileCachedHDVizDataImpl::getNumberOfSamples() {
   return nSamples;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getExtremaValues() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaValues() {
   return ef;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getExtremaNormalized() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaNormalized() {
   return ez;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getExtremaWidths() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths() {
   return ew;
 }
 
-FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizData::getExtremaLayout() {
+FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getExtremaLayout() {
   return eL;
 }
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizData::getReconstruction() {
+FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getReconstruction() {
   return R;
 }
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizData::getVariance() {
+FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getVariance() {
   return Rvar;
 }
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizData::getGradient() {
+FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getGradient() {
   return gradR;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getRMin() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRMin() {
   return Rmin;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getRMax() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRMax() {
   return Rmax;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getRsMin() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMin() {
   return Rsmin;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getRsMax() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMax() {
   return Rsmax;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getGradientMin() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMin() {
   return gRmin;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizData::getGradientMax() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMax() {
   return gRmax;
 }
 
-Precision FileCachedHDVizData::getExtremaMinValue() {
+Precision FileCachedHDVizDataImpl::getExtremaMinValue() {
   return efmin;
 }
   
-Precision FileCachedHDVizData::getExtremaMaxValue() {
+Precision FileCachedHDVizDataImpl::getExtremaMaxValue() {
   return efmax;
 }
 
-Precision FileCachedHDVizData::getZMin() {
+Precision FileCachedHDVizDataImpl::getZMin() {
   return zmin;
 }
 
-Precision FileCachedHDVizData::getZMax() {
+Precision FileCachedHDVizDataImpl::getZMax() {
   return zmax;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizData::getValueColor() {
+FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getValueColor() {
   return yc;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizData::getZ() {
+FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getZ() {
   return z;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizData::getWidth() {
+FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getWidth() {
   return yw;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizData::getDensity() {
+FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getDensity() {
   return yd;
 }
 
-ColorMapper<Precision>& FileCachedHDVizData::getColorMap() {
+ColorMapper<Precision>& FileCachedHDVizDataImpl::getColorMap() {
   return colormap;
 }
   
-ColorMapper<Precision>& FileCachedHDVizData::getDColorMap() {
+ColorMapper<Precision>& FileCachedHDVizDataImpl::getDColorMap() {
   return dcolormap;
 }
 
-int FileCachedHDVizData::getMinPersistenceLevel() { 
+int FileCachedHDVizDataImpl::getMinPersistenceLevel() { 
   return minLevel; 
 }
 
-int FileCachedHDVizData::getMaxPersistenceLevel() { 
+int FileCachedHDVizDataImpl::getMaxPersistenceLevel() { 
   return maxLevel; 
 }
 
-void FileCachedHDVizData::setLayout(HDVizLayout layout, int level) {
+void FileCachedHDVizDataImpl::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
   Lmax.deallocate();
@@ -196,7 +196,7 @@ void FileCachedHDVizData::setLayout(HDVizLayout layout, int level) {
 };
 
 
-void FileCachedHDVizData::loadLayout(std::string type, std::string extFile, int level) {
+void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, int level) {
   for (unsigned int i = 0; i < edges.N(); i++) {
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
     L[i].deallocate();
@@ -239,7 +239,7 @@ void FileCachedHDVizData::loadLayout(std::string type, std::string extFile, int 
   nSamples = L[0].N();
 };
 
-void FileCachedHDVizData::loadData(int level) {
+void FileCachedHDVizDataImpl::loadData(int level) {
   if (L != nullptr) {
     for (unsigned int i=0; i<edges.N(); i++) {
       L[i].deallocate();
@@ -303,7 +303,7 @@ void FileCachedHDVizData::loadData(int level) {
 };
 
 
-void FileCachedHDVizData::loadColorValues(std::string type, int level){ 
+void FileCachedHDVizDataImpl::loadColorValues(std::string type, int level){ 
   for(unsigned int i=0; i<edges.N(); i++){
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
     yc[i].deallocate();
@@ -323,7 +323,7 @@ void FileCachedHDVizData::loadColorValues(std::string type, int level){
 
 
 
-void FileCachedHDVizData::loadWidthValues(std::string type, int level){
+void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
   zmax = std::numeric_limits<Precision>::min();
   zmin = std::numeric_limits<Precision>::max();
 
@@ -352,7 +352,7 @@ void FileCachedHDVizData::loadWidthValues(std::string type, int level){
 };
 
 
-void FileCachedHDVizData::loadDensityValues(std::string type, int level){
+void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level){
   Precision zmax = std::numeric_limits<Precision>::min();
   Precision zmin = std::numeric_limits<Precision>::max();
 
@@ -374,7 +374,7 @@ void FileCachedHDVizData::loadDensityValues(std::string type, int level){
   dcolormap.set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
 };
 
-void FileCachedHDVizData::loadReconstructions(int level){
+void FileCachedHDVizDataImpl::loadReconstructions(int level){
   for(unsigned int i=0; i< edges.N(); i++){
     std::string baseFilename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i);
     std::string rFilename = baseFilename + "_Rs.data.hdr";
