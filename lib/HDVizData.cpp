@@ -150,6 +150,10 @@ FortranLinalg::DenseVector<Precision>* HDVizData::getZ() {
   return z;
 }
 
+FortranLinalg::DenseVector<Precision>* HDVizData::getWidth() {
+  return yw;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();

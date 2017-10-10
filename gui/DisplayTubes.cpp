@@ -285,7 +285,7 @@ void DisplayTubes<TPrecision>::display(void){
     std::stringstream ssv;
     ssv << "Input std: ";
     ssv << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    ssv << (data->yw[state->selectedCell](state->selectedPoint)-0.03) * data->getZMax()/0.3;
+    ssv << (data->getWidth()[state->selectedCell](state->selectedPoint)-0.03) * data->getZMax()/0.3;
     font.Render(ssv.str().c_str());
     
     glRasterPos2f(0, -0.4f);       
@@ -920,7 +920,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
           points[k+1][m] = data->getLayout()[i](m, k);
         }
         points[k+1][2] = data->getZ()[i](k);
-        radii[k+1] = scale*data->yw[i](k); 
+        radii[k+1] = scale*data->getWidth()[i](k); 
       }    
       radii[0] = radii[1];
       radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
@@ -1028,7 +1028,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
           points[k+1][m] = data->getLayout()[i](m, k);
         }
         points[k+1][2] = data->getZ()[i](k);
-        radii[k+1] = scale*data->yw[i](k); 
+        radii[k+1] = scale*data->getWidth()[i](k); 
       }    
       radii[0] = radii[1];
       radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
@@ -1257,7 +1257,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     points[2][2] = p - dir/l*0.02f; 
     points[3][2] = p - dir/l*0.04f; 
     for (int k = 0; k < 4; k++) {
-      radii[k] = data->yw[state->selectedCell](state->selectedPoint);
+      radii[k] = data->getWidth()[state->selectedCell](state->selectedPoint);
     }
     glePolyCone_c4f(4, points, nullptr, radii);      
   }
