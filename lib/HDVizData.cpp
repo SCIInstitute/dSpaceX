@@ -158,6 +158,14 @@ FortranLinalg::DenseVector<Precision>* HDVizData::getDensity() {
   return yd;
 }
 
+ColorMapper<Precision>& HDVizData::getColorMap() {
+  return colormap;
+}
+  
+ColorMapper<Precision>& HDVizData::getDColorMap() {
+  return dcolormap;
+}
+
 void HDVizData::setLayout(HDVizLayout layout, int level) {
   this->layout = layout;
   Lmin.deallocate();
