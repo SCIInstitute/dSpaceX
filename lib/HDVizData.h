@@ -31,7 +31,7 @@ class HDVizData {
 
     // Extrema Layouts
     virtual FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseVector<Precision>& getExtremaNormalized() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getExtremaWidths() = 0;
     virtual FortranLinalg::DenseMatrix<Precision>& getExtremaLayout() = 0;
     

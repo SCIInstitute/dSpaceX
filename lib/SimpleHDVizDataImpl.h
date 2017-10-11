@@ -26,7 +26,7 @@ class SimpleHDVizDataImpl : public HDVizData {
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
-    FortranLinalg::DenseVector<Precision>& getExtremaNormalized();
+    FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaWidths();
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();
     
@@ -68,5 +68,6 @@ class SimpleHDVizDataImpl : public HDVizData {
         
   private:
     HDProcessResult *m_data;
+    std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
 };
 

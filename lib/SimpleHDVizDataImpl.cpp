@@ -10,7 +10,18 @@ const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
-  // No work to do.
+
+  // Create Normalized Extrema Values
+  extremaNormalized.resize(m_data->scaledPersistence.N());
+  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
+    auto ef = m_data->extremaValues[level];
+    auto efmin = FortranLinalg::Linalg<Precision>::Min(ef);
+    auto efmax = FortranLinalg::Linalg<Precision>::Max(ef);
+    auto ez = FortranLinalg::DenseVector<Precision>(ef.N());
+    FortranLinalg::Linalg<Precision>::Subtract(ef, efmin, ez);
+    FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax-efmin), ez);
+    extremaNormalized[level] = ez;
+  }
 };
 
 int SimpleHDVizDataImpl::getNumberOfSamples() {
@@ -61,10 +72,8 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaValues(int
   return m_data->extremaValues[persistenceLevel];
 }
 
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized(int persistenceLevel) {
+  return extremaNormalized[persistenceLevel];
 }
 
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths() {
