@@ -153,9 +153,9 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getVari
 /**
  *
  */
-FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getGradient() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getGradient(
+    int persistenceLevel) {
+  return m_data->gradR[persistenceLevel];
 }
 
 /**
