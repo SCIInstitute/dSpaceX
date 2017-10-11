@@ -69,6 +69,10 @@ class SimpleHDVizDataImpl : public HDVizData {
         
   private:
     HDProcessResult *m_data;
+    
+    // Computed visualization helper data
     std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
+    FortranLinalg::DenseVector<Precision> Rmin;          // geom min 
+    FortranLinalg::DenseVector<Precision> Rmax;          // geom max
 };
 

@@ -25,6 +25,10 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax-efmin), ez);
     extremaNormalized[level] = ez;
   }
+
+  // Calculate Geom min/max
+  Rmin = FortranLinalg::Linalg<Precision>::RowMin(m_data->X);
+  Rmax = FortranLinalg::Linalg<Precision>::RowMax(m_data->X);
 };
 
 /**
@@ -162,18 +166,14 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getGrad
  *
  */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRMin() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+  return Rmin;
 }
 
 /**
  *
  */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRMax() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();  
-  return fake;
+  return Rmax;
 }
 
 /**
