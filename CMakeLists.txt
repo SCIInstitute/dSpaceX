@@ -18,6 +18,7 @@ ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
   lib
+  external/
   external/gle/lib 
   external/dimred/lib 
   external/graph/lib 

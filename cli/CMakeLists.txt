@@ -11,6 +11,5 @@ ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cpp)
 TARGET_LINK_LIBRARIES (HDVizProcessing 
     hdprocess
     blas
-    lapack    
-    gfortran
+    lapack
 )
