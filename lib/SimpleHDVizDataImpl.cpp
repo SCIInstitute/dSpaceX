@@ -30,12 +30,16 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   Rmin = FortranLinalg::Linalg<Precision>::RowMin(m_data->X);
   Rmax = FortranLinalg::Linalg<Precision>::RowMax(m_data->X);
 
-  // Calculate Reconstruction min/max
+  // Calculate Reconstruction min/max and Gradients min/max
   Rsmin.resize(m_data->scaledPersistence.N());
   Rsmax.resize(m_data->scaledPersistence.N());
+  gRmin.resize(m_data->scaledPersistence.N());
+  gRmin.resize(m_data->scaledPersistence.N());
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     Rsmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
     Rsmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
+    gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
+    gRmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
   }
 };
 
@@ -201,19 +205,15 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMax(int persist
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMin() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMin(int persistenceLevel) {
+  return gRmin[persistenceLevel];
 }
 
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMax() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();  
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMax(int persistenceLevel) {
+  return gRmax[persistenceLevel];
 }
 
 /**

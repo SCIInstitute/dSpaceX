@@ -51,8 +51,8 @@ class HDVizData {
     virtual FortranLinalg::DenseVector<Precision>& getRMax() = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRsMin(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRsMax(int persistenceLevel) = 0;  
-    virtual FortranLinalg::DenseVector<Precision>& getGradientMin() = 0;
-    virtual FortranLinalg::DenseVector<Precision>& getGradientMax() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getGradientMin(int persistenceLevel) = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getGradientMax(int persistenceLevel) = 0;
     
     virtual Precision getExtremaMinValue() = 0;
     virtual Precision getExtremaMaxValue() = 0;

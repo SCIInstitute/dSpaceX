@@ -207,7 +207,9 @@ class DisplayRange : public Display{
       Precision w1 = w/2.f;
       Precision offw1 = (w-w1)/2.f;
 
-      Precision glmax = std::max(fabs(data->getGradientMin()(i)), fabs(data->getGradientMax()(i)));
+      Precision glmax = std::max(
+          fabs(data->getGradientMin(state->currentLevel)(i)), 
+          fabs(data->getGradientMax(state->currentLevel)(i)));
       Precision rlmax = std::max(fabs(data->getRMin()(i)), fabs(data->getRMax()(i)));
 
       Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
@@ -323,7 +325,9 @@ class DisplayRange : public Display{
       Precision m = data->getGradient(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
 
       Precision mmax1 = std::max(fabs(data->getRMin()(i)), fabs(data->getRMax()(i)));
-      Precision mmax2 = std::max(fabs(data->getGradientMin()(i)), fabs(data->getGradientMax()(i)));
+      Precision mmax2 = std::max(
+        fabs(data->getGradientMin(state->currentLevel)(i)), 
+        fabs(data->getGradientMax(state->currentLevel)(i)));
       Precision mmax = std::max(mmax1, mmax2);
       if(mmax != 0){
         m = (m + mmax) / (2*mmax) * w2 ;

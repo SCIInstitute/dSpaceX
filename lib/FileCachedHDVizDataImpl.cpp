@@ -148,11 +148,15 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMax(
   return Rsmax;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMin() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMin(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return gRmin;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMax() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMax(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return gRmax;
 }
 
