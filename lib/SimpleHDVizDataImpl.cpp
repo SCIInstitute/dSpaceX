@@ -76,10 +76,8 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized
   return extremaNormalized[persistenceLevel];
 }
 
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths(int persistenceLevel) {
+  return m_data->extremaWidths[persistenceLevel];
 }
 
 FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout() {

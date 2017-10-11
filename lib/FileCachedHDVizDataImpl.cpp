@@ -95,7 +95,9 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaNormal
   return ez;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return ew;
 }
 
