@@ -204,9 +204,6 @@ class DisplayCurves : public Display{
 
       Precision offw1 = w/8.f;
       Precision w1 = w-2*offw1;
-
-
-
    
       glColor3f(0.7, 0.7, 0.7);
       glLineWidth(4.f); 
@@ -221,13 +218,15 @@ class DisplayCurves : public Display{
       glVertex2f(l+offw1+w1, b+h5);
       glEnd();
 
+      auto rsMin = data->getRsMin(state->currentLevel);
+      auto rsMax = data->getRsMax(state->currentLevel);
 
       glLineWidth(6.f); 
       glBegin(GL_LINE_STRIP);
       glColor3f(0.1, 0.1, 0.1);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
 	      Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, j);
-      	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
+      	m = (m - rsMin(i)) / (rsMax(i) - rsMin(i)) * hd;
       	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m);
       }
       glEnd();        
@@ -237,9 +236,9 @@ class DisplayCurves : public Display{
       glColor3f(0.6, 0.6, 0.6);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->getVariance(state->currentLevel)[state->selectedCell](i, j);
-        v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
+        v = v / (rsMax(i) - rsMin(i)) * hd ;
 	      Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, j);
-      	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
+      	m = (m - rsMin(i)) / (rsMax(i) - rsMin(i)) * hd;
       	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m + v);
       }
       glEnd();       
@@ -247,9 +246,9 @@ class DisplayCurves : public Display{
       glBegin(GL_LINE_STRIP);
       for (int j = 0; j < data->getNumberOfSamples(); j++){
         Precision v = data->getVariance(state->currentLevel)[state->selectedCell](i, j);
-        v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
+        v = v / (rsMax(i) - rsMin(i)) * hd ;
 	      Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, j);
-      	m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
+      	m = (m - rsMin(i)) / (rsMax(i) - rsMin(i) ) * hd;
       	glVertex2f(l+offw1+data->getZ()[state->selectedCell](j)*w1, b + h5 + m - v);
       }
       glEnd();    
@@ -273,13 +272,13 @@ class DisplayCurves : public Display{
      font.Render(ss2.str().c_str());
       
      std::stringstream ssa1;
-     ssa1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getRsMin()(i);
+     ssa1 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << rsMin(i);
      a = font.Advance(ssa1.str().c_str());
      glRasterPos2f(l+offw1-1.2*a, b + h5);
      font.Render(ssa1.str().c_str());   
 
      std::stringstream ssa2;
-     ssa2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << data->getRsMax()(i);
+     ssa2 << std::setiosflags(std::ios::fixed) << std::setprecision(2) << rsMax(i);
      a = font.Advance(ssa2.str().c_str());
      glRasterPos2f(l+offw1-1.2*a, t - h5);
      font.Render(ssa2.str().c_str());   
@@ -294,9 +293,9 @@ class DisplayCurves : public Display{
      sse << "(" << data->getValueColor()[state->selectedCell](state->selectedPoint) << ")";
 
      Precision v = data->getVariance(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
-     v = v / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd ;
+     v = v / (rsMax(i) - rsMin(i)) * hd ;
 	   Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
-     m = (m - data->getRsMin()(i))   / ( data->getRsMax()(i) - data->getRsMin()(i) ) * hd;
+     m = (m - rsMin(i)) / (rsMax(i) - rsMin(i)) * hd;
      Precision wz = data->getZ()[state->selectedCell](state->selectedPoint)*w1;
 
      a = font.Advance(ssm.str().c_str());

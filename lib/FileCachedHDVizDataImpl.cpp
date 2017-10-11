@@ -136,11 +136,15 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRMax() {
   return Rmax;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMin() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMin(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return Rsmin;
 }
 
-FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMax() {
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMax(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return Rsmax;
 }
 

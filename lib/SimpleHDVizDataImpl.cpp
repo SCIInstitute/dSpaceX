@@ -29,6 +29,14 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   // Calculate Geom min/max
   Rmin = FortranLinalg::Linalg<Precision>::RowMin(m_data->X);
   Rmax = FortranLinalg::Linalg<Precision>::RowMax(m_data->X);
+
+  // Calculate Reconstruction min/max
+  Rsmin.resize(m_data->scaledPersistence.N());
+  Rsmax.resize(m_data->scaledPersistence.N());
+  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
+    Rsmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
+    Rsmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
+  }
 };
 
 /**
@@ -179,19 +187,15 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRMax() {
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMin() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();  
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMin(int persistenceLevel) {
+  return Rsmin[persistenceLevel];
 }
 
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMax() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseVector<Precision>();  
-  return fake;
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMax(int persistenceLevel) {
+  return Rsmax[persistenceLevel];
 }
 
 /**

@@ -43,8 +43,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getGradient(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getRMin();
     FortranLinalg::DenseVector<Precision>& getRMax(); 
-    FortranLinalg::DenseVector<Precision>& getRsMin(); 
-    FortranLinalg::DenseVector<Precision>& getRsMax();      
+    FortranLinalg::DenseVector<Precision>& getRsMin(int persistenceLevel); 
+    FortranLinalg::DenseVector<Precision>& getRsMax(int persistenceLevel);      
     FortranLinalg::DenseVector<Precision>& getGradientMin();
     FortranLinalg::DenseVector<Precision>& getGradientMax();
     
