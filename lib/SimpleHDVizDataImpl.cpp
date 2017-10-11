@@ -137,9 +137,9 @@ FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout(
 /**
  *
  */
-FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getReconstruction() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getReconstruction(
+    int persistenceLevel) {
+  return m_data->R[persistenceLevel];
 }
 
 /**

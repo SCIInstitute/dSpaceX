@@ -71,7 +71,7 @@ class DisplayRange : public Display{
       glClear(GL_COLOR_BUFFER_BIT);
 
       glLoadIdentity();
-      int M = data->getReconstruction()[state->selectedCell].M();
+      int M = data->getReconstruction(state->currentLevel)[state->selectedCell].M();
       Precision h = (Precision) height / M;
 
       setFontSize((int)(h*0.5f));
@@ -210,7 +210,7 @@ class DisplayRange : public Display{
       Precision glmax = std::max(fabs(data->getGradientMin()(i)), fabs(data->getGradientMax()(i)));
       Precision rlmax = std::max(fabs(data->getRMin()(i)), fabs(data->getRMax()(i)));
 
-      Precision m = data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
+      Precision m = data->getReconstruction(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
       m = (m - data->getRMin()(i))   / ( data->getRMax()(i) - data->getRMin()(i) ) * w1;
 
       glColor3f(0.7, 0.7, 0.7);
@@ -263,7 +263,7 @@ class DisplayRange : public Display{
 
       std::stringstream ssm;
       ssm << std::setiosflags(std::ios::fixed) << std::setprecision(2) <<
-        data->getReconstruction()[state->selectedCell](i, state->selectedPoint);
+        data->getReconstruction(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
 
       std::stringstream sse;
       sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);

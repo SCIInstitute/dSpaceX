@@ -39,7 +39,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     void setLayout(HDVizLayout layout, int level);
        
     // Cell reconstruction
-    FortranLinalg::DenseMatrix<Precision>* getReconstruction(/* int persistenceLevel */);    
+    std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);
     FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */);
     FortranLinalg::DenseMatrix<Precision>* getGradient(/* int persistenceLevel */);
     FortranLinalg::DenseVector<Precision>& getRMin();
