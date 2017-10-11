@@ -50,8 +50,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     
     Precision getExtremaMinValue(int persistenceLevel);
     Precision getExtremaMaxValue(int persistenceLevel);
-    Precision getZMin();
-    Precision getZMax();
+    Precision getZMin(int persistenceLevel);
+    Precision getZMax(int persistenceLevel);
 
     // color/width and transparent width values
     FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);

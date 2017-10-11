@@ -285,7 +285,7 @@ void DisplayTubes<TPrecision>::display(void){
     std::stringstream ssv;
     ssv << "Input std: ";
     ssv << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-    ssv << (data->getWidth()[state->selectedCell](state->selectedPoint)-0.03) * data->getZMax()/0.3;
+    ssv << (data->getWidth()[state->selectedCell](state->selectedPoint)-0.03) * data->getZMax(state->currentLevel)/0.3;
     font.Render(ssv.str().c_str());
     
     glRasterPos2f(0, -0.4f);       

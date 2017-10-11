@@ -51,8 +51,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     
     Precision getExtremaMinValue(int persistenceLevel);
     Precision getExtremaMaxValue(int persistenceLevel);
-    Precision getZMin();
-    Precision getZMax();
+    Precision getZMin(int persistenceLevel);
+    Precision getZMax(int persistenceLevel);
 
     // color/width and transparent width values
     FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);
@@ -80,5 +80,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseVector<Precision>> gRmax; // Reconstruction Gradient maxs
     std::vector<Precision> efmin;                             // Extrema Value Mins
     std::vector<Precision> efmax;                             // Extrema Value Maxs
+    std::vector<Precision> zmin;                              // Normalized Extrema Value Mins
+    std::vector<Precision> zmax;                              // Normalized Extrema Value Maxs
 };
 

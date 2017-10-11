@@ -56,8 +56,8 @@ class HDVizData {
     
     virtual Precision getExtremaMinValue(int persistenceLevel) = 0;
     virtual Precision getExtremaMaxValue(int persistenceLevel) = 0;
-    virtual Precision getZMin() = 0;
-    virtual Precision getZMax() = 0;
+    virtual Precision getZMin(int persistenceLevel) = 0;
+    virtual Precision getZMax(int persistenceLevel) = 0;
 
     // color/width and transparent width values
     virtual FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */) = 0;

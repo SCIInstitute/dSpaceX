@@ -170,11 +170,13 @@ Precision FileCachedHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
   return efmax;
 }
 
-Precision FileCachedHDVizDataImpl::getZMin() {
+Precision FileCachedHDVizDataImpl::getZMin(int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return zmin;
 }
 
-Precision FileCachedHDVizDataImpl::getZMax() {
+Precision FileCachedHDVizDataImpl::getZMax(int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return zmax;
 }
 
@@ -358,8 +360,8 @@ void FileCachedHDVizDataImpl::loadColorValues(std::string type, int level){
 
 
 void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
-  zmax = std::numeric_limits<Precision>::min();
-  zmin = std::numeric_limits<Precision>::max();
+  zmax = std::numeric_limits<Precision>::min();   // TODO: Why is zmax being reused here?
+  zmin = std::numeric_limits<Precision>::max();   // TODO: Why is zmin being reused here?
 
   for(unsigned int i = 0; i < edges.N(); i++){
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
@@ -387,8 +389,8 @@ void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
 
 
 void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level){
-  Precision zmax = std::numeric_limits<Precision>::min();
-  Precision zmin = std::numeric_limits<Precision>::max();
+  Precision zmax = std::numeric_limits<Precision>::min();  // TODO: Why is zmax being reused here?
+  Precision zmin = std::numeric_limits<Precision>::max();  // TODO: Why is zmin being reused here?
 
   for(unsigned int i=0; i<edges.N(); i++){
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;

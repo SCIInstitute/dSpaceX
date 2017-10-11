@@ -17,7 +17,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   // Create Normalized Extrema Values and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
   efmin.resize(m_data->scaledPersistence.N());
-  efmax.resize(m_data->scaledPersistence.N());
+  efmax.resize(m_data->scaledPersistence.N());  
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
@@ -43,6 +43,10 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
     gRmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
   }
+
+  // Resize unknown quantity vectors
+  zmin.resize(m_data->scaledPersistence.N());
+  zmax.resize(m_data->scaledPersistence.N());
 };
 
 /**
@@ -235,17 +239,15 @@ Precision SimpleHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getZMin() {
-  // TODO: Replace with real implementation
-  return 0;  
+Precision SimpleHDVizDataImpl::getZMin(int persistenceLevel) {
+  return zmin[persistenceLevel];
 }
 
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getZMax() {
-  // TODO: Replace with real implementation
-  return 0;  
+Precision SimpleHDVizDataImpl::getZMax(int persistenceLevel) {
+  return zmax[persistenceLevel];
 }
 
 /**
