@@ -39,7 +39,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
        
     // Cell reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);
-    FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */);
+    std::vector<FortranLinalg::DenseMatrix<Precision>>& getVariance(int persistenceLevel);
     FortranLinalg::DenseMatrix<Precision>* getGradient(/* int persistenceLevel */);
     FortranLinalg::DenseVector<Precision>& getRMin();
     FortranLinalg::DenseVector<Precision>& getRMax(); 
@@ -98,7 +98,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
 
     // Cell Reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>> R;      // mean
-    FortranLinalg::DenseMatrix<Precision> *Rvar;   // std-dev
+    std::vector<FortranLinalg::DenseMatrix<Precision>> Rvar;   // std-dev
     FortranLinalg::DenseMatrix<Precision> *gradR;  // gradient
     FortranLinalg::DenseVector<Precision> Rmin; 
     FortranLinalg::DenseVector<Precision> Rmax;

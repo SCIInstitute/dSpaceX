@@ -145,9 +145,9 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getReco
 /**
  *
  */
-FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getVariance() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getVariance(
+    int persistenceLevel) {
+  return m_data->Rvar[persistenceLevel];
 }
 
 /**

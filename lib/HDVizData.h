@@ -45,7 +45,7 @@ class HDVizData {
        
     // Cell reconstruction
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseMatrix<Precision>* getVariance(/* int persistenceLevel */) = 0;
+    virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getVariance(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseMatrix<Precision>* getGradient(/* int persistenceLevel */) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRMin() = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRMax() = 0;

@@ -115,8 +115,11 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::get
   return R;
 }
 
-FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getVariance() {
+std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getVariance(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return Rvar;
+
 }
 
 FortranLinalg::DenseMatrix<Precision>* FileCachedHDVizDataImpl::getGradient() {
@@ -273,8 +276,6 @@ void FileCachedHDVizDataImpl::loadData(int level) {
       yd[i].deallocate();
     }
     
-    
-    delete[] Rvar;
     delete[] gradR;
     delete[] yc;
     delete[] z;
@@ -293,7 +294,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
   setLayout(layout, level);
 
   R = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
-  Rvar = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
+  Rvar = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
   gradR = new FortranLinalg::DenseMatrix<Precision>[edges.N()];
   loadReconstructions(level);
 
