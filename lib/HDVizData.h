@@ -33,7 +33,8 @@ class HDVizData {
     virtual FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getExtremaWidths(int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseMatrix<Precision>& getExtremaLayout() = 0;
+    virtual FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
+        HDVizLayout layout, int persistenceLevel) = 0;
     
     // Number of samples used for rendering.
     virtual int getNumberOfSamples() = 0;

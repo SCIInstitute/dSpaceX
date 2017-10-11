@@ -80,10 +80,22 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths(int
   return m_data->extremaWidths[persistenceLevel];
 }
 
-FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout() {
-  // TODO: Replace with real implementation
-  auto fake = FortranLinalg::DenseMatrix<Precision>();  
-  return fake;
+FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout(
+    HDVizLayout layout, int persistenceLevel) {
+  switch (layout) {
+    case HDVizLayout::ISOMAP : 
+      return m_data->IsoExtremaLayout[persistenceLevel];
+      break;
+    case HDVizLayout::PCA : 
+      return m_data->PCAExtremaLayout[persistenceLevel];
+      break;
+    case HDVizLayout::PCA2 :
+      return  m_data->PCA2ExtremaLayout[persistenceLevel];
+      break;
+    default:
+      throw std::invalid_argument("Unrecognized HDVizlayout specified.");
+      break;
+  }  
 }
 
 FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getReconstruction() {

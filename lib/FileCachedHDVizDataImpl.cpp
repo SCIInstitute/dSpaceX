@@ -101,7 +101,11 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths
   return ew;
 }
 
-FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getExtremaLayout() {
+FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getExtremaLayout(
+    HDVizLayout layout, int persistenceLevel) {
+  // TODO: Add call check to enforce that:
+  //       layout == cachedLayout  &&
+  //       persistenceLevel == cachedPersistenceLevel
   return eL;
 }
 

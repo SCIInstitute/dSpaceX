@@ -721,6 +721,8 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
   auto extremaValues = data->getExtremaValues(state->currentLevel);
+  auto extremaLayout = data->getExtremaLayout(state->currentLayout, state->currentLevel);
+  auto extremaNormalized = data->getExtremaNormalized(state->currentLevel);
 
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
 
@@ -761,17 +763,14 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
     glPopName();     
   } 
 
-
-
-
-  //Draw extremal points
-  for (unsigned int i = 0; i < data->getExtremaLayout().N(); i++) {
+  // Draw extremal points
+  for (unsigned int i = 0; i < extremaLayout.N(); i++) {
     if (selectedPeaks(i)) {
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       std::vector<Precision> color = data->getColorMap().getColor(extremaValues(i));
       glColor4f(color[0], color[1], color[2], 0.3);
       glutSolidSphere(0.028, 100, 100);
@@ -870,7 +869,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   }   
 
   //Draw extremal points
-  for (unsigned int i = 0; i < data->getExtremaLayout().N(); i++) {
+  for (unsigned int i = 0; i < extremaLayout.N(); i++) {
     if (!selectedPeaks(i)) { 
       glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
       glPushName(i);
@@ -880,9 +879,9 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
 
@@ -892,9 +891,9 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       glDepthMask(GL_FALSE);
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
       glDepthMask(GL_TRUE);
@@ -917,6 +916,8 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
   auto extremaValues = data->getExtremaValues(state->currentLevel);
+  auto extremaLayout = data->getExtremaLayout(state->currentLayout, state->currentLevel);
+  auto extremaNormalized = data->getExtremaNormalized(state->currentLevel);
 
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
     if (renderMode(i) != RENDER_TUBE) continue;
@@ -957,17 +958,17 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i1), 
-          data->getExtremaLayout()(1, i1), 
-          data->getExtremaNormalized(state->currentLevel)(i1)); 
+          extremaLayout(0, i1), 
+          extremaLayout(1, i1), 
+          extremaNormalized(i1)); 
       glutSolidSphere(scale * data->getExtremaWidths(state->currentLevel)(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i2), 
-          data->getExtremaLayout()(1, i2), 
-          data->getExtremaNormalized(state->currentLevel)(i2)); 
+          extremaLayout(0, i2), 
+          extremaLayout(1, i2), 
+          extremaNormalized(i2)); 
       glutSolidSphere(scale * data->getExtremaWidths(state->currentLevel)(i2), 50, 50);
       glPopMatrix();
 
@@ -985,17 +986,17 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i1), 
-          data->getExtremaLayout()(1, i1), 
-          data->getExtremaNormalized(state->currentLevel)(i1)); 
+          extremaLayout(0, i1), 
+          extremaLayout(1, i1), 
+          extremaNormalized(i1)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i2), 
-          data->getExtremaLayout()(1, i2), 
-          data->getExtremaNormalized(state->currentLevel)(i2)); 
+          extremaLayout(0, i2), 
+          extremaLayout(1, i2), 
+          extremaNormalized(i2)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i2), 50, 50);
       glPopMatrix();
 
@@ -1064,17 +1065,17 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i1), 
-          data->getExtremaLayout()(1, i1), 
-          data->getExtremaNormalized(state->currentLevel)(i1)); 
+          extremaLayout(0, i1), 
+          extremaLayout(1, i1), 
+          extremaNormalized(i1)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i1), 50, 50);
       glPopMatrix();
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i2), 
-          data->getExtremaLayout()(1, i2), 
-          data->getExtremaNormalized(state->currentLevel)(i2)); 
+          extremaLayout(0, i2), 
+          extremaLayout(1, i2), 
+          extremaNormalized(i2)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i2), 50, 50);
       glPopMatrix();
 
@@ -1102,9 +1103,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
       }
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i1), 
-          data->getExtremaLayout()(1, i1), 
-          data->getExtremaNormalized(state->currentLevel)(i1)); 
+          extremaLayout(0, i1), 
+          extremaLayout(1, i1), 
+          extremaNormalized(i1)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i1) + scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
@@ -1121,17 +1122,17 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i1), 
-          data->getExtremaLayout()(1, i1), 
-          data->getExtremaNormalized(state->currentLevel)(i1)); 
+          extremaLayout(0, i1), 
+          extremaLayout(1, i1), 
+          extremaNormalized(i1)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i1)+ scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i2), 
-          data->getExtremaLayout()(1, i2), 
-          data->getExtremaNormalized(state->currentLevel)(i2)); 
+          extremaLayout(0, i2), 
+          extremaLayout(1, i2), 
+          extremaNormalized(i2)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i2)+ scale*0.025/zoom, 50, 50);
       glPopMatrix();
 
@@ -1145,9 +1146,12 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::renderExtrema() {
+  auto extremaLayout = data->getExtremaLayout(state->currentLayout, state->currentLevel);
+  auto extremaNormalized = data->getExtremaNormalized(state->currentLevel);
+
   glEnable(GL_STENCIL_TEST);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60);
-  for (unsigned int i = 0; i < data->getExtremaLayout().N(); i++) {
+  for (unsigned int i = 0; i < extremaLayout.N(); i++) {
     if (selectedPeaks(i) == true) {
       glColor4f(0.8, 0.8, 0.8, 0.1);
 
@@ -1162,9 +1166,9 @@ void DisplayTubes<TPrecision>::renderExtrema() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i), 50, 50);
       glPopMatrix();
 
@@ -1176,9 +1180,9 @@ void DisplayTubes<TPrecision>::renderExtrema() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i), 50, 50);
       glPopMatrix();
 
@@ -1192,9 +1196,9 @@ void DisplayTubes<TPrecision>::renderExtrema() {
 
       glPushMatrix();
       glTranslatef(
-          data->getExtremaLayout()(0, i), 
-          data->getExtremaLayout()(1, i), 
-          data->getExtremaNormalized(state->currentLevel)(i)); 
+          extremaLayout(0, i), 
+          extremaLayout(1, i), 
+          extremaNormalized(i)); 
       glutSolidSphere(scale *data->getExtremaWidths(state->currentLevel)(i) + scale*0.015/zoom, 50, 50);
       glPopMatrix();
 
@@ -1286,7 +1290,7 @@ void DisplayTubes<TPrecision>::setFontSize(int fsize) {
 
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::initState() {
+void DisplayTubes<TPrecision>::initState() {  
   selectedCTubes.deallocate();
   selectedTubes.deallocate();
   renderMode.deallocate();
@@ -1295,13 +1299,16 @@ void DisplayTubes<TPrecision>::initState() {
   selectedCTubes = FortranLinalg::DenseVector<bool>(data->getEdges(state->currentLevel).N());
   selectedTubes = FortranLinalg::DenseVector<bool>(data->getEdges(state->currentLevel).N());
   renderMode = FortranLinalg::DenseVector<int>(data->getEdges(state->currentLevel).N());
+  
   for (unsigned int i = 0; i < data->getEdges(state->currentLevel).N(); i++) {
     selectedCTubes(i) = true;
     selectedTubes(i) = false;
     renderMode(i) = RENDER_TUBE;
   }
-  selectedPeaks = FortranLinalg::DenseVector<bool>(data->getExtremaLayout().N());
-  for (unsigned int i = 0; i < data->getExtremaLayout().N(); i++) {
+
+  auto extremaLayout = data->getExtremaLayout(state->currentLayout, state->currentLevel);
+  selectedPeaks = FortranLinalg::DenseVector<bool>(extremaLayout.N());
+  for (unsigned int i = 0; i < extremaLayout.N(); i++) {
     selectedPeaks(i) = true;
   }
 };

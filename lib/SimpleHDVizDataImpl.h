@@ -28,7 +28,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaWidths(int persistenceLevel);
-    FortranLinalg::DenseMatrix<Precision>& getExtremaLayout();
+    FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
+        HDVizLayout layout, int persistenceLevel);
     
     // Number of samples used for rendering.
     int getNumberOfSamples();   
