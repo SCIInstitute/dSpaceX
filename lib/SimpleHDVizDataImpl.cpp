@@ -14,15 +14,17 @@ const int k_defaultSamplesCount = 50;
  */
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
 
-  // Create Normalized Extrema Values
+  // Create Normalized Extrema Values and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
+  efmin.resize(m_data->scaledPersistence.N());
+  efmax.resize(m_data->scaledPersistence.N());
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
-    auto efmin = FortranLinalg::Linalg<Precision>::Min(ef);
-    auto efmax = FortranLinalg::Linalg<Precision>::Max(ef);
+    efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
+    efmax[level] = FortranLinalg::Linalg<Precision>::Max(ef);
     auto ez = FortranLinalg::DenseVector<Precision>(ef.N());
-    FortranLinalg::Linalg<Precision>::Subtract(ef, efmin, ez);
-    FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax-efmin), ez);
+    FortranLinalg::Linalg<Precision>::Subtract(ef, efmin[level], ez);
+    FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax[level] - efmin[level]), ez);
     extremaNormalized[level] = ez;
   }
 
@@ -219,17 +221,15 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMax(int p
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getExtremaMinValue() {
-  // TODO: Replace with real implementation
-  return 0;
+Precision SimpleHDVizDataImpl::getExtremaMinValue(int persistenceLevel) {
+  return efmin[persistenceLevel];
 }
   
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getExtremaMaxValue() {
-  // TODO: Replace with real implementation
-  return 0;
+Precision SimpleHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
+  return efmax[persistenceLevel];
 }
 
 /**

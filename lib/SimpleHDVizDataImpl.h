@@ -49,8 +49,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision>& getGradientMin(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getGradientMax(int persistenceLevel);
     
-    Precision getExtremaMinValue();
-    Precision getExtremaMaxValue();
+    Precision getExtremaMinValue(int persistenceLevel);
+    Precision getExtremaMaxValue(int persistenceLevel);
     Precision getZMin();
     Precision getZMax();
 
@@ -72,11 +72,13 @@ class SimpleHDVizDataImpl : public HDVizData {
     
     // Computed visualization helper data
     std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
-    FortranLinalg::DenseVector<Precision> Rmin;          // TODO: geom min, rename?
-    FortranLinalg::DenseVector<Precision> Rmax;          // TODO: geom max, rename?
+    FortranLinalg::DenseVector<Precision> Rmin;               // TODO: geom min, rename?
+    FortranLinalg::DenseVector<Precision> Rmax;               // TODO: geom max, rename?
     std::vector<FortranLinalg::DenseVector<Precision>> Rsmin; // Reconstruction mins
     std::vector<FortranLinalg::DenseVector<Precision>> Rsmax; // Reconstruction maxs
     std::vector<FortranLinalg::DenseVector<Precision>> gRmin; // Reconstruction Gradient mins
     std::vector<FortranLinalg::DenseVector<Precision>> gRmax; // Reconstruction Gradient maxs
+    std::vector<Precision> efmin;                             // Extrema Value Mins
+    std::vector<Precision> efmax;                             // Extrema Value Maxs
 };
 
