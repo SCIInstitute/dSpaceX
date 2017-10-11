@@ -292,10 +292,14 @@ void FileCachedHDVizDataImpl::loadData(int level) {
   ef.deallocate();      
   std::string extremaValuesFilename = "ExtremaValues_" + std::to_string(level) + ".data.hdr";
   ef = FortranLinalg::LinalgIO<Precision>::readVector(m_path + extremaValuesFilename);
+  
+  // Create Normalized Extrema Values
   ez.deallocate();
   ez = FortranLinalg::DenseVector<Precision>(ef.N());
   efmin = FortranLinalg::Linalg<Precision>::Min(ef);
   efmax = FortranLinalg::Linalg<Precision>::Max(ef);
+  FortranLinalg::Linalg<Precision>::Subtract(ef, efmin, ez);
+  FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax-efmin), ez);
   
   std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(level) + ".data.hdr";
   ew.deallocate();
@@ -323,9 +327,6 @@ void FileCachedHDVizDataImpl::loadColorValues(std::string type, int level){
     FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin, z[i]);
     FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax-efmin), z[i]);
   }
-
-  FortranLinalg::Linalg<Precision>::Subtract(ef, efmin, ez);
-  FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax-efmin), ez);
 
   colormap = ColorMapper<Precision>(efmin, efmax);
   colormap.set(0, 204.f/255.f, 210.f/255.f, 102.f/255.f, 204.f/255.f,
