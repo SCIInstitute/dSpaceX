@@ -9,6 +9,9 @@ const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
+/**
+ * SimpleHDVizDataImpl constuctor
+ */
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
 
   // Create Normalized Extrema Values
@@ -24,24 +27,39 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   }
 };
 
+/**
+ *
+ */
 int SimpleHDVizDataImpl::getNumberOfSamples() {
   return k_defaultSamplesCount;
 }
 
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getSelectedCoordinate(
     int persistenceLevel, int selectedCell, int selectedPoint, int index) {
   return m_data->R[persistenceLevel][selectedCell](index, selectedPoint);
 }
 
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getSelectedVariance(
     int persistenceLevel, int selectedCell, int selectedPoint, int index) {
   return m_data->Rvar[persistenceLevel][selectedCell](index, selectedPoint);
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  
   m_data->crystals[persistenceLevel];
 }    
 
+/**
+ *
+ */
 std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayout(
     HDVizLayout layout, int persistenceLevel) {  
   switch (layout) {
@@ -60,26 +78,44 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayo
   }  
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getPersistence() {
   return m_data->scaledPersistence;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<std::string>& SimpleHDVizDataImpl::getNames() {
   return m_data->names;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaValues(int persistenceLevel) {
   return m_data->extremaValues[persistenceLevel];
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized(int persistenceLevel) {
   return extremaNormalized[persistenceLevel];
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths(int persistenceLevel) {
   return m_data->extremaWidths[persistenceLevel];
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout(
     HDVizLayout layout, int persistenceLevel) {
   switch (layout) {
@@ -98,123 +134,192 @@ FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getExtremaLayout(
   }  
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getReconstruction() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getVariance() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<Precision>* SimpleHDVizDataImpl::getGradient() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRMin() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();
   return fake;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRMax() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();  
   return fake;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMin() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();  
   return fake;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getRsMax() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();  
   return fake;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMin() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();
   return fake;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getGradientMax() {
   // TODO: Replace with real implementation
   auto fake = FortranLinalg::DenseVector<Precision>();  
   return fake;
 }
 
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getExtremaMinValue() {
   // TODO: Replace with real implementation
   return 0;
 }
   
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getExtremaMaxValue() {
   // TODO: Replace with real implementation
   return 0;
 }
 
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getZMin() {
   // TODO: Replace with real implementation
   return 0;  
 }
 
+/**
+ *
+ */
 Precision SimpleHDVizDataImpl::getZMax() {
   // TODO: Replace with real implementation
   return 0;  
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getValueColor() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getZ() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getWidth() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getDensity() {
   // TODO: Replace with real implementation
   return nullptr;
 }
 
+/**
+ *
+ */
 ColorMapper<Precision>& SimpleHDVizDataImpl::getColorMap() {
   // TODO: Replace with real implementation
   auto fake = ColorMapper<Precision>();
   return fake;
 }
-  
+ 
+ /**
+ *
+ */ 
 ColorMapper<Precision>& SimpleHDVizDataImpl::getDColorMap() {
   // TODO: Replace with real implementation
   auto fake = ColorMapper<Precision>();
   return fake;
 }
 
+/**
+ *
+ */
 int SimpleHDVizDataImpl::getMinPersistenceLevel() { 
   // TODO: Replace with real implementation
   return 0;
 }
 
+/**
+ *
+ */
 int SimpleHDVizDataImpl::getMaxPersistenceLevel() { 
   // TODO: Replace with real implementation
   return 0;
 }
 
+/**
+ *
+ */
 void SimpleHDVizDataImpl::setLayout(HDVizLayout layout, int level) {
   /* No work necessary. */
 };
 
+/**
+ *
+ */
 void SimpleHDVizDataImpl::loadData(int level) {
   /* No work necessary. */
 };
