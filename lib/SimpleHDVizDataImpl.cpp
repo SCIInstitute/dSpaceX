@@ -16,11 +16,13 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
 
   // Create Normalized Extrema Values, Mean Values, and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
+  extremaWidthScaled.resize(m_data->scaledPersistence.N());
   meanNormalized.resize(m_data->scaledPersistence.N());
   efmin.resize(m_data->scaledPersistence.N());
   efmax.resize(m_data->scaledPersistence.N());  
   colormap.resize(m_data->scaledPersistence.N());
   dcolormap.resize(m_data->scaledPersistence.N());
+  widthScaled.resize(m_data->scaledPersistence.N());
 
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
@@ -32,14 +34,37 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax[level] - efmin[level]), ez);
     extremaNormalized[level] = ez;
 
-    auto yc = m_data->fmean[level];
+    auto yc = m_data->fmean[level];    
     auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
+    auto yw = m_data->mdists[level];
+    auto widthMax = std::numeric_limits<Precision>::min();
     for (unsigned int i=0; i < getEdges(level).N(); i++) {      
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
-      FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);      
+      FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);            
+
+      for(unsigned int k=0; k< yw[i].N(); k++){        
+        if(yw[i](k) > widthMax){
+          widthMax = yw[i](k);
+        }
+      }
     }
     meanNormalized[level] = z;
+
+    widthScaled[level].resize(getEdges(level).N());
+    for (unsigned int i=0; i < getEdges(level).N(); i++) { 
+      auto width = FortranLinalg::Linalg<Precision>::Copy(yw[i]);
+      FortranLinalg::Linalg<Precision>::Scale(width, 0.3/ widthMax, width);
+      FortranLinalg::Linalg<Precision>::Add(width, 0.03, width);
+      widthScaled[level][i] = width;
+    }
+
+    auto ew = m_data->extremaWidths[level];
+    auto extremaWidth = FortranLinalg::Linalg<Precision>::Copy(ew);
+    FortranLinalg::Linalg<Precision>::Scale(extremaWidth, 0.3/widthMax, extremaWidth);
+    FortranLinalg::Linalg<Precision>::Add(extremaWidth, 0.03, extremaWidth);
+    extremaWidthScaled[level] = extremaWidth;
+     
 
     // Set up Color Maps
     colormap[level] = ColorMapper<Precision>(efmin[level], efmax[level]);
@@ -165,6 +190,14 @@ FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaNormalized
  */
 FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidths(int persistenceLevel) {
   return m_data->extremaWidths[persistenceLevel];
+}
+
+/**
+ *
+ */
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getExtremaWidthsScaled(
+     int persistenceLevel) {
+  return extremaWidthScaled[persistenceLevel];
 }
 
 /**
@@ -304,6 +337,14 @@ std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getMean
 std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getWidth(
     int persistenceLevel) {
   return m_data->mdists[persistenceLevel];
+}
+
+/**
+ * 
+ */
+std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getWidthScaled(
+    int persistenceLevel) {
+  return widthScaled[persistenceLevel];
 }
 
 /**

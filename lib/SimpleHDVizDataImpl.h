@@ -28,6 +28,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaWidths(int persistenceLevel);
+    FortranLinalg::DenseVector<Precision>& getExtremaWidthsScaled(int persistenceLevel);
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     
@@ -61,6 +62,8 @@ class SimpleHDVizDataImpl : public HDVizData {
         int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
         int persistenceLevel);
+    std::vector<FortranLinalg::DenseVector<Precision>>& getWidthScaled(
+        int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getDensity(
         int persistenceLevel);
 
@@ -76,6 +79,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     
     // Computed visualization helper data
     std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
+    std::vector<FortranLinalg::DenseVector<Precision>> extremaWidthScaled;
     FortranLinalg::DenseVector<Precision> Rmin;               // TODO: geom min, rename?
     FortranLinalg::DenseVector<Precision> Rmax;               // TODO: geom max, rename?
     std::vector<FortranLinalg::DenseVector<Precision>> Rsmin; // Reconstruction mins
@@ -87,6 +91,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<Precision> zmin;                              // Normalized Extrema Value Mins
     std::vector<Precision> zmax;                              // Normalized Extrema Value Maxs
     std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> meanNormalized;
+    std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> widthScaled;
 
     // ColorMappers
     std::vector<ColorMapper<Precision>> colormap;

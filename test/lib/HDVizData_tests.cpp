@@ -97,9 +97,7 @@ TEST(HDVizData, persistence) {
     ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaNormalized(level), simpleData->getExtremaNormalized(level));
-    // printVector(cachedData->getExtremaWidths(level));
-    // printVector(simpleData->getExtremaWidths(level));
-    // ASSERT_VECTOR_EQ(cachedData->getExtremaWidths(level), simpleData->getExtremaWidths(level));
+    ASSERT_VECTOR_EQ(cachedData->getExtremaWidthsScaled(level), simpleData->getExtremaWidthsScaled(level));
   }  
 
   // cleanup

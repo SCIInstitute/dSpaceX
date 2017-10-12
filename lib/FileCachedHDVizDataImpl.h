@@ -27,6 +27,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaWidths(int persistenceLevel);
+    FortranLinalg::DenseVector<Precision>& getExtremaWidthsScaled(int persistenceLevel);
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     

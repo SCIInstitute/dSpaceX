@@ -97,6 +97,14 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaNormal
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths(
     int persistenceLevel) {
+  // TODO: This function is currently returning extrema widths scaled. Factor out
+  //       that logic and return the original extrema widths from this function.
+  maybeSwapLevelCache(persistenceLevel);
+  return ew;
+}
+
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidthsScaled(
+    int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
   return ew;
 }
