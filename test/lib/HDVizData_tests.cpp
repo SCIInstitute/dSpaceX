@@ -7,7 +7,20 @@
 #include <iostream>
 #include <exception>
 
+
+//---------------------------------------------------------------------
+// Declarations
+//---------------------------------------------------------------------
+
 std::string data_dir = std::string(TEST_DATA_DIR);   
+
+template <typename T>
+void printVector(FortranLinalg::DenseVector<T> &vector) {
+  for (unsigned int i = 0; i < vector.N(); i++) {    
+      std::cout << vector(i) << " ";
+  }
+  std::cout << std::endl;
+}
 
 template <typename T>
 void printMatrix(FortranLinalg::DenseMatrix<T> &matrix) {
@@ -20,6 +33,13 @@ void printMatrix(FortranLinalg::DenseMatrix<T> &matrix) {
   std::cout << std::endl;
 }
 
+template <typename T>
+void ASSERT_VECTOR_EQ(FortranLinalg::DenseVector<T> &a, FortranLinalg::DenseVector<T> &b) {
+  ASSERT_EQ(a.N(), b.N());
+  for (unsigned int i = 0; i < a.N(); i++) {
+    ASSERT_EQ(a(i), b(i));
+  }    
+}
 
 template <typename T>
 void ASSERT_MATRIX_EQ(FortranLinalg::DenseMatrix<T> &a, FortranLinalg::DenseMatrix<T> &b) {
@@ -32,6 +52,9 @@ void ASSERT_MATRIX_EQ(FortranLinalg::DenseMatrix<T> &a, FortranLinalg::DenseMatr
   }
 }
 
+//---------------------------------------------------------------------
+// Tests
+//---------------------------------------------------------------------
 
 TEST(FileCachedHDVizDataImpl, loadsFiles) {  
   try {
@@ -69,13 +92,15 @@ TEST(HDVizData, persistence) {
     ASSERT_EQ(cachedData->getPersistence()(level), simpleData->getPersistence()(level));
   }
 
-  // Compare Edges
-  for (unsigned int level=0; level < persistenceCount; level++) {
+  // Compare Persistence Level Data
+  for (unsigned int level=0; level < persistenceCount; level++) {    
     ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
-  }
-  
-
-  // Compare 
+    ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));
+    ASSERT_VECTOR_EQ(cachedData->getExtremaNormalized(level), simpleData->getExtremaNormalized(level));
+    // printVector(cachedData->getExtremaWidths(level));
+    // printVector(simpleData->getExtremaWidths(level));
+    // ASSERT_VECTOR_EQ(cachedData->getExtremaWidths(level), simpleData->getExtremaWidths(level));
+  }  
 
   // cleanup
   delete cachedData;
