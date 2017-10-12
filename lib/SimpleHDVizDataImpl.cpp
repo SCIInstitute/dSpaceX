@@ -288,9 +288,9 @@ std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getWidt
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getDensity() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getDensity(
+    int persistenceLevel) {
+  return m_data->spdf[persistenceLevel];
 }
 
 /**

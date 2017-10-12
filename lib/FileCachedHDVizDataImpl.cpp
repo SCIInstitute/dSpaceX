@@ -198,7 +198,9 @@ std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::get
   return yw;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getDensity() {
+std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getDensity(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return yd;
 }
 
@@ -295,8 +297,6 @@ void FileCachedHDVizDataImpl::loadData(int level) {
       yw[i].deallocate();
       yd[i].deallocate();
     }
-    
-    delete[] yd;
   }
 
   // Edges
@@ -337,7 +337,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
   yc = std::vector<FortranLinalg::DenseVector<Precision>>(edges.N());
   z = std::vector<FortranLinalg::DenseVector<Precision>>(edges.N());
   yw = std::vector<FortranLinalg::DenseVector<Precision>>(edges.N());
-  yd = new FortranLinalg::DenseVector<Precision>[edges.N()];
+  yd = std::vector<FortranLinalg::DenseVector<Precision>>(edges.N());
 
   loadColorValues("_fmean.data.hdr", level);
   loadWidthValues("_mdists.data.hdr", level);

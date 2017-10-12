@@ -61,7 +61,8 @@ class SimpleHDVizDataImpl : public HDVizData {
         int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
         int persistenceLevel);
-    FortranLinalg::DenseVector<Precision>* getDensity(); 
+    std::vector<FortranLinalg::DenseVector<Precision>>& getDensity(
+        int persistenceLevel);
 
     // ColorMapper for each cell
     ColorMapper<Precision>& getColorMap();
