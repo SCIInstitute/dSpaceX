@@ -54,7 +54,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     Precision getZMax(int persistenceLevel);
 
     // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision>* getValueColor(/* int persistenceLevel */);
+    std::vector<FortranLinalg::DenseVector<Precision>>& getMean(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>* getZ();    // What is z??
     FortranLinalg::DenseVector<Precision>* getWidth(); 
     FortranLinalg::DenseVector<Precision>* getDensity(); 
@@ -116,7 +116,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     Precision zmin, zmax;
 
     // color/width and transparent width values
-    FortranLinalg::DenseVector<Precision> *yc;   // value / color
+    std::vector<FortranLinalg::DenseVector<Precision>> yc;   // value / color
     FortranLinalg::DenseVector<Precision> *z;    // What is this??
     FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
     FortranLinalg::DenseVector<Precision> *yd;   // density

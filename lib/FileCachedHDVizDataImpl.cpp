@@ -180,7 +180,9 @@ Precision FileCachedHDVizDataImpl::getZMax(int persistenceLevel) {
   return zmax;
 }
 
-FortranLinalg::DenseVector<Precision>* FileCachedHDVizDataImpl::getValueColor() {
+std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getMean(
+    int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return yc;
 }
 
@@ -289,8 +291,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
       yw[i].deallocate();
       yd[i].deallocate();
     }
-        
-    delete[] yc;
+
     delete[] z;
     delete[] yw;
     delete[] yd;
@@ -331,7 +332,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
 
 
   // Load color and width informations.
-  yc = new FortranLinalg::DenseVector<Precision>[edges.N()];
+  yc = std::vector<FortranLinalg::DenseVector<Precision>>(edges.N());
   z = new FortranLinalg::DenseVector<Precision>[edges.N()];
   yw = new FortranLinalg::DenseVector<Precision>[edges.N()];
   yd = new FortranLinalg::DenseVector<Precision>[edges.N()];

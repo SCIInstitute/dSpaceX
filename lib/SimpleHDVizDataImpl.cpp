@@ -253,9 +253,9 @@ Precision SimpleHDVizDataImpl::getZMax(int persistenceLevel) {
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getValueColor() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getMean(
+  int persistenceLevel) {
+  return m_data->fmean[persistenceLevel];
 }
 
 /**

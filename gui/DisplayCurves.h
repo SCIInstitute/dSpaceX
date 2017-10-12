@@ -294,7 +294,7 @@ class DisplayCurves : public Display{
 
      std::stringstream sse;
      sse << std::setiosflags(std::ios::fixed) << std::setprecision(2);
-     sse << "(" << data->getValueColor()[state->selectedCell](state->selectedPoint) << ")";
+     sse << "(" << data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint) << ")";
 
      Precision v = data->getVariance(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
      v = v / (rsMax(i) - rsMin(i)) * hd ;
@@ -308,7 +308,7 @@ class DisplayCurves : public Display{
 
 
      std::vector<Precision> color =
-        data->getColorMap().getColor(data->getValueColor()[state->selectedCell](state->selectedPoint));
+        data->getColorMap().getColor(data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint));
      glColor3f(color[0], color[1], color[2]);   
      
      glRasterPos2f(l+offw1+wz, b + h5+m+v+0.004f*h);
