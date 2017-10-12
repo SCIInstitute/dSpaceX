@@ -124,8 +124,6 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
     }
   }
 
-  std::cout << "I'm here now" << std::endl;
-
   return result;
 } 
 
