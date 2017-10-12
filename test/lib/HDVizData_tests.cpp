@@ -74,7 +74,7 @@ TEST(SimpleHDVizDataImpl, loadData) {
  * Compare persistence information of FileCachedHDVizDataImpl
  * with newer SimpleHDVizDataImpl.
  */
-TEST(HDVizData, persistence) {
+TEST(HDVizData, compare) {
   HDVizData *cachedData = nullptr;
   try {
     cachedData = new FileCachedHDVizDataImpl(data_dir);
