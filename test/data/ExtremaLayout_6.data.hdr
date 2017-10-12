@@ -1,0 +1,5 @@
+DenseMatrix
+Size: 2 x 9
+ElementSize: 8
+RowMajor: 0
+DataFile: ExtremaLayout_6.data
