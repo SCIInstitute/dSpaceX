@@ -58,7 +58,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
         int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getMeanNormalized(
         int persistenceLevel);
-    FortranLinalg::DenseVector<Precision>* getWidth(); 
+    std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
+        int persistenceLevel);
     FortranLinalg::DenseVector<Precision>* getDensity(); 
 
     // ColorMapper for each cell
@@ -120,7 +121,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     // color/width and transparent width values
     std::vector<FortranLinalg::DenseVector<Precision>> yc;   // mean-value
     std::vector<FortranLinalg::DenseVector<Precision>> z;    // normalized mean-value
-    FortranLinalg::DenseVector<Precision> *yw;   // width / radii (std)
+    std::vector<FortranLinalg::DenseVector<Precision>> yw;   // width / radii (std)
     FortranLinalg::DenseVector<Precision> *yd;   // density
 
     // ColorMapper for each cell

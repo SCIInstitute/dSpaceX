@@ -64,7 +64,8 @@ class HDVizData {
         int persistenceLevel) = 0;
     virtual std::vector<FortranLinalg::DenseVector<Precision>>& getMeanNormalized(
         int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseVector<Precision>* getWidth() = 0; 
+    virtual std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
+        int persistenceLevel) = 0; 
     virtual FortranLinalg::DenseVector<Precision>* getDensity() = 0;
 
     // ColorMapper for each cell

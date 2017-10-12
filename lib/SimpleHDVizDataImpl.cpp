@@ -280,9 +280,9 @@ std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getMean
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getWidth() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getWidth(
+    int persistenceLevel) {
+  return m_data->mdists[persistenceLevel];
 }
 
 /**
