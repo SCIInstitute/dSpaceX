@@ -204,11 +204,15 @@ std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::get
   return yd;
 }
 
-ColorMapper<Precision>& FileCachedHDVizDataImpl::getColorMap() {
+ColorMapper<Precision>& FileCachedHDVizDataImpl::getColorMap(
+  int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return colormap;
 }
   
-ColorMapper<Precision>& FileCachedHDVizDataImpl::getDColorMap() {
+ColorMapper<Precision>& FileCachedHDVizDataImpl::getDColorMap(
+  int persistenceLevel) {
+  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
   return dcolormap;
 }
 

@@ -70,8 +70,8 @@ class HDVizData {
         int persistenceLevel) = 0;
 
     // ColorMapper for each cell
-    virtual ColorMapper<Precision>& getColorMap() = 0;
-    virtual ColorMapper<Precision>& getDColorMap() = 0;
+    virtual ColorMapper<Precision>& getColorMap(int persistenceLevel) = 0;
+    virtual ColorMapper<Precision>& getDColorMap(int persistenceLevel) = 0;
 
     virtual int getMinPersistenceLevel() = 0;
     virtual int getMaxPersistenceLevel() = 0;

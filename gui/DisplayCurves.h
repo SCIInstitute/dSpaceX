@@ -308,7 +308,7 @@ class DisplayCurves : public Display{
 
 
      std::vector<Precision> color =
-        data->getColorMap().getColor(data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint));
+        data->getColorMap(state->currentLevel).getColor(data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint));
      glColor3f(color[0], color[1], color[2]);   
      
      glRasterPos2f(l+offw1+wz, b + h5+m+v+0.004f*h);

@@ -64,8 +64,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
         int persistenceLevel);
 
     // ColorMapper for each cell
-    ColorMapper<Precision>& getColorMap();
-    ColorMapper<Precision>& getDColorMap();
+    ColorMapper<Precision>& getColorMap(int persistenceLevel);
+    ColorMapper<Precision>& getDColorMap(int persistenceLevel);
 
     int getMinPersistenceLevel(); 
     int getMaxPersistenceLevel();

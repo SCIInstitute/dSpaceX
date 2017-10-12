@@ -303,17 +303,17 @@ void DisplayTubes<TPrecision>::display(void){
 
     glBegin(GL_QUAD_STRIP);
     std::vector<Precision> color =
-      data->getColorMap().getColor(data->getExtremaMinValue(state->currentLevel));
+      data->getColorMap(state->currentLevel).getColor(data->getExtremaMinValue(state->currentLevel));
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 0);
     glVertex2f(0.4, 0);
 
-    color = data->getColorMap().getColor((data->getExtremaMinValue(state->currentLevel) + data->getExtremaMaxValue(state->currentLevel))/2.f);
+    color = data->getColorMap(state->currentLevel).getColor((data->getExtremaMinValue(state->currentLevel) + data->getExtremaMaxValue(state->currentLevel))/2.f);
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 1);
     glVertex2f(0.4, 1);      
     
-    color = data->getColorMap().getColor(data->getExtremaMaxValue(state->currentLevel));
+    color = data->getColorMap(state->currentLevel).getColor(data->getExtremaMaxValue(state->currentLevel));
     glColor3f(color[0], color[1], color[2]);
     glVertex2f(0, 2);
     glVertex2f(0.4, 2);
@@ -732,7 +732,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
     if (renderMode(i) != RENDER_TUBE) continue;
 
     for (unsigned int k = 0; k < layout[i].N(); k++) {
-      std::vector<Precision> color = data->getColorMap().getColor(data->getMean(state->currentLevel)[i](k));
+      std::vector<Precision> color = data->getColorMap(state->currentLevel).getColor(data->getMean(state->currentLevel)[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
@@ -771,7 +771,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
           extremaLayout(0, i), 
           extremaLayout(1, i), 
           extremaNormalized(i)); 
-      std::vector<Precision> color = data->getColorMap().getColor(extremaValues(i));
+      std::vector<Precision> color = data->getColorMap(state->currentLevel).getColor(extremaValues(i));
       glColor4f(color[0], color[1], color[2], 0.3);
       glutSolidSphere(0.028, 100, 100);
       glPopMatrix();
@@ -785,7 +785,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
     if (renderMode(i) == RENDER_TUBE || renderMode(i) == RENDER_NOTHING) continue;
 
     for (unsigned int k = 0; k < layout[i].N(); k++) {
-      std::vector<Precision> color = data->getColorMap().getColor(data->getMean(state->currentLevel)[i](k));
+      std::vector<Precision> color = data->getColorMap(state->currentLevel).getColor(data->getMean(state->currentLevel)[i](k));
       colors[k+1][0] = color[0];
       colors[k+1][1] = color[1];
       colors[k+1][2] = color[2];
@@ -1024,7 +1024,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
 
       for (unsigned int k = 0; k < layout[i].N(); k++) {
-        std::vector<Precision> color = data->getDColorMap().getColor(data->getDensity(state->currentLevel)[i](k));
+        std::vector<Precision> color = data->getDColorMap(state->currentLevel).getColor(data->getDensity(state->currentLevel)[i](k));
         colors[k+1][0] = color[0];
         colors[k+1][1] = color[1];
         colors[k+1][2] = color[2];
@@ -1233,7 +1233,7 @@ void DisplayTubes<TPrecision>::renderMS() {
   if (showPosition) {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32);
     std::vector<Precision> color =
-      data->getColorMap().getColor(data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint));
+      data->getColorMap(state->currentLevel).getColor(data->getMean(state->currentLevel)[state->selectedCell](state->selectedPoint));
     glColor4f(color[0], color[1], color[2], 0.4); 
     //glColor4f(0, 0, 0, 1);   
     glPushMatrix(); 

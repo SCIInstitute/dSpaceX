@@ -65,8 +65,8 @@ class SimpleHDVizDataImpl : public HDVizData {
         int persistenceLevel);
 
     // ColorMapper for each cell
-    ColorMapper<Precision>& getColorMap();
-    ColorMapper<Precision>& getDColorMap();
+    ColorMapper<Precision>& getColorMap(int persistenceLevel);
+    ColorMapper<Precision>& getDColorMap(int persistenceLevel);
 
     int getMinPersistenceLevel(); 
     int getMaxPersistenceLevel();
@@ -87,5 +87,9 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<Precision> zmin;                              // Normalized Extrema Value Mins
     std::vector<Precision> zmax;                              // Normalized Extrema Value Maxs
     std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> meanNormalized;
+
+    // ColorMappers
+    std::vector<ColorMapper<Precision>> colormap;
+    std::vector<ColorMapper<Precision>> dcolormap;
 };
 

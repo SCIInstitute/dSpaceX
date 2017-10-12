@@ -19,6 +19,9 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   meanNormalized.resize(m_data->scaledPersistence.N());
   efmin.resize(m_data->scaledPersistence.N());
   efmax.resize(m_data->scaledPersistence.N());  
+  colormap.resize(m_data->scaledPersistence.N());
+  dcolormap.resize(m_data->scaledPersistence.N());
+
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
@@ -31,12 +34,30 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
 
     auto yc = m_data->fmean[level];
     auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
-    for(unsigned int i=0; i < getEdges(level).N(); i++) {      
+    for (unsigned int i=0; i < getEdges(level).N(); i++) {      
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
       FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);      
     }
     meanNormalized[level] = z;
+
+    // Set up Color Maps
+    colormap[level] = ColorMapper<Precision>(efmin[level], efmax[level]);
+    colormap[level].set(0, 204.f/255.f, 210.f/255.f, 102.f/255.f, 204.f/255.f,
+      41.f/255.f, 204.f/255.f, 0, 5.f/255.f);  
+
+    // Set up Density Color Maps
+    Precision densityMax = std::numeric_limits<Precision>::min();
+    auto density = getDensity(level);
+    for (unsigned int i=0; i < getEdges(level).N(); i++) {      
+      for(unsigned int k=0; k < density[i].N(); k++){      
+        if(density[i](k) > densityMax){
+          densityMax = density[i](k);
+        }
+      }
+    }     
+    dcolormap[level] = ColorMapper<Precision>(0, densityMax); 
+    dcolormap[level].set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
   }
 
   // Calculate Geom min/max
@@ -296,19 +317,17 @@ std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getDens
 /**
  *
  */
-ColorMapper<Precision>& SimpleHDVizDataImpl::getColorMap() {
-  // TODO: Replace with real implementation
-  auto fake = ColorMapper<Precision>();
-  return fake;
+ColorMapper<Precision>& SimpleHDVizDataImpl::getColorMap(int persistenceLevel) {
+  // TODO: Color maps have no business in this data structure. Move out.
+  return colormap[persistenceLevel];
 }
  
  /**
  *
  */ 
-ColorMapper<Precision>& SimpleHDVizDataImpl::getDColorMap() {
-  // TODO: Replace with real implementation
-  auto fake = ColorMapper<Precision>();
-  return fake;
+ColorMapper<Precision>& SimpleHDVizDataImpl::getDColorMap(int persistenceLevel) {
+  // TODO: Color maps have no business in this data structure. Move out.
+  return dcolormap[persistenceLevel];
 }
 
 /**
