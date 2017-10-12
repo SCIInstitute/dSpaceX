@@ -108,7 +108,7 @@ Precision SimpleHDVizDataImpl::getSelectedVariance(
  *
  */
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  
-  m_data->crystals[persistenceLevel];
+  return m_data->crystals[persistenceLevel];
 }    
 
 /**

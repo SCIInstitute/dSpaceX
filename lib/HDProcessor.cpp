@@ -371,7 +371,7 @@ void HDProcessor::computeRegressionForCrystal(
     Zp(0, k) = z(0);
     kr.evaluate(z, tmp, gStmp, sdev.data());
     pdist(k) = 0;
-    for (int q=0; q<sdev.N(); q++) {
+    for (unsigned int q = 0; q < sdev.N(); q++) {
       pdist(k) += sdev(q);
       sdev(q) = sqrt(sdev(q));
     }

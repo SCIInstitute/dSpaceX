@@ -39,7 +39,7 @@ TEST(HDVizData, persistence) {
   HDVizData *simpleData = new SimpleHDVizDataImpl(result); 
   
   ASSERT_EQ(cachedData->getPersistence().N(), simpleData->getPersistence().N());
-  for (int level=0; level < cachedData->getPersistence().N(); level++) {
+  for (unsigned int level=0; level < cachedData->getPersistence().N(); level++) {
     ASSERT_EQ(cachedData->getPersistence()(level), simpleData->getPersistence()(level));
   }
 

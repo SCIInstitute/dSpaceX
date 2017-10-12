@@ -90,10 +90,10 @@ class DenseMatrix : public Matrix<TPrecision>{
       for(unsigned int i=0; i<n; i++){
         fastAccess[i] = &a[i*m];
       }
-    };
+    }
 
 };
 
-};
+}
 
 #endif

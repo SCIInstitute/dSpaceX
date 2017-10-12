@@ -44,7 +44,7 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
   result->IsoExtremaLayout.resize(result->scaledPersistence.N());
   result->IsoLayout.resize(result->scaledPersistence.N());
 
-  for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
+  for (unsigned int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
     std::string crystalsFilename = "Crystals_" + std::to_string(level) + ".data.hdr";
     result->crystals[level] = LinalgIO<int>::readMatrix(path + crystalsFilename);
 
@@ -62,7 +62,7 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
     result->fmean[level].resize(result->crystals[level].N());  
     result->spdf[level].resize(result->crystals[level].N());  
 
-    for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
       std::string crystalFilePrefix =
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex);
       std::string crystalIdFilename = crystalFilePrefix + "_Rs.data.hdr";
@@ -93,7 +93,7 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
   result->LminIso = LinalgIO<Precision>::readVector(path + "IsoMin.data.hdr");
   result->LmaxIso = LinalgIO<Precision>::readVector(path + "IsoMax.data.hdr");
 
-  for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {    
+  for (unsigned int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {    
     std::string PCAExtremaLayoutFilename = "ExtremaLayout_" + std::to_string(level) + ".data.hdr";
     result->PCAExtremaLayout[level] = LinalgIO<Precision>::readMatrix(path + PCAExtremaLayoutFilename);
 
@@ -109,7 +109,7 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
     result->PCA2Layout[level].resize(result->crystals[level].N());
     result->IsoLayout[level].resize(result->crystals[level].N());
 
-    for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
       std::string PCALayoutFilename = 
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_layout.data.hdr";
       result->PCALayout[level][crystalIndex] = LinalgIO<Precision>::readMatrix(path + PCALayoutFilename);
@@ -136,7 +136,7 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
   LinalgIO<Precision>::writeVector(path + "Function.data", result->Y);   
   LinalgIO<Precision>::writeVector(path + "Persistence.data", result->scaledPersistence);
   LinalgIO<Precision>::writeVector(path + "PersistenceStart.data", result->minLevel);
-  for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
+  for (unsigned int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
     std::string crystalsFilename = "Crystals_" + std::to_string(level) + ".data";
     LinalgIO<int>::writeMatrix(path + crystalsFilename, result->crystals[level]);
 
@@ -146,7 +146,7 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
     std::string extremaWidthsFilename = "ExtremaWidths_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeVector(path + extremaWidthsFilename, result->extremaWidths[level]);
 
-    for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
       std::string crystalFilePrefix =
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex);
       std::string crystalIdFilename = crystalFilePrefix + "_Rs.data";
@@ -177,7 +177,7 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
   LinalgIO<Precision>::writeVector(path + "IsoMin.data", result->LminIso);
   LinalgIO<Precision>::writeVector(path + "IsoMax.data", result->LmaxIso);
 
-  for (int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
+  for (unsigned int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
     std::string PCAExtremaLayoutFilename = "ExtremaLayout_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeMatrix(path + PCAExtremaLayoutFilename, result->PCAExtremaLayout[level]);
 
@@ -187,7 +187,7 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
     std::string IsoExtremaFilename = "IsoExtremaLayout_" + std::to_string(level) + ".data";
     LinalgIO<Precision>::writeMatrix(path + IsoExtremaFilename, result->IsoExtremaLayout[level]);
 
-    for (int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
       std::string PCALayoutFilename = 
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_layout.data";
       LinalgIO<Precision>::writeMatrix(path + PCALayoutFilename, result->PCALayout[level][crystalIndex]);
