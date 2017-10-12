@@ -60,8 +60,10 @@ class HDVizData {
     virtual Precision getZMax(int persistenceLevel) = 0;
 
     // color/width and transparent width values
-    virtual std::vector<FortranLinalg::DenseVector<Precision>>& getMean(int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseVector<Precision>* getZ() = 0;    // What is z??
+    virtual std::vector<FortranLinalg::DenseVector<Precision>>& getMean(
+        int persistenceLevel) = 0;
+    virtual std::vector<FortranLinalg::DenseVector<Precision>>& getMeanNormalized(
+        int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>* getWidth() = 0; 
     virtual FortranLinalg::DenseVector<Precision>* getDensity() = 0;
 

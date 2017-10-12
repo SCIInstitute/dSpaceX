@@ -55,8 +55,11 @@ class SimpleHDVizDataImpl : public HDVizData {
     Precision getZMax(int persistenceLevel);
 
     // color/width and transparent width values
-    std::vector<FortranLinalg::DenseVector<Precision>>& getMean(int persistenceLevel);
-    FortranLinalg::DenseVector<Precision>* getZ();    // What is z??
+    std::vector<FortranLinalg::DenseVector<Precision>>& getMean(
+        int persistenceLevel);
+    std::vector<FortranLinalg::DenseVector<Precision>>& getMeanNormalized(
+        int persistenceLevel);
+
     FortranLinalg::DenseVector<Precision>* getWidth(); 
     FortranLinalg::DenseVector<Precision>* getDensity(); 
 
@@ -82,5 +85,6 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<Precision> efmax;                             // Extrema Value Maxs
     std::vector<Precision> zmin;                              // Normalized Extrema Value Mins
     std::vector<Precision> zmax;                              // Normalized Extrema Value Maxs
+    std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> meanNormalized;
 };
 

@@ -14,18 +14,29 @@ const int k_defaultSamplesCount = 50;
  */
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
 
-  // Create Normalized Extrema Values and Mins/Maxs
+  // Create Normalized Extrema Values, Mean Values, and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
+  meanNormalized.resize(m_data->scaledPersistence.N());
   efmin.resize(m_data->scaledPersistence.N());
   efmax.resize(m_data->scaledPersistence.N());  
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
     efmax[level] = FortranLinalg::Linalg<Precision>::Max(ef);
+    
     auto ez = FortranLinalg::DenseVector<Precision>(ef.N());
     FortranLinalg::Linalg<Precision>::Subtract(ef, efmin[level], ez);
     FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax[level] - efmin[level]), ez);
     extremaNormalized[level] = ez;
+
+    auto yc = m_data->fmean[level];
+    auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
+    for(unsigned int i=0; i < getEdges(level).N(); i++) {      
+      z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
+      FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
+      FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);      
+    }
+    meanNormalized[level] = z;
   }
 
   // Calculate Geom min/max
@@ -254,16 +265,16 @@ Precision SimpleHDVizDataImpl::getZMax(int persistenceLevel) {
  *
  */
 std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getMean(
-  int persistenceLevel) {
+    int persistenceLevel) {
   return m_data->fmean[persistenceLevel];
 }
 
 /**
  *
  */
-FortranLinalg::DenseVector<Precision>* SimpleHDVizDataImpl::getZ() {
-  // TODO: Replace with real implementation
-  return nullptr;
+std::vector<FortranLinalg::DenseVector<Precision>>& SimpleHDVizDataImpl::getMeanNormalized(
+    int persistenceLevel) {
+  return meanNormalized[persistenceLevel];
 }
 
 /**
