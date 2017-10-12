@@ -9,7 +9,7 @@ const std::string k_defaultParameterNamesFilename = "names.txt";
 const int k_defaultSamplesCount = 50;
 
 FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
-  layout = HDVizLayout::ISOMAP;
+  m_currentLayout = HDVizLayout::ISOMAP;
   L = std::vector<FortranLinalg::DenseMatrix<Precision>>(0);
   nSamples = k_defaultSamplesCount;
 
@@ -18,7 +18,6 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   std::string geomDataHeaderFilename = k_defaultGeomDataHeaderFilename;
   std::string parameterNamesFilename = k_defaultParameterNamesFilename;
   m_path = path.empty() ? k_defaultPath : path;
-  std::cout << "Loading Data from: " << m_path << std::endl;
 
   pSorted = FortranLinalg::LinalgIO<Precision>::readVector(m_path + persistenceDataHeaderFilename);
   maxLevel = pSorted.N() - 1;      
@@ -42,24 +41,25 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
     }
   }
   nfile.close();
-  loadData(maxLevel);
+  m_currentLevel = maxLevel;
+  loadData(m_currentLevel);
 };
 
 
 Precision FileCachedHDVizDataImpl::getSelectedCoordinate(
     int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return R[selectedCell](index, selectedPoint);
 }
 
 Precision FileCachedHDVizDataImpl::getSelectedVariance(
     int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return Rvar[selectedCell](index, selectedPoint);
 }
 
 FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return edges;
 }    
 
@@ -85,19 +85,19 @@ int FileCachedHDVizDataImpl::getNumberOfSamples() {
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaValues(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return ef;
 }
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaNormalized(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return ez;
 }
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaWidths(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return ew;
 }
 
@@ -111,20 +111,20 @@ FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getExtremaLayout
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getReconstruction(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return R;
 }
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getVariance(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return Rvar;
 
 }
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getGradient(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return gradR;
 }
 
@@ -138,81 +138,81 @@ FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRMax() {
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMin(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return Rsmin;
 }
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getRsMax(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return Rsmax;
 }
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMin(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return gRmin;
 }
 
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getGradientMax(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return gRmax;
 }
 
 Precision FileCachedHDVizDataImpl::getExtremaMinValue(int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return efmin;
 }
   
 Precision FileCachedHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return efmax;
 }
 
 Precision FileCachedHDVizDataImpl::getZMin(int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return zmin;
 }
 
 Precision FileCachedHDVizDataImpl::getZMax(int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return zmax;
 }
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getMean(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return yc;
 }
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getMeanNormalized(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return z;
 }
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getWidth(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return yw;
 }
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getDensity(
     int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return yd;
 }
 
 ColorMapper<Precision>& FileCachedHDVizDataImpl::getColorMap(
   int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return colormap;
 }
   
 ColorMapper<Precision>& FileCachedHDVizDataImpl::getDColorMap(
   int persistenceLevel) {
-  // TODO: Add call check to enforce that persistenceLevel == cachedPersistenceLevel.
+  maybeSwapLevelCache(persistenceLevel);
   return dcolormap;
 }
 
@@ -225,7 +225,7 @@ int FileCachedHDVizDataImpl::getMaxPersistenceLevel() {
 }
 
 void FileCachedHDVizDataImpl::setLayout(HDVizLayout layout, int level) {
-  this->layout = layout;
+  m_currentLayout = layout;
   Lmin.deallocate();
   Lmax.deallocate();
   if (layout == HDVizLayout::ISOMAP) {
@@ -290,6 +290,7 @@ void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, 
 };
 
 void FileCachedHDVizDataImpl::loadData(int level) {
+  m_currentLevel = level;
   if (!L.empty()) {
     for (unsigned int i=0; i<edges.N(); i++) {
       L[i].deallocate();
@@ -311,7 +312,7 @@ void FileCachedHDVizDataImpl::loadData(int level) {
 
   // Read layout information matrices.
   L = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
-  setLayout(layout, level);
+  setLayout(m_currentLayout, level);
 
   R = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
   Rvar = std::vector<FortranLinalg::DenseMatrix<Precision>>(edges.N());
@@ -472,3 +473,11 @@ void FileCachedHDVizDataImpl::loadReconstructions(int level){
   }
 };
 
+/**
+ *
+ */
+void FileCachedHDVizDataImpl::maybeSwapLevelCache(int level) {
+  if (level != m_currentLevel) {
+    loadData(level);    
+  }
+}

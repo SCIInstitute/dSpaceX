@@ -76,6 +76,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     void loadWidthValues(std::string type, int level);
     void loadDensityValues(std::string type, int level);
     void loadReconstructions(int level);
+    void maybeSwapLevelCache(int level);
     
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
     // Morse-Smale edge information.
@@ -89,7 +90,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<std::string> m_names;
     int minLevel;
     int maxLevel;
-    HDVizLayout layout;
+    
 
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision> ef;   // Extrema Values
@@ -128,4 +129,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     // ColorMapper for each cell
     ColorMapper<Precision> colormap;
     ColorMapper<Precision> dcolormap;
+
+    HDVizLayout m_currentLayout;
+    unsigned int m_currentLevel;
 };
