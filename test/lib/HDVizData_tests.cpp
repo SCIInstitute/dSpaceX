@@ -87,7 +87,7 @@ TEST(HDVizData, compare) {
   
   // Compare Persistence
   ASSERT_EQ(cachedData->getPersistence().N(), simpleData->getPersistence().N());
-  unsigned int persistenceCount = cachedData->getPersistence().N();
+  unsigned int persistenceCount = simpleData->getPersistence().N();
   for (unsigned int level=0; level < persistenceCount; level++) {
     ASSERT_EQ(cachedData->getPersistence()(level), simpleData->getPersistence()(level));
   }
@@ -95,9 +95,17 @@ TEST(HDVizData, compare) {
   // Compare Persistence Level Data
   for (unsigned int level=0; level < persistenceCount; level++) {    
     ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
+    unsigned int crystalCount = simpleData->getEdges(level).N();
+
     ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaNormalized(level), simpleData->getExtremaNormalized(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaWidthsScaled(level), simpleData->getExtremaWidthsScaled(level));
+
+    for (unsigned int i = 0; i < crystalCount; i++) {
+      ASSERT_MATRIX_EQ(cachedData->getReconstruction(level)[i], simpleData->getReconstruction(level)[i]);
+      ASSERT_MATRIX_EQ(cachedData->getVariance(level)[i], simpleData->getVariance(level)[i]);
+      ASSERT_MATRIX_EQ(cachedData->getGradient(level)[i], simpleData->getGradient(level)[i]);
+    }
   }  
 
   // cleanup
