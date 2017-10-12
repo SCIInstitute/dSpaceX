@@ -106,6 +106,8 @@ TEST(HDVizData, compare) {
       ASSERT_MATRIX_EQ(cachedData->getVariance(level)[i], simpleData->getVariance(level)[i]);
       ASSERT_MATRIX_EQ(cachedData->getGradient(level)[i], simpleData->getGradient(level)[i]);
     }
+    ASSERT_VECTOR_EQ(cachedData->getRMin(), simpleData->getRMin());
+    ASSERT_VECTOR_EQ(cachedData->getRMax(), simpleData->getRMax());
   }  
 
   // cleanup
