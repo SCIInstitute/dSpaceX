@@ -68,7 +68,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   Rsmin.resize(m_data->scaledPersistence.N());
   Rsmax.resize(m_data->scaledPersistence.N());
   gRmin.resize(m_data->scaledPersistence.N());
-  gRmin.resize(m_data->scaledPersistence.N());
+  gRmax.resize(m_data->scaledPersistence.N());
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     Rsmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
     Rsmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);

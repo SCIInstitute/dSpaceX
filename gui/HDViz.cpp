@@ -71,7 +71,8 @@ int main(int argc, char **argv) {
 
   // Load data
   try { 
-    std::string path = pathArg.getValue();
+    std::string path = pathArg.getValue();    
+  
     HDVizData* data = new FileCachedHDVizDataImpl(path);
     HDVizState state(data);
 
