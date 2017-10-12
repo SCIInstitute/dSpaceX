@@ -315,16 +315,15 @@ ColorMapper<Precision>& SimpleHDVizDataImpl::getDColorMap() {
  *
  */
 int SimpleHDVizDataImpl::getMinPersistenceLevel() { 
-  // TODO: Replace with real implementation
-  return 0;
+  return m_data->minLevel(0);
 }
 
 /**
  *
  */
 int SimpleHDVizDataImpl::getMaxPersistenceLevel() { 
-  // TODO: Replace with real implementation
-  return 0;
+  // TODO: Move into HDProcessResult as 'maxLevel'.
+  return m_data->scaledPersistence.N() - 1;
 }
 
 /**
