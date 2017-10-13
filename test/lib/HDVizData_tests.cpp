@@ -112,6 +112,8 @@ TEST(HDVizData, compare) {
     
     ASSERT_VECTOR_EQ(cachedData->getRsMin(level), simpleData->getRsMin(level));
     ASSERT_VECTOR_EQ(cachedData->getRsMax(level), simpleData->getRsMax(level));
+    ASSERT_VECTOR_EQ(cachedData->getGradientMin(level), simpleData->getGradientMin(level));
+    ASSERT_VECTOR_EQ(cachedData->getGradientMax(level), simpleData->getGradientMax(level));
   }  
 
   // cleanup
