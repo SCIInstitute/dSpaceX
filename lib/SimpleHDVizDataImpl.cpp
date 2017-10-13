@@ -24,6 +24,14 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   dcolormap.resize(m_data->scaledPersistence.N());
   widthScaled.resize(m_data->scaledPersistence.N());
 
+  // Resize unspecified quantity vectors
+  // Note: The last value they are set to in FileCachedHDVizDataImpl
+  //       before being used in OpenGL calls is min/max density values.
+  //       HOWEVER, those are shadowed variables. So really they come from
+  //       min/max width values. Yikes.
+  zmin.resize(m_data->scaledPersistence.N());
+  zmax.resize(m_data->scaledPersistence.N());
+
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
@@ -37,19 +45,25 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     auto yc = m_data->fmean[level];    
     auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
     auto yw = m_data->mdists[level];
+    auto widthMin = std::numeric_limits<Precision>::max();
     auto widthMax = std::numeric_limits<Precision>::min();
     for (unsigned int i=0; i < getEdges(level).N(); i++) {      
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
       FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);            
 
-      for(unsigned int k=0; k< yw[i].N(); k++){        
+      for(unsigned int k=0; k< yw[i].N(); k++){  
+        if(yw[i](k) < widthMin){
+          widthMin = yw[i]( k);
+        }      
         if(yw[i](k) > widthMax){
           widthMax = yw[i](k);
         }
       }
     }
     meanNormalized[level] = z;
+    zmin[level] = widthMin;
+    zmax[level] = widthMax;
 
     widthScaled[level].resize(getEdges(level).N());
     for (unsigned int i=0; i < getEdges(level).N(); i++) { 
@@ -120,11 +134,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
       }
     }
   }
-
-
-  // Resize unknown quantity vectors
-  zmin.resize(m_data->scaledPersistence.N());
-  zmax.resize(m_data->scaledPersistence.N());
+  //
 };
 
 /**

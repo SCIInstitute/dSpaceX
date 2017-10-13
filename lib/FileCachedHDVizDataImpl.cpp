@@ -405,6 +405,7 @@ void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
 
 
 void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level){
+  // NOTE: zmin/max here are Shadowing class member variables. Not the same zmin/zmaxs. :(
   Precision zmax = std::numeric_limits<Precision>::min();  // TODO: Why is zmax being reused here?
   Precision zmin = std::numeric_limits<Precision>::max();  // TODO: Why is zmin being reused here?
 
