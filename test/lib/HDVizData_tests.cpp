@@ -118,8 +118,8 @@ TEST(HDVizData, compare) {
     ASSERT_EQ(cachedData->getExtremaMinValue(level), simpleData->getExtremaMinValue(level));
     ASSERT_EQ(cachedData->getExtremaMaxValue(level), simpleData->getExtremaMaxValue(level));
 
-    ASSERT_EQ(cachedData->getZMin(level), simpleData->getZMin(level));
-    ASSERT_EQ(cachedData->getZMax(level), simpleData->getZMax(level));
+    ASSERT_EQ(cachedData->getWidthMin(level), simpleData->getWidthMin(level));
+    ASSERT_EQ(cachedData->getWidthMax(level), simpleData->getWidthMax(level));
   }  
  
 

@@ -51,8 +51,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     
     Precision getExtremaMinValue(int persistenceLevel);
     Precision getExtremaMaxValue(int persistenceLevel);
-    Precision getZMin(int persistenceLevel);
-    Precision getZMax(int persistenceLevel);
+    Precision getWidthMin(int persistenceLevel);
+    Precision getWidthMax(int persistenceLevel);
 
     // color/width and transparent width values
     std::vector<FortranLinalg::DenseVector<Precision>>& getMean(
@@ -119,7 +119,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision> Lmin, Lmax;
 
     Precision efmin, efmax;
-    Precision zmin, zmax;
+    Precision widthMin, widthMax;
 
     // color/width and transparent width values
     std::vector<FortranLinalg::DenseVector<Precision>> yc;   // mean-value

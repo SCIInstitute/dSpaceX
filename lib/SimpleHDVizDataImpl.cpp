@@ -29,8 +29,8 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   //       before being used in OpenGL calls is min/max density values.
   //       HOWEVER, those are shadowed variables. So really they come from
   //       min/max width values. Yikes.
-  zmin.resize(m_data->scaledPersistence.N());
-  zmax.resize(m_data->scaledPersistence.N());
+  widthMin.resize(m_data->scaledPersistence.N());
+  widthMax.resize(m_data->scaledPersistence.N());
 
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
@@ -45,37 +45,35 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     auto yc = m_data->fmean[level];    
     auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
     auto yw = m_data->mdists[level];
-    auto widthMin = std::numeric_limits<Precision>::max();
-    auto widthMax = std::numeric_limits<Precision>::min();
+    widthMin[level] = std::numeric_limits<Precision>::max();
+    widthMax[level] = std::numeric_limits<Precision>::min();
     for (unsigned int i=0; i < getEdges(level).N(); i++) {      
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
       FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);            
 
       for(unsigned int k=0; k< yw[i].N(); k++){  
-        if(yw[i](k) < widthMin){
-          widthMin = yw[i]( k);
+        if(yw[i](k) < widthMin[level]){
+          widthMin[level] = yw[i]( k);
         }      
-        if(yw[i](k) > widthMax){
-          widthMax = yw[i](k);
+        if(yw[i](k) > widthMax[level]){
+          widthMax[level] = yw[i](k);
         }
       }
     }
     meanNormalized[level] = z;
-    zmin[level] = widthMin;
-    zmax[level] = widthMax;
 
     widthScaled[level].resize(getEdges(level).N());
     for (unsigned int i=0; i < getEdges(level).N(); i++) { 
       auto width = FortranLinalg::Linalg<Precision>::Copy(yw[i]);
-      FortranLinalg::Linalg<Precision>::Scale(width, 0.3/ widthMax, width);
+      FortranLinalg::Linalg<Precision>::Scale(width, 0.3/ widthMax[level], width);
       FortranLinalg::Linalg<Precision>::Add(width, 0.03, width);
       widthScaled[level][i] = width;
     }
 
     auto ew = m_data->extremaWidths[level];
     auto extremaWidth = FortranLinalg::Linalg<Precision>::Copy(ew);
-    FortranLinalg::Linalg<Precision>::Scale(extremaWidth, 0.3/widthMax, extremaWidth);
+    FortranLinalg::Linalg<Precision>::Scale(extremaWidth, 0.3/widthMax[level], extremaWidth);
     FortranLinalg::Linalg<Precision>::Add(extremaWidth, 0.03, extremaWidth);
     extremaWidthScaled[level] = extremaWidth;
      
@@ -335,15 +333,15 @@ Precision SimpleHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getZMin(int persistenceLevel) {
-  return zmin[persistenceLevel];
+Precision SimpleHDVizDataImpl::getWidthMin(int persistenceLevel) {
+  return widthMin[persistenceLevel];
 }
 
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getZMax(int persistenceLevel) {
-  return zmax[persistenceLevel];
+Precision SimpleHDVizDataImpl::getWidthMax(int persistenceLevel) {
+  return widthMax[persistenceLevel];
 }
 
 /**

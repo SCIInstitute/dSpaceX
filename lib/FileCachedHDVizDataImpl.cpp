@@ -178,14 +178,14 @@ Precision FileCachedHDVizDataImpl::getExtremaMaxValue(int persistenceLevel) {
   return efmax;
 }
 
-Precision FileCachedHDVizDataImpl::getZMin(int persistenceLevel) {
+Precision FileCachedHDVizDataImpl::getWidthMin(int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
-  return zmin;
+  return widthMin;
 }
 
-Precision FileCachedHDVizDataImpl::getZMax(int persistenceLevel) {
+Precision FileCachedHDVizDataImpl::getWidthMax(int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
-  return zmax;
+  return widthMax;
 }
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getMean(
@@ -376,8 +376,8 @@ void FileCachedHDVizDataImpl::loadColorValues(std::string type, int level){
 
 
 void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
-  zmax = std::numeric_limits<Precision>::min();   // TODO: Why is zmax being reused here?
-  zmin = std::numeric_limits<Precision>::max();   // TODO: Why is zmin being reused here?
+  widthMax = std::numeric_limits<Precision>::min();   // TODO: Why is zmax being reused here?
+  widthMin = std::numeric_limits<Precision>::max();   // TODO: Why is zmin being reused here?
 
   for(unsigned int i = 0; i < edges.N(); i++){
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
@@ -385,21 +385,21 @@ void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
     yw[i] = FortranLinalg::LinalgIO<Precision>::readVector(m_path + filename);    
 
     for(unsigned int k=0; k< yw[i].N(); k++){
-      if(yw[i](k) < zmin){
-        zmin = yw[i]( k);
+      if(yw[i](k) < widthMin){
+        widthMin = yw[i]( k);
       }
-      if(yw[i](k) > zmax){
-        zmax = yw[i](k);
+      if(yw[i](k) > widthMax){
+        widthMax = yw[i](k);
       }
     }
   }
 
   for(unsigned int i = 0; i < edges.N(); i++){
-    FortranLinalg::Linalg<Precision>::Scale(yw[i], 0.3/zmax, yw[i]);
+    FortranLinalg::Linalg<Precision>::Scale(yw[i], 0.3/widthMax, yw[i]);
     FortranLinalg::Linalg<Precision>::Add(yw[i], 0.03, yw[i]);
   }
 
-  FortranLinalg::Linalg<Precision>::Scale(ew, 0.3/zmax, ew);
+  FortranLinalg::Linalg<Precision>::Scale(ew, 0.3/widthMax, ew);
   FortranLinalg::Linalg<Precision>::Add(ew, 0.03, ew);
 };
 

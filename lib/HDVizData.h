@@ -57,8 +57,8 @@ class HDVizData {
     
     virtual Precision getExtremaMinValue(int persistenceLevel) = 0;
     virtual Precision getExtremaMaxValue(int persistenceLevel) = 0;
-    virtual Precision getZMin(int persistenceLevel) = 0;
-    virtual Precision getZMax(int persistenceLevel) = 0;
+    virtual Precision getWidthMin(int persistenceLevel) = 0;
+    virtual Precision getWidthMax(int persistenceLevel) = 0;
 
     // color/width and transparent width values
     virtual std::vector<FortranLinalg::DenseVector<Precision>>& getMean(
