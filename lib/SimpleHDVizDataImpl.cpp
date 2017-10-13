@@ -99,7 +99,28 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     Rsmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
     gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
     gRmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
+
+    for(unsigned int e = 0; e < getEdges(level).N(); e++){
+      for(unsigned int i = 0; i < m_data->R[level][e].N(); i++){
+        for(unsigned int j = 0; j < m_data->R[level][e].M(); j++){
+          if(Rsmin[level](j) > m_data->R[level][e](j, i) - m_data->Rvar[level][e](j, i)){
+            Rsmin[level](j) = m_data->R[level][e](j, i) - m_data->Rvar[level][e](j, i);
+          }
+          if(Rsmax[level](j) < m_data->R[level][e](j, i) + m_data->Rvar[level][e](j, i)){
+            Rsmax[level](j) = m_data->R[level][e](j, i) + m_data->Rvar[level][e](j, i);
+          }
+
+          if(gRmin[level](j) > m_data->gradR[level][e](j, i)){
+            gRmin[level](j) = m_data->gradR[level][e](j, i);
+          }
+          if(gRmax[level](j) < m_data->gradR[level][e](j, i)){
+            gRmax[level](j) = m_data->gradR[level][e](j, i);
+          }
+        }
+      }
+    }
   }
+
 
   // Resize unknown quantity vectors
   zmin.resize(m_data->scaledPersistence.N());
