@@ -404,10 +404,9 @@ void FileCachedHDVizDataImpl::loadWidthValues(std::string type, int level){
 };
 
 
-void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level){
-  // NOTE: zmin/max here are Shadowing class member variables. Not the same zmin/zmaxs. :(
-  Precision zmax = std::numeric_limits<Precision>::min();  // TODO: Why is zmax being reused here?
-  Precision zmin = std::numeric_limits<Precision>::max();  // TODO: Why is zmin being reused here?
+void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level) {  
+  Precision densityMax = std::numeric_limits<Precision>::min();
+  Precision densityMin = std::numeric_limits<Precision>::max();
 
   for(unsigned int i=0; i<edges.N(); i++){
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
@@ -415,15 +414,15 @@ void FileCachedHDVizDataImpl::loadDensityValues(std::string type, int level){
     yd[i] = FortranLinalg::LinalgIO<Precision>::readVector(m_path + filename);    
 
     for(unsigned int k=0; k< yd[i].N(); k++){
-      if(yd[i](k) < zmin){
-        zmin = yd[i]( k);
+      if(yd[i](k) < densityMin){
+        densityMin = yd[i]( k);
       }
-      if(yd[i](k) > zmax){
-        zmax = yd[i](k);
+      if(yd[i](k) > densityMax){
+        densityMax = yd[i](k);
       }
     }
   }
-  dcolormap = ColorMapper<Precision>(0, zmax); 
+  dcolormap = ColorMapper<Precision>(0, densityMax); 
   dcolormap.set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
 };
 
