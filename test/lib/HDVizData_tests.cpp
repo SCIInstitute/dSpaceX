@@ -100,6 +100,7 @@ TEST(HDVizData, compare) {
     ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
     unsigned int crystalCount = simpleData->getEdges(level).N();
 
+    // Compare Layout Data
     for (unsigned int crystal = 0; crystal < crystalCount; crystal++) {     
       ASSERT_MATRIX_EQ(
           cachedData->getLayout(HDVizLayout::ISOMAP, level)[crystal],
@@ -112,11 +113,14 @@ TEST(HDVizData, compare) {
           simpleData->getLayout(HDVizLayout::PCA2, level)[crystal]);
     }
 
-
+    // Compare Extrema Data
     ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaNormalized(level), simpleData->getExtremaNormalized(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaWidthsScaled(level), simpleData->getExtremaWidthsScaled(level));
+    ASSERT_EQ(cachedData->getExtremaMinValue(level), simpleData->getExtremaMinValue(level));
+    ASSERT_EQ(cachedData->getExtremaMaxValue(level), simpleData->getExtremaMaxValue(level));
 
+    // Compare Reconstruction Data
     for (unsigned int i = 0; i < crystalCount; i++) {
       ASSERT_MATRIX_EQ(cachedData->getReconstruction(level)[i], simpleData->getReconstruction(level)[i]);
       ASSERT_MATRIX_EQ(cachedData->getVariance(level)[i], simpleData->getVariance(level)[i]);
@@ -127,10 +131,7 @@ TEST(HDVizData, compare) {
     ASSERT_VECTOR_EQ(cachedData->getRsMax(level), simpleData->getRsMax(level));
     ASSERT_VECTOR_EQ(cachedData->getGradientMin(level), simpleData->getGradientMin(level));
     ASSERT_VECTOR_EQ(cachedData->getGradientMax(level), simpleData->getGradientMax(level));
-
-    ASSERT_EQ(cachedData->getExtremaMinValue(level), simpleData->getExtremaMinValue(level));
-    ASSERT_EQ(cachedData->getExtremaMaxValue(level), simpleData->getExtremaMaxValue(level));
-
+    
     ASSERT_EQ(cachedData->getWidthMin(level), simpleData->getWidthMin(level));
     ASSERT_EQ(cachedData->getWidthMax(level), simpleData->getWidthMax(level));
   }  
