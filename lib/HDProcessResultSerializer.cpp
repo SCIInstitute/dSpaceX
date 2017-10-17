@@ -27,6 +27,8 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
       LinalgIO<Precision>::readVector(path + "Persistence.data.hdr");
   result->minLevel = LinalgIO<Precision>::readVector(path + "PersistenceStart.data.hdr");
 
+  result->names = FortranLinalg::DenseVector<std::string>(result->X.M());
+
   // Resize Stores for Persistence Level information
   result->crystals.resize(result->scaledPersistence.N());
   result->extremaValues.resize(result->scaledPersistence.N());  
