@@ -11,11 +11,7 @@
 
 class SimpleHDVizDataImpl : public HDVizData {
   public:
-    SimpleHDVizDataImpl(HDProcessResult *result);
-    Precision getSelectedCoordinate(
-        int persistenceLevel, int selectedCell, int selectedPoint, int index);
-    Precision getSelectedVariance(
-        int persistenceLevel, int selectedCell, int selectedPoint, int index);
+    SimpleHDVizDataImpl(HDProcessResult *result);    
 
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int>& getEdges(int persistenceLevel);    

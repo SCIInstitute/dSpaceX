@@ -147,22 +147,6 @@ int SimpleHDVizDataImpl::getNumberOfSamples() {
 /**
  *
  */
-Precision SimpleHDVizDataImpl::getSelectedCoordinate(
-    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  return m_data->R[persistenceLevel][selectedCell](index, selectedPoint);
-}
-
-/**
- *
- */
-Precision SimpleHDVizDataImpl::getSelectedVariance(
-    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  return m_data->Rvar[persistenceLevel][selectedCell](index, selectedPoint);
-}
-
-/**
- *
- */
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  
   return m_data->crystals[persistenceLevel];
 }    

@@ -207,9 +207,9 @@ class DisplayMolecule : public Display{
 
       int index=0;
       for(int i=2; i<data->getRMin().N(); i+=3, index++ ){
-         double x = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i-2);
-         double y = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i-1);
-         double z = data->getSelectedCoordinate(state->currentLevel, state->selectedCell, state->selectedPoint, i);
+         double x = data->getReconstruction(state->currentLevel)[state->selectedCell](i-2, state->selectedPoint);
+         double y = data->getReconstruction(state->currentLevel)[state->selectedCell](i-1, state->selectedPoint);
+         double z = data->getReconstruction(state->currentLevel)[state->selectedCell](i, state->selectedPoint);
          X(0, index) =x;
          X(1, index) =y;
          X(2, index) =z;
@@ -228,9 +228,9 @@ class DisplayMolecule : public Display{
  
       for(int i=0; i<nAtoms; i++){
         int ind = i*3;
-        double x = data->getSelectedVariance(state->currentLevel, state->selectedCell, state->selectedPoint, ind);
-        double y = data->getSelectedVariance(state->currentLevel, state->selectedCell, state->selectedPoint, ind+1);
-        double z = data->getSelectedVariance(state->currentLevel, state->selectedCell, state->selectedPoint, ind+2);
+        double x = data->getVariance(state->currentLevel)[state->selectedCell](ind, state->selectedPoint);
+        double y = data->getVariance(state->currentLevel)[state->selectedCell](ind+1, state->selectedPoint);
+        double z = data->getVariance(state->currentLevel)[state->selectedCell](ind+2, state->selectedPoint);
         W(0, i) = sqrt( x*x + y*y + z*z );
 
       }
@@ -298,12 +298,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW);
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind);
-          double y = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+1);
-          double z = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+2);
+          double x = data->getVariance(state->currentLevel)[state->selectedCell](ind, state->selectedPoint);
+          double y = data->getVariance(state->currentLevel)[state->selectedCell](ind+1, state->selectedPoint);
+          double z = data->getVariance(state->currentLevel)[state->selectedCell](ind+2, state->selectedPoint);
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
 	  glScaled(0.6+x, 0.6+y, 0.6+z);
@@ -334,12 +331,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW);
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind);
-          double y = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+1);
-          double z = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+2);
+          double x = data->getVariance(state->currentLevel)[state->selectedCell](ind, state->selectedPoint);
+          double y = data->getVariance(state->currentLevel)[state->selectedCell](ind+1, state->selectedPoint);
+          double z = data->getVariance(state->currentLevel)[state->selectedCell](ind+2, state->selectedPoint);
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
           glScaled(0.6+x, 0.6+y, 0.6+z);
@@ -360,12 +354,9 @@ class DisplayMolecule : public Display{
         //glePolyCone_c4f(nSamples+2, points, NULL, radiiW); 
         for(int i=0; i<nAtoms; i++){
           int ind = i*3;
-          double x = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind) + scale*0.1/zoom;
-          double y = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+1)+ scale*0.1/zoom;
-          double z = data->getSelectedVariance(
-              state->currentLevel, state->selectedCell, state->selectedPoint, ind+2)+ scale*0.1/zoom;
+          double x = data->getVariance(state->currentLevel)[state->selectedCell](ind, state->selectedPoint) + scale*0.1/zoom;
+          double y = data->getVariance(state->currentLevel)[state->selectedCell](ind+1, state->selectedPoint)+ scale*0.1/zoom;
+          double z = data->getVariance(state->currentLevel)[state->selectedCell](ind+2, state->selectedPoint)+ scale*0.1/zoom;
           glPushMatrix();
           glTranslatef(X(0,i), X(1,i),  X(2,i));
           glScaled(0.6+x, 0.6+y, 0.6+z);

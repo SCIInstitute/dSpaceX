@@ -17,11 +17,7 @@ enum class HDVizLayout : char {
 class HDVizData {
   public:
     virtual ~HDVizData(){};
-    virtual Precision getSelectedCoordinate(
-        int persistenceLevel, int selectedCell, int selectedPoint, int index) = 0;
-    virtual Precision getSelectedVariance(
-        int persistenceLevel, int selectedCell, int selectedPoint, int index) = 0;
-
+  
     // Morse-Smale edge information.
     virtual FortranLinalg::DenseMatrix<int>& getEdges(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
@@ -46,7 +42,7 @@ class HDVizData {
        
     // Cell reconstruction
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel) = 0;
-    virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getVariance(int persistenceLevel) = 0;
+    virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getVariance(int persistenceLevel) = 0;   // TODO: Maybe rename.
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getGradient(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRMin() = 0;
     virtual FortranLinalg::DenseVector<Precision>& getRMax() = 0;

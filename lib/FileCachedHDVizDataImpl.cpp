@@ -45,19 +45,6 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   loadData(m_currentLevel);
 };
 
-
-Precision FileCachedHDVizDataImpl::getSelectedCoordinate(
-    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  maybeSwapLevelCache(persistenceLevel);
-  return R[selectedCell](index, selectedPoint);
-}
-
-Precision FileCachedHDVizDataImpl::getSelectedVariance(
-    int persistenceLevel, int selectedCell, int selectedPoint, int index) {
-  maybeSwapLevelCache(persistenceLevel);
-  return Rvar[selectedCell](index, selectedPoint);
-}
-
 FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
   return edges;
@@ -127,7 +114,6 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::get
     int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
   return Rvar;
-
 }
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getGradient(
