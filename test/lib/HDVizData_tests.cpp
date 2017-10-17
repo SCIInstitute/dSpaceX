@@ -89,6 +89,8 @@ TEST(HDVizData, compare) {
   
   // Compare Persistence
   ASSERT_EQ(cachedData->getPersistence().N(), simpleData->getPersistence().N());
+  ASSERT_EQ(cachedData->getMinPersistenceLevel(), simpleData->getMinPersistenceLevel());
+  ASSERT_EQ(cachedData->getMaxPersistenceLevel(), simpleData->getMaxPersistenceLevel());
   unsigned int persistenceCount = simpleData->getPersistence().N();
   for (unsigned int level=0; level < persistenceCount; level++) {
     ASSERT_EQ(cachedData->getPersistence()(level), simpleData->getPersistence()(level));
