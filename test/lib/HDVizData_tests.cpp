@@ -101,6 +101,15 @@ TEST(HDVizData, compare) {
     unsigned int crystalCount = simpleData->getEdges(level).N();
 
     // Compare Layout Data
+    ASSERT_MATRIX_EQ(
+        cachedData->getExtremaLayout(HDVizLayout::ISOMAP, level),
+        simpleData->getExtremaLayout(HDVizLayout::ISOMAP, level));
+    ASSERT_MATRIX_EQ(
+        cachedData->getExtremaLayout(HDVizLayout::PCA, level),
+        simpleData->getExtremaLayout(HDVizLayout::PCA, level));
+    ASSERT_MATRIX_EQ(
+        cachedData->getExtremaLayout(HDVizLayout::PCA2, level),
+        simpleData->getExtremaLayout(HDVizLayout::PCA2, level));
     for (unsigned int crystal = 0; crystal < crystalCount; crystal++) {     
       ASSERT_MATRIX_EQ(
           cachedData->getLayout(HDVizLayout::ISOMAP, level)[crystal],
@@ -112,6 +121,7 @@ TEST(HDVizData, compare) {
           cachedData->getLayout(HDVizLayout::PCA2, level)[crystal],
           simpleData->getLayout(HDVizLayout::PCA2, level)[crystal]);
     }
+
 
     // Compare Extrema Data
     ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));

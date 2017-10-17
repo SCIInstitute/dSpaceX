@@ -97,5 +97,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> scaledIsoLayout; 
     std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> scaledPCALayout;
     std::vector<std::vector<FortranLinalg::DenseMatrix<Precision>>> scaledPCA2Layout;
+    std::vector<FortranLinalg::DenseMatrix<Precision>> scaledIsoExtremaLayout;
+    std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCAExtremaLayout;
+    std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCA2ExtremaLayout;
 };
 
