@@ -483,17 +483,3 @@ int SimpleHDVizDataImpl::getMaxPersistenceLevel() {
   // TODO: Move into HDProcessResult as 'maxLevel'.
   return m_data->scaledPersistence.N() - 1;
 }
-
-/**
- *
- */
-void SimpleHDVizDataImpl::setLayout(HDVizLayout layout, int level) {
-  /* No work necessary. */
-};
-
-/**
- *
- */
-void SimpleHDVizDataImpl::loadData(int level) {
-  /* No work necessary. */
-};

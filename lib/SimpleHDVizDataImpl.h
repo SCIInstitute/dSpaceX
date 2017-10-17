@@ -30,10 +30,6 @@ class SimpleHDVizDataImpl : public HDVizData {
     
     // Number of samples used for layouts.
     int getNumberOfSamples();   
-    
-    // Set which persistence level and layout to use.
-    void loadData(int level);
-    void setLayout(HDVizLayout layout, int level);
        
     // Cell reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);

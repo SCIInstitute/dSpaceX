@@ -35,11 +35,7 @@ class HDVizData {
     
     // Number of samples used for layouts.
     virtual int getNumberOfSamples() = 0;
-    
-    // Set which persistence level and layout to use.
-    virtual void loadData(int level) = 0;
-    virtual void setLayout(HDVizLayout layout, int level) = 0;
-       
+           
     // Cell reconstruction
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel) = 0;
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getVariance(int persistenceLevel) = 0;   // TODO: Maybe rename.

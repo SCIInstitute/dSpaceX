@@ -375,20 +375,17 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       break;        
     case 'w':
     case 'W':
-      state->currentLayout = HDVizLayout::PCA;
-      data->setLayout(state->currentLayout, state->currentLevel);
+      state->currentLayout = HDVizLayout::PCA;      
       notifyChange();  
       break;
     case 'p':
     case 'P':
-      state->currentLayout = HDVizLayout::PCA2;
-      data->setLayout(state->currentLayout, state->currentLevel);
+      state->currentLayout = HDVizLayout::PCA2;      
       notifyChange();  
       break;
     case 'i':
     case 'I':
-      state->currentLayout = HDVizLayout::ISOMAP;
-      data->setLayout(state->currentLayout, state->currentLevel);
+      state->currentLayout = HDVizLayout::ISOMAP;      
       notifyChange();  
       break;
     case 'a':
@@ -600,8 +597,6 @@ void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
   } else if(state->currentLevel < data->getMinPersistenceLevel()) {
     state->currentLevel = data->getMinPersistenceLevel();
   }
-
-  data->loadData(state->currentLevel);
 
   if (state->selectedCell >= (int) data->getEdges(state->currentLevel).N()) {
     state->selectedCell = data->getEdges(state->currentLevel).N() - 1;

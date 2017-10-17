@@ -29,10 +29,6 @@ class FileCachedHDVizDataImpl : public HDVizData {
     
     // Number of samples used for layouts.
     int getNumberOfSamples();   
-    
-    // Set which persistence level and layout to use.
-    void loadData(int level);
-    void setLayout(HDVizLayout layout, int level);
        
     // Cell reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);
@@ -67,7 +63,9 @@ class FileCachedHDVizDataImpl : public HDVizData {
     int getMinPersistenceLevel(); 
     int getMaxPersistenceLevel();
         
-  private:
+  private:        
+    void loadData(int level);
+    void setLayout(HDVizLayout layout, int level);
     void loadLayout(std::string type, std::string extFile, 
         std::string minFile, std::string maxFile, int level);    
     void loadColorValues(std::string type, int level);
