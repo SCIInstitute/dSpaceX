@@ -9,7 +9,9 @@
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
 
-#include "FileCachedHDVizDataImpl.h"
+#include "HDProcessResult.h"
+#include "HDProcessResultSerializer.h"
+#include "SimpleHDVizDataImpl.h"
 #include <tclap/CmdLine.h>
 
 #include <iostream>
@@ -73,7 +75,8 @@ int main(int argc, char **argv) {
   try { 
     std::string path = pathArg.getValue();    
   
-    HDVizData* data = new FileCachedHDVizDataImpl(path);
+    HDProcessResult *result = HDProcessResultSerializer::read(path);
+    HDVizData *data = new SimpleHDVizDataImpl(result);
     HDVizState state(data);
 
     std::string fontname = fontArg.getValue();
