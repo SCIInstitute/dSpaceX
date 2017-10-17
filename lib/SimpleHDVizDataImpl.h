@@ -85,7 +85,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<Precision> efmin;                             // Extrema Value Mins
     std::vector<Precision> efmax;                             // Extrema Value Maxs
     std::vector<Precision> widthMin;                          // Width Min
-    std::vector<Precision> widthMax;                              // Width Max
+    std::vector<Precision> widthMax;                          // Width Max
     std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> meanNormalized;
     std::vector<std::vector<FortranLinalg::DenseVector<Precision>>> widthScaled;
 
