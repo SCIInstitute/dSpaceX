@@ -59,6 +59,8 @@ class HDVizData {
         int persistenceLevel) = 0;
     virtual std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
         int persistenceLevel) = 0; 
+    virtual std::vector<FortranLinalg::DenseVector<Precision>>& getWidthScaled(
+        int persistenceLevel) = 0;
     virtual std::vector<FortranLinalg::DenseVector<Precision>>& getDensity(
         int persistenceLevel) = 0;
 

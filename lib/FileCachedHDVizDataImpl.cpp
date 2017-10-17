@@ -186,6 +186,14 @@ std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::get
 
 std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getWidth(
     int persistenceLevel) {
+  // TODO: This function is currently returning widths scaled. Factor out
+  //       that logic and return the original widths from this function.
+  maybeSwapLevelCache(persistenceLevel);
+  return yw;
+}
+
+std::vector<FortranLinalg::DenseVector<Precision>>& FileCachedHDVizDataImpl::getWidthScaled(
+    int persistenceLevel) {  
   maybeSwapLevelCache(persistenceLevel);
   return yw;
 }

@@ -53,6 +53,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
         int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getWidth(
         int persistenceLevel);
+    std::vector<FortranLinalg::DenseVector<Precision>>& getWidthScaled(
+        int persistenceLevel);
     std::vector<FortranLinalg::DenseVector<Precision>>& getDensity(
         int persistenceLevel);
 

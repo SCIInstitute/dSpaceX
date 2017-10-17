@@ -142,7 +142,7 @@ TEST(HDVizData, compare) {
 
       ASSERT_VECTOR_EQ(cachedData->getMean(level)[i], simpleData->getMean(level)[i]);
       ASSERT_VECTOR_EQ(cachedData->getMeanNormalized(level)[i], simpleData->getMeanNormalized(level)[i]);
-      // ASSERT_VECTOR_EQ(cachedData->getWidth(level)[i], simpleData->getWidth(level)[i]);
+      ASSERT_VECTOR_EQ(cachedData->getWidthScaled(level)[i], simpleData->getWidthScaled(level)[i]);
       ASSERT_VECTOR_EQ(cachedData->getDensity(level)[i], simpleData->getDensity(level)[i]);
     }  
     
