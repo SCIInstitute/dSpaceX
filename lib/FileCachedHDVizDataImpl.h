@@ -68,12 +68,14 @@ class FileCachedHDVizDataImpl : public HDVizData {
     int getMaxPersistenceLevel();
         
   private:
-    void loadLayout(std::string type, std::string extFile, int level);    
+    void loadLayout(std::string type, std::string extFile, 
+        std::string minFile, std::string maxFile, int level);    
     void loadColorValues(std::string type, int level);
     void loadWidthValues(std::string type, int level);
     void loadDensityValues(std::string type, int level);
     void loadReconstructions(int level);
     void maybeSwapLevelCache(int level);
+    void maybeSwapLayoutCache(HDVizLayout layout);
     
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
     // Morse-Smale edge information.

@@ -100,6 +100,19 @@ TEST(HDVizData, compare) {
     ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
     unsigned int crystalCount = simpleData->getEdges(level).N();
 
+    for (unsigned int crystal = 0; crystal < crystalCount; crystal++) {     
+      ASSERT_MATRIX_EQ(
+          cachedData->getLayout(HDVizLayout::ISOMAP, level)[crystal],
+          simpleData->getLayout(HDVizLayout::ISOMAP, level)[crystal]);
+      ASSERT_MATRIX_EQ(
+          cachedData->getLayout(HDVizLayout::PCA, level)[crystal],
+          simpleData->getLayout(HDVizLayout::PCA, level)[crystal]);
+      ASSERT_MATRIX_EQ(
+          cachedData->getLayout(HDVizLayout::PCA2, level)[crystal],
+          simpleData->getLayout(HDVizLayout::PCA2, level)[crystal]);
+    }
+
+
     ASSERT_VECTOR_EQ(cachedData->getExtremaValues(level), simpleData->getExtremaValues(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaNormalized(level), simpleData->getExtremaNormalized(level));
     ASSERT_VECTOR_EQ(cachedData->getExtremaWidthsScaled(level), simpleData->getExtremaWidthsScaled(level));

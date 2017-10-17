@@ -134,8 +134,61 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
       }
     }
   }
+
+  computeScaledLayouts();
   //
 };
+
+void SimpleHDVizDataImpl::computeScaledLayouts() {
+  // Resize vectors
+  scaledIsoLayout.resize(m_data->scaledPersistence.N());
+  scaledPCALayout.resize(m_data->scaledPersistence.N());
+  scaledPCA2Layout.resize(m_data->scaledPersistence.N());
+
+  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {    
+    // Resize vectors
+    scaledIsoLayout[level].resize(m_data->crystals[level].N());
+    scaledPCALayout[level].resize(m_data->crystals[level].N());
+    scaledPCA2Layout[level].resize(m_data->crystals[level].N());
+
+    // Compute scaling factors
+    FortranLinalg::DenseVector<Precision> isoDiff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxIso, m_data->LminIso);
+    Precision rISO = std::max(isoDiff(0), isoDiff(1));
+    FortranLinalg::Linalg<Precision>::Scale(isoDiff, 0.5f, isoDiff);
+    FortranLinalg::Linalg<Precision>::Add(isoDiff, m_data->LminIso, isoDiff);
+
+    FortranLinalg::DenseVector<Precision> pcaDiff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxPCA, m_data->LminPCA);
+    Precision rPCA = std::max(pcaDiff(0), pcaDiff(1));
+    FortranLinalg::Linalg<Precision>::Scale(pcaDiff, 0.5f, pcaDiff);
+    FortranLinalg::Linalg<Precision>::Add(pcaDiff, m_data->LminPCA, pcaDiff);
+
+    FortranLinalg::DenseVector<Precision> pca2Diff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxPCA2, m_data->LminPCA2);
+    Precision rPCA2 = std::max(pca2Diff(0), pca2Diff(1));
+    FortranLinalg::Linalg<Precision>::Scale(pca2Diff, 0.5f, pca2Diff);
+    FortranLinalg::Linalg<Precision>::Add(pca2Diff, m_data->LminPCA2, pca2Diff);
+
+
+    for (unsigned int crystal = 0; crystal < m_data->crystals[level].N(); crystal++) { 
+      // copy layout matrices
+      scaledIsoLayout[level][crystal] = 
+          FortranLinalg::Linalg<Precision>::Copy(m_data->IsoLayout[level][crystal]);
+      scaledPCALayout[level][crystal] = 
+          FortranLinalg::Linalg<Precision>::Copy(m_data->PCALayout[level][crystal]);
+      scaledPCA2Layout[level][crystal] = 
+          FortranLinalg::Linalg<Precision>::Copy(m_data->PCA2Layout[level][crystal]);
+
+      // perform scaling
+      FortranLinalg::Linalg<Precision>::AddColumnwise(scaledIsoLayout[level][crystal], isoDiff, scaledIsoLayout[level][crystal]);
+      FortranLinalg::Linalg<Precision>::Scale(scaledIsoLayout[level][crystal], 2.f/rISO, scaledIsoLayout[level][crystal]);
+
+      FortranLinalg::Linalg<Precision>::AddColumnwise(scaledPCALayout[level][crystal], pcaDiff, scaledPCALayout[level][crystal]);
+      FortranLinalg::Linalg<Precision>::Scale(scaledPCALayout[level][crystal], 2.f/rPCA, scaledPCALayout[level][crystal]);
+
+      FortranLinalg::Linalg<Precision>::AddColumnwise(scaledPCA2Layout[level][crystal], pca2Diff, scaledPCA2Layout[level][crystal]);
+      FortranLinalg::Linalg<Precision>::Scale(scaledPCA2Layout[level][crystal], 2.f/rPCA2, scaledPCA2Layout[level][crystal]);
+    }     
+  }
+}
 
 /**
  *
@@ -158,13 +211,16 @@ std::vector<FortranLinalg::DenseMatrix<Precision>>& SimpleHDVizDataImpl::getLayo
     HDVizLayout layout, int persistenceLevel) {  
   switch (layout) {
     case HDVizLayout::ISOMAP : 
-      return m_data->IsoLayout[persistenceLevel];
+      // return m_data->IsoLayout[persistenceLevel];
+      return scaledIsoLayout[persistenceLevel];
       break;
     case HDVizLayout::PCA : 
-      return m_data->PCALayout[persistenceLevel];
+      // return m_data->PCALayout[persistenceLevel];
+      return scaledPCALayout[persistenceLevel];
       break;
     case HDVizLayout::PCA2 :
-      return  m_data->PCA2Layout[persistenceLevel];
+      // return  m_data->PCA2Layout[persistenceLevel];
+      return scaledPCA2Layout[persistenceLevel];
       break;
     default:
       throw std::invalid_argument("Unrecognized HDVizlayout specified.");

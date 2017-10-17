@@ -52,9 +52,8 @@ FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persisten
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getLayout(
     HDVizLayout layout, int persistenceLevel) {
-  // TODO: Add call check to enforce that:
-  //       layout == cachedLayout  &&
-  //       persistenceLevel == cachedPersistenceLevel
+  maybeSwapLevelCache(persistenceLevel);
+  maybeSwapLayoutCache(layout);
   return L;
 }
 
@@ -222,25 +221,34 @@ void FileCachedHDVizDataImpl::setLayout(HDVizLayout layout, int level) {
   m_currentLayout = layout;
   Lmin.deallocate();
   Lmax.deallocate();
-  if (layout == HDVizLayout::ISOMAP) {
-    Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "IsoMin.data.hdr");
-    Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "IsoMax.data.hdr");
-    loadLayout("_isolayout.data.hdr", "IsoExtremaLayout", level);
-  } else if (layout == HDVizLayout::PCA) {
-    Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCAMin.data.hdr");
-    Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCAMax.data.hdr");
-    loadLayout("_layout.data.hdr", "ExtremaLayout", level);
-  } else if (layout == HDVizLayout::PCA2) {
-    Lmin = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCA2Min.data.hdr");
-    Lmax = FortranLinalg::LinalgIO<Precision>::readVector(m_path + "PCA2Max.data.hdr");
-    loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout", level);
-  } else {
-    throw std::invalid_argument("Unrecognized HDVizlayout specified.");
+  switch (layout) {
+    case HDVizLayout::ISOMAP:
+      loadLayout("_isolayout.data.hdr", "IsoExtremaLayout", 
+          m_path + "IsoMin.data.hdr", m_path + "IsoMax.data.hdr", level);
+      break;
+
+    case HDVizLayout::PCA:
+      loadLayout("_layout.data.hdr", "ExtremaLayout", 
+          m_path + "PCAMin.data.hdr", m_path + "PCAMax.data.hdr", level);  
+      break;    
+
+    case HDVizLayout::PCA2:
+      loadLayout("_pca2layout.data.hdr", "PCA2ExtremaLayout",
+          m_path + "PCA2Min.data.hdr", m_path + "PCA2Max.data.hdr", level);
+      break;
+
+    default:  
+      throw std::invalid_argument("Unrecognized HDVizlayout specified.");
+      break;
   }
 };
 
 
-void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, int level) {
+void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, 
+    std::string minFile, std::string maxFile, int level) {
+  Lmin = FortranLinalg::LinalgIO<Precision>::readVector(minFile);
+  Lmax = FortranLinalg::LinalgIO<Precision>::readVector(maxFile);
+
   for (unsigned int i = 0; i < edges.N(); i++) {
     std::string filename = "ps_" + std::to_string(level) + "_crystal_" + std::to_string(i) + type;
     L[i].deallocate();
@@ -252,21 +260,7 @@ void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile, 
 
   eL = FortranLinalg::LinalgIO<Precision>::readMatrix(m_path + eL_Filename);  
 
-  /*Lmin = FortranLinalg::Linalg<Precision>::ExtractColumn(L[0], 0);
-  Lmax = FortranLinalg::Linalg<Precision>::ExtractColumn(L[0], 0);
-  for(unsigned int e=0; e<edges.N(); e++){
-    for(unsigned int i=0; i<L[e].N(); i++){
-      for(unsigned int j=0; j< L[e].M(); j++){
-        if(Lmin(j) > L[e](j, i)){
-          Lmin(j) = L[e](j, i);
-        }
-        if(Lmax(j) < L[e](j, i)){
-          Lmax(j) = L[e](j, i);
-        }
-      }
-    }
-  }*/
-
+ 
   FortranLinalg::DenseVector<Precision> diff = FortranLinalg::Linalg<Precision>::Subtract(Lmax, Lmin);
   Precision r = std::max(diff(0), diff(1));
   FortranLinalg::Linalg<Precision>::Scale(diff, 0.5f, diff);
@@ -475,3 +469,14 @@ void FileCachedHDVizDataImpl::maybeSwapLevelCache(int level) {
     loadData(level);    
   }
 }
+
+/**
+ *
+ */
+void FileCachedHDVizDataImpl::maybeSwapLayoutCache(HDVizLayout layout) {
+  if (layout != m_currentLayout) {
+    setLayout(layout, m_currentLevel);
+  }
+}
+
+
