@@ -93,6 +93,8 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
         }
       }
     }     
+    // TODO: Move color map creation completely outside of HDVizData impls.
+    //    Expose densityMax via a class method and construct at viz time.
     dcolormap[level] = ColorMapper<Precision>(0, densityMax); 
     dcolormap[level].set(1, 0.5, 0, 1, 0.5, 0 , 1, 0.5, 0);  
   }
