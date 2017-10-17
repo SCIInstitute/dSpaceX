@@ -28,7 +28,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     
-    // Number of samples used for rendering.
+    // Number of samples used for layouts.
     int getNumberOfSamples();   
     
     // Set which persistence level and layout to use.
@@ -73,6 +73,8 @@ class SimpleHDVizDataImpl : public HDVizData {
   private:
     HDProcessResult *m_data;
     
+    int m_numberOfSamples;
+
     // Computed visualization helper data
     std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
     std::vector<FortranLinalg::DenseVector<Precision>> extremaWidthScaled;

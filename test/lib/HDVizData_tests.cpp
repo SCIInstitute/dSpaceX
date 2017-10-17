@@ -84,6 +84,8 @@ TEST(HDVizData, compare) {
 
   HDProcessResult *result = HDProcessResultSerializer::read(data_dir);  
   HDVizData *simpleData = new SimpleHDVizDataImpl(result); 
+
+  ASSERT_EQ(cachedData->getNumberOfSamples(), simpleData->getNumberOfSamples());
   
   // Compare Persistence
   ASSERT_EQ(cachedData->getPersistence().N(), simpleData->getPersistence().N());

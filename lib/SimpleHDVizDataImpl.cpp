@@ -13,6 +13,7 @@ const int k_defaultSamplesCount = 50;
  * SimpleHDVizDataImpl constuctor
  */
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
+  m_numberOfSamples = k_defaultSamplesCount;
 
   // Create Normalized Extrema Values, Mean Values, and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
@@ -188,6 +189,8 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
     FortranLinalg::Linalg<Precision>::AddColumnwise(scaledPCA2ExtremaLayout[level], pca2Diff, scaledPCA2ExtremaLayout[level]);
     FortranLinalg::Linalg<Precision>::Scale(scaledPCA2ExtremaLayout[level], 2.f/rPCA2, scaledPCA2ExtremaLayout[level]);
 
+    // TODO: These values should be the same for all levels, but we should enforce that somehow.
+    m_numberOfSamples = m_data->IsoLayout[level][0].N(); 
 
     for (unsigned int crystal = 0; crystal < m_data->crystals[level].N(); crystal++) { 
       // copy layout matrices
@@ -208,14 +211,14 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
       FortranLinalg::Linalg<Precision>::AddColumnwise(scaledPCA2Layout[level][crystal], pca2Diff, scaledPCA2Layout[level][crystal]);
       FortranLinalg::Linalg<Precision>::Scale(scaledPCA2Layout[level][crystal], 2.f/rPCA2, scaledPCA2Layout[level][crystal]);
     }     
-  }
+  }  
 }
 
 /**
  *
  */
 int SimpleHDVizDataImpl::getNumberOfSamples() {
-  return k_defaultSamplesCount;
+  return m_numberOfSamples;
 }
 
 /**

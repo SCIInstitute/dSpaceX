@@ -27,7 +27,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     
-    // Number of samples used for rendering.
+    // Number of samples used for layouts.
     int getNumberOfSamples();   
     
     // Set which persistence level and layout to use.

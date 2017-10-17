@@ -33,7 +33,7 @@ class HDVizData {
     virtual FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel) = 0;
     
-    // Number of samples used for rendering.
+    // Number of samples used for layouts.
     virtual int getNumberOfSamples() = 0;
     
     // Set which persistence level and layout to use.
