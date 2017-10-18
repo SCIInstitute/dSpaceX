@@ -439,6 +439,9 @@ void HDProcessor::computeRegressionForCrystal(
   y.deallocate();
 }
 
+/**
+ * Add small pertubations to data achieve general position / avoid pathological cases.
+ */
 void HDProcessor::addNoise(FortranLinalg::DenseVector<Precision> &v) {
   Random<Precision> rand;
   double a = 0.00000001 *( Linalg<Precision>::Max(v) - Linalg<Precision>::Min(v));
@@ -485,11 +488,9 @@ void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::D
 /**
  * Compute low-d layout of geomtry using PCA.
  * TODO:  Return layout result that include:
- *        - Lmin, Lmax
  *        - Crystal's Layout Matrix
  *        - Extrema Layout Matrix
  *        - Extrema Values Matrix
- * Then Move disk-writing methods outside of compute method.
  */
 void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
   int nExt, int nSamples, unsigned int persistenceLevel) {
