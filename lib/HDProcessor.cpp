@@ -385,10 +385,7 @@ void HDProcessor::computeRegressionForCrystal(
   sdev.deallocate();
   z.deallocate();
   tmp.deallocate();
-
-  std::string crystalPrefix = 
-      "ps_" + std::to_string(persistenceLevel) + "_crystal_" + std::to_string(crystalIndex);
-
+  
   // Store Regression Info in Results
   m_result->R[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(ScrystalIDs[crystalIndex]);
   m_result->gradR[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(gradS);
