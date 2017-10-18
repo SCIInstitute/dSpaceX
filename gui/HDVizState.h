@@ -8,7 +8,7 @@ class HDVizState {
     selectedCell  = 0;
     selectedPoint = 0;
     currentLevel = data->getMaxPersistenceLevel();
-    HDVizLayout currentLayout = HDVizLayout::ISOMAP;
+    currentLayout = HDVizLayout::ISOMAP;
   }
 
   HDVizLayout currentLayout;
