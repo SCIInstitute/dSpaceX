@@ -6,6 +6,7 @@
 #include "Display.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
+#include "TopologyData.h"
 
 #include <stdlib.h>
 #include <string>
@@ -22,7 +23,7 @@ template<typename TPrecision>
 class DisplayTubes : public Display{
 
   public:
-    DisplayTubes(HDVizData *data, HDVizState *state, std::string fontname);    
+    DisplayTubes(HDVizData *data, TopologyData *topoData, HDVizState *state, std::string fontname);    
     std::string title();
     void reshape(int w, int h);
     void init();
@@ -82,6 +83,7 @@ class DisplayTubes : public Display{
     FortranLinalg::DenseVector<bool> selectedTubes;
 
     HDVizData *data;
+    TopologyData *topoData;
     HDVizState *state;
     FTGLPixmapFont font; 
     

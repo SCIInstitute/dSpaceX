@@ -13,6 +13,8 @@
 #include "HDProcessResult.h"
 #include "HDProcessResultSerializer.h"
 #include "SimpleHDVizDataImpl.h"
+#include "TopologyData.h"
+#include "LegacyTopologyDataImpl.h"
 #include <tclap/CmdLine.h>
 #include "Precision.h"
 #include "Linalg.h"
@@ -123,6 +125,7 @@ int main(int argc, char **argv) {
   }
         
   HDVizData *data = new SimpleHDVizDataImpl(result);
+  TopologyData *topoData = new LegacyTopologyDataImpl(data);
   HDVizState state(data);
 
   // Init GL stuff. Initialize Visualization Windows
@@ -131,7 +134,7 @@ int main(int argc, char **argv) {
 
   try {  
     std::string fontname = MAKE_STRING(FONTNAME);
-    mainD = new DisplayTubes<Precision>(data, &state, fontname);
+    mainD = new DisplayTubes<Precision>(data, topoData, &state, fontname);
     glutInitWindowSize(1000, 1000); 
     int mainWindow = glutCreateWindow(mainD->title().c_str());
     glutDisplayFunc([]() { 

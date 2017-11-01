@@ -5,13 +5,16 @@ SET(HDPROCESS_INCLUDE_FILES
   HDProcessResult.h
   HDVizData.h 
   FileCachedHDVizDataImpl.h 
-  SimpleHDVizDataImpl.h)
+  SimpleHDVizDataImpl.h
+  TopologyData.h
+  LegacyTopologyDataImpl.h)
 
 SET(HDPROCESS_SOURCE_FILES 
   HDProcessor.cpp 
   HDProcessResultSerializer.cpp
   FileCachedHDVizDataImpl.cpp 
-  SimpleHDVizDataImpl.cpp)
+  SimpleHDVizDataImpl.cpp
+  LegacyTopologyDataImpl.cpp)
 
 LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 

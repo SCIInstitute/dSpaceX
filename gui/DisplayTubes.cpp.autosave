@@ -11,8 +11,7 @@ template<typename TPrecision> DisplayTubes<TPrecision>::DisplayTubes(
   showSamples = false;
   extremaOnly = false;
 
-  // oldN = data->getCrystals(state->currentLevel).N();
-  oldN = topoData->getComplex(state->currentLevel)->getCrystals().size();
+  oldN = data->getCrystals(state->currentLevel).N();
   mod = 0;
   cur_button = -1;
 
@@ -604,12 +603,8 @@ void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
     state->currentLevel = data->getMinPersistenceLevel();
   }
 
-  // if (state->selectedCell >= (int) data->getCrystals(state->currentLevel).N()) {
-  //   state->selectedCell = data->getCrystals(state->currentLevel).N() - 1;
-  // }
-  unsigned int crystalCount = topoData->getComplex(state->currentLevel)->getCrystals().size();
-  if (state->selectedCell >= crystalCount) {
-    state->selectedCell = crystalCount - 1;
+  if (state->selectedCell >= (int) data->getCrystals(state->currentLevel).N()) {
+    state->selectedCell = data->getCrystals(state->currentLevel).N() - 1;
   }
   if (update) {
     notifyChange();
@@ -629,26 +624,16 @@ void DisplayTubes<TPrecision>::setRenderModesFromPeaks() {
     selectedPeaks(i) = false;
   }
 
-  // for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
-  for (unsigned int i = 0; i < topoData->getComplex(state->currentLevel)->getCrystals().size(); i++) {
+  for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
     if (selectedTubes(i)) {
-      // selectedPeaks(data->getCrystals(state->currentLevel)(0, i)) = true;
-      // selectedPeaks(data->getCrystals(state->currentLevel)(1, i)) = true;
-      int minIndex = topoData->getComplex(state->currentLevel)->getCrystals()[i]->getMinSample();
-      int maxIndex = topoData->getComplex(state->currentLevel)->getCrystals()[i]->getMaxSample();
-
-      selectedPeaks(maxIndex) = true;
-      selectedPeaks(maxIndex) = true;
+      selectedPeaks(data->getCrystals(state->currentLevel)(0, i)) = true;
+      selectedPeaks(data->getCrystals(state->currentLevel)(1, i)) = true;
     }
   }
 
-  // for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
-  for (unsigned int i = 0; i < topoData->getComplex(state->currentLevel)->getCrystals().size(); i++) {
-    // int e1 = data->getCrystals(state->currentLevel)(0, i);
-    // int e2 = data->getCrystals(state->currentLevel)(1, i);
-    int e1 = topoData->getComplex(state->currentLevel)->getCrystals()[i]->getMaxSample();
-    int e2 = topoData->getComplex(state->currentLevel)->getCrystals()[i]->getMinSample();
-
+  for (unsigned int i=0; i<data->getCrystals(state->currentLevel).N(); i++) {
+    int e1 =data->getCrystals(state->currentLevel)(0, i);
+    int e2 =data->getCrystals(state->currentLevel)(1, i);
     if (selectedPeaks(e1) && selectedPeaks(e2)) {
       renderMode(i) =  RENDER_TUBE;
     } else if(selectedPeaks(e1)) {
@@ -689,15 +674,13 @@ void DisplayTubes<TPrecision>::doPick() {
   if (hits > 0){
     int index = selectBuf[3];
     if (mod == GLUT_ACTIVE_CTRL) {
-      // if (index >=0 && index < (int)data->getCrystals(state->currentLevel).N()) {
-      if (index >=0 && index < (int)topoData->getComplex(state->currentLevel)->getCrystals().size()) {
+      if (index >=0 && index < (int)data->getCrystals(state->currentLevel).N()) {
         selectedCTubes(index) = !selectedCTubes(index);
         std::cout << "Edge: " << index << std::endl;
       }
     }    
     else if (mod == GLUT_ACTIVE_SHIFT) {
-      // if (index >=0 && index < (int) data->getCrystals(state->currentLevel).N()) {
-      if (index >=0 && index < (int)topoData->getComplex(state->currentLevel)->getCrystals().size()) {
+      if (index >=0 && index < (int) data->getCrystals(state->currentLevel).N()) {
         selectedTubes(index) = !selectedTubes(index);
         if (selectedTubes(index)) {
           state->selectedCell = index;
@@ -849,8 +832,7 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   }  
 
   glColor4f(0.9, 0.9, 0.9, 0.1f);
-  // for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
-  for (unsigned int i = 0; i < topoData->getComplex(state->currentLevel)->getCrystals().size(); i++) {
+  for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
     if (renderMode(i) != RENDER_NOTHING) continue;
 
     for (unsigned int k = 0; k < layout[i].N(); k++) {

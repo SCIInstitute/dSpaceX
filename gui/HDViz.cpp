@@ -12,8 +12,9 @@
 #include "HDProcessResult.h"
 #include "HDProcessResultSerializer.h"
 #include "SimpleHDVizDataImpl.h"
+#include "TopologyData.h"
+#include "LegacyTopologyDataImpl.h"
 #include <tclap/CmdLine.h>
-
 #include <iostream>
 #include <iomanip>
 #include <math.h>
@@ -76,7 +77,8 @@ int main(int argc, char **argv) {
     std::string path = pathArg.getValue();    
   
     HDProcessResult *result = HDProcessResultSerializer::read(path);
-    HDVizData *data = new SimpleHDVizDataImpl(result);
+    HDVizData *data = new SimpleHDVizDataImpl(result);    
+    TopologyData *topoData = new LegacyTopologyDataImpl(data);
     HDVizState state(data);
 
     std::string fontname = fontArg.getValue();
@@ -85,7 +87,7 @@ int main(int argc, char **argv) {
     }
 
     //Windows
-    mainD = new DisplayTubes<Precision>(data, &state, fontname);
+    mainD = new DisplayTubes<Precision>(data, topoData, &state, fontname);
 
     #ifdef DIMENSION    
     auxD = new DisplayImagePCA<Image, Precision>(data, &state, fontname);
