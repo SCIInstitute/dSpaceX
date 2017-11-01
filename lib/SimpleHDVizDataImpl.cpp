@@ -44,11 +44,11 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     extremaNormalized[level] = ez;
 
     auto yc = m_data->fmean[level];    
-    auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getEdges(level).N());
+    auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getCrystals(level).N());
     auto yw = m_data->mdists[level];
     widthMin[level] = std::numeric_limits<Precision>::max();
     widthMax[level] = std::numeric_limits<Precision>::min();
-    for (unsigned int i=0; i < getEdges(level).N(); i++) {      
+    for (unsigned int i=0; i < getCrystals(level).N(); i++) {      
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
       FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);            
@@ -64,8 +64,8 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     }
     meanNormalized[level] = z;
 
-    widthScaled[level].resize(getEdges(level).N());
-    for (unsigned int i=0; i < getEdges(level).N(); i++) { 
+    widthScaled[level].resize(getCrystals(level).N());
+    for (unsigned int i=0; i < getCrystals(level).N(); i++) { 
       auto width = FortranLinalg::Linalg<Precision>::Copy(yw[i]);
       FortranLinalg::Linalg<Precision>::Scale(width, 0.3/ widthMax[level], width);
       FortranLinalg::Linalg<Precision>::Add(width, 0.03, width);
@@ -87,7 +87,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     // Set up Density Color Maps
     Precision densityMax = std::numeric_limits<Precision>::min();
     auto density = getDensity(level);
-    for (unsigned int i=0; i < getEdges(level).N(); i++) {      
+    for (unsigned int i=0; i < getCrystals(level).N(); i++) {      
       for(unsigned int k=0; k < density[i].N(); k++){      
         if(density[i](k) > densityMax){
           densityMax = density[i](k);
@@ -115,7 +115,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
     gRmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
 
-    for(unsigned int e = 0; e < getEdges(level).N(); e++){
+    for(unsigned int e = 0; e < getCrystals(level).N(); e++){
       for(unsigned int i = 0; i < m_data->R[level][e].N(); i++){
         for(unsigned int j = 0; j < m_data->R[level][e].M(); j++){
           if(Rsmin[level](j) > m_data->R[level][e](j, i) - m_data->Rvar[level][e](j, i)){
@@ -224,7 +224,7 @@ int SimpleHDVizDataImpl::getNumberOfSamples() {
 /**
  *
  */
-FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getEdges(int persistenceLevel) {  
+FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getCrystals(int persistenceLevel) {  
   return m_data->crystals[persistenceLevel];
 }    
 

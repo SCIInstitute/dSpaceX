@@ -45,7 +45,7 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   loadData(m_currentLevel);
 };
 
-FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getEdges(int persistenceLevel) {
+FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getCrystals(int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
   return edges;
 }    

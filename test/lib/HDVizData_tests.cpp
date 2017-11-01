@@ -101,8 +101,8 @@ TEST(HDVizData, compare) {
 
   // Compare Persistence Level Data
   for (unsigned int level=0; level < persistenceCount; level++) {    
-    ASSERT_MATRIX_EQ(cachedData->getEdges(level), simpleData->getEdges(level));
-    unsigned int crystalCount = simpleData->getEdges(level).N();
+    ASSERT_MATRIX_EQ(cachedData->getCrystals(level), simpleData->getCrystals(level));
+    unsigned int crystalCount = simpleData->getCrystals(level).N();
 
     // Compare Layout Data
     ASSERT_MATRIX_EQ(
@@ -114,6 +114,7 @@ TEST(HDVizData, compare) {
     ASSERT_MATRIX_EQ(
         cachedData->getExtremaLayout(HDVizLayout::PCA2, level),
         simpleData->getExtremaLayout(HDVizLayout::PCA2, level));
+    
     for (unsigned int crystal = 0; crystal < crystalCount; crystal++) {     
       ASSERT_MATRIX_EQ(
           cachedData->getLayout(HDVizLayout::ISOMAP, level)[crystal],
