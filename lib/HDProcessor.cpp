@@ -51,6 +51,10 @@ HDProcessResult* HDProcessor::process(
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
+
+  // Store Nearest Neighbors
+  m_result->knn = msComplex.getNearestNeighbors();
+
   
   // Save geometry and function
   m_result->X = Linalg<Precision>::Copy(Xall);

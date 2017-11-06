@@ -9,7 +9,7 @@
   * All output data generated from the HDProcessor. 
   */
 struct HDProcessResult {
-  
+  FortranLinalg::DenseMatrix<int> knn;
   FortranLinalg::DenseVector<Precision> scaledPersistence; // Persistence.data.hdr
   FortranLinalg::DenseVector<Precision> minLevel;          // PersistenceStart.data.hdr
   FortranLinalg::DenseMatrix<Precision> X;                 // Geom.data.hdr

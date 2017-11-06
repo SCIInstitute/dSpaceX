@@ -23,6 +23,7 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
   
   result->X = LinalgIO<Precision>::readMatrix(path + "Geom.data.hdr");   
   result->Y = LinalgIO<Precision>::readVector(path + "Function.data.hdr");   
+  result->knn = LinalgIO<int>::readMatrix(path + "KNN.data.hdr");
   result->scaledPersistence = 
       LinalgIO<Precision>::readVector(path + "Persistence.data.hdr");
   result->minLevel = LinalgIO<Precision>::readVector(path + "PersistenceStart.data.hdr");
@@ -136,6 +137,7 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
 
   LinalgIO<Precision>::writeMatrix(path + "Geom.data", result->X);   
   LinalgIO<Precision>::writeVector(path + "Function.data", result->Y);   
+  LinalgIO<int>::writeMatrix(path + "KNN.data", result->knn);
   LinalgIO<Precision>::writeVector(path + "Persistence.data", result->scaledPersistence);
   LinalgIO<Precision>::writeVector(path + "PersistenceStart.data", result->minLevel);
   for (unsigned int level = result->minLevel(0); level < result->scaledPersistence.N(); level++) {
