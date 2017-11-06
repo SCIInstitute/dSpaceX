@@ -1,0 +1,5 @@
+DenseMatrix
+Size: 20 x 2000
+ElementSize: 4
+RowMajor: 0
+DataFile: KNN.data
