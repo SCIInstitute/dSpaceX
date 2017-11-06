@@ -141,13 +141,9 @@ class NNMSComplex{
       Distance<TPrecision>::computeKNN(X, KNN, KNND, dist);
       
       runMS(smooth, sigma2);      
-      KNN.deallocate();
+      // KNN.deallocate();   // JONBRONSON:  Nov 6, 2017  - reintroduce to prevent memory leak.
       KNND.deallocate();
     };
-
-
-
-
 
 
 
@@ -267,6 +263,12 @@ class NNMSComplex{
       }
       pers(index) = std::numeric_limits<TPrecision>::max();
     };
+
+    FortranLinalg::DenseMatrix<int> getNearestNeighbors() {
+      FortranLinalg::DenseMatrix<int> knn;
+      knn = FortranLinalg::Linalg<int>::Copy(KNN);
+      return knn;
+    }
 
     void cleanup(){
       extrema.deallocate();
