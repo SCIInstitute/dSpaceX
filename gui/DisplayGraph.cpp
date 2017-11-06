@@ -1,4 +1,5 @@
 #include "DisplayGraph.h"
+#include <iostream>
 #include <string>
 
 /**
@@ -45,7 +46,16 @@ void DisplayGraph::init(){
   // Clear to White.  
   glClearColor(1, 1, 1, 0);
 
+  int count = data->getNearestNeighbors().N();
+  std::cout << "Initializing graph with " << count << " nodes." << std::endl;
 
+  glGenVertexArrays(1, &m_vertexArrayObject);
+  glBindVertexArray(m_vertexArrayObject);
+
+  glGenBuffers(1, &m_bufferPositions);
+  glBindBuffer(GL_ARRAY_BUFFER, m_bufferPositions);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * count, nullptr, GL_STREAM_DRAW);
+  glEnableVertexAttribArray(0);
 }
 
 

@@ -27,8 +27,12 @@ class DisplayGraph : public Display{
   private:
     HDVizData *data;
     HDVizState *state;
-
+    
+    void setupOrtho(int w, int h);
     int width, height;
 
-    void setupOrtho(int w, int h);
+    // OpenGL variables
+    unsigned int m_vertexArrayObject { 0 };
+    unsigned int m_bufferPositions { 0 };
+    unsigned int m_bufferColors { 0 };
 };

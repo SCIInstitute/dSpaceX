@@ -1,6 +1,8 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
+#define GL_GLEXT_PROTOTYPES 1
+
 //include opengl stuff
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
