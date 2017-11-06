@@ -224,6 +224,13 @@ int SimpleHDVizDataImpl::getNumberOfSamples() {
 /**
  *
  */
+FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getNearestNeighbors() {
+  return m_data->knn;
+}
+
+/**
+ *
+ */
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getCrystals(int persistenceLevel) {  
   return m_data->crystals[persistenceLevel];
 }    

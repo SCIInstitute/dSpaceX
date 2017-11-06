@@ -19,6 +19,8 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   std::string parameterNamesFilename = k_defaultParameterNamesFilename;
   m_path = path.empty() ? k_defaultPath : path;
 
+
+  m_knn = FortranLinalg::LinalgIO<int>::readMatrix(m_path + "KNN.data.hdr");
   pSorted = FortranLinalg::LinalgIO<Precision>::readVector(m_path + persistenceDataHeaderFilename);
   maxLevel = pSorted.N() - 1;      
   FortranLinalg::DenseVector<Precision> tmp = 
@@ -44,6 +46,11 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
   m_currentLevel = maxLevel;
   loadData(m_currentLevel);
 };
+
+
+FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getNearestNeighbors() {
+  return m_knn;
+}
 
 FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getCrystals(int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);

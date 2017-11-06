@@ -13,6 +13,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FileCachedHDVizDataImpl(std::string path);
     
     // Morse-Smale edge information.
+    FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
     FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);    
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
@@ -77,6 +78,7 @@ class FileCachedHDVizDataImpl : public HDVizData {
     void maybeSwapLevelCache(int level);
     void maybeSwapLayoutCache(HDVizLayout layout);
     
+    FortranLinalg::DenseMatrix<int> m_knn;      
     FortranLinalg::DenseVector<Precision> pSorted;  //  Persistence.data.hdr
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<int> edges;          //  Crystals_<level>.data.hdr

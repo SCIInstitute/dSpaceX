@@ -14,6 +14,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     SimpleHDVizDataImpl(HDProcessResult *result);    
 
     // Morse-Smale edge information.
+    FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
     FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);    
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
