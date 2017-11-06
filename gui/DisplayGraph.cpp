@@ -46,16 +46,37 @@ void DisplayGraph::init(){
   // Clear to White.  
   glClearColor(1, 1, 1, 0);
 
+  glDisable(GL_LIGHTING);
+
   int count = data->getNearestNeighbors().N();
   std::cout << "Initializing graph with " << count << " nodes." << std::endl;
 
+  // Create the VBOs
+  glGenBuffers(1, &m_positionsVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
+  glBufferData(GL_ARRAY_BUFFER, 3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  
+  glGenBuffers(1, &m_colorsVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
+  glBufferData(GL_ARRAY_BUFFER, 3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
+
+  // Create the VAO
   glGenVertexArrays(1, &m_vertexArrayObject);
   glBindVertexArray(m_vertexArrayObject);
+  glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);  
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-  glGenBuffers(1, &m_bufferPositions);
-  glBindBuffer(GL_ARRAY_BUFFER, m_bufferPositions);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * count, nullptr, GL_STREAM_DRAW);
-  glEnableVertexAttribArray(0);
+  // Enable Vertex Arrays 0 and 1 in the VAO
+  glEnableVertexAttribArray(0);  
+  glEnableVertexAttribArray(1);
+
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+  // Create Shaders
 }
 
 
@@ -63,7 +84,16 @@ void DisplayGraph::init(){
  *
  */
 void DisplayGraph::setupOrtho(int w, int h) {
-
+  int sx = 1;
+  int sy = 1;
+  
+  if (w > h) {
+    sx = (float)w/h;
+  } else {
+    sy = (float)h/w;
+  }
+  
+  glOrtho(-sx, sx, -sy, sy, 1, -1);  
 }
 
 
@@ -75,7 +105,14 @@ void DisplayGraph::display(void) {
 
   glMatrixMode(GL_MODELVIEW);   
   glLoadIdentity();
+  //
 
+  glBindVertexArray(m_vertexArrayObject);  
+  glDrawArrays(GL_POINTS, 0, 1);
+  
+  // glBindVertexArray(0);
+
+  //
   glutSwapBuffers();
 }
 

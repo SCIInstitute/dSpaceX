@@ -32,7 +32,10 @@ class DisplayGraph : public Display{
     int width, height;
 
     // OpenGL variables
-    unsigned int m_vertexArrayObject { 0 };
-    unsigned int m_bufferPositions { 0 };
-    unsigned int m_bufferColors { 0 };
+    GLuint m_vertexArrayObject { 0 };
+    GLuint m_positionsVBO { 0 };
+    GLuint m_colorsVBO { 0 };
+
+    std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f };
+    std::vector<GLfloat> colors = {1.0f, 0.0f, 0.0f };
 };
