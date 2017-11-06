@@ -5,6 +5,7 @@
 #ifdef DIMENSION
 #include "DisplayImagePCA.h"
 #endif
+#include "DisplayGraph.h"
 #include "DisplayRange.h"
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
@@ -31,7 +32,7 @@
 #define MAKE_STRING_(x) #x
 #define MAKE_STRING(x) MAKE_STRING_(x)
 
-Display *mainD, *auxD, *auxD2, *auxD3;
+Display *mainD, *graphD;
 
 
 void printHelp() {
@@ -155,6 +156,27 @@ int main(int argc, char **argv) {
     
     mainD->init();    
     reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(mainWindow);
+
+    // Create Graph Window
+    graphD = new DisplayGraph(data, &state);
+    int graphWindow = glutCreateWindow(graphD->title().c_str());
+    glutDisplayFunc([]() {
+      graphD->display();
+    });
+    glutReshapeFunc([](int w, int h) {
+      graphD->reshape(w, h);
+    });
+    glutMouseFunc([](int button, int state, int x, int y) {
+      graphD->mouse(button, state, x, y);
+    });
+    glutMotionFunc([](int x, int y) {
+      graphD->motion(x, y);
+    });
+    glutKeyboardFunc([](unsigned char key, int x, int y) {
+      graphD->keyboard(key, x, y);
+    });
+    graphD->init();
+    reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(graphWindow);
 
     printHelp();
     glutMainLoop();
