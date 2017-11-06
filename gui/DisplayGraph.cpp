@@ -78,28 +78,66 @@ void DisplayGraph::init(){
 
   // Create Shaders
   const char* vertex_shader = 
-  "in vec3 vp;"
+  "in vec3 vertex_position;"
+  "in vec3 vertex_color;"
+  " "
+  "varying out vec3 color;"
+  " " 
   "void main() {"
-  "  gl_position = vec4(vp, 1.0);"
+  "  color = vertex_color;"
+  "  gl_Position = vec4(vertex_position, 1.0);"
   "}";
 
   const char* fragment_shader = 
-  "out vec4 frag_color;"
+  "in vec3 color;"
+  "varying out vec4 frag_color;"
   "void main() {"
   "  frag_color = vec4(1.0, 0, 0, 1.0);"
   "}";
 
+  // Compile Vertex Shader
   m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(m_vertexShader, 1, &vertex_shader, NULL);
   glCompileShader(m_vertexShader);
 
+  // Check for Vertex Shader Errors
+  GLint success = 0;
+  glGetShaderiv(m_vertexShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_vertexShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_vertexShader, logSize, &logSize, &errorLog[0]);
+
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+  // Compile Fragment Shader
   m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(m_fragmentShader, 1, &fragment_shader, NULL);
   glCompileShader(m_fragmentShader);
 
+  // Check for Fragment Shader Errors
+  glGetShaderiv(m_fragmentShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_fragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_fragmentShader, logSize, &logSize, &errorLog[0]);
+
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+
+
   m_shaderProgram = glCreateProgram();
   glAttachShader(m_shaderProgram, m_vertexShader);
   glAttachShader(m_shaderProgram, m_fragmentShader);
+
+  glBindAttribLocation(m_shaderProgram, 0, "vertex_position");
+  glBindAttribLocation(m_shaderProgram, 1, "vertex_color");
   glLinkProgram(m_shaderProgram);
 }
 
@@ -130,7 +168,7 @@ void DisplayGraph::display(void) {
   glMatrixMode(GL_MODELVIEW);   
   glLoadIdentity();
   //
-
+  glUseProgram(m_shaderProgram);
   glBindVertexArray(m_vertexArrayObject);  
   glDrawArrays(GL_POINTS, 0, 1);
   
