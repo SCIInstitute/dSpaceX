@@ -77,6 +77,30 @@ void DisplayGraph::init(){
 
 
   // Create Shaders
+  const char* vertex_shader = 
+  "in vec3 vp;"
+  "void main() {"
+  "  gl_position = vec4(vp, 1.0);"
+  "}";
+
+  const char* fragment_shader = 
+  "out vec4 frag_color;"
+  "void main() {"
+  "  frag_color = vec4(1.0, 0, 0, 1.0);"
+  "}";
+
+  m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(m_vertexShader, 1, &vertex_shader, NULL);
+  glCompileShader(m_vertexShader);
+
+  m_fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(m_fragmentShader, 1, &fragment_shader, NULL);
+  glCompileShader(m_fragmentShader);
+
+  m_shaderProgram = glCreateProgram();
+  glAttachShader(m_shaderProgram, m_vertexShader);
+  glAttachShader(m_shaderProgram, m_fragmentShader);
+  glLinkProgram(m_shaderProgram);
 }
 
 

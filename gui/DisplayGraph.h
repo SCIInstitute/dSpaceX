@@ -38,4 +38,8 @@ class DisplayGraph : public Display{
 
     std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f };
     std::vector<GLfloat> colors = {1.0f, 0.0f, 0.0f };
+
+    GLuint m_vertexShader { 0 };
+    GLuint m_fragmentShader { 0 };
+    GLuint m_shaderProgram { 0 };
 };
