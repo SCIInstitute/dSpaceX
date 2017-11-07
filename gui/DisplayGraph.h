@@ -28,6 +28,11 @@ class DisplayGraph : public Display{
     HDVizData *data;
     HDVizState *state;
 
+    // Mouse 
+    int last_x;
+    int last_y;
+    int cur_button;
+
     float m_scale { 20.0f };
     float m_minScale { 0.1f };
     float m_maxScale { 100.0f };
@@ -40,14 +45,13 @@ class DisplayGraph : public Display{
     GLuint m_vertexArrayObject { 0 };
     GLuint m_positionsVBO { 0 };
     GLuint m_colorsVBO { 0 };
+    GLuint m_edgeElementVBO { 0 };
 
     int m_count { 0 };
-    std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f,
-                                      2.0f, 2.0f, 0.0f,
-                                    - 1.0f, -4.0f, 0.0f };
-    std::vector<GLfloat> colors = {1.0f, 0.0f, 0.0f, 
-                                   0.0f, 1.0f, 0.0f,
-                                   0.0f, 0.0f, 1.0f };
+
+    std::vector<GLuint> edgeIndices;
+    std::vector<GLfloat> vertices;
+    std::vector<GLfloat> colors;
 
     GLuint m_vertexShader { 0 };
     GLuint m_geometryShader { 0 };

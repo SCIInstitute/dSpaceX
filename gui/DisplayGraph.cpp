@@ -50,7 +50,7 @@ void DisplayGraph::init(){
   // create temp data
   vertices.clear();
   colors.clear();
-  m_count = data->getNearestNeighbors().N();
+  m_count = 500; // data->getNearestNeighbors().N();
   float range = 20.0f;
 
   // TODO: Only generate x and y's, supply z=0 in shader.
@@ -58,9 +58,9 @@ void DisplayGraph::init(){
     vertices.push_back(range*(randf() - 0.5f));   // x
     vertices.push_back(range*(randf() - 0.5f));   // y
     vertices.push_back(0.0f);   // z
-    colors.push_back(range*randf());   // r
-    colors.push_back(range*randf());   // g
-    colors.push_back(range*randf());   // b    
+    colors.push_back(randf());   // r
+    colors.push_back(randf());   // g
+    colors.push_back(randf());   // b    
   }
 
 
@@ -84,6 +84,10 @@ void DisplayGraph::init(){
   glGenBuffers(1, &m_colorsVBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
   glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
+
+  glGenBuffers(1, &m_edgeElementVBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_STATIC_DRAW);
 
   // Create the VAO
   glGenVertexArrays(1, &m_vertexArrayObject);
@@ -120,7 +124,9 @@ void DisplayGraph::init(){
   "layout(triangle_strip, max_vertices = 4) out;                            "
   "                                                                         "
   "uniform mat4 projectionMatrix;                                           "
+  "in vec3 color[];                                                         "
   "out vec2 Vertex_UV;                                                      "
+  "out vec3 geom_color;                                                     "
   "                                                                         "
   "const float radius = 0.5;                                                "
   "                                                                         "
@@ -128,21 +134,25 @@ void DisplayGraph::init(){
   "  gl_Position = gl_in[0].gl_Position + vec4  (-1 * radius, -1 * radius, 0.0, 0.0); "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 0.0);"
+  "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4(-1 * radius,  1 * radius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 1.0);"
+  "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius, -1 * radius, 0.0, 0.0); "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 0.0);"
+  "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius,  1 * radius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 1.0);"
+  "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "    
   "                                                                         "  
@@ -152,7 +162,7 @@ void DisplayGraph::init(){
   const char* fragment_shader_src = 
   "#version 150\n"
   "in vec2 Vertex_UV;"
-  "in vec3 color;"
+  "in vec3 geom_color;"
   "out vec4 frag_color;"
   "void main() {"
   "  vec2 uv = Vertex_UV.xy;"
@@ -167,7 +177,7 @@ void DisplayGraph::init(){
   "  vec4 fill = clear;"
   "  if (t < 0.0) {"
   "    t = abs(t);"
-  "    fill = fillColor;"
+  "    fill = vec4(geom_color, 1.0);"
   "  }"
   "  "
   "  float step1 = thickness;"
@@ -236,6 +246,21 @@ void DisplayGraph::init(){
   glBindAttribLocation(m_shaderProgram, 0, "vertex_position");
   glBindAttribLocation(m_shaderProgram, 1, "vertex_color");
   glLinkProgram(m_shaderProgram);
+
+  GLint isLinked = 0;
+  glGetProgramiv(m_shaderProgram, GL_LINK_STATUS, &isLinked);
+  if(isLinked == GL_FALSE)
+  {
+    GLint maxLength = 0;
+    glGetProgramiv(m_shaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+    
+    GLchar *errorLog = new GLchar[maxLength];    
+    glGetProgramInfoLog(m_shaderProgram, maxLength, &maxLength, &errorLog[0]);
+    
+    glDeleteProgram(m_shaderProgram);    
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
 }
 
 
@@ -307,7 +332,6 @@ void DisplayGraph::mouse(int button, int state, int x, int y) {
     }
     m_scale = std::min(std::max(m_scale, m_minScale), m_maxScale);
   }
-  std::cout << "Scale: " << m_scale << std::endl;
 
   reshape(width, height);
   glutPostRedisplay();
