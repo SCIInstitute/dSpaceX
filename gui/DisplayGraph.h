@@ -41,6 +41,7 @@ class DisplayGraph : public Display{
     GLuint m_positionsVBO { 0 };
     GLuint m_colorsVBO { 0 };
 
+    int m_count { 0 };
     std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f,
                                       2.0f, 2.0f, 0.0f,
                                     - 1.0f, -4.0f, 0.0f };

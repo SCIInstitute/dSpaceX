@@ -1,6 +1,7 @@
 #include "DisplayGraph.h"
 #include <iostream>
 #include <string>
+#include <cstdlib>
 
 /**
  *
@@ -38,11 +39,31 @@ void DisplayGraph::reshape(int w, int h){
   setupOrtho(w, h);
 }
 
+float randf() {
+  return static_cast<float>(rand() / (static_cast<float>(RAND_MAX)));
+}
 
 /**
  *
  */
 void DisplayGraph::init(){  
+  // create temp data
+  vertices.clear();
+  colors.clear();
+  m_count = data->getNearestNeighbors().N();
+  float range = 20.0f;
+
+  // TODO: Only generate x and y's, supply z=0 in shader.
+  for (int i = 0; i < m_count; i++) {
+    vertices.push_back(range*(randf() - 0.5f));   // x
+    vertices.push_back(range*(randf() - 0.5f));   // y
+    vertices.push_back(0.0f);   // z
+    colors.push_back(range*randf());   // r
+    colors.push_back(range*randf());   // g
+    colors.push_back(range*randf());   // b    
+  }
+
+
   // Clear to White.  
   glClearColor(1, 1, 1, 0);
 
@@ -55,16 +76,14 @@ void DisplayGraph::init(){
   // int count = data->getNearestNeighbors().N();
   // std::cout << "Initializing graph with " << count << " nodes." << std::endl;
 
-  int count = 3;
-
   // Create the VBOs
   glGenBuffers(1, &m_positionsVBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
-  glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
   
   glGenBuffers(1, &m_colorsVBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
-  glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
 
   // Create the VAO
   glGenVertexArrays(1, &m_vertexArrayObject);
@@ -257,7 +276,7 @@ void DisplayGraph::display(void) {
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
 
   glBindVertexArray(m_vertexArrayObject);  
-  glDrawArrays(GL_POINTS, 0, 3);
+  glDrawArrays(GL_POINTS, 0, m_count);
   
   // glBindVertexArray(0);
 
