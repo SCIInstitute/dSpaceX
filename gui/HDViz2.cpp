@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
   // Init GL stuff. Initialize Visualization Windows
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
+  glutInitDisplayMode(GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL | GLUT_MULTISAMPLE);
 
   try {  
     std::string fontname = MAKE_STRING(FONTNAME);

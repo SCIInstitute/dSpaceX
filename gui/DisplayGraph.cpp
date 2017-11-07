@@ -49,18 +49,22 @@ void DisplayGraph::init(){
   glDisable(GL_LIGHTING);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable(GL_MULTISAMPLE);
+  glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
 
-  int count = data->getNearestNeighbors().N();
-  std::cout << "Initializing graph with " << count << " nodes." << std::endl;
+  // int count = data->getNearestNeighbors().N();
+  // std::cout << "Initializing graph with " << count << " nodes." << std::endl;
+
+  int count = 3;
 
   // Create the VBOs
   glGenBuffers(1, &m_positionsVBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
-  glBufferData(GL_ARRAY_BUFFER, 3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
   
   glGenBuffers(1, &m_colorsVBO);
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
-  glBufferData(GL_ARRAY_BUFFER, 3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
 
   // Create the VAO
   glGenVertexArrays(1, &m_vertexArrayObject);
@@ -88,6 +92,7 @@ void DisplayGraph::init(){
   "void main() {                                "
   "  color = vertex_color;                      "
   "  gl_Position = vec4(vertex_position, 1.0);  "
+  // "  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;"
   "}                                            ";
 
   const char* geometry_shader_src = 
@@ -95,24 +100,29 @@ void DisplayGraph::init(){
   "layout(points) in;                                                       "
   "layout(triangle_strip, max_vertices = 4) out;                            "
   "                                                                         "
+  "uniform mat4 projectionMatrix;                                           "
   "out vec2 Vertex_UV;                                                      "
   "                                                                         "
-  "const float radius = 0.1;                                                "
+  "const float radius = 0.5;                                                "
   "                                                                         "
   "void main() {                                                            "
-  "  gl_Position = gl_in[0].gl_Position + vec4(-1 * radius, -1 * radius, 0.0, 0.0); "  
+  "  gl_Position = gl_in[0].gl_Position + vec4  (-1 * radius, -1 * radius, 0.0, 0.0); "  
+  "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 0.0);"
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4(-1 * radius,  1 * radius, 0.0, 0.0);  "  
+  "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 1.0);"
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius, -1 * radius, 0.0, 0.0); "  
+  "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 0.0);"
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius,  1 * radius, 0.0, 0.0);  "  
+  "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 1.0);"
   "  EmitVertex();                                                          "
   "                                                                         "    
@@ -124,21 +134,26 @@ void DisplayGraph::init(){
   "#version 150\n"
   "in vec2 Vertex_UV;"
   "in vec3 color;"
-  "varying out vec4 frag_color;"
+  "out vec4 frag_color;"
   "void main() {"
   "  vec2 uv = Vertex_UV.xy;"
-  "  vec2 c = vec2(0.5);"
-  "  float d = distance(uv, c);"
-  "  if (d > 0.5) {"
-  "     d = 0.0;   "
+  "  vec2 center = vec2(0.5);"
+  "  float radius = 0.45;"
+  "  float thickness = 0.01;"  
+  "  float blur = 0.05;"
+  "  float t = distance(uv, center) - radius;"
+  "  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);"
+  "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
+  "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
+  "  vec4 fill = clear;"
+  "  if (t < 0.0) {"
+  "    t = abs(t);"
+  "    fill = fillColor;"
   "  }"
-  "  else if (d < 0.45) {"
-  "     d = 0.0;   "
-  "  }"
-  "  else {"
-  "    d = 1.0;"
-  "  }"
-  "  frag_color = vec4(0.0, 0.0, 0.0, d);"
+  "  "
+  "  float step1 = thickness;"
+  "  float step2 = thickness + blur;"  
+  "  frag_color = mix(black, fill, smoothstep(step1, step2, t));"
   "}";
 
   // Compile Vertex Shader
@@ -218,7 +233,7 @@ void DisplayGraph::setupOrtho(int w, int h) {
     sy = (float)h/w;
   }
   
-  glOrtho(-sx, sx, -sy, sy, 1, -1);  
+  glOrtho(-1*m_scale*sx, 1*m_scale*sx, -1*m_scale*sy, 1*m_scale*sy, 1, -1);  
 }
 
 
@@ -232,8 +247,17 @@ void DisplayGraph::display(void) {
   glLoadIdentity();
   //
   glUseProgram(m_shaderProgram);
+
+  GLfloat modelViewMatrix[16];
+  GLfloat projectionMatrix[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix);
+  glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
+
+  GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");
+  glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
+
   glBindVertexArray(m_vertexArrayObject);  
-  glDrawArrays(GL_POINTS, 0, 1);
+  glDrawArrays(GL_POINTS, 0, 3);
   
   // glBindVertexArray(0);
 
@@ -254,7 +278,20 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
  *
  */
 void DisplayGraph::mouse(int button, int state, int x, int y) {
-  
+  if (button == 3 || button == 4) {
+    if (state == GLUT_UP) return;
+
+    if (button == 3) {
+      m_scale = m_scale / m_scaleFactor;
+    } else { 
+      m_scale = m_scale * m_scaleFactor;
+    }
+    m_scale = std::min(std::max(m_scale, m_minScale), m_maxScale);
+  }
+  std::cout << "Scale: " << m_scale << std::endl;
+
+  reshape(width, height);
+  glutPostRedisplay();
 }
 
 

@@ -27,6 +27,11 @@ class DisplayGraph : public Display{
   private:
     HDVizData *data;
     HDVizState *state;
+
+    float m_scale { 20.0f };
+    float m_minScale { 0.1f };
+    float m_maxScale { 100.0f };
+    float m_scaleFactor = { 1.2f };
     
     void setupOrtho(int w, int h);
     int width, height;
@@ -36,8 +41,12 @@ class DisplayGraph : public Display{
     GLuint m_positionsVBO { 0 };
     GLuint m_colorsVBO { 0 };
 
-    std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f };
-    std::vector<GLfloat> colors = {1.0f, 0.0f, 0.0f };
+    std::vector<GLfloat> vertices = { 0.0f, 0.0f, 0.0f,
+                                      2.0f, 2.0f, 0.0f,
+                                    - 1.0f, -4.0f, 0.0f };
+    std::vector<GLfloat> colors = {1.0f, 0.0f, 0.0f, 
+                                   0.0f, 1.0f, 0.0f,
+                                   0.0f, 0.0f, 1.0f };
 
     GLuint m_vertexShader { 0 };
     GLuint m_geometryShader { 0 };
