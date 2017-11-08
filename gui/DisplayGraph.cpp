@@ -52,21 +52,25 @@ void DisplayGraph::init(){
   // create temp data
   vertices.clear();
   colors.clear();
-  m_count = 500; // data->getNearestNeighbors().N();
-  float range = 20.0f;
+  // m_count = 500; // data->getNearestNeighbors().N();
+  // float range = 20.0f;
 
-  // TODO: Only generate x and y's, supply z=0 in shader.
-  for (int i = 0; i < m_count; i++) {
-    vertices.push_back(range*(randf() - 0.5f));   // x
-    vertices.push_back(range*(randf() - 0.5f));   // y
-    vertices.push_back(0.0f);   // z
-    colors.push_back(randf());   // r
-    colors.push_back(randf());   // g
-    colors.push_back(randf());   // b    
+  // // TODO: Only generate x and y's, supply z=0 in shader.
+  // for (int i = 0; i < m_count; i++) {
+  //   vertices.push_back(range*(randf() - 0.5f));   // x
+  //   vertices.push_back(range*(randf() - 0.5f));   // y
+  //   vertices.push_back(0.0f);   // z
+  //   colors.push_back(randf());   // r
+  //   colors.push_back(randf());   // g
+  //   colors.push_back(randf());   // b    
 
-    edgeIndices.push_back((GLuint) i);
-    edgeIndices.push_back((GLuint)(randf()*(m_count - 1)));
-  }
+  //   edgeIndices.push_back((GLuint) i);
+  //   edgeIndices.push_back((GLuint)(randf()*(m_count - 1)));
+  // }
+  m_count = 2;
+  vertices = { -2, 0, 0, 2, 0, 0 };
+  colors = { 1, 0.5, 0.5, 0.5, 0.5, 1.0 };
+  edgeIndices = { 0, 1 };
 
 
   // Clear to White.  
@@ -403,7 +407,7 @@ void DisplayGraph::display(void) {
   // render nodes
   glUseProgram(m_shaderProgram);
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
-  glDrawArrays(GL_POINTS, 0, m_count);
+  glDrawArrays(GL_POINTS, 0, edgeIndices.size());
 
   
   //glBindVertexArray(0); 
