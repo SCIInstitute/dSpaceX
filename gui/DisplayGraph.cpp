@@ -1,5 +1,7 @@
 #include "DisplayGraph.h"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <cstdlib>
 
@@ -61,6 +63,9 @@ void DisplayGraph::init(){
     colors.push_back(randf());   // r
     colors.push_back(randf());   // g
     colors.push_back(randf());   // b    
+
+    edgeIndices.push_back((GLuint) i);
+    edgeIndices.push_back((GLuint)(randf()*(m_count - 1)));
   }
 
 
@@ -73,8 +78,9 @@ void DisplayGraph::init(){
   glEnable(GL_MULTISAMPLE);
   glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
 
-  // int count = data->getNearestNeighbors().N();
-  // std::cout << "Initializing graph with " << count << " nodes." << std::endl;
+  // Create the VAO
+  glGenVertexArrays(1, &m_vertexArrayObject);
+  glBindVertexArray(m_vertexArrayObject);
 
   // Create the VBOs
   glGenBuffers(1, &m_positionsVBO);
@@ -89,9 +95,6 @@ void DisplayGraph::init(){
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_STATIC_DRAW);
 
-  // Create the VAO
-  glGenVertexArrays(1, &m_vertexArrayObject);
-  glBindVertexArray(m_vertexArrayObject);
   glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);  
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
@@ -101,12 +104,21 @@ void DisplayGraph::init(){
   glEnableVertexAttribArray(0);  
   glEnableVertexAttribArray(1);
 
-  glBindVertexArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  //glBindVertexArray(0);
+  //glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  compileShaders();
+}
 
 
+void DisplayGraph::compileShaders() {
+  compileNodeShaders();
+  compileEdgeShaders();
+}
+
+void DisplayGraph::compileNodeShaders() {
   // Create Shaders
-  const char* vertex_shader_src = 
+  const char* vertex_shader_src =
   "in vec3 vertex_position;                     "
   "in vec3 vertex_color;                        "
   "                                             "
@@ -115,8 +127,8 @@ void DisplayGraph::init(){
   "void main() {                                "
   "  color = vertex_color;                      "
   "  gl_Position = vec4(vertex_position, 1.0);  "
-  // "  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;"
   "}                                            ";
+
 
   const char* geometry_shader_src = 
   "#version 150 core\n                                                      "
@@ -263,6 +275,85 @@ void DisplayGraph::init(){
   }
 }
 
+void DisplayGraph::compileEdgeShaders() {
+  // Create Shaders
+  const char* vertex_shader_src =
+  "in vec3 vertex_position;                     "
+  "in vec3 vertex_color;                        "
+  "uniform mat4 projectionMatrix;               "
+  "                                             " 
+  "void main() {                                "
+  "  gl_Position = projectionMatrix * vec4(vertex_position, 1.0);"
+  "}                                            ";
+
+
+  const char* fragment_shader_src = 
+  "#version 150\n"
+  "out vec4 frag_color;"
+  "void main() {"
+  "  frag_color = vec4(0.0, 0.0, 0.0, 1.0);"
+  "}";
+
+  // Compile Vertex Shader
+  m_edgeVertexShader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(m_edgeVertexShader, 1, &vertex_shader_src, NULL);
+  glCompileShader(m_edgeVertexShader);
+
+  // Check for Vertex Shader Errors
+  GLint success = 0;
+  glGetShaderiv(m_edgeVertexShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_edgeVertexShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_edgeVertexShader, logSize, &logSize, &errorLog[0]);
+
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+  // Compile Fragment Shader
+  m_edgeFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(m_edgeFragmentShader, 1, &fragment_shader_src, NULL);
+  glCompileShader(m_edgeFragmentShader);
+
+  // Check for Fragment Shader Errors
+  glGetShaderiv(m_edgeFragmentShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_edgeFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_edgeFragmentShader, logSize, &logSize, &errorLog[0]);
+
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+
+
+  m_edgeShaderProgram = glCreateProgram();
+  glAttachShader(m_edgeShaderProgram, m_edgeVertexShader);
+  glAttachShader(m_edgeShaderProgram, m_edgeFragmentShader);
+ 
+  glBindAttribLocation(m_edgeShaderProgram, 0, "vertex_position");
+  glBindAttribLocation(m_edgeShaderProgram, 1, "vertex_color");
+  glLinkProgram(m_edgeShaderProgram);
+
+  GLint isLinked = 0;
+  glGetProgramiv(m_edgeShaderProgram, GL_LINK_STATUS, &isLinked);
+  if(isLinked == GL_FALSE)
+  {
+    GLint maxLength = 0;
+    glGetProgramiv(m_edgeShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+    
+    GLchar *errorLog = new GLchar[maxLength];    
+    glGetProgramInfoLog(m_edgeShaderProgram, maxLength, &maxLength, &errorLog[0]);
+    
+    glDeleteProgram(m_edgeShaderProgram);    
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }  
+}
 
 /**
  *
@@ -290,7 +381,7 @@ void DisplayGraph::display(void) {
   glMatrixMode(GL_MODELVIEW);   
   glLoadIdentity();
   //
-  glUseProgram(m_shaderProgram);
+  
 
   GLfloat modelViewMatrix[16];
   GLfloat projectionMatrix[16];
@@ -298,12 +389,24 @@ void DisplayGraph::display(void) {
   glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
 
   GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");
-  glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
 
   glBindVertexArray(m_vertexArrayObject);  
+
+  // render edges  
+  glBindVertexArray(m_vertexArrayObject);  
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
+  glUseProgram(m_edgeShaderProgram);  
+  glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
+  glLineWidth(2.0f);
+  glDrawElements(GL_LINES, m_count, GL_UNSIGNED_INT, 0);
+
+  // render nodes
+  glUseProgram(m_shaderProgram);
+  glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
   glDrawArrays(GL_POINTS, 0, m_count);
+
   
-  // glBindVertexArray(0);
+  //glBindVertexArray(0); 
 
   //
   glutSwapBuffers();
@@ -314,6 +417,12 @@ void DisplayGraph::display(void) {
  *
  */
 void DisplayGraph::keyboard(unsigned char key, int x, int y) {
+  switch (key) {
+    case 'q':
+    case 'Q':
+      exit(0);
+      break;
+  }
   glutPostRedisplay();
 }
 

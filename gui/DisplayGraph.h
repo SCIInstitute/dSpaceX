@@ -28,6 +28,10 @@ class DisplayGraph : public Display{
     HDVizData *data;
     HDVizState *state;
 
+    void compileShaders();
+    void compileNodeShaders();
+    void compileEdgeShaders();
+
     // Mouse 
     int last_x;
     int last_y;
@@ -57,4 +61,8 @@ class DisplayGraph : public Display{
     GLuint m_geometryShader { 0 };
     GLuint m_fragmentShader { 0 };
     GLuint m_shaderProgram { 0 };
+
+    GLuint m_edgeVertexShader { 0 };
+    GLuint m_edgeFragmentShader { 0 };
+    GLuint m_edgeShaderProgram { 0 };
 };
