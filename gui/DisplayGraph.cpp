@@ -304,7 +304,7 @@ const char* vertex_shader_src =
   "out vec3 geom_color;                                                     "
   "                                                                         "
   "const float radius = 0.5;                                                "
-  "const float thickness = 0.04;"  
+  "const float thickness = 0.05;"  
   "const float blur = 0.05;"
   "                                                                         "
   "void main() {                                                            "
@@ -344,9 +344,20 @@ const char* vertex_shader_src =
 
   const char* fragment_shader_src = 
   "#version 150\n"
+  "in vec2 Vertex_UV;"
+  "in vec3 geom_color;"
   "out vec4 frag_color;"
   "void main() {"
-  "  frag_color = vec4(0.0, 0.0, 0.0, 1.0);"
+  "  float center = 0.5;"
+  // "  float thickness = 0.45;"
+  "  float thickness = 0.2;"
+  "  float blur = 0.4;"
+  "  float t = abs(Vertex_UV.y - 0.5);"
+  "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
+  "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
+  "  float step1 = thickness;"
+  "  float step2 = thickness + blur;"  
+  "  frag_color = mix(black, clear, smoothstep(step1, step2, t));"
   "}";
 
   // Compile Vertex Shader
