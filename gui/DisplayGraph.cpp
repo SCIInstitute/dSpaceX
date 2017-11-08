@@ -461,7 +461,12 @@ void DisplayGraph::setupOrtho(int w, int h) {
     sy = (float)h/w;
   }
   
-  glOrtho(-1*m_scale*sx, 1*m_scale*sx, -1*m_scale*sy, 1*m_scale*sy, 1, -1);  
+  glOrtho(-1*m_scale*sx + m_xOffset, // left
+           1*m_scale*sx + m_xOffset, // right
+          -1*m_scale*sy + m_yOffset, // bottom
+           1*m_scale*sy + m_yOffset, // top
+           1,    // near
+           -1);  // far
 }
 
 
@@ -509,11 +514,32 @@ void DisplayGraph::display(void) {
 /**
  *
  */
+void DisplayGraph::resetView() {
+  m_scale = 20.0f; 
+  m_minScale = 0.1f;
+  m_maxScale = 100.0f;
+  m_scaleFactor = 1.2f;
+
+  m_xOffset = 0;
+  m_yOffset = 0;
+  
+  glMatrixMode(GL_PROJECTION);  
+  glLoadIdentity();
+  setupOrtho(width, height);
+}
+
+
+/**
+ *
+ */
 void DisplayGraph::keyboard(unsigned char key, int x, int y) {
   switch (key) {
     case 'q':
     case 'Q':
       exit(0);
+      break;
+    case ' ':  // spacebar    
+      resetView();
       break;
   }
   glutPostRedisplay();
@@ -524,6 +550,9 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
  *
  */
 void DisplayGraph::mouse(int button, int state, int x, int y) {
+  m_previousX = x;
+  m_previousY = y;
+
   if (button == 3 || button == 4) {
     if (state == GLUT_UP) return;
 
@@ -535,6 +564,12 @@ void DisplayGraph::mouse(int button, int state, int x, int y) {
     m_scale = std::min(std::max(m_scale, m_minScale), m_maxScale);
   }
 
+  if (state == GLUT_DOWN) {    
+    m_currentButton = button;    
+  } else {
+    m_currentButton = -1;
+  }
+
   reshape(width, height);
   glutPostRedisplay();
 }
@@ -544,5 +579,14 @@ void DisplayGraph::mouse(int button, int state, int x, int y) {
  *
  */
 void DisplayGraph::motion(int x, int y) {
+  
+  int dx = x - m_previousX;
+  int dy = y - m_previousY;
+ 
+  if (m_currentButton == GLUT_RIGHT_BUTTON) {
+    m_xOffset -= dx / m_scale;
+    m_yOffset += dy / m_scale;
+    reshape(width, height);
+  }
   glutPostRedisplay();
 }

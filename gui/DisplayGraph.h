@@ -31,16 +31,20 @@ class DisplayGraph : public Display{
     void compileShaders();
     void compileNodeShaders();
     void compileEdgeShaders();
+    void resetView();
 
     // Mouse 
-    int last_x;
-    int last_y;
-    int cur_button;
+    int m_previousX;
+    int m_previousY;
+    int m_currentButton;
 
     float m_scale { 20.0f };
     float m_minScale { 0.1f };
     float m_maxScale { 100.0f };
     float m_scaleFactor = { 1.2f };
+
+    float m_xOffset { 0 };
+    float m_yOffset { 0 };
     
     void setupOrtho(int w, int h);
     int width, height;
