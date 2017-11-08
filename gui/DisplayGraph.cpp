@@ -455,16 +455,16 @@ void DisplayGraph::setupOrtho(int w, int h) {
   int sx = 1;
   int sy = 1;
   
-  if (w > h) {
-    sx = (float)w/h;
-  } else {
-    sy = (float)h/w;
-  }
-  
-  glOrtho(-1*m_scale*sx + m_xOffset, // left
-           1*m_scale*sx + m_xOffset, // right
-          -1*m_scale*sy + m_yOffset, // bottom
-           1*m_scale*sy + m_yOffset, // top
+  // if (w > h) {
+  //   sx = (float)w/h;
+  // } else {
+  //   sy = (float)h/w;
+  // }
+
+  glOrtho(-1 * m_scale + m_xOffset, // left
+           1 * m_scale + m_xOffset, // right
+           (-1 + 0) * m_scale + m_yOffset, // bottom
+           ( 1 + 0) * m_scale + m_yOffset, // top
            1,    // near
            -1);  // far
 }
@@ -495,7 +495,6 @@ void DisplayGraph::display(void) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glUseProgram(m_edgeShaderProgram);  
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
-  glLineWidth(4.0f + 1 / (m_scale));
   glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
 
   // render nodes
@@ -578,14 +577,15 @@ void DisplayGraph::mouse(int button, int state, int x, int y) {
 /**
  *
  */
-void DisplayGraph::motion(int x, int y) {
-  
+void DisplayGraph::motion(int x, int y) {  
   int dx = x - m_previousX;
   int dy = y - m_previousY;
+  m_previousX = x;
+  m_previousY = y;
  
   if (m_currentButton == GLUT_RIGHT_BUTTON) {
-    m_xOffset -= dx / m_scale;
-    m_yOffset += dy / m_scale;
+    m_xOffset -= 0.1*dx;
+    m_yOffset += 0.1*dy;
     reshape(width, height);
   }
   glutPostRedisplay();
