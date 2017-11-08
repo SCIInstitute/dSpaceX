@@ -70,17 +70,12 @@ void DisplayGraph::init(){
   }
 
   for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
-    for (int j = 0; j < data->getNearestNeighbors().M() && j < 3; j++) {
+    for (int j = 0; j < data->getNearestNeighbors().M() && j < 1; j++) {
       int neighbor = data->getNearestNeighbors()(i,j);
       edgeIndices.push_back((GLuint) i);
       edgeIndices.push_back((GLuint) neighbor);
     }
   }
-  // m_count = 2;
-  // vertices = { -2, 0, 0, 2, 0, 0 };
-  // colors = { 1, 0.5, 0.5, 0.5, 0.5, 1.0 };
-  // edgeIndices = { 0, 1 };
-
 
   // Clear to White.  
   glClearColor(1, 1, 1, 0);
@@ -290,7 +285,7 @@ void DisplayGraph::compileNodeShaders() {
 
 void DisplayGraph::compileEdgeShaders() {
   // Create Shaders
-const char* vertex_shader_src =
+  const char* vertex_shader_src =
   "in vec3 vertex_position;                     "
   "in vec3 vertex_color;                        "
   "                                             "
