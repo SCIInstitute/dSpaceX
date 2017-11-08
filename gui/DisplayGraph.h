@@ -63,6 +63,7 @@ class DisplayGraph : public Display{
     GLuint m_shaderProgram { 0 };
 
     GLuint m_edgeVertexShader { 0 };
+    GLuint m_edgeGeometryShader { 0 };
     GLuint m_edgeFragmentShader { 0 };
     GLuint m_edgeShaderProgram { 0 };
 };

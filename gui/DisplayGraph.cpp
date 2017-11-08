@@ -281,14 +281,65 @@ void DisplayGraph::compileNodeShaders() {
 
 void DisplayGraph::compileEdgeShaders() {
   // Create Shaders
-  const char* vertex_shader_src =
+const char* vertex_shader_src =
   "in vec3 vertex_position;                     "
   "in vec3 vertex_color;                        "
-  "uniform mat4 projectionMatrix;               "
+  "                                             "
+  "varying out vec3 color;                      "
   "                                             " 
   "void main() {                                "
-  "  gl_Position = projectionMatrix * vec4(vertex_position, 1.0);"
+  "  color = vertex_color;                      "
+  "  gl_Position = vec4(vertex_position, 1.0);  "
   "}                                            ";
+
+
+  const char* geometry_shader_src = 
+  "#version 150 core\n                                                      "
+  "layout(lines) in;                                                       "
+  "layout(triangle_strip, max_vertices = 4) out;                            "
+  "                                                                         "
+  "uniform mat4 projectionMatrix;                                           "
+  "in vec3 color[];                                                         "
+  "out vec2 Vertex_UV;                                                      "
+  "out vec3 geom_color;                                                     "
+  "                                                                         "
+  "const float radius = 0.5;                                                "
+  "const float thickness = 0.04;"  
+  "const float blur = 0.05;"
+  "                                                                         "
+  "void main() {                                                            "
+  "  vec3 a = vec3(gl_in[0].gl_Position.xy, 0.0);"
+  "  vec3 b = vec3(gl_in[1].gl_Position.xy, 0.0);"
+  "  vec3 line = b - a;"
+  "  vec3 perp = normalize(vec3(-line.y, line.x, 0.0));"
+  "  vec3 v1 = a + thickness*perp;"
+  "  vec3 v2 = a - thickness*perp;"
+  "  vec3 v3 = b + thickness*perp;"
+  "  vec3 v4 = b - thickness*perp;"
+  "  "
+  "  gl_Position = projectionMatrix * vec4(v1, 1);"
+  "  Vertex_UV = vec2(0.0, 0.0);"
+  "  geom_color = color[0];                                                 "
+  "  EmitVertex();                                                          "
+  "                                                                         "  
+  "  gl_Position = projectionMatrix * vec4(v2, 1);"
+  "  Vertex_UV = vec2(0.0, 1.0);"
+  "  geom_color = color[0];                                                 "
+  "  EmitVertex();                                                          "
+  "                                                                         "  
+  "  gl_Position = projectionMatrix * vec4(v3, 1);"
+  "  Vertex_UV = vec2(1.0, 0.0);"
+  "  geom_color = color[0];                                                 "
+  "  EmitVertex();                                                          "
+  "                                                                         "  
+  "  gl_Position = projectionMatrix * vec4(v4, 1);"
+  "  Vertex_UV = vec2(1.0, 1.0);"
+  "  geom_color = color[0];                                                 "
+  "  EmitVertex();                                                          "
+  "                                                                         "    
+  "                                                                         "  
+  "  EndPrimitive();                                                        "
+  "}                                                                  ";
 
 
   const char* fragment_shader_src = 
@@ -333,11 +384,29 @@ void DisplayGraph::compileEdgeShaders() {
     exit(0);
   }
 
+  // Compile Geometry Shader
+  m_edgeGeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+  glShaderSource(m_edgeGeometryShader, 1, &geometry_shader_src, NULL);
+  glCompileShader(m_edgeGeometryShader);
+
+  // Check for Geometry Shader Errors
+  glGetShaderiv(m_edgeGeometryShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_edgeGeometryShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_edgeGeometryShader, logSize, &logSize, &errorLog[0]);
+
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
 
 
   m_edgeShaderProgram = glCreateProgram();
   glAttachShader(m_edgeShaderProgram, m_edgeVertexShader);
   glAttachShader(m_edgeShaderProgram, m_edgeFragmentShader);
+  glAttachShader(m_edgeShaderProgram, m_edgeGeometryShader);
+
  
   glBindAttribLocation(m_edgeShaderProgram, 0, "vertex_position");
   glBindAttribLocation(m_edgeShaderProgram, 1, "vertex_color");
@@ -357,6 +426,8 @@ void DisplayGraph::compileEdgeShaders() {
     std::cout << errorLog << std::endl;
     exit(0);
   }  
+
+  std::cout << "Shaders built" << std::endl;
 }
 
 /**
