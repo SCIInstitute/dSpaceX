@@ -397,7 +397,7 @@ void DisplayGraph::display(void) {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glUseProgram(m_edgeShaderProgram);  
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
-  glLineWidth(2.0f);
+  glLineWidth(4.0f + 1 / (m_scale));
   glDrawElements(GL_LINES, m_count, GL_UNSIGNED_INT, 0);
 
   // render nodes
