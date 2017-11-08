@@ -61,8 +61,8 @@ void DisplayGraph::init(){
       float x_offset = (float)(i % one_dim) / (float)one_dim;
       float y_offset = (float)std::floor(i / one_dim) / (float)one_dim;
 
-      vertices.push_back(range*(x_offset - 0.5f));
-      vertices.push_back(range*(y_offset - 0.5f));   // y
+      vertices.push_back(range*(randf() - 0.5f));
+      vertices.push_back(range*(randf() - 0.5f));   // y
       vertices.push_back(0.0f);   // z
       colors.push_back(randf());   // r
       colors.push_back(randf());   // g
