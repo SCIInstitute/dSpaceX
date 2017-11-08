@@ -52,25 +52,34 @@ void DisplayGraph::init(){
   // create temp data
   vertices.clear();
   colors.clear();
-  // m_count = 500; // data->getNearestNeighbors().N();
-  // float range = 20.0f;
+  m_count = data->getNearestNeighbors().N();
+  float range = 100.0f;
 
-  // // TODO: Only generate x and y's, supply z=0 in shader.
-  // for (int i = 0; i < m_count; i++) {
-  //   vertices.push_back(range*(randf() - 0.5f));   // x
-  //   vertices.push_back(range*(randf() - 0.5f));   // y
-  //   vertices.push_back(0.0f);   // z
-  //   colors.push_back(randf());   // r
-  //   colors.push_back(randf());   // g
-  //   colors.push_back(randf());   // b    
+  for (int i = 0; i < m_count; i++) {    
+      // vertices.push_back(range*(randf() - 0.5f));   // x
+      int one_dim = std::floor(sqrt(m_count));
+      float x_offset = (float)(i % one_dim) / (float)one_dim;
+      float y_offset = (float)std::floor(i / one_dim) / (float)one_dim;
 
-  //   edgeIndices.push_back((GLuint) i);
-  //   edgeIndices.push_back((GLuint)(randf()*(m_count - 1)));
-  // }
-  m_count = 2;
-  vertices = { -2, 0, 0, 2, 0, 0 };
-  colors = { 1, 0.5, 0.5, 0.5, 0.5, 1.0 };
-  edgeIndices = { 0, 1 };
+      vertices.push_back(range*(x_offset - 0.5f));
+      vertices.push_back(range*(y_offset - 0.5f));   // y
+      vertices.push_back(0.0f);   // z
+      colors.push_back(randf());   // r
+      colors.push_back(randf());   // g
+      colors.push_back(randf());   // b    
+  }
+
+  for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
+    for (int j = 0; j < data->getNearestNeighbors().M() && j < 3; j++) {
+      int neighbor = data->getNearestNeighbors()(i,j);
+      edgeIndices.push_back((GLuint) i);
+      edgeIndices.push_back((GLuint) neighbor);
+    }
+  }
+  // m_count = 2;
+  // vertices = { -2, 0, 0, 2, 0, 0 };
+  // colors = { 1, 0.5, 0.5, 0.5, 0.5, 1.0 };
+  // edgeIndices = { 0, 1 };
 
 
   // Clear to White.  
@@ -183,8 +192,8 @@ void DisplayGraph::compileNodeShaders() {
   "void main() {"
   "  vec2 uv = Vertex_UV.xy;"
   "  vec2 center = vec2(0.5);"
-  "  float radius = 0.45;"
-  "  float thickness = 0.01;"  
+  "  float radius = 0.425;"
+  "  float thickness = 0.025;"  
   "  float blur = 0.05;"
   "  float t = distance(uv, center) - radius;"
   "  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);"
@@ -303,9 +312,7 @@ const char* vertex_shader_src =
   "out vec2 Vertex_UV;                                                      "
   "out vec3 geom_color;                                                     "
   "                                                                         "
-  "const float radius = 0.5;                                                "
-  "const float thickness = 0.05;"  
-  "const float blur = 0.05;"
+  "const float thickness = 0.075;"
   "                                                                         "
   "void main() {                                                            "
   "  vec3 a = vec3(gl_in[0].gl_Position.xy, 0.0);"
@@ -350,8 +357,8 @@ const char* vertex_shader_src =
   "void main() {"
   "  float center = 0.5;"
   // "  float thickness = 0.45;"
-  "  float thickness = 0.2;"
-  "  float blur = 0.4;"
+  "  float thickness = 0.25;"
+  "  float blur = 0.2;"
   "  float t = abs(Vertex_UV.y - 0.5);"
   "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
   "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
@@ -484,12 +491,12 @@ void DisplayGraph::display(void) {
   glUseProgram(m_edgeShaderProgram);  
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
   glLineWidth(4.0f + 1 / (m_scale));
-  glDrawElements(GL_LINES, m_count, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
 
   // render nodes
   glUseProgram(m_shaderProgram);
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
-  glDrawArrays(GL_POINTS, 0, edgeIndices.size());
+  glDrawArrays(GL_POINTS, 0, m_count);
 
   
   //glBindVertexArray(0); 
