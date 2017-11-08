@@ -452,19 +452,19 @@ const char* vertex_shader_src =
  *
  */
 void DisplayGraph::setupOrtho(int w, int h) {
-  int sx = 1;
-  int sy = 1;
+  float sx = 1;
+  float sy = 1;
   
-  // if (w > h) {
-  //   sx = (float)w/h;
-  // } else {
-  //   sy = (float)h/w;
-  // }
+  if (w > h) {
+    sx = (float)w/h;
+  } else {
+    sy = (float)h/w;
+  }
 
-  glOrtho(-1 * m_scale + m_xOffset, // left
-           1 * m_scale + m_xOffset, // right
-           (-1 + 0) * m_scale + m_yOffset, // bottom
-           ( 1 + 0) * m_scale + m_yOffset, // top
+  glOrtho(-1 * sx * m_scale + m_xOffset, // left
+           1 * sx * m_scale + m_xOffset, // right
+          -1 * sy * m_scale + m_yOffset, // bottom
+           1 + sy * m_scale + m_yOffset, // top
            1,    // near
            -1);  // far
 }
