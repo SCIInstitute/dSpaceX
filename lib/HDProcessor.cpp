@@ -94,6 +94,7 @@ HDProcessResult* HDProcessor::process(
 
   // Resize Stores for Saving Persistence Level information
   m_result->crystals.resize(persistence.N());
+  m_result->crystalPartitions.resize(persistence.N());
   m_result->extremaValues.resize(persistence.N());  
   m_result->extremaWidths.resize(persistence.N());
   m_result->R.resize(persistence.N());
@@ -182,12 +183,15 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   DenseMatrix<int> crystalTmp(crystals.M(), crystals.N());
   for (unsigned int i=0; i < crystalTmp.N(); i++) {
     for (unsigned int j=0; j < crystalTmp.M(); j++) {
-      crystalTmp(j, i) = exts[crystals(j, i)];
+      crystalTmp(j, i) = exts[crystals(j, i)];         // TODO: What is this transformation? 11/9/17
     }
   } 
 
   // Store Crystals in Result
   m_result->crystals[persistenceLevel] = Linalg<int>::Copy(crystalTmp);
+  // Store Crystal Partitions in Result (which samples belong to which crystal)
+  m_result->crystalPartitions[persistenceLevel] = Linalg<int>::Copy(crystalIDs);
+
 
   crystalTmp.deallocate();   
 

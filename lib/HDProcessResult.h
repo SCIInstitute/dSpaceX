@@ -16,7 +16,8 @@ struct HDProcessResult {
   FortranLinalg::DenseVector<Precision> Y;                 // Function.data.hdr
 
   // loadData
-  std::vector<FortranLinalg::DenseMatrix<int>> crystals;            // Crystals_[level].dat.hdr
+  std::vector<FortranLinalg::DenseMatrix<int>> crystals;            // Crystals_[level].data.hdr
+  std::vector<FortranLinalg::DenseVector<int>> crystalPartitions;   // CrystalPartitions_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaValues; // ExtremaValues_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaWidths; // ExtremaWidths_[level].data.hdr
     
