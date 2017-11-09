@@ -48,6 +48,12 @@ FileCachedHDVizDataImpl::FileCachedHDVizDataImpl(std::string path) {
 };
 
 
+FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getX() {
+  // TODO:  Implement this function. 
+  FortranLinalg::DenseMatrix<Precision> x;
+  return x;
+}
+
 FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getNearestNeighbors() {
   return m_knn;
 }
@@ -56,6 +62,12 @@ FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getCrystals(int persis
   maybeSwapLevelCache(persistenceLevel);
   return edges;
 }    
+
+FortranLinalg::DenseVector<int>& FileCachedHDVizDataImpl::getCrystalPartitions(int persistenceLevel) {
+  // TODO: Implement this function.
+  FortranLinalg::DenseVector<int> x;
+  return x;
+}
 
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getLayout(
     HDVizLayout layout, int persistenceLevel) {

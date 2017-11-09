@@ -13,8 +13,10 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FileCachedHDVizDataImpl(std::string path);
     
     // Morse-Smale edge information.
+    FortranLinalg::DenseMatrix<Precision>& getX();
     FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
-    FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);    
+    FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);
+    FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
