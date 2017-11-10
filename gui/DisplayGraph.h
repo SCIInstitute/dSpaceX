@@ -36,6 +36,9 @@ class DisplayGraph : public Display{
     void compileEdgeShaders();
     void resetView();
 
+    int m_currentLevel = -1;
+    int m_currentCrystal = -1;
+
     // Mouse 
     int m_previousX;
     int m_previousY;

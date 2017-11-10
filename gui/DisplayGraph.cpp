@@ -62,15 +62,16 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   Crystal *crystal = complex->getCrystals()[crystalIndex];
   std::vector<unsigned int> samples = crystal->getAllSamples();
   m_count = samples.size();
-  std::cout << "m_count = " << m_count << std::endl;
 
+  // TODO(jonbronson): Add logic here to combine the subset of samples into a matrix
+  //                   and use that as the input for the mds embedding for layout.
 
   // EuclideanMetric<Precision> metric;
   // MetricMDS<Precision> mds;
   // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(data->getX(), metric, 2);
   // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
 
-  float range = 100.0f;
+  float range = 50.0f;
 
   for (int i = 0; i < m_count; i++) {    
       // vertices.push_back(range*(randf() - 0.5f));   // x
@@ -503,6 +504,12 @@ void DisplayGraph::setupOrtho(int w, int h) {
  *
  */
 void DisplayGraph::display(void) {
+
+  if (state->currentLevel != m_currentLevel ||
+      state->selectedCell != m_currentCrystal) {
+    this->setCrystal(state->currentLevel, state->selectedCell);
+  }
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
   glMatrixMode(GL_MODELVIEW);   
