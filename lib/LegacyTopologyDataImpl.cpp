@@ -13,7 +13,16 @@ LegacyTopologyDataImpl::LegacyTopologyDataImpl(HDVizData *data) : m_data(data) {
 
       unsigned int minIndex = m_data->getCrystals(level)(1, crystalIndex);
       unsigned int maxIndex = m_data->getCrystals(level)(0, crystalIndex);      
-      Crystal *crystal = new LegacyCrystalImpl(minIndex, maxIndex); // .., samples);      
+      std::vector<unsigned int> samples;      
+
+      auto crystalPartitions = data->getCrystalPartitions(level);
+      for (unsigned int s = 0; s < crystalPartitions.N(); s++) {
+        if (crystalPartitions(s) == crystalIndex) {
+          samples.push_back(s);
+        }
+      }
+
+      Crystal *crystal = new LegacyCrystalImpl(minIndex, maxIndex, samples); 
       crystals.push_back(crystal);
     }
 
@@ -38,5 +47,3 @@ MorseSmaleComplex* LegacyTopologyDataImpl::getComplex(unsigned int persistenceLe
   }
   return m_morseSmaleComplexes[index];
 }
-
-

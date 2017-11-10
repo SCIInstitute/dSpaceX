@@ -1,4 +1,10 @@
 #include "DisplayGraph.h"
+#include "MetricMDS.h"
+
+#include "Precision.h"
+#include "LinalgIO.h"
+#include "EuclideanMetric.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -8,7 +14,8 @@
 /**
  *
  */
-DisplayGraph::DisplayGraph(HDVizData *data, HDVizState *state) : data(data), state(state) { 
+DisplayGraph::DisplayGraph(HDVizData *data, TopologyData *topoData, HDVizState *state) : 
+    data(data), topoData(topoData), state(state) { 
   // intentionally left empty
 };
 
@@ -45,14 +52,24 @@ float randf() {
   return static_cast<float>(rand() / (static_cast<float>(RAND_MAX)));
 }
 
-/**
- *
- */
-void DisplayGraph::init(){  
-  // create temp data
+void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   vertices.clear();
   colors.clear();
-  m_count = data->getNearestNeighbors().N();
+  edgeIndices.clear();
+
+  // m_count = data->getNearestNeighbors().N();
+  MorseSmaleComplex *complex = topoData->getComplex(persistenceLevel);
+  Crystal *crystal = complex->getCrystals()[crystalIndex];
+  std::vector<unsigned int> samples = crystal->getAllSamples();
+  m_count = samples.size();
+  std::cout << "m_count = " << m_count << std::endl;
+
+
+  // EuclideanMetric<Precision> metric;
+  // MetricMDS<Precision> mds;
+  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(data->getX(), metric, 2);
+  // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
+
   float range = 100.0f;
 
   for (int i = 0; i < m_count; i++) {    
@@ -63,19 +80,36 @@ void DisplayGraph::init(){
 
       vertices.push_back(range*(randf() - 0.5f));
       vertices.push_back(range*(randf() - 0.5f));   // y
+      // vertices.push_back(range*layout(0, i));
+      // vertices.push_back(range*layout(1, i));
       vertices.push_back(0.0f);   // z
-      colors.push_back(randf());   // r
-      colors.push_back(randf());   // g
-      colors.push_back(randf());   // b    
+      // colors.push_back(randf());   // r
+      // colors.push_back(randf());   // g
+      // colors.push_back(randf());   // b    
+      colors.push_back(100.0f / 255.0f); 
+      colors.push_back(146.0f / 255.0f);
+      colors.push_back(255.0f / 255.0f);
   }
 
   for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
-    for (int j = 0; j < data->getNearestNeighbors().M() && j < 1; j++) {
+    for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
       int neighbor = data->getNearestNeighbors()(i,j);
-      edgeIndices.push_back((GLuint) i);
-      edgeIndices.push_back((GLuint) neighbor);
+
+      std::vector<unsigned int>::iterator iter;
+      iter = find (samples.begin(), samples.end(), neighbor);
+      if (iter != samples.end()) {            
+        edgeIndices.push_back((GLuint) i);
+        edgeIndices.push_back((GLuint) neighbor);
+      }
     }
   }
+}
+
+/**
+ *
+ */
+void DisplayGraph::init(){  
+  this->setCrystal(state->currentLevel, state->selectedCell);
 
   // Clear to White.  
   glClearColor(1, 1, 1, 0);

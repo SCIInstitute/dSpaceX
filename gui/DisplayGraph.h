@@ -14,7 +14,7 @@
 class DisplayGraph : public Display{
 
   public:
-    DisplayGraph(HDVizData *data, HDVizState *state);    
+    DisplayGraph(HDVizData *data, TopologyData *topoData, HDVizState *state);    
     std::string title();
     void reshape(int w, int h);
     void init();
@@ -24,9 +24,12 @@ class DisplayGraph : public Display{
     void mouse(int button, int state, int x, int y);    
     void motion(int x, int y); // catch mouse move events
 
+    void setCrystal(int persistenceLevel, int crystalIndex);
+
   private:
     HDVizData *data;
     HDVizState *state;
+    TopologyData *topoData;
 
     void compileShaders();
     void compileNodeShaders();

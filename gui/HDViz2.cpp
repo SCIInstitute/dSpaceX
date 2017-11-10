@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     reinterpret_cast<DisplayTubes<Precision>*>(mainD)->addWindow(mainWindow);
 
     // Create Graph Window
-    graphD = new DisplayGraph(data, &state);
+    graphD = new DisplayGraph(data, topoData, &state);
     int graphWindow = glutCreateWindow(graphD->title().c_str());
     glutDisplayFunc([]() {
       graphD->display();
