@@ -53,6 +53,9 @@ float randf() {
 }
 
 void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
+  m_currentLevel = persistenceLevel;
+  m_currentCrystal = crystalIndex;
+
   vertices.clear();
   colors.clear();
   edgeIndices.clear();
@@ -104,6 +107,18 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       }
     }
   }
+
+  // bind new data to buffers
+  glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  
+  glGenBuffers(1, &m_colorsVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
+
+  glGenBuffers(1, &m_edgeElementVBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_STATIC_DRAW);
 }
 
 /**
