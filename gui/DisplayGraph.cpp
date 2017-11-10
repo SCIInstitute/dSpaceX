@@ -97,7 +97,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
     for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
-      int neighbor = data->getNearestNeighbors()(i,j);
+      int neighbor = data->getNearestNeighbors()(j, i);
 
       std::vector<unsigned int>::iterator iter;
       iter = find (samples.begin(), samples.end(), neighbor);
