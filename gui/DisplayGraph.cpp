@@ -106,8 +106,8 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       std::vector<unsigned int>::iterator iter1 = find (samples.begin(), samples.end(), neighbor);
       std::vector<unsigned int>::iterator iter2 = find (samples.begin(), samples.end(), i);
       if (iter1 != samples.end() && iter2 != samples.end()) {            
-        edgeIndices.push_back((GLuint) i);
-        edgeIndices.push_back((GLuint) neighbor);
+        edgeIndices.push_back((GLuint) std::distance(samples.begin(), iter1));
+        edgeIndices.push_back((GLuint) std::distance(samples.begin(), iter2));
       }
     }
   }
@@ -122,7 +122,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   glGenBuffers(1, &m_edgeElementVBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_DYNAMIC_DRAW);
 }
 
 /**
