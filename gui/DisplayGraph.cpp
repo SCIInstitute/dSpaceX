@@ -409,7 +409,7 @@ void DisplayGraph::compileEdgeShaders() {
   "  float thickness = 0.25;"
   "  float blur = 0.2;"
   "  float t = abs(Vertex_UV.y - 0.5);"
-  "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
+  "  vec4 black = vec4(0.0, 0.0, 0.0, 0.15);"
   "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
   "  float step1 = thickness;"
   "  float step2 = thickness + blur;"  
