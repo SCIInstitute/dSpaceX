@@ -76,14 +76,18 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   float range = 50.0f;
 
-  for (int i = 0; i < m_count; i++) {    
+  for (int i = 0; i < samples.size(); i++) {    
       // vertices.push_back(range*(randf() - 0.5f));   // x
-      int one_dim = std::floor(sqrt(m_count));
-      float x_offset = (float)(i % one_dim) / (float)one_dim;
-      float y_offset = (float)std::floor(i / one_dim) / (float)one_dim;
+      int sampleIndex = samples[i];
+      // int one_dim = std::floor(sqrt(m_count));
+      int one_dim = std::floor(sqrt(2000));
+      float x_offset = (float)(sampleIndex % one_dim) / (float)one_dim;
+      float y_offset = (float)std::floor(sampleIndex / one_dim) / (float)one_dim;
 
-      vertices.push_back(range*(randf() - 0.5f));
-      vertices.push_back(range*(randf() - 0.5f));   // y
+      //vertices.push_back(range*(randf() - 0.5f));
+      //vertices.push_back(range*(randf() - 0.5f));   // y
+      vertices.push_back(range * (x_offset - 0.5f));
+       vertices.push_back(range * (y_offset - 0.5f));
       // vertices.push_back(range*layout(0, i));
       // vertices.push_back(range*layout(1, i));
       vertices.push_back(0.0f);   // z
@@ -99,9 +103,9 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
       int neighbor = data->getNearestNeighbors()(j, i);
 
-      std::vector<unsigned int>::iterator iter;
-      iter = find (samples.begin(), samples.end(), neighbor);
-      if (iter != samples.end()) {            
+      std::vector<unsigned int>::iterator iter1 = find (samples.begin(), samples.end(), neighbor);
+      std::vector<unsigned int>::iterator iter2 = find (samples.begin(), samples.end(), i);
+      if (iter1 != samples.end() && iter2 != samples.end()) {            
         edgeIndices.push_back((GLuint) i);
         edgeIndices.push_back((GLuint) neighbor);
       }
