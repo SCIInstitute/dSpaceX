@@ -7,19 +7,22 @@ LegacyTopologyDataImpl::LegacyTopologyDataImpl(HDVizData *data) : m_data(data) {
 
   // TODO: Convert to Iterator Range Loop
   for (unsigned int level = getMinPersistenceLevel(); level <= getMaxPersistenceLevel(); level++) {
-
     std::vector<Crystal*> crystals;
-    for (unsigned int crystalIndex = 0; crystalIndex < m_data->getCrystals(level).N(); crystalIndex++) {
+    auto crystalPartitions = data->getCrystalPartitions(level);
 
+    for (unsigned int crystalIndex = 0; crystalIndex < m_data->getCrystals(level).N(); crystalIndex++) {
       unsigned int minIndex = m_data->getCrystals(level)(1, crystalIndex);
       unsigned int maxIndex = m_data->getCrystals(level)(0, crystalIndex);      
       std::vector<unsigned int> samples;      
-
-      auto crystalPartitions = data->getCrystalPartitions(level);
+    
       for (unsigned int s = 0; s < crystalPartitions.N(); s++) {
         if (crystalPartitions(s) == crystalIndex) {
           samples.push_back(s);
         }
+      }
+      
+      for (unsigned int s = 0; s < crystalPartitions.N(); s++) {
+        std::cout << " " << crystalPartitions(s);
       }
 
       Crystal *crystal = new LegacyCrystalImpl(minIndex, maxIndex, samples); 
