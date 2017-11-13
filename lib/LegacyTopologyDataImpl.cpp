@@ -21,10 +21,6 @@ LegacyTopologyDataImpl::LegacyTopologyDataImpl(HDVizData *data) : m_data(data) {
         }
       }
       
-      for (unsigned int s = 0; s < crystalPartitions.N(); s++) {
-        std::cout << " " << crystalPartitions(s);
-      }
-
       Crystal *crystal = new LegacyCrystalImpl(minIndex, maxIndex, samples); 
       crystals.push_back(crystal);
     }
