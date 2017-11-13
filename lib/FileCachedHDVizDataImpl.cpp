@@ -54,6 +54,12 @@ FortranLinalg::DenseMatrix<Precision>& FileCachedHDVizDataImpl::getX() {
   return x;
 }
 
+FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getY() {
+  // TODO:  Implement this function. 
+  FortranLinalg::DenseVector<Precision> y;
+  return y; 
+}
+
 FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getNearestNeighbors() {
   return m_knn;
 }

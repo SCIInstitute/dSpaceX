@@ -20,7 +20,7 @@ class HDVizData {
   
     // Morse-Smale edge information.
     virtual FortranLinalg::DenseMatrix<Precision>& getX() = 0;
-    // virtual FortranLinalg::DenseMatrix<Precision>& getY() = 0;
+    virtual FortranLinalg::DenseVector<Precision>& getY() = 0;
     virtual FortranLinalg::DenseMatrix<int>& getNearestNeighbors() = 0;
     virtual FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel) = 0;

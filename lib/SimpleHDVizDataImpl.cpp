@@ -225,6 +225,10 @@ FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getX() {
   return m_data->X;
 }
 
+FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getY() {
+  return m_data->Y;
+}
+
 /**
  *
  */

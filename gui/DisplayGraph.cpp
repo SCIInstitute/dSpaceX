@@ -69,17 +69,40 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   // TODO(jonbronson): Add logic here to combine the subset of samples into a matrix
   //                   and use that as the input for the mds embedding for layout.
   auto &X = data->getX();
+  auto &Y = data->getY();
+
   FortranLinalg::DenseMatrix<Precision> xSubset(X.M(), samples.size());
-  for (int j=0; j < X.M(); j++) {
-    for (int i=0; i < samples.size(); i++) {
+  FortranLinalg::DenseVector<Precision> ySubset(samples.size());  
+
+
+  for (int i=0; i < samples.size(); i++) {
+    for (int j=0; j < X.M(); j++) {    
       xSubset(j, i) = X(j, samples[i]);
     }
+    ySubset(i) = Y(samples[i]);
   }
 
+  // Normalize Y values for colormap.
+  // float min_value = ySubset(0);
+  // float max_value = ySubset(0);
+  // for (int i=0; i < samples.size(); i++) {
+  //   if (ySubset(i) < min_value) {
+  //     min_value = ySubset(i);      
+  //   }
+  //   if (ySubset(i) > max_value) {
+  //     max_value = ySubset(i);
+  //   }
+  // }
+  // for (int i=0; i < samples.size(); i++) {
+  //   ySubset(i) = (ySubset(i) - min_value) / (max_value - min_value);
+  // }
+
+  ColorMapper<Precision> colorMapper = data->getColorMap(m_currentLevel);
 
   EuclideanMetric<Precision> metric;
   MetricMDS<Precision> mds;
   FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
+  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(X, metric, 2);
   // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
 
   float range = 50.0f;
@@ -98,13 +121,23 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       // vertices.push_back(range * (y_offset - 0.5f));
       vertices.push_back(range*layout(0, i));
       vertices.push_back(range*layout(1, i));
+      // vertices.push_back(range*layout(0, samples[i]));
+      // vertices.push_back(range*layout(1, samples[i]));
       vertices.push_back(0.0f);   // z
       // colors.push_back(randf());   // r
       // colors.push_back(randf());   // g
       // colors.push_back(randf());   // b    
-      colors.push_back(100.0f / 255.0f); 
-      colors.push_back(146.0f / 255.0f);
-      colors.push_back(255.0f / 255.0f);
+      // colors.push_back(100.0f / 255.0f); 
+      // colors.push_back(146.0f / 255.0f);
+      // colors.push_back(255.0f / 255.0f);
+      // colors.push_back(100.0f / 255.0f); 
+      // colors.push_back(146.0f / 255.0f);
+      // colors.push_back(255.0f / 255.0f);
+
+      std::vector<Precision> color = colorMapper.getColor(ySubset(i));
+      colors.push_back(color[0]);      
+      colors.push_back(color[1]);
+      colors.push_back(color[2]);
   }
 
   for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
@@ -123,12 +156,10 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   // bind new data to buffers
   glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
   glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
-  
-  glGenBuffers(1, &m_colorsVBO);
+    
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
-  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
-
-  glGenBuffers(1, &m_edgeElementVBO);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_DYNAMIC_DRAW);
+  
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_DYNAMIC_DRAW);
 }
