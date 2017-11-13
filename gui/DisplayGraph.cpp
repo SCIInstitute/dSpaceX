@@ -68,10 +68,18 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   // TODO(jonbronson): Add logic here to combine the subset of samples into a matrix
   //                   and use that as the input for the mds embedding for layout.
+  auto &X = data->getX();
+  FortranLinalg::DenseMatrix<Precision> xSubset(X.M(), samples.size());
+  for (int j=0; j < X.M(); j++) {
+    for (int i=0; i < samples.size(); i++) {
+      xSubset(j, i) = X(j, samples[i]);
+    }
+  }
 
-  // EuclideanMetric<Precision> metric;
-  // MetricMDS<Precision> mds;
-  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(data->getX(), metric, 2);
+
+  EuclideanMetric<Precision> metric;
+  MetricMDS<Precision> mds;
+  FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
   // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
 
   float range = 50.0f;
@@ -86,10 +94,10 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
       //vertices.push_back(range*(randf() - 0.5f));
       //vertices.push_back(range*(randf() - 0.5f));   // y
-      vertices.push_back(range * (x_offset - 0.5f));
-       vertices.push_back(range * (y_offset - 0.5f));
-      // vertices.push_back(range*layout(0, i));
-      // vertices.push_back(range*layout(1, i));
+      //vertices.push_back(range * (x_offset - 0.5f));
+      // vertices.push_back(range * (y_offset - 0.5f));
+      vertices.push_back(range*layout(0, i));
+      vertices.push_back(range*layout(1, i));
       vertices.push_back(0.0f);   // z
       // colors.push_back(randf());   // r
       // colors.push_back(randf());   // g
