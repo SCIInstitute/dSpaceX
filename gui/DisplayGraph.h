@@ -22,7 +22,7 @@ class DisplayGraph : public Display{
     void display(void);
     void keyboard(unsigned char key, int x, int y);
     void mouse(int button, int state, int x, int y);    
-    void motion(int x, int y); // catch mouse move events
+    void motion(int x, int y);
 
     void setCrystal(int persistenceLevel, int crystalIndex);
 
