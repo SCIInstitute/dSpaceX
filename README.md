@@ -2,14 +2,20 @@ This project uses the CMake build system.
 
 # Steps for build.
 1. Create a build directory
+```
     <../dSpaceX>$  mkdir build
+```
 
 2. Run cmake or ccmake to configure.
+```
     <../dSpaceX>$  cd build
     <../build>$ ccmake ../
+```
 
 3. Run make to build the targets.
+```
     <../build>$ make -j8
+```
 
 
 The default CMake configuration will only build the HDProcess library.
