@@ -95,6 +95,8 @@ HDProcessResult* HDProcessor::process(
   // Resize Stores for Saving Persistence Level information
   m_result->crystals.resize(persistence.N());
   m_result->crystalPartitions.resize(persistence.N());
+
+  // Regression Stores
   m_result->extremaValues.resize(persistence.N());  
   m_result->extremaWidths.resize(persistence.N());
   m_result->R.resize(persistence.N());
@@ -103,6 +105,8 @@ HDProcessResult* HDProcessor::process(
   m_result->mdists.resize(persistence.N());
   m_result->fmean.resize(persistence.N());
   m_result->spdf.resize(persistence.N());
+
+  // Layout Stores
   m_result->PCAExtremaLayout.resize(persistence.N());  
   m_result->PCALayout.resize(persistence.N());
   m_result->PCA2ExtremaLayout.resize(persistence.N());
@@ -112,7 +116,9 @@ HDProcessResult* HDProcessor::process(
 
   
   // Compute inverse regression curves and additional information for each crystal
-  computeInverseRegression(msComplex, start, nSamples, sigma);
+  for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
+    computeInverseRegressionForLevel(msComplex, persistenceLevel, nSamples, sigma);
+  }
 
   // detach and return processed result
   HDProcessResult *result = m_result;
@@ -129,9 +135,7 @@ HDProcessResult* HDProcessor::process(
  */
 void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex, 
     int start, int nSamples, Precision sigma) {
-  for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeInverseRegressionForLevel(msComplex, persistenceLevel, nSamples, sigma);
-  }
+
 }
 
 /**
