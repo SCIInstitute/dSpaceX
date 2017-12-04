@@ -400,21 +400,22 @@ void DisplayGraph::compileEdgeShaders() {
   "layout(triangle_strip, max_vertices = 4) out;                            "
   "                                                                         "
   "uniform mat4 projectionMatrix;                                           "
+  "uniform float edgeThickness;                                            "
   "in vec3 color[];                                                         "
   "out vec2 Vertex_UV;                                                      "
   "out vec3 geom_color;                                                     "
   "                                                                         "
-  "const float thickness = 0.075;"
+  // "const float thickness = 0.075;"
   "                                                                         "
   "void main() {                                                            "
   "  vec3 a = vec3(gl_in[0].gl_Position.xy, 0.0);"
   "  vec3 b = vec3(gl_in[1].gl_Position.xy, 0.0);"
   "  vec3 line = b - a;"
   "  vec3 perp = normalize(vec3(-line.y, line.x, 0.0));"
-  "  vec3 v1 = a + thickness*perp;"
-  "  vec3 v2 = a - thickness*perp;"
-  "  vec3 v3 = b + thickness*perp;"
-  "  vec3 v4 = b - thickness*perp;"
+  "  vec3 v1 = a + edgeThickness*perp;"
+  "  vec3 v2 = a - edgeThickness*perp;"
+  "  vec3 v3 = b + edgeThickness*perp;"
+  "  vec3 v4 = b - edgeThickness*perp;"
   "  "
   "  gl_Position = projectionMatrix * vec4(v1, 1);"
   "  Vertex_UV = vec2(0.0, 0.0);"
@@ -443,6 +444,7 @@ void DisplayGraph::compileEdgeShaders() {
 
   const char* fragment_shader_src = 
   "#version 150\n"
+  "uniform float edgeOpacity;                                            "
   "in vec2 Vertex_UV;"
   "in vec3 geom_color;"
   "out vec4 frag_color;"
@@ -452,7 +454,7 @@ void DisplayGraph::compileEdgeShaders() {
   "  float thickness = 0.25;"
   "  float blur = 0.2;"
   "  float t = abs(Vertex_UV.y - 0.5);"
-  "  vec4 black = vec4(0.0, 0.0, 0.0, 0.15);"
+  "  vec4 black = vec4(0.0, 0.0, 0.0, edgeOpacity);"
   "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
   "  float step1 = thickness;"
   "  float step2 = thickness + blur;"  
@@ -585,6 +587,9 @@ void DisplayGraph::display(void) {
   glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
 
   GLuint projectionMatrixID = glGetUniformLocation(m_edgeShaderProgram, "projectionMatrix");  
+  GLuint edgeThicknessID = glGetUniformLocation(m_edgeShaderProgram, "edgeThickness");  
+  GLuint edgeOpacityID = glGetUniformLocation(m_edgeShaderProgram, "edgeOpacity");  
+
   GLuint nodeRadiusID = glGetUniformLocation(m_shaderProgram, "nodeRadius");  
   GLuint nodeOutlineID = glGetUniformLocation(m_shaderProgram, "nodeOutline");  
   GLuint nodeSmoothnessID = glGetUniformLocation(m_shaderProgram, "nodeSmoothness");  
@@ -595,6 +600,13 @@ void DisplayGraph::display(void) {
   glBindVertexArray(m_vertexArrayObject);  
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glUseProgram(m_edgeShaderProgram);  
+
+  GLfloat thickness[1] = { m_edgeThickness };
+  glUniform1fv(edgeThicknessID, 1, thickness);
+
+  GLfloat opacity[1] = { m_edgeOpacity };
+  glUniform1fv(edgeOpacityID, 1, opacity);
+
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
   glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
 
@@ -665,6 +677,18 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
       break;
     case 'l':
       m_nodeSmoothness *= 1.1;
+      break;
+    case 'm':
+      m_edgeThickness = std::max(0.005, m_edgeThickness / 1.1);
+      break;
+    case 'k':
+      m_edgeThickness *= 1.1;
+      break;
+    case 'n':
+      m_edgeOpacity = std::max(0.01, m_edgeOpacity / 1.1);
+      break;
+    case 'j':
+      m_edgeOpacity *= 1.1;
       break;
     case ' ':  // spacebar    
       resetView();

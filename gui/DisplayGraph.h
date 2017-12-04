@@ -63,9 +63,10 @@ class DisplayGraph : public Display{
 
     float m_nodeRadius { 0.5 };
     float m_nodeOutline { 0.025 };
-    float m_nodeSmoothness { 0.1 };
-    float m_edgeThickness { 0.1 };
+    float m_nodeSmoothness { 0.05 };
+    float m_edgeThickness { 0.075 };
     float m_edgeSmoothness { 0.1 };
+    float m_edgeOpacity { 0.15 };
 
     int m_count { 0 };
 
