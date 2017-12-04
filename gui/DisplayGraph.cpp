@@ -276,6 +276,7 @@ void DisplayGraph::compileNodeShaders() {
   const char* fragment_shader_src = 
   "#version 150\n"
   "uniform float nodeOutline;                                               "
+  "uniform float nodeSmoothness;                                            "
   "in vec2 Vertex_UV;"
   "in vec3 geom_color;"
   "out vec4 frag_color;"
@@ -284,7 +285,7 @@ void DisplayGraph::compileNodeShaders() {
   "  vec2 center = vec2(0.5);"
   "  float radius = 0.425;"
   "  float thickness = nodeOutline;"  // 0.025;"  
-  "  float blur = 0.05;"
+  "  float blur = nodeSmoothness;"    //0.05;"
   "  float t = distance(uv, center) - radius;"
   "  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);"
   "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
