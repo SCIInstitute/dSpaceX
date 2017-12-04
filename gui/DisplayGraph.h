@@ -61,6 +61,12 @@ class DisplayGraph : public Display{
     GLuint m_colorsVBO { 0 };
     GLuint m_edgeElementVBO { 0 };
 
+    float m_nodeRadius { 0.5 };
+    float m_nodeOutline { 0.025 };
+    float m_nodeSmoothness { 0.1 };
+    float m_edgeThickness { 0.1 };
+    float m_edgeSmoothness { 0.1 };
+
     int m_count { 0 };
 
     std::vector<GLuint> edgeIndices;

@@ -236,6 +236,7 @@ void DisplayGraph::compileNodeShaders() {
   "layout(points) in;                                                       "
   "layout(triangle_strip, max_vertices = 4) out;                            "
   "                                                                         "
+  "uniform float nodeRadius;                                                "
   "uniform mat4 projectionMatrix;                                           "
   "in vec3 color[];                                                         "
   "out vec2 Vertex_UV;                                                      "
@@ -244,25 +245,25 @@ void DisplayGraph::compileNodeShaders() {
   "const float radius = 0.5;                                                "
   "                                                                         "
   "void main() {                                                            "
-  "  gl_Position = gl_in[0].gl_Position + vec4  (-1 * radius, -1 * radius, 0.0, 0.0); "  
+  "  gl_Position = gl_in[0].gl_Position + vec4  (-1 * nodeRadius, -1 * nodeRadius, 0.0, 0.0); "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 0.0);"
   "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
-  "  gl_Position = gl_in[0].gl_Position + vec4(-1 * radius,  1 * radius, 0.0, 0.0);  "  
+  "  gl_Position = gl_in[0].gl_Position + vec4(-1 * nodeRadius,  1 * nodeRadius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 1.0);"
   "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
-  "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius, -1 * radius, 0.0, 0.0); "  
+  "  gl_Position = gl_in[0].gl_Position + vec4( 1 * nodeRadius, -1 * nodeRadius, 0.0, 0.0); "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 0.0);"
   "  geom_color = color[0];                                                 "
   "  EmitVertex();                                                          "
   "                                                                         "  
-  "  gl_Position = gl_in[0].gl_Position + vec4( 1 * radius,  1 * radius, 0.0, 0.0);  "  
+  "  gl_Position = gl_in[0].gl_Position + vec4( 1 * nodeRadius,  1 * nodeRadius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 1.0);"
   "  geom_color = color[0];                                                 "
@@ -274,6 +275,7 @@ void DisplayGraph::compileNodeShaders() {
 
   const char* fragment_shader_src = 
   "#version 150\n"
+  "uniform float nodeOutline;                                               "
   "in vec2 Vertex_UV;"
   "in vec3 geom_color;"
   "out vec4 frag_color;"
@@ -281,11 +283,12 @@ void DisplayGraph::compileNodeShaders() {
   "  vec2 uv = Vertex_UV.xy;"
   "  vec2 center = vec2(0.5);"
   "  float radius = 0.425;"
-  "  float thickness = 0.025;"  
+  "  float thickness = nodeOutline;"  // 0.025;"  
   "  float blur = 0.05;"
   "  float t = distance(uv, center) - radius;"
   "  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);"
   "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);"
+  "  vec4 lineColor = vec4(mix(black.xyz, geom_color, 0.4), 1.0);"
   "  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);"
   "  vec4 fill = clear;"
   "  if (t < 0.0) {"
@@ -295,7 +298,7 @@ void DisplayGraph::compileNodeShaders() {
   "  "
   "  float step1 = thickness;"
   "  float step2 = thickness + blur;"  
-  "  frag_color = mix(black, fill, smoothstep(step1, step2, t));"
+  "  frag_color = mix(lineColor, fill, smoothstep(step1, step2, t));"
   "}";
 
   // Compile Vertex Shader
@@ -580,7 +583,10 @@ void DisplayGraph::display(void) {
   glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix);
   glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
 
-  GLuint projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");
+  GLuint projectionMatrixID = glGetUniformLocation(m_edgeShaderProgram, "projectionMatrix");  
+  GLuint nodeRadiusID = glGetUniformLocation(m_shaderProgram, "nodeRadius");  
+  GLuint nodeOutlineID = glGetUniformLocation(m_shaderProgram, "nodeOutline");  
+  GLuint nodeSmoothnessID = glGetUniformLocation(m_shaderProgram, "nodeSmoothness");  
 
   glBindVertexArray(m_vertexArrayObject);  
 
@@ -593,6 +599,16 @@ void DisplayGraph::display(void) {
 
   // render nodes
   glUseProgram(m_shaderProgram);
+  projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");  
+  GLfloat radius[1] = { m_nodeRadius };
+  glUniform1fv(nodeRadiusID, 1, radius);
+
+  GLfloat outline[1] = { m_nodeOutline };
+  glUniform1fv(nodeOutlineID, 1, outline);
+
+  GLfloat smoothness[1] = { m_nodeSmoothness };
+  glUniform1fv(nodeSmoothnessID, 1, smoothness);
+
   glUniformMatrix4fv(projectionMatrixID, 1, GL_FALSE, &projectionMatrix[0]);
   glDrawArrays(GL_POINTS, 0, m_count);
 
@@ -630,6 +646,24 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
     case 'q':
     case 'Q':
       exit(0);
+      break;
+    case '/':
+      m_nodeRadius = std::max(0.1, m_nodeRadius / 1.1);
+      break;
+    case '\'':
+      m_nodeRadius *= 1.1;
+      break;
+    case '.':
+      m_nodeOutline = std::max(0.001, m_nodeOutline / 1.1);
+      break;
+    case ';':
+      m_nodeOutline *= 1.1;
+      break;
+    case ',':
+      m_nodeSmoothness = std::max(0.01, m_nodeSmoothness / 1.1);
+      break;
+    case 'l':
+      m_nodeSmoothness *= 1.1;
       break;
     case ' ':  // spacebar    
       resetView();
