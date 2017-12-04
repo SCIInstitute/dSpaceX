@@ -28,9 +28,7 @@ class HDProcessor {
       int knn, int nSamples, int persistenceArg, bool randArg, 
       Precision sigmaArg, Precision sigmaSmooth);
 
- private:
-  void computeInverseRegression(NNMSComplex<Precision> &msComplex, 
-    int start, int nSamples, Precision sigma);
+ private:  
   void computeInverseRegressionForLevel(NNMSComplex<Precision> &msComplex, 
     unsigned int persistenceLevel, int nSamples, Precision sigma);
   void computeRegressionForCrystal(unsigned int crystalIndex, unsigned int persistenceLevel, 

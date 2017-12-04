@@ -127,18 +127,6 @@ HDProcessResult* HDProcessor::process(
 }
 
 /**
- * Compute inverse regression curves and additional information for each crystal.
- * @param[in] msComplex A computed Morse-Smale complex.
- * @param[in] start The persistence level to start with.
- * @param[in] nSamples Number of samples for regression curve.  
- * @param[in] sigma Bandwidth for inverse regression.
- */
-void HDProcessor::computeInverseRegression(NNMSComplex<Precision> &msComplex, 
-    int start, int nSamples, Precision sigma) {
-
-}
-
-/**
  * Compute inverse regression curves for a single persistence level.
  * @param[in] msComplex A computed Morse-Smale complex.
  * @param[in] persistenceLevel The persistence level to regress.
