@@ -14,6 +14,7 @@ struct HDProcessResult {
   FortranLinalg::DenseVector<Precision> minLevel;          // PersistenceStart.data.hdr
   FortranLinalg::DenseMatrix<Precision> X;                 // Geom.data.hdr
   FortranLinalg::DenseVector<Precision> Y;                 // Function.data.hdr
+  FortranLinalg::DenseVector<int> regressionSampleCount;   
 
   // loadData
   std::vector<FortranLinalg::DenseMatrix<int>> crystals;            // Crystals_[level].data.hdr

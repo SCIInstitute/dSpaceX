@@ -15,6 +15,27 @@ const int k_defaultSamplesCount = 50;
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
   m_numberOfSamples = k_defaultSamplesCount;
 
+  // TEMP DEBUG CODE
+  std::cout << "VECTOR / MATRIX SIZES" << std::endl;
+  std::cout << "scaledPersistence.N() = " << m_data->scaledPersistence.N() << std::endl;
+  std::cout << "minLevel.N() = " << m_data->minLevel.N() << std::endl;
+  std::cout << "X.N() = " << m_data->X.N() << std::endl;
+  std::cout << "Y.N() = " << m_data->Y.N() << std::endl;
+  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
+    std::cout << "Persistence Level " << level << std::endl;
+    std::cout << "    crystals.MxN() = " << m_data->crystals[level].M() << " x " << m_data->crystals[level].N() << std::endl;
+    // std::cout << "    crystalPartitions.N() = " << m_data->crystalPartitions[level].N() << std::endl;
+    std::cout << "    extremaValues.N() = " << m_data->extremaValues[level].N() << std::endl;
+    std::cout << "    extremaWidths.N() = " << m_data->extremaWidths[level].N() << std::endl; 
+    std::cout << "    IsoExtremaLayout.MxN() = " << m_data->IsoExtremaLayout[level].M() << " x " << m_data->IsoExtremaLayout[level].N() << std::endl;
+    for (unsigned int crystal = 0; crystal < m_data->spdf[level].size(); crystal++) {
+      std::cout << "  Crystal " << crystal << std::endl;
+      std::cout << "     spdf[" << crystal << "].N() = " << m_data->spdf[level][crystal].N() << std::endl;
+    }
+  }
+
+  // TEMP DEBUG CODE
+
   // Create Normalized Extrema Values, Mean Values, and Mins/Maxs
   extremaNormalized.resize(m_data->scaledPersistence.N());
   extremaWidthScaled.resize(m_data->scaledPersistence.N());

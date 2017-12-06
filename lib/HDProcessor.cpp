@@ -89,6 +89,11 @@ HDProcessResult* HDProcessor::process(
   DenseVector<Precision> pStart(1);
   pStart(0) = start;
 
+  // Save number of requested regression samples
+  DenseVector<int> regressionSampleCount(1);
+  regressionSampleCount(1) = nSamples;
+  m_result->regressionSampleCount = Linalg<int>::Copy(regressionSampleCount);
+
   // Store Min Level (Starting Level)
   m_result->minLevel = Linalg<Precision>::Copy(pStart);
 
@@ -190,6 +195,56 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
   std::cout << "# of Crystals: " << crystals.N() << std::endl;
   std::cout << "=================================" << std::endl << std::endl;
+
+  bool canComputeRegression = true;
+  if (!canComputeRegression) {
+    // Create and return fake data for now.
+    // Resize Stores for Regression Information
+    m_result->R[persistenceLevel].resize(crystals.N());
+    m_result->gradR[persistenceLevel].resize(crystals.N());
+    m_result->Rvar[persistenceLevel].resize(crystals.N());
+    m_result->mdists[persistenceLevel].resize(crystals.N());  
+    m_result->fmean[persistenceLevel].resize(crystals.N());  
+    m_result->spdf[persistenceLevel].resize(crystals.N());  
+
+    // Resize Stores with Layout Information
+    m_result->IsoLayout[persistenceLevel].resize(crystals.N());
+    m_result->PCALayout[persistenceLevel].resize(crystals.N());
+    m_result->PCA2Layout[persistenceLevel].resize(crystals.N());
+        
+    // m_result->extremaWidths[persistenceLevel]
+    DenseVector<Precision> fakeVector(nExt);
+    DenseMatrix<Precision> fakeLayoutMatrix(2, nSamples);
+    m_result->extremaValues[persistenceLevel] = Linalg<Precision>::Copy(fakeVector);  
+    m_result->extremaWidths[persistenceLevel] = Linalg<Precision>::Copy(fakeVector);  
+
+    for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
+      m_result->IsoLayout[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fakeLayoutMatrix);
+      m_result->PCALayout[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fakeLayoutMatrix);
+      m_result->PCA2Layout[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fakeLayoutMatrix);
+    }
+
+    DenseVector<Precision> fakeSpdf(nSamples);
+    DenseMatrix<Precision> fakeExtremaMatrix(2, nExt);
+    m_result->IsoExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(fakeExtremaMatrix);
+
+    // Create fake regression info for each crystal of current persistence level.
+    for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
+    //   // Store Regression Info in Results
+    //   m_result->R[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(ScrystalIDs[crystalIndex]);
+    //   m_result->gradR[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(gradS);
+    //   m_result->Rvar[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(Svar);
+    //   m_result->mdists[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(pdist);
+      m_result->fmean[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fakeVector);
+      m_result->spdf[persistenceLevel][crystalIndex] = Linalg<Precision>::Copy(fakeSpdf);
+    }
+
+    return;
+  }
+
+  // ------------------------------------------------------------
+  // Only Proceed Below if Regression can be ran over input.
+  // ------------------------------------------------------------
 
   DenseMatrix<Precision> S(Xall.M(), crystals.N()*nSamples + nExt);
   std::vector<DenseMatrix<Precision>> ScrystalIDs(crystals.N());  

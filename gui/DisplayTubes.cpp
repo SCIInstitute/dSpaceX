@@ -937,6 +937,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
   auto extremaLayout = data->getExtremaLayout(state->currentLayout, state->currentLevel);
   auto extremaNormalized = data->getExtremaNormalized(state->currentLevel);
 
+
   for (unsigned int i = 0; i < data->getCrystals(state->currentLevel).N(); i++) {
     if (renderMode(i) != RENDER_TUBE) continue;
 
@@ -944,6 +945,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       int i1 = data->getCrystals(state->currentLevel)(0, i);
       int i2 = data->getCrystals(state->currentLevel)(1, i);
+
+      std::cout << "Vector size: " << extremaNormalized.N() << std::endl;
+      std::cout << "indices:  i1: " << i1 << "   i2: " << i2 << std::endl;
 
       for (unsigned int k = 0; k < layout[i].N(); k++) {
         for (unsigned int m = 0; m < layout[i].M(); m++) {
