@@ -28,10 +28,12 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     std::cout << "    extremaValues.N() = " << m_data->extremaValues[level].N() << std::endl;
     std::cout << "    extremaWidths.N() = " << m_data->extremaWidths[level].N() << std::endl; 
     std::cout << "    IsoExtremaLayout.MxN() = " << m_data->IsoExtremaLayout[level].M() << " x " << m_data->IsoExtremaLayout[level].N() << std::endl;
+    std::cout << "    Min(ef) = " <<  FortranLinalg::Linalg<Precision>::Min(m_data->extremaValues[level]) << std::endl;
+    std::cout << "    Max(ef) = " <<  FortranLinalg::Linalg<Precision>::Max(m_data->extremaValues[level]) << std::endl;
     for (unsigned int crystal = 0; crystal < m_data->spdf[level].size(); crystal++) {
       std::cout << "  Crystal " << crystal << std::endl;
       std::cout << "     spdf[" << crystal << "].N() = " << m_data->spdf[level][crystal].N() << std::endl;
-    }
+    }    
   }
 
   // TEMP DEBUG CODE

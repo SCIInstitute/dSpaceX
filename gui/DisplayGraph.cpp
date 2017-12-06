@@ -96,7 +96,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   // for (int i=0; i < samples.size(); i++) {
   //   ySubset(i) = (ySubset(i) - min_value) / (max_value - min_value);
   // }
-
+  // std::cout << "current level: " << m_currentLevel << std::endl;
   ColorMapper<Precision> colorMapper = data->getColorMap(m_currentLevel);
 
   EuclideanMetric<Precision> metric;

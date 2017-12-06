@@ -946,9 +946,6 @@ void DisplayTubes<TPrecision>::renderWidths() {
       int i1 = data->getCrystals(state->currentLevel)(0, i);
       int i2 = data->getCrystals(state->currentLevel)(1, i);
 
-      std::cout << "Vector size: " << extremaNormalized.N() << std::endl;
-      std::cout << "indices:  i1: " << i1 << "   i2: " << i2 << std::endl;
-
       for (unsigned int k = 0; k < layout[i].N(); k++) {
         for (unsigned int m = 0; m < layout[i].M(); m++) {
           points[k+1][m] = layout[i](m, k);

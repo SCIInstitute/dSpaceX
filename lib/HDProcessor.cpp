@@ -192,11 +192,22 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
 
   crystalTmp.deallocate();   
 
+  // Grab and Store Extrema Function Values 
+  DenseVector<Precision> Ef(nExt);
+  for (map_i_i_it it = exts.begin(); it != exts.end(); ++it) {
+    int eID = it->second;
+    int eIndex = it->first;    
+    Ef(eID) = yall(eIndex);
+  }
+  m_result->extremaValues[persistenceLevel] = Linalg<Precision>::Copy(Ef);  
+  Ef.deallocate();
+
+
   std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
   std::cout << "# of Crystals: " << crystals.N() << std::endl;
   std::cout << "=================================" << std::endl << std::endl;
 
-  bool canComputeRegression = true;
+  bool canComputeRegression = false;
   if (!canComputeRegression) {
     // Create and return fake data for now.
     // Resize Stores for Regression Information
@@ -214,8 +225,7 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
         
     // m_result->extremaWidths[persistenceLevel]
     DenseVector<Precision> fakeVector(nExt);
-    DenseMatrix<Precision> fakeLayoutMatrix(2, nSamples);
-    m_result->extremaValues[persistenceLevel] = Linalg<Precision>::Copy(fakeVector);  
+    DenseMatrix<Precision> fakeLayoutMatrix(2, nSamples);    
     m_result->extremaWidths[persistenceLevel] = Linalg<Precision>::Copy(fakeVector);  
 
     for (unsigned int crystalIndex = 0; crystalIndex < crystals.N(); crystalIndex++) {
@@ -561,13 +571,10 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
   }
 
   // Save extremal points location and function value.
-  DenseMatrix<Precision> E(fL.M(), nExt);
-  DenseVector<Precision> Ef(nExt);
+  DenseMatrix<Precision> E(fL.M(), nExt); 
   for (map_i_i_it it = exts.begin(); it != exts.end(); ++it) {
     int eID = it->second;
-    int eIndex = it->first;
     Linalg<Precision>::SetColumn(E, eID, fL, crystals.N()*nSamples+eID);
-    Ef(eID) = yall(eIndex);
   } 
 
   // Align extrema to previous etxrema.
@@ -622,12 +629,6 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
   // Store ExtremaLayout in Result Object
   m_result->PCAExtremaLayout[persistenceLevel] = Linalg<Precision>::Copy(E);
   E.deallocate();
-
-  // TODO: ExtremaValues are NOT unique to PCA. The construction of Ef and the
-  //       copying of them should be moved out of this method.
-  // Store ExtremaValues in Result Object
-  m_result->extremaValues[persistenceLevel] = Linalg<Precision>::Copy(Ef);  
-  Ef.deallocate();
 
   pca.cleanup();
   fL.deallocate();      
