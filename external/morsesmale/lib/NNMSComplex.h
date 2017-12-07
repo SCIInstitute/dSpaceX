@@ -120,16 +120,24 @@ class NNMSComplex{
   public:
 
 
-    NNMSComplex(FortranLinalg::DenseMatrix<int> &KNNin, 
-                FortranLinalg::DenseMatrix<TPrecision> &KNNDin, 
+    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &distances,                
                 FortranLinalg::DenseVector<TPrecision> &yin,
-                bool smooth = false, double sigma2=0) : y(yin), KNN(KNNin), KNND(KNNDin){
+                int knn, bool smooth = false, double sigma2=0) : y(yin) {
+      m_sampleCount = distances.N();
+      if(knn > (int) m_sampleCount){
+        knn = m_sampleCount;
+      }
+      KNN = FortranLinalg::DenseMatrix<int>(knn, m_sampleCount);
+      KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, m_sampleCount);
+      Distance<TPrecision>::findKNN(distances, KNN, KNND);
+
       runMS(smooth, sigma2);
+      KNND.deallocate();
     };
 
  
-    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, FortranLinalg::DenseVector<TPrecision> &yin, int
-        knn, bool smooth = false, double eps=0.01, double sigma2=0) : X(Xin), y(yin){
+    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, FortranLinalg::DenseVector<TPrecision> &yin, 
+        int knn, bool smooth = false, double eps=0.01, double sigma2=0) : X(Xin), y(yin){
       m_sampleCount = X.N();
       if(knn > (int) m_sampleCount){
         knn = m_sampleCount;

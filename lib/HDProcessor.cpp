@@ -34,6 +34,7 @@ HDProcessResult* HDProcessor::processOnMetric(
     FortranLinalg::DenseVector<Precision> qoi,
     int knn, int nSamples, int persistenceArg, bool random,
     Precision sigmaArg, Precision sigmaSmooth) {
+  // TODO: Assert(qoi.N() == d.M() && d.M() == d.N())
 
   // Initialize processing result output object.
   m_result = new HDProcessResult();
@@ -46,8 +47,8 @@ HDProcessResult* HDProcessor::processOnMetric(
     addNoise(yall);
   }
      
-  // Compute Morse-Smale complex  
-  NNMSComplex<Precision> msComplex(d, yall, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
+  // Compute Morse-Smale complex    
+  NNMSComplex<Precision> msComplex(d, qoi, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
