@@ -120,11 +120,11 @@ class NNMSComplex{
   public:
 
 
-    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, FortranLinalg::DenseVector<TPrecision> &yin,
-                FortranLinalg::DenseMatrix<int> &KNNin, FortranLinalg::DenseMatrix<TPrecision> &KNNDin, 
-                bool smooth = false, double sigma2=0) : X(Xin), y(yin), KNN(KNNin), KNND(KNNDin){
+    NNMSComplex(FortranLinalg::DenseMatrix<int> &KNNin, 
+                FortranLinalg::DenseMatrix<TPrecision> &KNNDin, 
+                FortranLinalg::DenseVector<TPrecision> &yin,
+                bool smooth = false, double sigma2=0) : y(yin), KNN(KNNin), KNND(KNNDin){
       runMS(smooth, sigma2);
-
     };
 
  
