@@ -44,6 +44,7 @@ class NNMSComplex{
     FortranLinalg::DenseMatrix<int> KNNG;
 
     // Data points
+    unsigned int m_sampleCount;
     FortranLinalg::DenseMatrix<TPrecision> X;
     FortranLinalg::DenseVector<TPrecision> y;
       
@@ -129,11 +130,12 @@ class NNMSComplex{
  
     NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, FortranLinalg::DenseVector<TPrecision> &yin, int
         knn, bool smooth = false, double eps=0.01, double sigma2=0) : X(Xin), y(yin){
-      if(knn > (int) X.N()){
-        knn = X.N();
+      m_sampleCount = X.N();
+      if(knn > (int) m_sampleCount){
+        knn = m_sampleCount;
       }
-      KNN = FortranLinalg::DenseMatrix<int>(knn, X.N());
-      KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, X.N());
+      KNN = FortranLinalg::DenseMatrix<int>(knn, m_sampleCount);
+      KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, m_sampleCount);
 
       //Compute nearest nieghbors
       //ANNWrapper<TPrecision>::computeANN(X, KNN, KNND, eps);
@@ -190,7 +192,7 @@ class NNMSComplex{
     //Get partioning accordinng to the crystals of the MS-complex for the
     //currently set persistence level
     FortranLinalg::DenseVector<int> getPartitions(){
-      FortranLinalg::DenseVector<int> crys(X.N());
+      FortranLinalg::DenseVector<int> crys(m_sampleCount);
       getPartitions(crys);
       return crys;
     };
@@ -199,7 +201,7 @@ class NNMSComplex{
 
 
     void getPartitions(FortranLinalg::DenseVector<int> &crys){
-      for(unsigned int i=0; i<X.N(); i++){
+      for(unsigned int i = 0; i < m_sampleCount; i++){
         std::pair<int, int> p( merge(extrema(0, i)), merge(extrema(1, i)) );
         crys(i) = pcrystals[p];
       }
@@ -303,14 +305,14 @@ private:
       }
 
 
-      KNNG = FortranLinalg::DenseMatrix<int>(2, X.N());
+      KNNG = FortranLinalg::DenseMatrix<int>(2, m_sampleCount);
       FortranLinalg::Linalg<int>::Set(KNNG, -1);
-      FortranLinalg::DenseMatrix<TPrecision> G = FortranLinalg::DenseMatrix<TPrecision>(2, X.N());
+      FortranLinalg::DenseMatrix<TPrecision> G = FortranLinalg::DenseMatrix<TPrecision>(2, m_sampleCount);
       FortranLinalg::Linalg<TPrecision>::Zero(G);
 
 
       // Compute steepest asc/descending neighbors
-      for (unsigned int i=0; i<X.N(); i++) {
+      for (unsigned int i = 0; i < m_sampleCount; i++) {
         for (unsigned int k=1; k<KNN.M(); k++) {
           int j = KNN(k, i);
           double d = sqrt(KNND(k, i));
@@ -351,7 +353,7 @@ private:
 
       //compute for each point its minimum and maximum based on
       //steepest ascent/descent
-      extrema = FortranLinalg::DenseMatrix<int>(2, X.N()); 
+      extrema = FortranLinalg::DenseMatrix<int>(2, m_sampleCount); 
       FortranLinalg::Linalg<int>::Set(extrema, -1);
 
       std::list<int> extremaL;
