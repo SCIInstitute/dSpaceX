@@ -17,6 +17,120 @@ using namespace FortranLinalg;
 
 HDProcessor::HDProcessor() {}
 
+
+/**
+ * Process the input data and generate all data files necessary for visualization.
+ * @param[in] d Distances Matrix containing pairwise distances between samples.
+ * @param[in] qoi Vector containing quantity of interest values for each sample.
+ * @param[in] knn Number of nearest nieghbor for Morse-Samle complex computation.
+ * @param[in] nSamples Number of samples for regression curve. 
+ * @param[in] persistence Number of persistence levels to compute.
+ * @param[in] randdom Whether to apply random noise to input function.
+ * @param[in] sigma Bandwidth for inverse regression.
+ * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
+ */
+HDProcessResult* HDProcessor::processOnMetric(
+    FortranLinalg::DenseMatrix<Precision> d,
+    FortranLinalg::DenseVector<Precision> qoi,
+    int knn, int nSamples, int persistenceArg, bool random,
+    Precision sigmaArg, Precision sigmaSmooth) {
+
+  // Initialize processing result output object.
+  m_result = new HDProcessResult();
+
+  // Store input data as member variables.  
+  yall = qoi;
+  
+  // Add noise to yall in case of equivalent values 
+  if (random) {
+    addNoise(yall);
+  }
+     
+  // Compute Morse-Smale complex  
+  NNMSComplex<Precision> msComplex(d, yall, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
+  
+  // Store persistence levels
+  persistence = msComplex.getPersistence();
+
+  // Store Nearest Neighbors
+  m_result->knn = msComplex.getNearestNeighbors();
+
+  
+  // Save QoI function values
+  m_result->Y = Linalg<Precision>::Copy(yall);  
+
+  // Scale persistence to be in [0,1]
+  // TODO: Is this just doing a normalization?
+  DenseVector<Precision> pScaled(persistence.N());
+  Precision fmax = Linalg<Precision>::Max(yall);
+  Precision fmin = Linalg<Precision>::Min(yall);
+  Precision frange = fmax - fmin;
+  for (unsigned int i=0; i < persistence.N(); i++) {
+    pScaled(i) = persistence(i) / frange;    // TODO: Shouldn't this also subtract fmin?
+  }
+  pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1?
+  
+  // Store Scled Persistence Data
+  m_result->scaledPersistence = Linalg<Precision>::Copy(pScaled);
+  
+
+  // Read number of persistence levels to compute visualization for
+  int nlevels = persistenceArg;
+  int start = 0;
+  if (nlevels > 0) {
+    start = persistence.N() - nlevels;
+  }
+  if (start < 0) {
+    start = 0;
+  }
+
+  // Save start persistence
+  DenseVector<Precision> pStart(1);
+  pStart(0) = start;
+
+  // Save number of requested regression samples
+  DenseVector<int> regressionSampleCount(1);
+  regressionSampleCount(1) = nSamples;
+  m_result->regressionSampleCount = Linalg<int>::Copy(regressionSampleCount);
+
+  // Store Min Level (Starting Level)
+  m_result->minLevel = Linalg<Precision>::Copy(pStart);
+
+  // Resize Stores for Saving Persistence Level information
+  m_result->crystals.resize(persistence.N());
+  m_result->crystalPartitions.resize(persistence.N());
+
+  // Regression Stores
+  m_result->extremaValues.resize(persistence.N());  
+  m_result->extremaWidths.resize(persistence.N());
+  m_result->R.resize(persistence.N());
+  m_result->gradR.resize(persistence.N());
+  m_result->Rvar.resize(persistence.N());
+  m_result->mdists.resize(persistence.N());
+  m_result->fmean.resize(persistence.N());
+  m_result->spdf.resize(persistence.N());
+
+  // Layout Stores
+  m_result->PCAExtremaLayout.resize(persistence.N());  
+  m_result->PCALayout.resize(persistence.N());
+  m_result->PCA2ExtremaLayout.resize(persistence.N());
+  m_result->PCA2Layout.resize(persistence.N());
+  m_result->IsoExtremaLayout.resize(persistence.N());
+  m_result->IsoLayout.resize(persistence.N());
+
+  
+  // Compute inverse regression curves and additional information for each crystal
+  for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, false /*computeRegression*/);
+  }
+
+  // detach and return processed result
+  HDProcessResult *result = m_result;
+  m_result = nullptr;
+  return result;
+}
+
+
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.
@@ -122,7 +236,7 @@ HDProcessResult* HDProcessor::process(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeInverseRegressionForLevel(msComplex, persistenceLevel, nSamples, sigma);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigma, true /*computeRegression*/);
   }
 
   // detach and return processed result
@@ -132,14 +246,14 @@ HDProcessResult* HDProcessor::process(
 }
 
 /**
- * Compute inverse regression curves for a single persistence level.
+ * Compute analysis for a single persistence level.
  * @param[in] msComplex A computed Morse-Smale complex.
  * @param[in] persistenceLevel The persistence level to regress.
  * @param[in] nSamples Number of samples for regression curve.  
  * @param[in] sigma Bandwidth for inverse regression.
  */
-void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msComplex,
-    unsigned int persistenceLevel, int nSamples, Precision sigma) {
+void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
+    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression) {
   // Number of extrema in current crystal
   // int nExt = persistence.N() - persistenceLevel + 1;      // jonbronson commented out 8/16/17
   msComplex.mergePersistence(persistence(persistenceLevel));
@@ -206,9 +320,8 @@ void HDProcessor::computeInverseRegressionForLevel(NNMSComplex<Precision> &msCom
   std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
   std::cout << "# of Crystals: " << crystals.N() << std::endl;
   std::cout << "=================================" << std::endl << std::endl;
-
-  bool canComputeRegression = false;
-  if (!canComputeRegression) {
+  
+  if (!computeRegression) {
     // Create and return fake data for now.
     // Resize Stores for Regression Information
     m_result->R[persistenceLevel].resize(crystals.N());

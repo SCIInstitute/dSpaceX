@@ -27,10 +27,14 @@ class HDProcessor {
       FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
       Precision sigmaArg, Precision sigmaSmooth);
+  HDProcessResult* processOnMetric(FortranLinalg::DenseMatrix<Precision> distances,
+    FortranLinalg::DenseVector<Precision> qoi,
+    int knn, int nSamples, int persistence, bool random,
+    Precision sigmaArg, Precision sigmaSmooth);
 
  private:  
-  void computeInverseRegressionForLevel(NNMSComplex<Precision> &msComplex, 
-    unsigned int persistenceLevel, int nSamples, Precision sigma);
+  void computeAnalysisForLevel(NNMSComplex<Precision> &msComplex, 
+    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression = true);
   void computeRegressionForCrystal(unsigned int crystalIndex, unsigned int persistenceLevel, 
     Precision sigma, int nSamples,
     std::vector<std::vector<unsigned int>> &Xi,
