@@ -121,30 +121,17 @@ int main(int argc, char **argv) {
   FortranLinalg::DenseMatrix<Precision> distances = 
         genericProcessor.computeDistances(samples, metric);
 
-  HDProcessResult *result = nullptr;
-  HDProcessResult *result2 = nullptr;
-  try {    
-    HDProcessor processor;
-    // result = processor.process(
-    //     x /* domain */,
-    //     y /* function */,
-    //     knnArg.getValue() /* knn */,        
-    //     samplesArg.getValue() /* samples */,
-    //     pArg.getValue() /* persistence */,        
-    //     randArg.getValue() /* random */,
-    //     sigmaArg.getValue() /* sigma */,
-    //     smoothArg.getValue() /* smooth */);
-    result = processor.processOnMetric(
-           distances /* distance matrix */,
-           y /* qoi */,
-           knnArg.getValue() /* knn */,        
-           samplesArg.getValue() /* samples */,
-           pArg.getValue() /* persistence */,        
-           randArg.getValue() /* random */,
-           sigmaArg.getValue() /* sigma */,
-           smoothArg.getValue() /* smooth */);
-      // exit(0);
-    
+  HDProcessResult *result = nullptr;  
+  try {        
+    result = genericProcessor.processOnMetric(
+        distances /* distance matrix */,
+        y /* qoi */,
+        knnArg.getValue() /* knn */,        
+        samplesArg.getValue() /* samples */,
+        pArg.getValue() /* persistence */,        
+        randArg.getValue() /* random */,
+        sigmaArg.getValue() /* sigma */,
+        smoothArg.getValue() /* smooth */);
   } catch (const char *err) {
     std::cerr << err << std::endl;
   }
