@@ -50,6 +50,27 @@ class Distance{
         }
     };
 
+    static void findKNN(FortranLinalg::Matrix<TPrecision> &d, FortranLinalg::Matrix<int> &knn,
+        FortranLinalg::Matrix<TPrecision> &dists){
+
+      TPrecision *distances = new TPrecision[d.N()];
+
+      for (unsigned int i = 0; i < d.N(); i++){
+          // TODO: Replace with row extraction.
+          for (unsigned int j = 0; j < d.N(); j++){
+            distances[j] = d(j,i);
+            // std::cout << distances[j] << " " << std::flush;
+          }
+          // exit(1);
+        
+          MinHeap<TPrecision> minHeap(distances, d.N());
+          for (unsigned int j=0; j < knn.M(); j++){
+            knn(j, i) = minHeap.getRootIndex();
+            dists(j, i) = minHeap.extractRoot();
+          }
+        }
+        delete[] distances;
+    };
 
 
 
@@ -62,7 +83,9 @@ class Distance{
 
           for(unsigned int j=0; j<data.N(); j++){
             distances[j] = metric.distance(data, j, data, i); 
+            // std::cout << distances[j] << " " << std::flush;
           }
+          // exit(1);
         
           MinHeap<TPrecision> minHeap(distances, data.N());
           for(unsigned int j=0; j < knn.M(); j++){

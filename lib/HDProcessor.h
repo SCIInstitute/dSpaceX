@@ -31,6 +31,7 @@ class HDProcessor {
     FortranLinalg::DenseVector<Precision> qoi,
     int knn, int nSamples, int persistence, bool random,
     Precision sigmaArg, Precision sigmaSmooth);
+ 
 
  private:  
   void computeAnalysisForLevel(NNMSComplex<Precision> &msComplex, 

@@ -16,9 +16,8 @@ class MetricMDS{
 
 
   public:
-    FortranLinalg::DenseMatrix<TPrecision>
-      embed(FortranLinalg::Matrix<TPrecision> &data, Metric<TPrecision>
-        &metric, unsigned int ndims){
+    FortranLinalg::DenseMatrix<TPrecision> embed(
+        FortranLinalg::Matrix<TPrecision> &data, Metric<TPrecision> &metric, unsigned int ndims){
       using namespace FortranLinalg;
       DenseMatrix<TPrecision> distances(data.N(), data.N());
       Distance<TPrecision>::computeDistances(data, metric, distances);
@@ -27,7 +26,9 @@ class MetricMDS{
       return result;
     };
 
-    FortranLinalg::DenseMatrix<TPrecision> embed(FortranLinalg::DenseMatrix<TPrecision> &m, int ndims){
+
+    FortranLinalg::DenseMatrix<TPrecision> embed(
+        FortranLinalg::DenseMatrix<TPrecision> &m, int ndims){
       using namespace FortranLinalg;
 
       TPrecision *tmp = m.data();

@@ -13,6 +13,7 @@
 #include "HDProcessor.h"
 #include "HDProcessResult.h"
 #include "HDProcessResultSerializer.h"
+#include "HDGenericProcessor.h"
 #include "SimpleHDVizDataImpl.h"
 #include "TopologyData.h"
 #include "LegacyTopologyDataImpl.h"
@@ -22,6 +23,7 @@
 #include "LinalgIO.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
+#include "util/DenseVectorSample.h"
 
 #include <iostream>
 #include <iomanip>
@@ -102,19 +104,47 @@ int main(int argc, char **argv) {
       FortranLinalg::LinalgIO<Precision>::readMatrix(xArg.getValue());
   FortranLinalg::DenseVector<Precision> y = 
       FortranLinalg::LinalgIO<Precision>::readVector(fArg.getValue());
+  
+  // Build Sample Vector from Input Data
+  std::vector<DenseVectorSample*> samples;
+  for (int j=0; j < x.N(); j++) {
+    FortranLinalg::DenseVector<Precision> vector(x.M());
+    for (int i=0; i < x.M(); i++) {
+      vector(i) = x(i, j);
+    }
+    DenseVectorSample *sample = new DenseVectorSample(vector);
+    samples.push_back(sample);
+  }
+
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  DenseVectorEuclideanMetric metric;
+  FortranLinalg::DenseMatrix<Precision> distances = 
+        genericProcessor.computeDistances(samples, metric);
 
   HDProcessResult *result = nullptr;
-  try {
+  HDProcessResult *result2 = nullptr;
+  try {    
     HDProcessor processor;
-    result = processor.process(
-        x /* domain */,
-        y /* function */,
-        knnArg.getValue() /* knn */,        
-        samplesArg.getValue() /* samples */,
-        pArg.getValue() /* persistence */,        
-        randArg.getValue() /* random */,
-        sigmaArg.getValue() /* sigma */,
-        smoothArg.getValue() /* smooth */);
+    // result = processor.process(
+    //     x /* domain */,
+    //     y /* function */,
+    //     knnArg.getValue() /* knn */,        
+    //     samplesArg.getValue() /* samples */,
+    //     pArg.getValue() /* persistence */,        
+    //     randArg.getValue() /* random */,
+    //     sigmaArg.getValue() /* sigma */,
+    //     smoothArg.getValue() /* smooth */);
+    result = processor.processOnMetric(
+           distances /* distance matrix */,
+           y /* qoi */,
+           knnArg.getValue() /* knn */,        
+           samplesArg.getValue() /* samples */,
+           pArg.getValue() /* persistence */,        
+           randArg.getValue() /* random */,
+           sigmaArg.getValue() /* sigma */,
+           smoothArg.getValue() /* smooth */);
+      // exit(0);
+    
   } catch (const char *err) {
     std::cerr << err << std::endl;
   }
@@ -127,7 +157,7 @@ int main(int argc, char **argv) {
         
   HDVizData *data = new SimpleHDVizDataImpl(result);
   TopologyData *topoData = new LegacyTopologyDataImpl(data);
-  HDVizState state(data);
+  HDVizState state(data, distances);
 
   // Init GL stuff. Initialize Visualization Windows
   glutInit(&argc, argv);

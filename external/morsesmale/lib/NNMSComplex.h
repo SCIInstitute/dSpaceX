@@ -99,7 +99,7 @@ class NNMSComplex{
       int nCrystals = 0;
       //reassign crystals based on merge chain
       pcrystals.clear();
-      for(map_pi_i_it it = crystals.begin(); it != crystals.end(); ++it){
+      for (map_pi_i_it it = crystals.begin(); it != crystals.end(); ++it) {
         std::pair<int, int> p = (*it).first;
         
         
@@ -122,24 +122,35 @@ class NNMSComplex{
 
     NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &distances,                
                 FortranLinalg::DenseVector<TPrecision> &yin,
-                int knn, bool smooth = false, double sigma2=0) : y(yin) {
+                int knn, bool smooth = false, double sigma2=0, bool test=true) : y(yin) {
       m_sampleCount = distances.N();
-      if(knn > (int) m_sampleCount){
+      if (knn > (int) m_sampleCount) {
         knn = m_sampleCount;
       }
       KNN = FortranLinalg::DenseMatrix<int>(knn, m_sampleCount);
       KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, m_sampleCount);
       Distance<TPrecision>::findKNN(distances, KNN, KNND);
 
+      // std::cout << "KNND[" << KNND.M() << "," << KNND.N() << "]" << std::endl;
+      // for (unsigned int i = 0; i < KNND.M() && i < 5; i++) {
+      //   for (unsigned int j = 0; j < KNND.N() && j < 5; j++) {
+      //     std::cout << KNND(i, j) << " " << std::flush;
+      //   }
+      //   std::cout << std::endl;
+      // }
+      // exit(1);
+
       runMS(smooth, sigma2);
       KNND.deallocate();
     };
 
+
  
-    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, FortranLinalg::DenseVector<TPrecision> &yin, 
-        int knn, bool smooth = false, double eps=0.01, double sigma2=0) : X(Xin), y(yin){
+    NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &Xin, 
+                FortranLinalg::DenseVector<TPrecision> &yin, 
+                int knn, bool smooth = false, double eps=0.01, double sigma2=0) : X(Xin), y(yin){
       m_sampleCount = X.N();
-      if(knn > (int) m_sampleCount){
+      if (knn > (int) m_sampleCount) {
         knn = m_sampleCount;
       }
       KNN = FortranLinalg::DenseMatrix<int>(knn, m_sampleCount);
@@ -149,6 +160,15 @@ class NNMSComplex{
       //ANNWrapper<TPrecision>::computeANN(X, KNN, KNND, eps);
       SquaredEuclideanMetric<TPrecision> dist;
       Distance<TPrecision>::computeKNN(X, KNN, KNND, dist);
+
+      // std::cout << "KNND[" << KNND.M() << "," << KNND.N() << "]" << std::endl;
+      // for (unsigned int i = 0; i < KNND.M() && i < 5; i++) {
+      //   for (unsigned int j = 0; j < KNND.N() && j < 5; j++) {
+      //     std::cout << KNND(i, j) << " " << std::flush;
+      //   }
+      //   std::cout << std::endl;
+      // }
+      // exit(1);
       
       runMS(smooth, sigma2);      
       // KNN.deallocate();   // JONBRONSON:  Nov 6, 2017  - reintroduce to prevent memory leak.

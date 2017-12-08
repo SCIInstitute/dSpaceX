@@ -48,7 +48,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   }
      
   // Compute Morse-Smale complex    
-  NNMSComplex<Precision> msComplex(d, qoi, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
+  NNMSComplex<Precision> msComplex(d, qoi, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
@@ -58,6 +58,7 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   
   // Save QoI function values
+  m_result->X = FortranLinalg::DenseMatrix<Precision>(2, yall.N());
   m_result->Y = Linalg<Precision>::Copy(yall);  
 
   // Scale persistence to be in [0,1]
