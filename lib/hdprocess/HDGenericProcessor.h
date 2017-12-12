@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HDProcessor.h"
 #include "HDProcessResult.h"
 #include "Precision.h"
 #include "PCA.h"

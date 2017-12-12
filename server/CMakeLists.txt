@@ -16,9 +16,11 @@ SET(SERVER_SOURCE_FILES
   render.c)
 
 INCLUDE_DIRECTORIES(../include)
+INCLUDE_DIRECTORIES(../lib/hdprocess)
 
 ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS}) 
-TARGET_LINK_LIBRARIES (dSpaceX libwsserver pthread dl ${ZLIB_LIBRARIES})
+TARGET_LINK_LIBRARIES (dSpaceX libwsserver hdprocess blas
+    lapack pthread dl ${ZLIB_LIBRARIES} )
 
 
 ADD_SUBDIRECTORY(backends/sampleBE)

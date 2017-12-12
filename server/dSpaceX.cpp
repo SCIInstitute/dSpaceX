@@ -1,6 +1,13 @@
 /*
  *      dSpaceX server
  */
+#include "HDGenericProcessor.h"
+#include "Precision.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
+#include "DenseMatrix.h"
+#include "DenseVector.h"
+#include "util/DenseVectorSample.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,6 +68,12 @@ int main(int argc, char *argv[])
     printf(" failed to Load Back-End %d!\n", stat);
     return 1;
   }
+
+  #ifndef FALLBACK
+    HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  DenseVectorEuclideanMetric metric;
+  #endif
+
 
   /* create the WebViewer context */
   cntxt = wv_createContext(0, 30.0, 1.0, 10.0, eye, center, up);

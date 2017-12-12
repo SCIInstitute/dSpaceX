@@ -24,7 +24,7 @@ ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
   include/
-  lib/analysis
+  lib/hdprocess
   external/
   external/gle/lib 
   external/dimred/lib 
@@ -43,7 +43,7 @@ INCLUDE_DIRECTORIES(
 
 
 ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
-ADD_SUBDIRECTORY(lib/analysis)
+ADD_SUBDIRECTORY(lib/hdprocess)
 if(BUILD_SERVER_LIB)
   ADD_SUBDIRECTORY(lib/serverlib)
 endif(BUILD_SERVER_LIB)
