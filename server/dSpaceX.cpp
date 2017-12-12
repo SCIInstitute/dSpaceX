@@ -85,11 +85,10 @@ int main(int argc, char *argv[])
 
     FortranLinalg::DenseMatrix<Precision> x = 
         FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
-    FortranLinalg::DenseVector<Precision> y = 
-        FortranLinalg::LinalgIO<Precision>::readVector(fArg);
+    // FortranLinalg::DenseVector<Precision> 
+    y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
     
     // Build Sample Vector from Input Data
-    std::vector<DenseVectorSample*> samples;
     for (int j=0; j < x.N(); j++) {
       FortranLinalg::DenseVector<Precision> vector(x.M());
       for (int i=0; i < x.M(); i++) {
@@ -105,6 +104,7 @@ int main(int argc, char *argv[])
           genericProcessor.computeDistances(samples, metric);
     HDProcessResult *result = nullptr;  
   
+    
     result = genericProcessor.processOnMetric(
         distances /* distance matrix */,
         y /* qoi */,
@@ -116,6 +116,7 @@ int main(int argc, char *argv[])
         0 /* smooth */);
     HDVizData *data = new SimpleHDVizDataImpl(result);
     TopologyData *topoData = new LegacyTopologyDataImpl(data);  
+    
 
     std::cout << "processOnMetric called()";
   } catch (const char *err) {

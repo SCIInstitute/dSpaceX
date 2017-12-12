@@ -28,8 +28,8 @@ extern FortranLinalg::DenseVector<Precision> y;
 
 
 /* image file reader */
-extern "C" int dsx_getThumbNail( const char *Name, int *Width, int *Height,
-                             unsigned char **Image );
+// extern "C" int dsx_getThumbNail( const char *Name, int *Width, int *Height,
+//                              unsigned char **Image );
 
 
 /* storage location for everything we allocate
@@ -119,7 +119,7 @@ extern "C" int dsxInitialize(
     }
     for (i = 0; i < *nQoI;    i++, n++) {
       // fscanf(fp, "%lf", &qois[n]);
-      qois[n] =  y(j);
+      qois[n] = y(j);
     }
   }
   // fclose(fp);
@@ -147,18 +147,18 @@ extern "C" int dsxInitialize(
 /* function that returns a thumbnail of the specified case */
 extern "C" int dsxThumbNail(/*@unused@*/ int caseIndex, int *width, int *height, unsigned char **image)
 {
-  int stat;
+  int stat = 0;
   
   *width = *height = 0;
   *image = NULL;
   if (save.thumb != NULL) free(save.thumb);
   save.thumb = NULL;
 
-#ifdef WIN32
-  stat = dsx_getThumbNail("mach_alpha\\n33T.jpg", width, height, image);
-#else
-  stat = dsx_getThumbNail("mach_alpha/n33T.jpg",  width, height, image);
-#endif
+// #ifdef WIN32
+//   stat = dsx_getThumbNail("mach_alpha\\n33T.jpg", width, height, image);
+// #else
+//   stat = dsx_getThumbNail("mach_alpha/n33T.jpg",  width, height, image);
+// #endif
   if (stat == 0) save.thumb = *image;
   
   return stat;
