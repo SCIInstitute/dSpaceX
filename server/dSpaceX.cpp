@@ -2,6 +2,9 @@
  *      dSpaceX server
  */
 #include "HDGenericProcessor.h"
+#include "SimpleHDVizDataImpl.h"
+#include "TopologyData.h"
+#include "LegacyTopologyDataImpl.h"
 #include "Precision.h"
 #include "Linalg.h"
 #include "LinalgIO.h"
@@ -70,8 +73,48 @@ int main(int argc, char *argv[])
   }
 
   #ifndef FALLBACK
+  try {        
+    std::string xArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Geom.data.hdr";
+    std::string fArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Function.data.hdr";
+
+    FortranLinalg::DenseMatrix<Precision> x = 
+        FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
+    FortranLinalg::DenseVector<Precision> y = 
+        FortranLinalg::LinalgIO<Precision>::readVector(fArg);
+    
+    // Build Sample Vector from Input Data
+    std::vector<DenseVectorSample*> samples;
+    for (int j=0; j < x.N(); j++) {
+      FortranLinalg::DenseVector<Precision> vector(x.M());
+      for (int i=0; i < x.M(); i++) {
+        vector(i) = x(i, j);
+      }
+      DenseVectorSample *sample = new DenseVectorSample(vector);
+      samples.push_back(sample);
+    }
+
     HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-  DenseVectorEuclideanMetric metric;
+    DenseVectorEuclideanMetric metric;
+    FortranLinalg::DenseMatrix<Precision> distances = 
+          genericProcessor.computeDistances(samples, metric);
+    HDProcessResult *result = nullptr;  
+  
+    result = genericProcessor.processOnMetric(
+        distances /* distance matrix */,
+        y /* qoi */,
+        15 /* knn */,        
+        5 /* samples */,
+        20 /* persistence */,        
+        true /* random */,
+        0.25 /* sigma */,
+        0 /* smooth */);
+    HDVizData *data = new SimpleHDVizDataImpl(result);
+    TopologyData *topoData = new LegacyTopologyDataImpl(data);  
+
+    std::cout << "processOnMetric called()";
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+  }
   #endif
 
 
