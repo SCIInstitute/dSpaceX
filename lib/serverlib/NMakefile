@@ -1,0 +1,62 @@
+#
+IDIR = ..\include
+!include $(IDIR)\WIN64
+SDIR = $(MAKEDIR)
+LDIR = $(SDIR)\..\lib
+ODIR = $(SDIR)\..\obj
+BDIR = $(SDIR)\..\bin
+
+DEFINE = $(DEFINE) /D_UNICODE /DUNICODE
+
+OBJS = gettimeofday.obj websock-w32.obj base64-decode.obj handshake.obj \
+       client-handshake.obj libwebsockets.obj extension-deflate-stream.obj \
+       md5.obj extension-x-google-mux.obj parsers.obj extension.obj sha-1.obj \
+       server.obj wv.obj fwv.obj
+
+default:	start $(BDIR)\server.exe end
+
+start:
+	cd $(ODIR)
+	xcopy $(SDIR)\*.c           /Q /Y
+	xcopy $(SDIR)\*.h           /Q /Y
+
+$(BDIR)\server.exe:	$(ODIR)\servertest.obj $(LDIR)\wsserver.lib \
+			$(LDIR)\z.lib
+	cl /Fe$(BDIR)\server.exe $(ODIR)\servertest.obj $(LDIR)\wsserver.lib \
+		$(LDIR)\z.lib ws2_32.lib
+	$(MCOMP) /manifest $(BDIR)\server.exe.manifest \
+		/outputresource:$(BDIR)\server.exe;1
+
+$(ODIR)\servertest.obj:	server.c
+	cl /c $(COPTS) $(DEFINE) /DSTANDALONE /I$(IDIR) /I$(IDIR)\winhelpers \
+		/I. /I$(SDIR)\win32helpers server.c /Fo$(ODIR)\servertest.obj
+
+$(LDIR)\wsserver.lib:	$(OBJS)
+	-del $(LDIR)\wsserver.lib
+	lib /out:$(LDIR)\wsserver.lib $(OBJS)
+
+$(OBJS):	extension-deflate-stream.h libwebsockets.h $(IDIR)\wsserver.h \
+		extension-x-google-mux.h private-libwebsockets.h \
+		$(IDIR)\wsss.h
+.c.obj:
+	cl /c $(COPTS) $(DEFINE) /I. /I$(IDIR) /I$(IDIR)\winhelpers \
+		/I$(SDIR)\win32helpers /I$(SDIR)\zlib $<
+
+$(LDIR)\z.lib:
+	cd $(SDIR)\zlib
+	nmake -f NMakefile
+	cd $(ODIR)
+
+end:
+	-del *.c *.h
+	cd $(SDIR)
+
+clean:
+	cd $(SDIR)\zlib
+	nmake -f NMakefile clean
+	cd $(ODIR)
+	-del $(OBJS)
+	cd $(SDIR)
+
+cleanall:	clean
+	-del $(LDIR)\wsserver.lib $(BDIR)\server.exe $(ODIR)\servertest.obj

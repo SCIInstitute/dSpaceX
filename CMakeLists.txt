@@ -10,6 +10,9 @@ OPTION(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
 OPTION(BUILD_HDVIZPROCESSING "Build HDViz preprocessing tool" OFF)
 OPTION(BUILD_HDVIZ "Build HDViz visualizatoin tool" OFF)
 OPTION(BUILD_TESTS "Build tests" ON)
+OPTION(BUILD_SERVER_LIB "Builder server lib" ON)
+OPTION(BUILD_SERVER "Build server" ON)
+
 
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
@@ -20,6 +23,7 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
 ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
+  include/
   lib
   external/
   external/gle/lib 

@@ -1,0 +1,104 @@
+/* light yellow backbround to table data entries */
+td {
+    padding-left:         5px;
+    padding-right:        5px;
+    padding-top:          0px;
+    padding-bottom:       0px;
+    background-color: #FFFFF0;
+}
+
+/* buttons */
+button {
+    font-size:            9px;
+    padding:              0px;
+}
+
+/* background for error table data entries (light-red) */
+.errorTD {
+    padding-left:         5px;
+    padding-right:        5px;
+    padding-top:          0px;
+    padding-bottom:       0px;
+    background-color: #FF7F7F;
+}
+
+/* real text that looks like a link */
+.fakelink {
+    cursor:           pointer;
+    text-decoration:     none;
+    font-weight:         bold;
+    color:            #0000FF;
+}
+
+/* real text that looks like a link that has context-menu (green) */
+.fakelinkcmenu {
+    cursor:           pointer;
+    font-weight:         bold;
+    color:            #00BF00;
+}
+
+/* real text that looks like a link that is "on" */
+.fakelinkon {
+    cursor:           pointer;
+    text-decoration:     none;
+    font-weight:         bold;
+    color:            #0000FF;
+}
+
+/* real text that looks like a link that is "off" */
+.fakelinkoff {
+    cursor:           pointer;
+    text-decoration:     none;
+    font-weight:         bold;
+    color:            #7F0000;
+}
+
+/* + or - that looks like a link that is "on" (blue) */
+.fakelinkexpand {
+    cursor:           pointer;
+    font-weight:         bold;
+    color:            #0000FF;
+}
+
+/* frame on top left that contains menus, trees, etc */
+#leftframe {
+    width:              250px;
+    height:             600px;
+    float:               left;
+    overflow:          scroll;
+    font-size:           10pt;
+}
+
+/* frame on top right that contains the 3D viewer */
+#riteframe {
+    width:              600px;
+    height:             600px;
+    float:               left;
+    overflow:          scroll;
+}
+
+/* frame on top middle contains 2D data */
+#midlframe {
+    width:              600px;
+    height:             600px;
+    float:               left;
+    overflow:          scroll;
+}
+
+/* frame on bottom that contains messages */
+#botmframe {
+    width:              750px;
+    height:             150px;
+    overflow:          scroll;
+    font-family:      courier, monospace;
+    font-size:           10pt;
+}
+
+/* frame on bottom left that contains key */
+#keyframe {
+    width:              250px;
+    height:             150px;
+    float:               left;
+    overflow:          scroll;
+    font-size:            9pt;
+}

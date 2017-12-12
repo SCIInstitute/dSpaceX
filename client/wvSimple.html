@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+/*
+ * WebViewer (wv) WebSocket simple example
+ */
+ -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>WebViewer</title>
+
+<script type="text/javascript" src="WebViewer/webgl-utils.js"> </script>
+<script type="text/javascript" src="WebViewer/webgl-debug.js"> </script>
+<script type="text/javascript" src="WebViewer/J3DIMath.js">    </script>
+
+<script>
+    var   wv = {};                // place to store "globals"
+</script>
+<script type="text/javascript" src="WebViewer/wv-draw.js">     </script>
+<script type="text/javascript" src="WebViewer/wv-render.js">   </script>
+<script type="text/javascript" src="WebViewer/wv-gPrim.js">    </script>
+<script type="text/javascript" src="WebViewer/wv-sGraph.js">   </script>
+<script type="text/javascript" src="WebViewer/wv-socket.js">   </script>
+<script type="text/javascript" src="WebViewer/wv-cbManage.js"> </script>
+
+<script type="text/javascript" src="simpleUI.js">              </script>
+
+<script>
+    "use strict";
+
+    wv.zNear    =  1.0;           // have some values for Zscreen
+    wv.zFar     = 11.0;
+    wv.canvasID = "WebViewer";    // must match <canvas id=...> below!
+
+    // initialize WebSockets
+    var url = prompt("Enter hostname:port", "Localhost:7681");
+    wv.getSockets("ws://"+url);
+
+    // set our callback functions
+    wv.setCallback("InitUI",       wvInitUI);
+    wv.setCallback("UpdateCanvas", wvUpdateCanvas);
+    wv.setCallback("UpdateUI",     wvUpdateUI);
+    wv.setCallback("Reshape",      reshape);
+  
+</script>
+
+<style type="text/css">
+    canvas {
+        /* border: 2px solid black; */
+    }
+    .text {
+        position:absolute;
+        top:100px;
+        left:20px;
+        font-size:2em;
+        color: blue;
+    }
+</style>
+</head>
+
+<body onload="wv.Start()">
+<canvas id="WebViewer">
+    If you're seeing this your web browser doesn't support the &lt;canvas>&gt; element. Ouch!
+</canvas>
+<div id="statusline"></div>
+</body>
+
+</html>
