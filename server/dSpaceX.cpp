@@ -116,8 +116,10 @@ int main(int argc, char *argv[])
         0 /* smooth */);
     HDVizData *data = new SimpleHDVizDataImpl(result);
     TopologyData *topoData = new LegacyTopologyDataImpl(data);  
-    
 
+    MetricMDS<Precision> mds;
+    FortranLinalg::DenseMatrix<Precision> layout = mds.embed(distances, 2);
+  
     std::cout << "processOnMetric called()";
   } catch (const char *err) {
     std::cerr << err << std::endl;
