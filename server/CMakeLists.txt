@@ -24,3 +24,4 @@ TARGET_LINK_LIBRARIES (dSpaceX libwsserver hdprocess blas
 
 
 ADD_SUBDIRECTORY(backends/sampleBE)
+ADD_SUBDIRECTORY(backends/sciBE)
