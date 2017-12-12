@@ -1,5 +1,7 @@
 examples
 build
+build.darwin
+build.linux
 CMakeLists.txt.user
 .DS_Store
 /data
