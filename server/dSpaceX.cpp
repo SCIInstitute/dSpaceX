@@ -43,6 +43,12 @@ extern "C" void dsx_draw2D(wvContext *cntxt, float *lims, int nCrystal,
                            int flag);
 
 
+#ifndef FALLBACK
+std::vector<DenseVectorSample*> samples;
+FortranLinalg::DenseVector<Precision> y;
+#endif
+ 
+
 int main(int argc, char *argv[])
 {
   int   stat, port = 7681;

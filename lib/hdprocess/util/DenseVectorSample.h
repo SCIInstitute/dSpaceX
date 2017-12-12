@@ -2,6 +2,7 @@
 
 #include "Precision.h"
 #include "DenseVector.h"
+#include "EuclideanMetric.h"
 
 
 class DenseVectorSample {

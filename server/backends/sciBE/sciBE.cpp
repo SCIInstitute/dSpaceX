@@ -14,6 +14,18 @@
 #include <limits.h>
 #endif
 
+#include <vector>
+#include "util/DenseVectorSample.h";
+#include "Precision.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
+#include "DenseMatrix.h"
+#include "DenseVector.h"
+
+
+extern std::vector<DenseVectorSample*> samples;
+extern FortranLinalg::DenseVector<Precision> y;
+
 
 /* image file reader */
 extern "C" int dsx_getThumbNail( const char *Name, int *Width, int *Height,
@@ -61,10 +73,13 @@ extern "C" int dsxInitialize(
   *params = *QoIs    = NULL;
   *PNames = *QNames  = NULL;
   
-  fp = fopen("aeroDB_ALL.dat", "r");
-  if (fp == NULL) return -1;
-  
-  fscanf(fp, "%d %d %d", nParams, nQoI, nCases);
+  // fp = fopen("aeroDB_ALL.dat", "r");
+  // if (fp == NULL) return -1;
+  // fscanf(fp, "%d %d %d", nParams, nQoI, nCases);
+  *nCases = samples.size();
+  *nQoI = 1;
+  *nParams = 1;
+
   
   len    = *nCases;
   cases  = (double *) malloc(*nParams*len*sizeof(double));
@@ -81,25 +96,33 @@ extern "C" int dsxInitialize(
   }
   
   for (i = 0; i < *nParams; i++) {
-    fscanf(fp, " \"%[^\"]\"", text);
+    // fscanf(fp, " \"%[^\"]\"", text);
+    strcpy(text, "parameters\0");
     len = strlen(text)+1;
-    pNames[i] = malloc(len*sizeof(char));
+    pNames[i] = (char*)malloc(len*sizeof(char));
     if (pNames[i] == NULL) continue;
     for (j = 0; j < len; j++) pNames[i][j] = text[j];
   }
   for (i = 0; i < *nQoI; i++) {
-    fscanf(fp, " \"%[^\"]\"", text);
+    // fscanf(fp, " \"%[^\"]\"", text);
+    strcpy(text, "qoi\0");
     len = strlen(text)+1;
-    qNames[i] = malloc(len*sizeof(char));
+    qNames[i] = (char*)malloc(len*sizeof(char));
     if (qNames[i] == NULL) continue;
     for (j = 0; j < len; j++) qNames[i][j] = text[j];
   }
   
   for (m = n = j = 0; j < *nCases; j++) {
-    for (i = 0; i < *nParams; i++, m++) fscanf(fp, "%lf", &cases[m]);
-    for (i = 0; i < *nQoI;    i++, n++) fscanf(fp, "%lf", &qois[n]);
+    for (i = 0; i < *nParams; i++, m++) {
+      // fscanf(fp, "%lf", &cases[m]);
+      cases[n] = 0;
+    }
+    for (i = 0; i < *nQoI;    i++, n++) {
+      // fscanf(fp, "%lf", &qois[n]);
+      qois[n] =  y(j);
+    }
   }
-  fclose(fp);
+  // fclose(fp);
   
   /* get our current location */
   (void) getcwd(save.currentPath, PATH_MAX);

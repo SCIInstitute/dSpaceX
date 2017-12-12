@@ -9,7 +9,7 @@ SET(HDPROCESS_INCLUDE_FILES
   TopologyData.h
   LegacyTopologyDataImpl.h)
 
-SET(HDPROCESS_SOURCE_FILES 
+SET(HDPROCESS_SOURCE_FILES
   HDProcessor.cpp 
   HDProcessResultSerializer.cpp
   FileCachedHDVizDataImpl.cpp 
