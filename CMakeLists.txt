@@ -44,6 +44,9 @@ INCLUDE_DIRECTORIES(
 
 ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
 ADD_SUBDIRECTORY(lib/analysis)
+if(BUILD_SERVER_LIB)
+  ADD_SUBDIRECTORY(lib/serverlib)
+endif(BUILD_SERVER_LIB)
 
 if(BUILD_HDVIZ)
   ADD_SUBDIRECTORY(external/gle)
