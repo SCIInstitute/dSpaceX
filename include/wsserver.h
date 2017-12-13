@@ -78,6 +78,8 @@ __ProtoExt__ void wv_sendText( void *wsi, char *text );
 __ProtoExt__ void wv_broadcastText( char *text );
                               
 __ProtoExt__ void wv_adjustVerts( wvData *dstruct, float *focus );
+  
+__ProtoExt__ void wv_adjustVerts2D( wvData *dstruct, float *focus );
 
 __ProtoExt__ void wv_cleanupServers( void );
 

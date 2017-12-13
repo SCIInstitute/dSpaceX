@@ -205,7 +205,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   std::vector<unsigned int> &edgeIndices, float *lims, int nCrystal, int flag)
 {
   int    i, stat, segs[8];
-  float  xy[12], focus[4], colrs[3];
+  float  xy[12], focus[3], colrs[3];
   char   gpname[33];
   wvData items[3];
 
@@ -213,8 +213,8 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 
   if (flag != 0) return;
   
-  focus[0] = focus[1] = focus[2] = 0.0;
-  focus[3] = 1.0;
+  focus[0] = focus[1] = 0.0;
+  focus[2] = 1.0;
   
   for (int i = 0; i < layout.N(); i++) {    
     vertices.push_back(layout(0, i));
@@ -233,22 +233,6 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   for (size_t i = 0; i < y.N(); i++) {
     spec_col(lims, y(i), &colors[3*i]);
   }
-     
-  // xy[ 0]  = xy[ 1] = -0.9;
-  // xy[ 3]  =  0.9;
-  // xy[ 4]  = -0.9;
-  // xy[ 6]  = xy[ 7] =  0.9;
-  // xy[ 9]  = -0.9;
-  // xy[10]  =  0.9;
-  // xy[ 2]  = xy[5] = xy[8] = xy[11] = 0.0;
-  // segs[0] = 0;
-  // segs[1] = 1;
-  // segs[2] = 1;
-  // segs[3] = 2;
-  // segs[4] = 2;
-  // segs[5] = 3;
-  // segs[6] = 3;
-  // segs[7] = 0
   
   sprintf(gpname, "Scatter Lines");
   stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &vertices[0],  WV_VERTICES, &items[0]);
@@ -256,7 +240,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
     return;
   }
-  wv_adjustVerts(&items[0], focus);
+  wv_adjustVerts2D(&items[0], focus);
   colrs[0]  = 0.5;
   colrs[1]  = 0.5;
   colrs[2]  = 0.5;
@@ -280,7 +264,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
     return;
   }
-  wv_adjustVerts(&items[0], focus);
+  wv_adjustVerts2D(&items[0], focus);
   // colrs[0]  = 0.0;
   // colrs[1]  = 0.0;
   // colrs[2]  = 1.0;
