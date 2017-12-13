@@ -196,6 +196,8 @@ function plotTriangles2D(gl, graphic)
 // draws the 2D scene
 function drawPicture2D(gl)
 {
+  gl.useProgram(wv.program2D);
+
   // Make sure the canvas is sized correctly.
   var canvas = document.getElementById(wv.canvas2D);
   if (wv.off2DTop != canvas.offsetTop || wv.off2DLft != canvas.offsetLeft) {
@@ -213,7 +215,7 @@ function drawPicture2D(gl)
     wv.mvMatrix2D.makeIdentity();
     wv.orthoMatrix2D.makeIdentity();
     wv.orthoMatrix2D.ortho(-1, 1, -wv.height2D/wv.width2D,
-                                   wv.height2D/wv.width2D, -1, 1);
+                                   wv.height2D/wv.width2D, 1, -1);
     wv.sceneU2D = 1;
   }
 
@@ -310,7 +312,7 @@ function InitCanvas2D(gl)
 
   //
   // Set up the uniform variables for the shaders
-
+  gl.useProgram(wv.program2D);
   wv.u_conColorLoc2D = gl.getUniformLocation(wv.program2D,  "conColor");
   gl.uniform3f(wv.u_conColorLoc2D, 0.0, 1.0, 0.0);
   wv.u_wColorLoc2D = gl.getUniformLocation(wv.program2D,    "wColor");

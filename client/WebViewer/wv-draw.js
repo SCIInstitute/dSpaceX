@@ -529,6 +529,8 @@ wv["InitDraw"] = function()
 // draws the scene using the globals "g"
 wv["drawPicture"] = function(gl)
 {
+  gl.useProgram(wv.program);
+
   // Make sure the canvas is sized correctly.
   wv.Reshape(gl);
 
