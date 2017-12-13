@@ -376,6 +376,26 @@ wv_adjustVerts(wvData *dstruct, float *focus)
 }
 
 
+void
+wv_adjustVerts2D(wvData *dstruct, float *focus)
+{
+  int   i;
+  float *fptr;
+  
+  if (dstruct->dataType != WV_VERTICES) return;
+  if (dstruct->dataPtr  == NULL) return;
+  
+  fptr = (float *) dstruct->dataPtr;
+  for (i = 0; i < dstruct->dataLen; i++) {
+    fptr[2*i  ] -= focus[0];
+    fptr[2*i+1] -= focus[1];
+    fptr[2*i  ] /= focus[2];
+    fptr[2*i+1] /= focus[2];
+  }
+  
+}
+
+
 static void
 wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bias)
 {
