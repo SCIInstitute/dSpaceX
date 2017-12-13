@@ -270,7 +270,7 @@ function InitCanvas2D(gl)
 "    uniform float  pointSize;                   // point size in pixels",
 "",
 "    attribute vec4 vPosition;",
-"    attribute vec4 vColor;",
+"    attribute vec3 vColor;",
 "",
 "    varying vec4   v_Color;",
 "",
@@ -280,8 +280,8 @@ function InitCanvas2D(gl)
 "        gl_Position  = u_modelViewMatrix * vPosition;",
 "        gl_PointSize = pointSize; // set the point size",
 "        // assumes that colors are coming in as unsigned bytes",
-"        vec4 color = vColor/255.0;",
-"        v_Color    = color*wColor + vec4(conColor,1)*(1.0-wColor);",
+"        vec4 color = vec4(vColor/255.0, 1.0);",
+"        v_Color    = color*wColor + vec4(conColor,1.0)*(1.0-wColor);",
 "    }"
   ].join("\n");
 
