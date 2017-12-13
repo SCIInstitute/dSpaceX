@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 
 #include "Precision.h"
@@ -217,8 +218,14 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   focus[3] = 1.0;
   
   for (int i = 0; i < layout.N(); i++) {    
-    vertices.push_back(layout(0, i));
-    vertices.push_back(layout(1, i));
+    int sampleIndex = i;
+    int one_dim = std::floor(sqrt(2000));
+    float x_offset = (float)(sampleIndex % one_dim) / (float)one_dim;
+    float y_offset = (float)std::floor(sampleIndex / one_dim) / (float)one_dim;
+    vertices.push_back(x_offset - 0.5f);
+    vertices.push_back(y_offset - 0.5f);
+    // vertices.push_back(layout(0, i));
+    // vertices.push_back(layout(1, i));
   }
 
   std::cout << "FLAG = " << flag << std::endl;
@@ -250,6 +257,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   // segs[6] = 3;
   // segs[7] = 0
   
+  /*
   sprintf(gpname, "Scatter Lines");
   stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &vertices[0],  WV_VERTICES, &items[0]);
   if (stat < 0) {
@@ -273,7 +281,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   stat = wv_addGPrim(cntxt, gpname, WV_LINE2D, WV_ON, 3, items);
   if (stat < 0)
     printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
-  
+  */
   sprintf(gpname, "Scatter Dots");
   stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &vertices[0],  WV_VERTICES, &items[0]);
   if (stat < 0) {
