@@ -224,9 +224,12 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   std::cout << "FLAG = " << flag << std::endl;
   std::cout << "vertices.size() = " << vertices.size() << std::endl;
   std::cout << "edgeIndices.size() = " << edgeIndices.size() << std::endl;
+  std::cout << "layout.N() = " << layout.N() << std::endl;
+  std::cout << "y.N() = " << y.N() << std::endl;
 
   std::vector<float> colors(3*y.N());
   std::cout << "colors.size() = " << colors.size() << std::endl;
+
   for (size_t i = 0; i < y.N(); i++) {
     spec_col(lims, y(i), &colors[3*i]);
   }
@@ -286,7 +289,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
     return;
   }
-  stat = wv_addGPrim(cntxt, gpname, WV_POINT2D, WV_ON, 2, items);
+  stat = wv_addGPrim(cntxt, gpname, WV_POINT2D, WV_ON | WV_SHADING, 2, items);
   if (stat < 0) {
     printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
   } else {
