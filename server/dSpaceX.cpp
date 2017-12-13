@@ -41,6 +41,7 @@ extern void dsx_drawKey(wvContext *cntxt, float *lims,
 extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal,
                            int flag);
 extern void dsx_draw2D(wvContext *cntxt, 
+  FortranLinalg::DenseVector<Precision> y, 
   FortranLinalg::DenseMatrix<Precision> layout, 
   std::vector<unsigned int> &edgeIndices, 
   float *lims, int nCrystal, int flag);
@@ -281,7 +282,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       /* set 3D rendering of the result */
       dsx_draw3D(cntxt, lims, nCrystal, 0);
       /* set 2D rendering of the result */
-      dsx_draw2D(cntxt, layout, edgeIndices, lims, nCrystal, 0);
+      dsx_draw2D(cntxt, y, layout, edgeIndices, lims, nCrystal, 0);
     }
 
     return;
@@ -342,7 +343,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     /* set 3D rendering of the result */
     dsx_draw3D(cntxt, lims, nCrystal, color_only);
     /* set 2D rendering of the result */
-    dsx_draw2D(cntxt, layout, edgeIndices, lims, nCrystal, color_only);
+    dsx_draw2D(cntxt, y, layout, edgeIndices, lims, nCrystal, color_only);
     
     return;
   }

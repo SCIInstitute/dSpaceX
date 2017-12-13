@@ -200,7 +200,8 @@ dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name)
 
 /* place-holder for scatter-plot rendering */
 void
-dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout, 
+dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
+  FortranLinalg::DenseMatrix<Precision> layout, 
   std::vector<unsigned int> &edgeIndices, float *lims, int nCrystal, int flag)
 {
   int    i, stat, segs[8];
@@ -224,6 +225,12 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout,
   std::cout << "vertices.size() = " << vertices.size() << std::endl;
   std::cout << "edgeIndices.size() = " << edgeIndices.size() << std::endl;
 
+  std::vector<float> colors(3*y.N());
+  std::cout << "colors.size() = " << colors.size() << std::endl;
+  for (size_t i = 0; i < y.N(); i++) {
+    spec_col(lims, y(i), &colors[3*i]);
+  }
+     
   // xy[ 0]  = xy[ 1] = -0.9;
   // xy[ 3]  =  0.9;
   // xy[ 4]  = -0.9;
@@ -271,10 +278,10 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout,
     return;
   }
   wv_adjustVerts(&items[0], focus);
-  colrs[0]  = 0.0;
-  colrs[1]  = 0.0;
-  colrs[2]  = 1.0;
-  stat = wv_setData(WV_REAL32, 1, (void *) colrs,  WV_COLORS, &items[1]);
+  // colrs[0]  = 0.0;
+  // colrs[1]  = 0.0;
+  // colrs[2]  = 1.0;
+  stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &colors[0],  WV_COLORS, &items[1]);
   if (stat < 0) {
     printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
     return;
