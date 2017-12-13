@@ -36,12 +36,14 @@ static wvContext  *cntxt;
 static dsxContext dsxcntxt;
 
 
-extern "C" void dsx_drawKey(wvContext *cntxt, float *lims,
+extern void dsx_drawKey(wvContext *cntxt, float *lims,
                             /*@null@*/ char *name);
-extern "C" void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal,
+extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal,
                            int flag);
-extern "C" void dsx_draw2D(wvContext *cntxt, float *lims, int nCrystal,
-                           int flag);
+extern void dsx_draw2D(wvContext *cntxt, 
+  FortranLinalg::DenseMatrix<Precision> layout, 
+  std::vector<unsigned int> edgeIndices, 
+  float *lims, int nCrystal, int flag);
 
 
 #ifndef FALLBACK
@@ -78,63 +80,6 @@ int main(int argc, char *argv[])
     printf(" failed to Load Back-End %d!\n", stat);
     return 1;
   }
-
-  #ifndef FALLBACK
-  try {        
-    std::string xArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Geom.data.hdr";
-    std::string fArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Function.data.hdr";
-
-    FortranLinalg::DenseMatrix<Precision> x = 
-        FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
-    // FortranLinalg::DenseVector<Precision> 
-    y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
-    
-    // Build Sample Vector from Input Data
-    for (int j=0; j < x.N(); j++) {
-      FortranLinalg::DenseVector<Precision> vector(x.M());
-      for (int i=0; i < x.M(); i++) {
-        vector(i) = x(i, j);
-      }
-      DenseVectorSample *sample = new DenseVectorSample(vector);
-      samples.push_back(sample);
-    }
-
-    HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-    DenseVectorEuclideanMetric metric;
-    FortranLinalg::DenseMatrix<Precision> distances = 
-          genericProcessor.computeDistances(samples, metric);
-    HDProcessResult *result = nullptr;  
-  
-    
-    result = genericProcessor.processOnMetric(
-        distances /* distance matrix */,
-        y /* qoi */,
-        15 /* knn */,        
-        5 /* samples */,
-        20 /* persistence */,        
-        true /* random */,
-        0.25 /* sigma */,
-        0 /* smooth */);
-    HDVizData *data = new SimpleHDVizDataImpl(result);
-    TopologyData *topoData = new LegacyTopologyDataImpl(data);  
-
-    MetricMDS<Precision> mds;
-    FortranLinalg::DenseMatrix<Precision> layout = mds.embed(distances, 2);
-
-    std::vector<unsigned int> edgeIndices;
-    for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
-      for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
-        int neighbor = data->getNearestNeighbors()(j, i);
-          edgeIndices.push_back(i);
-          edgeIndices.push_back(neighbor);
-      }
-    }
-
-  } catch (const char *err) {
-    std::cerr << err << std::endl;
-  }
-  #endif
-
 
   /* create the WebViewer context */
   cntxt = wv_createContext(0, 30.0, 1.0, 10.0, eye, center, up);
@@ -210,6 +155,13 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   static double *cases = NULL, *QoIs = NULL;
   static char   **pNames, **qNames;
 
+  static HDProcessResult *result = nullptr;  
+  static HDVizData *data = nullptr;
+  static TopologyData *topoData = nullptr;
+  static FortranLinalg::DenseMatrix<Precision> layout;
+  static std::vector<unsigned int> edgeIndices;
+
+
 /*
   printf(" pWSI = %lx\n", (unsigned long) wsi);
   {
@@ -234,6 +186,62 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
       return;
     }
+
+    // Begin HDProcess Block
+    #ifndef FALLBACK
+    try {        
+      std::string xArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Geom.data.hdr";
+      std::string fArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Function.data.hdr";
+
+      FortranLinalg::DenseMatrix<Precision> x = 
+          FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
+      // FortranLinalg::DenseVector<Precision> 
+      y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
+      
+      // Build Sample Vector from Input Data
+      for (int j=0; j < x.N(); j++) {
+        FortranLinalg::DenseVector<Precision> vector(x.M());
+        for (int i=0; i < x.M(); i++) {
+          vector(i) = x(i, j);
+        }
+        DenseVectorSample *sample = new DenseVectorSample(vector);
+        samples.push_back(sample);
+      }
+
+      HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+      DenseVectorEuclideanMetric metric;
+      FortranLinalg::DenseMatrix<Precision> distances = 
+            genericProcessor.computeDistances(samples, metric);
+        
+      result = genericProcessor.processOnMetric(
+          distances /* distance matrix */,
+          y /* qoi */,
+          15 /* knn */,        
+          5 /* samples */,
+          20 /* persistence */,        
+          true /* random */,
+          0.25 /* sigma */,
+          0 /* smooth */);
+      data = new SimpleHDVizDataImpl(result);
+      topoData = new LegacyTopologyDataImpl(data);  
+
+      MetricMDS<Precision> mds;
+      layout = mds.embed(distances, 2);
+
+      std::vector<unsigned int> edgeIndices;
+      for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
+        for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
+          int neighbor = data->getNearestNeighbors()(j, i);
+            edgeIndices.push_back(i);
+            edgeIndices.push_back(neighbor);
+        }
+      }
+
+    } catch (const char *err) {
+      std::cerr << err << std::endl;
+    }
+    #endif
+    // End HDProcess Block
   
     stat = dsx_Initialize(&dsxcntxt, &nCases, &nParams, &cases, &pNames,
                           &nQoIs, &QoIs, &qNames);
@@ -274,7 +282,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       /* set 3D rendering of the result */
       dsx_draw3D(cntxt, lims, nCrystal, 0);
       /* set 2D rendering of the result */
-      dsx_draw2D(cntxt, lims, nCrystal, 0);
+      dsx_draw2D(cntxt, layout, edgeIndices, lims, nCrystal, 0);
     }
 
     return;
@@ -335,7 +343,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     /* set 3D rendering of the result */
     dsx_draw3D(cntxt, lims, nCrystal, color_only);
     /* set 2D rendering of the result */
-    dsx_draw2D(cntxt, lims, nCrystal, color_only);
+    dsx_draw2D(cntxt, layout, edgeIndices, lims, nCrystal, color_only);
     
     return;
   }

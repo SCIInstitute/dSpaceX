@@ -15,7 +15,7 @@ SET(SERVER_INCLUDE_FILES
 SET(SERVER_SOURCE_FILES 
   dSpaceX.cpp
   dsxdyn.c
-  render.c)
+  render.cpp)
 
 INCLUDE_DIRECTORIES(../include)
 INCLUDE_DIRECTORIES(../lib/hdprocess)

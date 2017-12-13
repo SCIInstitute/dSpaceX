@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <vector>
+
+#include "Precision.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
+#include "DenseMatrix.h"
+#include "DenseVector.h"
+
 #include "wsserver.h"
 
 
@@ -192,7 +200,8 @@ dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name)
 
 /* place-holder for scatter-plot rendering */
 void
-dsx_draw2D(wvContext *cntxt, float *lims, int nCrystal, int flag)
+dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout, 
+  std::vector<unsigned int> edgeIndices, float *lims, int nCrystal, int flag)
 {
   int    i, stat, segs[8];
   float  xy[12], focus[4], colrs[3];
