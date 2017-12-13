@@ -191,8 +191,8 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     // Begin HDProcess Block
     #ifndef FALLBACK
     try {        
-      std::string xArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Geom.data.hdr";
-      std::string fArg = "/Users/jon/workspace/dSpaceX/examples/gaussian2d/Function.data.hdr";
+      std::string xArg = "../../examples/gaussian2d/Geom.data.hdr";
+      std::string fArg = "../../examples/gaussian2d/Function.data.hdr";
 
       FortranLinalg::DenseMatrix<Precision> x = 
           FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
