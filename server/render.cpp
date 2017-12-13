@@ -241,7 +241,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout,
   // segs[7] = 0
   
   sprintf(gpname, "Scatter Lines");
-  stat = wv_setData(WV_REAL32, vertices.size(), (void *) &vertices[0],  WV_VERTICES, &items[0]);
+  stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &vertices[0],  WV_VERTICES, &items[0]);
   if (stat < 0) {
     printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
     return;
@@ -265,7 +265,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseMatrix<Precision> layout,
     printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
   
   sprintf(gpname, "Scatter Dots");
-  stat = wv_setData(WV_REAL32, vertices.size(), (void *) &vertices[0],  WV_VERTICES, &items[0]);
+  stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &vertices[0],  WV_VERTICES, &items[0]);
   if (stat < 0) {
     printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
     return;
