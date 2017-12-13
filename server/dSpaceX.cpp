@@ -42,7 +42,7 @@ extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal,
                            int flag);
 extern void dsx_draw2D(wvContext *cntxt, 
   FortranLinalg::DenseMatrix<Precision> layout, 
-  std::vector<unsigned int> edgeIndices, 
+  std::vector<unsigned int> &edgeIndices, 
   float *lims, int nCrystal, int flag);
 
 
@@ -228,7 +228,6 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       MetricMDS<Precision> mds;
       layout = mds.embed(distances, 2);
 
-      std::vector<unsigned int> edgeIndices;
       for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
         for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
           int neighbor = data->getNearestNeighbors()(j, i);
