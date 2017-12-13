@@ -12,8 +12,9 @@
 #include "DenseVector.h"
 #include "util/DenseVectorSample.h"
 
+#include <cstdlib>
+#include <algorithm>
 #include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <unistd.h>		// usleep
@@ -119,8 +120,16 @@ int main(int argc, char *argv[])
 
     MetricMDS<Precision> mds;
     FortranLinalg::DenseMatrix<Precision> layout = mds.embed(distances, 2);
-  
-    std::cout << "processOnMetric called()";
+
+    std::vector<unsigned int> edgeIndices;
+    for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
+      for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
+        int neighbor = data->getNearestNeighbors()(j, i);
+          edgeIndices.push_back(i);
+          edgeIndices.push_back(neighbor);
+      }
+    }
+
   } catch (const char *err) {
     std::cerr << err << std::endl;
   }
