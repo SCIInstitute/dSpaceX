@@ -354,6 +354,79 @@ wv_setData(int type, int len, void *data, int VBOtype, wvData *dstruct)
 }
 
 
+int
+wv_setVerts2D(int type, int len, void *data, wvData *dstruct)
+{
+  int     i, VBOtype = WV_VERTICES;
+  float   *fdata, *fptr;
+  double  *ddata;
+  
+  dstruct->dataType = 0;
+  dstruct->dataLen  = len;
+  dstruct->dataPtr  = NULL;
+  dstruct->data[0]  = 0.0;
+  dstruct->data[1]  = 0.0;
+  dstruct->data[2]  = 0.0;
+  if (len <= 0) return -4;
+  
+  /* single data entry */
+  if (len == 1) {
+    switch (type) {
+      case WV_UINT8:
+      case WV_UINT16:
+      case WV_INT32:
+        return -2;
+      case WV_REAL32:
+        fdata = (float *) data;
+        dstruct->data[0] = fdata[0];
+        dstruct->data[1] = fdata[1];
+        break;
+      case WV_REAL64:
+        ddata = (double *) data;
+        dstruct->data[0] = ddata[0];
+        dstruct->data[1] = ddata[1];
+        break;
+      default:
+        return -3;
+    }
+        
+    dstruct->dataType = VBOtype;
+    return 0;
+  }
+  
+  /* an array of data */
+  fptr = (float *) wv_alloc(2*len*sizeof(float));
+  if (fptr == NULL) return -1;
+  dstruct->dataPtr = fptr;
+  
+  switch (type) {
+    case WV_UINT8:
+    case WV_UINT16:
+    case WV_INT32:
+      return -2;
+    case WV_REAL32:
+      fdata = (float *) data;
+      for (i = 0; i < len; i++) {
+        fptr[2*i  ] = fdata[2*i  ];
+        fptr[2*i+1] = fdata[2*i+1];
+      }
+      break;
+    case WV_REAL64:
+      ddata = (double *) data;
+      for (i = 0; i < len; i++) {
+        fptr[2*i  ] = ddata[2*i  ];
+        fptr[2*i+1] = ddata[2*i+1];
+      }
+      break;
+    default:
+      return -3;
+  }
+  
+  dstruct->dataType = VBOtype;
+  return 0;
+}
+
+
 void
 wv_adjustVerts(wvData *dstruct, float *focus)
 {
@@ -493,12 +566,14 @@ wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bi
 static int
 wv_makeStripes(wvGPrim *gp, int bias)
 {
-  int            i, j, k, m, maxLen, cnt, len, nstripe, *index, *lmark;
+  int            i, j, k, m, nd, maxLen, cnt, len, nstripe, *index, *lmark;
   unsigned short *i2, *il2, *ip2;
   wvStripe       *stripes;
 
   maxLen = 65536;
+  nd     = 3;
   if ((gp->gtype == WV_TRIANGLE) || (gp->gtype == WV_TRIANGLE2D)) maxLen--;
+  if  (gp->gtype > 2) nd = 2;
   if  (gp->nVerts <= maxLen) {
 
     /* a single stripe */
@@ -573,7 +648,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
         stripes[i].nlIndices = 0;
         stripes[i].npIndices = 0;
         stripes[i].nsVerts   = len;
-        stripes[i].vertices  = (float *) wv_alloc(3*len*sizeof(float));
+        stripes[i].vertices  = (float *) wv_alloc(nd*len*sizeof(float));
         stripes[i].gIndices  = (int *)   wv_alloc(len*sizeof(int));
         if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
           wv_free(stripes[i].vertices);
@@ -587,11 +662,19 @@ wv_makeStripes(wvGPrim *gp, int bias)
           wv_free(stripes);
           return -1;
         }
-        for (k = 0; k < len; k++) {
-          stripes[i].gIndices[k]     = j+k;
-          stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
-          stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
-          stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+        if (nd == 3)  {
+          for (k = 0; k < len; k++) {
+            stripes[i].gIndices[k]     = j+k;
+            stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
+            stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
+            stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+          }
+        } else {
+          for (k = 0; k < len; k++) {
+            stripes[i].gIndices[k]     = j+k;
+            stripes[i].vertices[2*k  ] = gp->vertices[2*(j+k)  ];
+            stripes[i].vertices[2*k+1] = gp->vertices[2*(j+k)+1];
+          }
         }
         if (gp->colors != NULL) {
           stripes[i].colors = (unsigned char *) 
@@ -660,7 +743,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
           stripes[i].nlIndices = 0;
           stripes[i].npIndices = 0;
           stripes[i].nsVerts   = len;
-          stripes[i].vertices  = (float *) wv_alloc(3*len*sizeof(float));
+          stripes[i].vertices  = (float *) wv_alloc(nd*len*sizeof(float));
           stripes[i].gIndices  = (int *)   wv_alloc(len*sizeof(int));
           if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
             wv_free(stripes[i].vertices);
@@ -674,12 +757,21 @@ wv_makeStripes(wvGPrim *gp, int bias)
             return -1;
           }
           if (gp->indices != NULL)
-            for (k = 0; k < len; k++) {
-              m = gp->indices[j+k] - bias;
-              stripes[i].gIndices[k]     = m;
-              stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
-              stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
-              stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+            if (nd == 3) {
+              for (k = 0; k < len; k++) {
+                m = gp->indices[j+k] - bias;
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
+                stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
+                stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+              }
+            } else {
+              for (k = 0; k < len; k++) {
+                m = gp->indices[j+k] - bias;
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[2*k  ] = gp->vertices[2*m  ];
+                stripes[i].vertices[2*k+1] = gp->vertices[2*m+1];
+              }
             }
           if (gp->colors != NULL) {
             stripes[i].colors = (unsigned char *) 
@@ -727,7 +819,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
             stripes[i].nlIndices = 0;
             stripes[i].npIndices = 0;
             stripes[i].nsVerts   = len;
-            stripes[i].vertices  = (float *) wv_alloc(3*len*sizeof(float));
+            stripes[i].vertices  = (float *) wv_alloc(nd*len*sizeof(float));
             stripes[i].gIndices  = (int *)   wv_alloc(len*sizeof(int));
             if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
               wv_free(stripes[i].vertices);
@@ -742,11 +834,19 @@ wv_makeStripes(wvGPrim *gp, int bias)
               wv_free(stripes);
               return -1;
             }
-            for (k = 0; k < len; k++) {
-              stripes[i].gIndices[k]     = j+k;
-              stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
-              stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
-              stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+            if (nd == 3) {
+              for (k = 0; k < len; k++) {
+                stripes[i].gIndices[k]     = j+k;
+                stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
+                stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
+                stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+              }
+            } else {
+              for (k = 0; k < len; k++) {
+                stripes[i].gIndices[k]     = j+k;
+                stripes[i].vertices[2*k  ] = gp->vertices[2*(j+k)  ];
+                stripes[i].vertices[2*k+1] = gp->vertices[2*(j+k)+1];
+              }
             }
             for (cnt = k = 0; k < gp->npIndex; k++)
               if ((gp->pIndices[k]-bias >= j) &&
@@ -874,7 +974,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
             stripes[i].nlIndices = 0;
             stripes[i].npIndices = 0;
             stripes[i].nsVerts   = cnt;
-            stripes[i].vertices  = (float *) wv_alloc(3*cnt*sizeof(float));
+            stripes[i].vertices  = (float *) wv_alloc(nd*cnt*sizeof(float));
             stripes[i].gIndices  = (int *)   wv_alloc(cnt*sizeof(int));
             if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
               wv_free(stripes[i].vertices);
@@ -892,12 +992,21 @@ wv_makeStripes(wvGPrim *gp, int bias)
               wv_free(index);
               return -1;
             }
-            for (k = 0; k < cnt; k++) {
-              m = index[gp->nVerts+k];
-              stripes[i].gIndices[k]     = m;
-              stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
-              stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
-              stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+            if (nd == 3) {
+              for (k = 0; k < cnt; k++) {
+                m = index[gp->nVerts+k];
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
+                stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
+                stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+              }
+            } else {
+              for (k = 0; k < cnt; k++) {
+                m = index[gp->nVerts+k];
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[2*k  ] = gp->vertices[2*m  ];
+                stripes[i].vertices[2*k+1] = gp->vertices[2*m+1];
+              }
             }
             if (gp->normals != NULL) {
               stripes[i].normals = (float *) wv_alloc(3*cnt*sizeof(float));
@@ -1021,7 +1130,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
             stripes[i].nlIndices = 0;
             stripes[i].npIndices = 0;
             stripes[i].nsVerts   = len;
-            stripes[i].vertices  = (float *) wv_alloc(3*len*sizeof(float));
+            stripes[i].vertices  = (float *) wv_alloc(nd*len*sizeof(float));
             stripes[i].gIndices  = (int *)   wv_alloc(len*sizeof(int));
             if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
               wv_free(stripes[i].vertices);
@@ -1038,11 +1147,19 @@ wv_makeStripes(wvGPrim *gp, int bias)
               wv_free(lmark);
               return -1;
             }
-            for (k = 0; k < len; k++) {
-              stripes[i].gIndices[k]     = j+k;
-              stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
-              stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
-              stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+            if (nd == 3) {
+              for (k = 0; k < len; k++) {
+                stripes[i].gIndices[k]     = j+k;
+                stripes[i].vertices[3*k  ] = gp->vertices[3*(j+k)  ];
+                stripes[i].vertices[3*k+1] = gp->vertices[3*(j+k)+1];
+                stripes[i].vertices[3*k+2] = gp->vertices[3*(j+k)+2];
+              }
+            } else {
+              for (k = 0; k < len; k++) {
+                stripes[i].gIndices[k]     = j+k;
+                stripes[i].vertices[2*k  ] = gp->vertices[2*(j+k)  ];
+                stripes[i].vertices[2*k+1] = gp->vertices[2*(j+k)+1];
+              }
             }
             for (cnt = k = 0; k < gp->npIndex; k++)
               if ((gp->pIndices[k]-bias >= j) &&
@@ -1223,7 +1340,7 @@ wv_makeStripes(wvGPrim *gp, int bias)
             stripes[i].nlIndices = 0;
             stripes[i].npIndices = 0;
             stripes[i].nsVerts   = cnt;
-            stripes[i].vertices  = (float *) wv_alloc(3*cnt*sizeof(float));
+            stripes[i].vertices  = (float *) wv_alloc(nd*cnt*sizeof(float));
             stripes[i].gIndices  = (int *)   wv_alloc(cnt*sizeof(int));
             if ((stripes[i].vertices == NULL) || (stripes[i].gIndices == NULL)) {
               wv_free(stripes[i].vertices);
@@ -1243,12 +1360,21 @@ wv_makeStripes(wvGPrim *gp, int bias)
               wv_free(lmark);
               return -1;
             }
-            for (k = 0; k < cnt; k++) {
-              m = index[gp->nVerts+k];
-              stripes[i].gIndices[k]     = m;
-              stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
-              stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
-              stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+            if (nd == 3) {
+              for (k = 0; k < cnt; k++) {
+                m = index[gp->nVerts+k];
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[3*k  ] = gp->vertices[3*m  ];
+                stripes[i].vertices[3*k+1] = gp->vertices[3*m+1];
+                stripes[i].vertices[3*k+2] = gp->vertices[3*m+2];
+              }
+            } else {
+              for (k = 0; k < cnt; k++) {
+                m = index[gp->nVerts+k];
+                stripes[i].gIndices[k]     = m;
+                stripes[i].vertices[2*k  ] = gp->vertices[2*m  ];
+                stripes[i].vertices[2*k+1] = gp->vertices[2*m+1];
+              }
             }
             if (gp->normals != NULL) {
               stripes[i].normals = (float *) wv_alloc(3*cnt*sizeof(float));

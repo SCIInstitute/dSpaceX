@@ -71,6 +71,9 @@ __ProtoExt__ int  wv_thumbNail( wvContext *cntxt, int width, int height,
 __ProtoExt__ int  wv_setData( int type, int len, void *data, int VBOtype, 
                               wvData *dstruct );
 
+__ProtoExt__ int  wv_setVerts2D( int type, int len, void *data, 
+                                 wvData *dstruct );
+
 #ifndef STANDALONE
 __ProtoExt__ void wv_sendText( void *wsi, char *text );
 #endif

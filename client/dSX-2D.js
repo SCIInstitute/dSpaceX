@@ -196,7 +196,6 @@ function plotTriangles2D(gl, graphic)
 // draws the 2D scene
 function drawPicture2D(gl)
 {
-  gl.useProgram(wv.program2D);
 
   // Make sure the canvas is sized correctly.
   var canvas = document.getElementById(wv.canvas2D);
@@ -271,7 +270,7 @@ function InitCanvas2D(gl)
 "    uniform float  wColor;                      // Constant color switch",
 "    uniform float  pointSize;                   // point size in pixels",
 "",
-"    attribute vec4 vPosition;",
+"    attribute vec2 vPosition;",
 "    attribute vec3 vColor;",
 "",
 "    varying vec4   v_Color;",
@@ -279,11 +278,12 @@ function InitCanvas2D(gl)
 "    void main()",
 "    {",
 "        // set the pixel position",
-"        gl_Position  = u_modelViewMatrix * vPosition;",
+"        vec4 vPos    = vec4(vPosition, 0.0, 1.0);",
+"        gl_Position  = u_modelViewMatrix * vPos;",
 "        gl_PointSize = pointSize; // set the point size",
 "        // assumes that colors are coming in as unsigned bytes",
-"        vec4 color = vec4(vColor/255.0, 1.0);",
-"        v_Color    = color*wColor + vec4(conColor,1.0)*(1.0-wColor);",
+"        vec4 color   = vec4(vColor/255.0, 1.0);",
+"        v_Color      = color*wColor + vec4(conColor,1.0)*(1.0-wColor);",
 "    }"
   ].join("\n");
 
