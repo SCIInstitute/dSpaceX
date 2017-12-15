@@ -472,7 +472,7 @@ wv_adjustVerts2D(wvData *dstruct, float *focus)
 static void
 wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bias)
 {
-  int            *itmp, i, j, k, m, cnt, nslen, nsline;
+  int            *itmp, i, j, k, nd, m, cnt, nslen, nsline;
   float          *ftmp;
   unsigned char  *ctmp;
   unsigned short *stmp;
@@ -486,8 +486,11 @@ wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bi
     printf(" WV warning: Can not complete last stripe with Lines!\n");
     return;
   }
+  nd = 3;
+  if ((gp->gtype == WV_POINT2D) || (gp->gtype == WV_LINE2D) ||
+      (gp->gtype == WV_TRIANGLE2D)) nd = 2;
 
-  ftmp = (float *) wv_realloc(stripes[nstripe-1].vertices, 3*nslen*sizeof(float));
+  ftmp = (float *) wv_realloc(stripes[nstripe-1].vertices, nd*nslen*sizeof(float));
   if (ftmp == NULL) return;
   stripes[nstripe-1].vertices = ftmp;
   itmp = (int *) wv_realloc(stripes[nstripe-1].gIndices, nslen*sizeof(int));
@@ -520,10 +523,15 @@ wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bi
   for (i = 0; i < gp->nlIndex/2; i++) {
     if (lmark[i] != -1) continue;
     m = gp->lIndices[2*i  ]-bias;
-    stripes[nstripe-1].gIndices[j]      = m;
-    stripes[nstripe-1].vertices[3*j  ]  = gp->vertices[3*m  ];
-    stripes[nstripe-1].vertices[3*j+1]  = gp->vertices[3*m+1];
-    stripes[nstripe-1].vertices[3*j+2]  = gp->vertices[3*m+2];    
+    stripes[nstripe-1].gIndices[j]        = m;
+    if (nd == 3) {
+      stripes[nstripe-1].vertices[3*j  ]  = gp->vertices[3*m  ];
+      stripes[nstripe-1].vertices[3*j+1]  = gp->vertices[3*m+1];
+      stripes[nstripe-1].vertices[3*j+2]  = gp->vertices[3*m+2];
+    } else {
+      stripes[nstripe-1].vertices[2*j  ]  = gp->vertices[2*m  ];
+      stripes[nstripe-1].vertices[2*j+1]  = gp->vertices[2*m+1];
+    }
     stripes[nstripe-1].lIndice2[k]      = j;
     if (gp->normals != NULL) {
       stripes[nstripe-1].normals[3*j  ] = gp->normals[3*m  ];
@@ -539,10 +547,15 @@ wv_fixupLineData(wvGPrim *gp, int nstripe, wvStripe *stripes, int *lmark, int bi
     k++;
     
     m = gp->lIndices[2*i+1]-bias;
-    stripes[nstripe-1].gIndices[j]      = m;
-    stripes[nstripe-1].vertices[3*j  ]  = gp->vertices[3*m  ];
-    stripes[nstripe-1].vertices[3*j+1]  = gp->vertices[3*m+1];
-    stripes[nstripe-1].vertices[3*j+2]  = gp->vertices[3*m+2];    
+    stripes[nstripe-1].gIndices[j]        = m;
+    if (nd == 3) {
+      stripes[nstripe-1].vertices[3*j  ]  = gp->vertices[3*m  ];
+      stripes[nstripe-1].vertices[3*j+1]  = gp->vertices[3*m+1];
+      stripes[nstripe-1].vertices[3*j+2]  = gp->vertices[3*m+2];
+    } else {
+      stripes[nstripe-1].vertices[2*j  ]  = gp->vertices[2*m  ];
+      stripes[nstripe-1].vertices[2*j+1]  = gp->vertices[2*m+1];
+    }
     stripes[nstripe-1].lIndice2[k]      = j;
     if (gp->normals != NULL) {
       stripes[nstripe-1].normals[3*j  ] = gp->normals[3*m  ];
@@ -573,7 +586,8 @@ wv_makeStripes(wvGPrim *gp, int bias)
   maxLen = 65536;
   nd     = 3;
   if ((gp->gtype == WV_TRIANGLE) || (gp->gtype == WV_TRIANGLE2D)) maxLen--;
-  if  (gp->gtype > 2) nd = 2;
+  if ((gp->gtype == WV_POINT2D)  || (gp->gtype == WV_LINE2D) ||
+      (gp->gtype == WV_TRIANGLE2D)) nd = 2;
   if  (gp->nVerts <= maxLen) {
 
     /* a single stripe */
@@ -1643,10 +1657,12 @@ wv_computeNormals(int bias, int nVerts, float *vertices, int nIndex,
 void
 wv_printGPrim(wvContext *cntxt, int index)
 {
-  int i;
+  int i, gtype;
 
   if (cntxt == NULL) return;
   if (cntxt->gPrims == NULL) return;
+  gtype = cntxt->gPrims[index].gtype;
+  if (gtype >= 10) gtype -= 10;
 
   printf("\n GPrim: %s  GType = %d  Attrs = %x\n", 
          cntxt->gPrims[index].name, cntxt->gPrims[index].gtype,
@@ -1654,7 +1670,7 @@ wv_printGPrim(wvContext *cntxt, int index)
   printf("    Point data: %f  %f %f %f\n",
          cntxt->gPrims[index].pSize,     cntxt->gPrims[index].pColor[0],
          cntxt->gPrims[index].pColor[1], cntxt->gPrims[index].pColor[2]);
-  if (cntxt->gPrims[index].gtype > 0) {
+  if (gtype > 0) {
     printf("    Line  data: %f  %f %f %f\n",
            cntxt->gPrims[index].lWidth,    cntxt->gPrims[index].lColor[0],
            cntxt->gPrims[index].lColor[1], cntxt->gPrims[index].lColor[2]);
@@ -1663,7 +1679,7 @@ wv_printGPrim(wvContext *cntxt, int index)
            cntxt->gPrims[index].bColor[2], cntxt->gPrims[index].fColor[0],
            cntxt->gPrims[index].fColor[1], cntxt->gPrims[index].fColor[2]);
   }
-  if (cntxt->gPrims[index].gtype > 1) {
+  if (gtype > 1) {
     printf("    Tri   data: colors  %f %f %f  %f %f %f\n",
            cntxt->gPrims[index].bColor[0], cntxt->gPrims[index].bColor[1], 
            cntxt->gPrims[index].bColor[2], cntxt->gPrims[index].fColor[0],
@@ -1673,10 +1689,16 @@ wv_printGPrim(wvContext *cntxt, int index)
            cntxt->gPrims[index].normal[2]);
   }
   printf("    %d Vertices:\n", cntxt->gPrims[index].nVerts);
-  for (i = 0; i < cntxt->gPrims[index].nVerts; i++)
-    printf("           %f %f %f\n", cntxt->gPrims[index].vertices[3*i  ],
-                                    cntxt->gPrims[index].vertices[3*i+1], 
-                                    cntxt->gPrims[index].vertices[3*i+2]);
+  if (cntxt->gPrims[index].gtype >= 10) {
+    for (i = 0; i < cntxt->gPrims[index].nVerts; i++)
+    printf("           %f %f %f\n", cntxt->gPrims[index].vertices[2*i  ],
+                                    cntxt->gPrims[index].vertices[2*i+1]);
+  } else{
+    for (i = 0; i < cntxt->gPrims[index].nVerts; i++)
+      printf("           %f %f %f\n", cntxt->gPrims[index].vertices[3*i  ],
+                                      cntxt->gPrims[index].vertices[3*i+1],
+                                      cntxt->gPrims[index].vertices[3*i+2]);
+  }
   if (cntxt->gPrims[index].colors != NULL) {
     printf("    %d Colors:\n", cntxt->gPrims[index].nVerts);
     for (i = 0; i < cntxt->gPrims[index].nVerts; i++)
@@ -1764,7 +1786,7 @@ int
 wv_addGPrim(wvContext *cntxt, char *name, int gtype, int attrs, 
             int nItems, wvData *items)
 {
-  int     i, nameLen, type, *cnt;
+  int     i, nd, nameLen, type, *cnt;
   char    *nam;
   float   *norm;
   wvGPrim *gp;
@@ -1779,6 +1801,9 @@ wv_addGPrim(wvContext *cntxt, char *name, int gtype, int attrs,
       for (i = 0; i < nItems; i++)
         if (items[i].dataType == WV_NORMALS) return -5;
   }
+  nd = 3;
+  if ((gp->gtype == WV_POINT2D) || (gp->gtype == WV_LINE2D) ||
+      (gp->gtype == WV_TRIANGLE2D)) nd = 2;
 
   if (cntxt->gPrims != NULL)
     for (i = 0; i < cntxt->nGPrim; i++)
@@ -1866,13 +1891,13 @@ wv_addGPrim(wvContext *cntxt, char *name, int gtype, int attrs,
         if (cntxt->keepItems == 0) {
           gp->vertices = (float *) items[i].dataPtr;
         } else {
-          gp->vertices = (float *) wv_alloc(3*items[i].dataLen*sizeof(float));
+          gp->vertices = (float *) wv_alloc(nd*items[i].dataLen*sizeof(float));
           if (gp->vertices == NULL) {
             wv_free(nam);
             return -1;
           }
           memcpy(gp->vertices, (float *) items[i].dataPtr,
-                 3*items[i].dataLen*sizeof(float));
+                 nd*items[i].dataLen*sizeof(float));
         }
         break;
       case WV_INDICES:
@@ -2330,13 +2355,16 @@ wv_thumbNail(wvContext *cntxt, int width, int height, const unsigned char *image
 int
 wv_modGPrim(wvContext *cntxt, int index, int nItems, wvData *items)
 {
-  int     i, type, vlen, *cnt, norm = 0;
+  int     i, nd, type, vlen, *cnt, norm = 0;
   float   *normals;
   wvGPrim *gp;
 
   if ((index >= cntxt->nGPrim) || (index < 0)) return -3;
   if (cntxt->gPrims == NULL) return -3;
-  gp   = &cntxt->gPrims[index];
+  gp = &cntxt->gPrims[index];
+  nd = 3;
+  if ((gp->gtype == WV_POINT2D) || (gp->gtype == WV_LINE2D) ||
+      (gp->gtype == WV_TRIANGLE2D)) nd = 2;
   vlen = -1;
   for (i = 0; i < nItems; i++)
     if (items[i].dataType == WV_VERTICES) vlen = items[i].dataLen;
@@ -2395,10 +2423,10 @@ wv_modGPrim(wvContext *cntxt, int index, int nItems, wvData *items)
         if (cntxt->keepItems == 0) {
           gp->vertices = (float *) items[i].dataPtr;
         } else {
-          gp->vertices = (float *) wv_alloc(3*items[i].dataLen*sizeof(float));
+          gp->vertices = (float *) wv_alloc(nd*items[i].dataLen*sizeof(float));
           if (gp->vertices == NULL) return -1;
           memcpy(gp->vertices, (float *) items[i].dataPtr,
-                 3*items[i].dataLen*sizeof(float));
+                 nd*items[i].dataLen*sizeof(float));
         }
         break;
       case WV_INDICES:
@@ -2596,17 +2624,9 @@ wv_writeGPrim(wvGPrim *gp, void *wsi, unsigned char *buf, int *iBuf)
     i4 = nd*gp->stripes[i].nsVerts;
     memcpy(&buf[n], &i4, 4);
     n += 4;
-    if (nd == 3) {
-      memcpy(&buf[n], gp->stripes[i].vertices, nd*4*gp->stripes[i].nsVerts);
-      n += nd*4*gp->stripes[i].nsVerts;
-    } else {
-      for (j = 0; j < gp->stripes[i].nsVerts; j++) {
-        memcpy(&buf[n], &gp->stripes[i].vertices[3*j], nd*4);
-        n += nd*4;
-      }
-    }
-    if ((gp->stripes[i].nsIndices != 0) && 
-        (gp->stripes[i].sIndice2  != NULL)) {
+    memcpy(&buf[n], gp->stripes[i].vertices, nd*4*gp->stripes[i].nsVerts);
+    n += nd*4*gp->stripes[i].nsVerts;
+    if ((gp->stripes[i].nsIndices != 0) && (gp->stripes[i].sIndice2  != NULL)) {
       i4 = gp->stripes[i].nsIndices;
       memcpy(&buf[n], &i4, 4);
       n += 4;      
@@ -2726,7 +2746,7 @@ wv_writeGPrim(wvGPrim *gp, void *wsi, unsigned char *buf, int *iBuf)
 int
 wv_sendGPrim(void *wsi, wvContext *cntxt, unsigned char *buf, int flag)
 {
-  int            i, j, k, iBuf, npack, i4;
+  int            i, j, k, nd, iBuf, npack, i4;
   unsigned short *s2 = (unsigned short *) &i4;
   unsigned char  *c1 = (unsigned char *)  &i4;
   wvGPrim        *gp;
@@ -2851,6 +2871,9 @@ wv_sendGPrim(void *wsi, wvContext *cntxt, unsigned char *buf, int flag)
     if ((gp->updateFlg == WV_DELETE) && (flag == -1)) continue;
 /*  printf(" flag = %d,  %d  gp->updateFlg = %d\n", 
            flag, i, gp->updateFlg); */
+    nd = 3;
+    if ((gp->gtype == WV_POINT2D) || (gp->gtype == WV_LINE2D) ||
+        (gp->gtype == WV_TRIANGLE2D)) nd = 2;
     if  (gp->updateFlg == WV_DELETE) {
     
       /* delete the gPrim */
@@ -2909,7 +2932,7 @@ wv_sendGPrim(void *wsi, wvContext *cntxt, unsigned char *buf, int flag)
         for (j = 0; j < gp->nStripe; j++) {
           if ((gp->stripes[j].nsVerts  == 0) || 
               (gp->stripes[j].vertices == NULL)) continue;
-          npack = 12 + gp->nameLen + 3*4*gp->stripes[j].nsVerts;
+          npack = 12 + gp->nameLen + nd*4*gp->stripes[j].nsVerts;
           wv_writeBuf(wsi, buf, npack, &iBuf);
           i4    = j;
           c1[3] = 4;                        /* edit opcode */
@@ -2919,10 +2942,10 @@ wv_sendGPrim(void *wsi, wvContext *cntxt, unsigned char *buf, int flag)
           c1[3] = gp->gtype;
           memcpy(&buf[iBuf+ 4], c1, 4);
           memcpy(&buf[iBuf+ 8], gp->name, gp->nameLen);
-          i4    = 3*gp->stripes[j].nsVerts;
+          i4    = nd*gp->stripes[j].nsVerts;
           memcpy(&buf[iBuf+ 8+gp->nameLen], &i4, 4);
           memcpy(&buf[iBuf+12+gp->nameLen], gp->stripes[j].vertices,
-                 3*4*gp->stripes[j].nsVerts);
+                 nd*4*gp->stripes[j].nsVerts);
           iBuf += npack;
         }
 
