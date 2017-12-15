@@ -1802,8 +1802,8 @@ wv_addGPrim(wvContext *cntxt, char *name, int gtype, int attrs,
         if (items[i].dataType == WV_NORMALS) return -5;
   }
   nd = 3;
-  if ((gp->gtype == WV_POINT2D) || (gp->gtype == WV_LINE2D) ||
-      (gp->gtype == WV_TRIANGLE2D)) nd = 2;
+  if ((gtype == WV_POINT2D) || (gtype == WV_LINE2D) ||
+      (gtype == WV_TRIANGLE2D)) nd = 2;
 
   if (cntxt->gPrims != NULL)
     for (i = 0; i < cntxt->nGPrim; i++)
