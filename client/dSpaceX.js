@@ -331,7 +331,7 @@ function wvUpdateUI()
           matrix2D.load(wv.orthoMatrix2D);
           matrix2D.multiply(wv.mvMatrix2D);
           matrix2D.invert();
-          var vec = new J3DIVector3(-scrX, scrY*fact, 0.0);
+          var vec = new J3DIVector3(scrX, scrY*fact, 0.0);
           vec.multVecMatrix(matrix2D);
           postMessage(" locate2D = " + vec[0] + " " + vec[1]/fact);
           

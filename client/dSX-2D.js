@@ -213,7 +213,7 @@ function drawPicture2D(gl)
     wv.mvMatrix2D = new J3DIMatrix4();
     wv.mvMatrix2D.makeIdentity();
     wv.orthoMatrix2D.makeIdentity();
-    wv.orthoMatrix2D.ortho(-1, 1, -wv.height2D/wv.width2D,
+    wv.orthoMatrix2D.ortho(1, -1, -wv.height2D/wv.width2D,
                                    wv.height2D/wv.width2D, 1, -1);
     wv.sceneU2D = 1;
   }
