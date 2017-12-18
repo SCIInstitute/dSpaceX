@@ -72,7 +72,7 @@ __ProtoExt__ int  wv_setData( int type, int len, void *data, int VBOtype,
                               wvData *dstruct );
 
 __ProtoExt__ int  wv_setVerts2D( int type, int len, void *data, 
-                                 wvData *dstruct );
+                                 /*@null@*/ float *focus, wvData *dstruct );
 
 #ifndef STANDALONE
 __ProtoExt__ void wv_sendText( void *wsi, char *text );
@@ -82,8 +82,6 @@ __ProtoExt__ void wv_broadcastText( char *text );
                               
 __ProtoExt__ void wv_adjustVerts( wvData *dstruct, float *focus );
   
-__ProtoExt__ void wv_adjustVerts2D( wvData *dstruct, float *focus );
-
 __ProtoExt__ void wv_cleanupServers( void );
 
 #ifdef __cplusplus

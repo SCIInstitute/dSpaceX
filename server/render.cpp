@@ -242,12 +242,12 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   }
   
   sprintf(gpname, "Scatter Lines");
-  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0], &items[0]);
+  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
+                       focus, &items[0]);
   if (stat < 0) {
     printf(" wv_setVerts2D = %d for %s/item 0!\n", stat, gpname);
     return;
   }
-  wv_adjustVerts2D(&items[0], focus);
   colrs[0]  = 0.5;
   colrs[1]  = 0.5;
   colrs[2]  = 0.5;
@@ -266,12 +266,12 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
 
   sprintf(gpname, "Scatter Dots");
-  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0], &items[0]);
+  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
+                       focus, &items[0]);
   if (stat < 0) {
     printf(" wv_setVerts2D = %d for %s/item 0!\n", stat, gpname);
     return;
   }
-  wv_adjustVerts2D(&items[0], focus);
   // colrs[0]  = 0.0;
   // colrs[1]  = 0.0;
   // colrs[2]  = 1.0;

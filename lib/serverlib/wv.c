@@ -355,7 +355,8 @@ wv_setData(int type, int len, void *data, int VBOtype, wvData *dstruct)
 
 
 int
-wv_setVerts2D(int type, int len, void *data, wvData *dstruct)
+wv_setVerts2D(int type, int len, void *data, /*@null@*/ float *focus,
+              wvData *dstruct)
 {
   int     i, VBOtype = WV_VERTICES;
   float   *fdata, *fptr;
@@ -422,6 +423,15 @@ wv_setVerts2D(int type, int len, void *data, wvData *dstruct)
       return -3;
   }
   
+  if (focus != NULL) {
+    for (i = 0; i < len; i++) {
+      fptr[2*i  ] -= focus[0];
+      fptr[2*i+1] -= focus[1];
+      fptr[2*i  ] /= focus[2];
+      fptr[2*i+1] /= focus[2];
+    }
+  }
+  
   dstruct->dataType = VBOtype;
   return 0;
 }
@@ -446,26 +456,6 @@ wv_adjustVerts(wvData *dstruct, float *focus)
     fptr[3*i+2] /= focus[3];
   }
 
-}
-
-
-void
-wv_adjustVerts2D(wvData *dstruct, float *focus)
-{
-  int   i;
-  float *fptr;
-  
-  if (dstruct->dataType != WV_VERTICES) return;
-  if (dstruct->dataPtr  == NULL) return;
-  
-  fptr = (float *) dstruct->dataPtr;
-  for (i = 0; i < dstruct->dataLen; i++) {
-    fptr[2*i  ] -= focus[0];
-    fptr[2*i+1] -= focus[1];
-    fptr[2*i  ] /= focus[2];
-    fptr[2*i+1] /= focus[2];
-  }
-  
 }
 
 
