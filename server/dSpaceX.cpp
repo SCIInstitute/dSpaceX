@@ -36,21 +36,19 @@ static wvContext  *cntxt;
 static dsxContext dsxcntxt;
 
 
-extern void dsx_drawKey(wvContext *cntxt, float *lims,
-                            /*@null@*/ char *name);
-extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal,
-                           int flag);
-extern void dsx_draw2D(wvContext *cntxt, 
-  FortranLinalg::DenseVector<Precision> y, 
-  FortranLinalg::DenseMatrix<Precision> layout, 
-  std::vector<unsigned int> &edgeIndices, 
-  float *lims, int nCrystal, int flag);
+extern void dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name);
+extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key,
+                       int flag);
+extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
+                       FortranLinalg::DenseMatrix<Precision> layout,
+                       std::vector<unsigned int> &edgeIndices,
+                       FortranLinalg::DenseVector<int> parts,
+                       float *lims, int nCrystal, int key, int flag);
 
 
-#ifndef FALLBACK
 std::vector<DenseVectorSample*> samples;
 FortranLinalg::DenseVector<Precision> y;
-#endif
+
  
 
 int main(int argc, char *argv[])
@@ -152,7 +150,8 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   char          copy[133], *word, *word1, *lasts, sep[2] = " ";
   static float  lims[2] = {-1.0, +1.0};
   unsigned char *image;
-  static int    nCases, nParams, nQoIs, nCrystal, icase = 1, key = -1;
+  static int    nCases, nParams, nQoIs, nCrystal, maxP, persistence;
+  static int    icase = 1, key = -1;
   static double *cases = NULL, *QoIs = NULL;
   static char   **pNames, **qNames;
 
@@ -161,6 +160,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   static TopologyData *topoData = nullptr;
   static FortranLinalg::DenseMatrix<Precision> layout;
   static std::vector<unsigned int> edgeIndices;
+  static FortranLinalg::DenseVector<int> parts;
 
 
 /*
@@ -189,7 +189,6 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
 
     // Begin HDProcess Block
-    #ifndef FALLBACK
     try {        
       std::string xArg = "../../examples/gaussian2d/Geom.data.hdr";
       std::string fArg = "../../examples/gaussian2d/Function.data.hdr";
@@ -240,7 +239,6 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     } catch (const char *err) {
       std::cerr << err << std::endl;
     }
-    #endif
     // End HDProcess Block
   
     stat = dsx_Initialize(&dsxcntxt, &nCases, &nParams, &cases, &pNames,
@@ -257,7 +255,16 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
     
     /* compute the Morse-Smale Complex */
-    nCrystal   = 4;
+    maxP = data->getMaxPersistenceLevel();
+    printf(" getMinPersistenceLevel = %d\n", data->getMinPersistenceLevel());
+    printf(" getMaxPersistenceLevel = %d\n", maxP);
+    persistence = 0;
+    parts       = data->getCrystalPartitions(persistence);
+    nCrystal    = 0;
+    for (int i = 0; i < parts.N(); i++)
+      if (parts(i) > nCrystal) nCrystal = parts(i);
+    nCrystal++;
+    printf(" nCrystals is %d\n", nCrystal);
     
     /* put up key & render */
     color_only = 0;
@@ -271,18 +278,25 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       printf(" No slider data!\n");
       return;
     }
-    width  = (atoi(word)-1)/25;
-    width++;
-    if (width != nCrystal) {
-      nCrystal = width;
-      printf(" new persistence = %d\n", nCrystal);
+    float slide = (maxP+1)/100.0;
+    width       = (atoi(word)-1)*slide;
+    width       = maxP - width;
+    if (width != persistence) {
+      persistence = width;
+      printf(" new persistence = %d\n", persistence);
     
       /* recompute the Morse-Smale Complex using new persistence */
+      parts    = data->getCrystalPartitions(persistence);
+      nCrystal = 0;
+      for (int i = 0; i < parts.N(); i++)
+        if (parts(i) > nCrystal) nCrystal = parts(i);
+      nCrystal++;
+      printf(" nCrystals is %d\n", nCrystal);
     
       /* set 3D rendering of the result */
-      dsx_draw3D(cntxt, lims, nCrystal, 0);
+      dsx_draw3D(cntxt, lims, nCrystal, key, 0);
       /* set 2D rendering of the result */
-      dsx_draw2D(cntxt, y, layout, edgeIndices, lims, nCrystal, 0);
+      dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, nCrystal, key, 0);
     }
 
     return;
@@ -318,11 +332,16 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     
     if (strcmp(word,"next") == 0) {
       key++;
-      if (key >= nQoIs) key = 0;
-      lims[0] = lims[1] = cases[key];
-      for (i = 1; i < nCases; i++) {
-        if (QoIs[nQoIs*i+key] < lims[0]) lims[0] = QoIs[nQoIs*i+key];
-        if (QoIs[nQoIs*i+key] > lims[1]) lims[1] = QoIs[nQoIs*i+key];
+      if (key >= nQoIs) {
+        key = -1;
+        lims[0] = 0.0;
+        lims[1] = nCrystal-1;
+      } else {
+        lims[0] = lims[1] = cases[key];
+        for (i = 1; i < nCases; i++) {
+          if (QoIs[nQoIs*i+key] < lims[0]) lims[0] = QoIs[nQoIs*i+key];
+          if (QoIs[nQoIs*i+key] > lims[1]) lims[1] = QoIs[nQoIs*i+key];
+        }
       }
     } else {
       word  = strtok_r(NULL, sep, &lasts);
@@ -338,12 +357,17 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
 
     /* recolor data in 3D frame */
-    dsx_drawKey(cntxt, lims, qNames[key]);
+    if (key == -1) {
+      dsx_drawKey(cntxt, lims, "Crystal");
+    } else {
+      dsx_drawKey(cntxt, lims, qNames[key]);
+    }
     
     /* set 3D rendering of the result */
-    dsx_draw3D(cntxt, lims, nCrystal, color_only);
+    dsx_draw3D(cntxt, lims, nCrystal, key, color_only);
     /* set 2D rendering of the result */
-    dsx_draw2D(cntxt, y, layout, edgeIndices, lims, nCrystal, color_only);
+    dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims,
+               nCrystal, key, color_only);
     
     return;
   }

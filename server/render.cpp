@@ -202,8 +202,10 @@ dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name)
 /* place-holder for scatter-plot rendering */
 void
 dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
-  FortranLinalg::DenseMatrix<Precision> layout, 
-  std::vector<unsigned int> &edgeIndices, float *lims, int nCrystal, int flag)
+           FortranLinalg::DenseMatrix<Precision> layout,
+           std::vector<unsigned int> &edgeIndices,
+           FortranLinalg::DenseVector<int> parts, float *lims, int nCrystal,
+           int key, int flag)
 {
   int    i, stat, segs[8];
   float  xy[12], focus[3], colrs[3];
@@ -212,7 +214,27 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 
   std::vector<float> vertices;
 
-  if (flag != 0) return;
+  /* color only */
+  if (flag != 0) {
+    std::vector<float> colors(3*y.N());
+    if (key == -1) {
+      for (size_t i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
+    } else {
+      for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
+    }
+    
+    sprintf(gpname, "Scatter Dots");
+    int index = wv_indexGPrim(cntxt, gpname);
+    stat = wv_setData(WV_REAL32, y.N(), (void *) &colors[0], WV_COLORS, &items[0]);
+    if (stat < 0) {
+      printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
+      return;
+    }
+    stat = wv_modGPrim(cntxt, index, 1, items);
+    if (stat < 0)
+      printf(" wv_modGPrim = %d for %s (%d)!\n", stat, gpname, index);
+    return;
+  }
   
   focus[0] = focus[1] = 0.0;
   focus[2] = 1.0;
@@ -237,8 +259,10 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   std::vector<float> colors(3*y.N());
   std::cout << "colors.size() = " << colors.size() << std::endl;
 
-  for (size_t i = 0; i < y.N(); i++) {
-    spec_col(lims, y(i), &colors[3*i]);
+  if (key == -1) {
+    for (size_t i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
+  } else {
+    for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
   }
   
   sprintf(gpname, "Scatter Lines");
@@ -292,7 +316,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 
 /* place-holder for Morse-Smale Complex rendering */
 void
-dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int flag)
+dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
 {
   int          i, j, k, k1, m, stat, index, segs[2*24], tris[6*18*24];
   double       ang, rad;
@@ -335,7 +359,12 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int flag)
         xyzs[3*i  ] = xz[2*i+1]*cos(ang);
         xyzs[3*i+1] = xz[2*i+1]*sin(ang);
         xyzs[3*i+2] = xz[2*i  ];
-        spec_col(lims, scalar[i], &colrs[3*i]);
+        if (key == -1) {
+          float scalr = j;
+          spec_col(lims, scalr,     &colrs[3*i]);
+        } else {
+          spec_col(lims, scalar[i], &colrs[3*i]);
+        }
       }
       stat = wv_setData(WV_REAL32, 25, (void *) xyzs,  WV_VERTICES, &items[0]);
       if (stat < 0) {
@@ -407,10 +436,15 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int flag)
       
       /* only the colors have changed */
       index = wv_indexGPrim(cntxt, gpname);
-      for (i = 0; i < 25; i++) spec_col(lims, scalar[i], &colrs[3*i]);
+      if (key == -1) {
+        float scalr = j;
+        for (i = 0; i < 25; i++) spec_col(lims, scalr,     &colrs[3*i]);
+      } else {
+        for (i = 0; i < 25; i++) spec_col(lims, scalar[i], &colrs[3*i]);
+      }
       stat = wv_setData(WV_REAL32, 25, (void *) colrs,  WV_COLORS, &items[0]);
       if (stat < 0) {
-        printf(" wv_setData = %d for %s/item 2!\n", stat, gpname);
+        printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
         continue;
       }
       stat = wv_modGPrim(cntxt, index, 1, items);
