@@ -292,6 +292,12 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
         if (parts(i) > nCrystal) nCrystal = parts(i);
       nCrystal++;
       printf(" nCrystals is %d\n", nCrystal);
+      
+      if (key == -1) {
+        lims[0] = 0.0;
+        lims[1] = nCrystal-1;
+        dsx_drawKey(cntxt, lims, "Crystal");
+      }
     
       /* set 3D rendering of the result */
       dsx_draw3D(cntxt, lims, nCrystal, key, 0);
@@ -299,6 +305,27 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, nCrystal, key, 0);
     }
 
+    return;
+  }
+  
+  /* locate2D request */
+  if (strcmp(word,"locate2D") == 0) {
+    word  = strtok_r(NULL, sep, &lasts);
+    word1 = strtok_r(NULL, sep, &lasts);
+    float xloc  = atof(word);
+    float yloc  = atof(word1);
+    float dist2 = 10000.0;
+    icase = 1;
+    for (int i = 0; i < layout.N(); i++) {
+      float d = (layout(0,i)-xloc)*(layout(0,i)-xloc) +
+                (layout(1,i)-yloc)*(layout(1,i)-yloc);
+      if (d >= dist2) continue;
+      dist2 = d;
+      icase = i+1;
+    }
+    printf(" locate2D = (%f %f), case# = %d, crystal = %d\n", xloc, yloc,
+           icase, parts(icase-1));
+    sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
     return;
   }
   
@@ -356,7 +383,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       printf(" new limits = %e %e\n", lims[0], lims[1]);
     }
 
-    /* recolor data in 3D frame */
+    /* recolor data */
     if (key == -1) {
       dsx_drawKey(cntxt, lims, "Crystal");
     } else {

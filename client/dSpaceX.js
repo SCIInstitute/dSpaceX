@@ -333,7 +333,7 @@ function wvUpdateUI()
           matrix2D.invert();
           var vec = new J3DIVector3(scrX, scrY*fact, 0.0);
           vec.multVecMatrix(matrix2D);
-          postMessage(" locate2D = " + vec[0] + " " + vec[1]/fact);
+          wv.socketUt.send(" locate2D " + vec[0] + " " + vec[1]/fact);
           
         // 'T' -- thumbnail
         } else if (wv.keyPress == 84) {

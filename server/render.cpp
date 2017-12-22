@@ -212,8 +212,6 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   char   gpname[33];
   wvData items[3];
 
-  std::vector<float> vertices;
-
   /* color only */
   if (flag != 0) {
     std::vector<float> colors(3*y.N());
@@ -238,16 +236,19 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   
   focus[0] = focus[1] = 0.0;
   focus[2] = 1.0;
+  std::vector<float> vertices;
   
-  for (int i = 0; i < layout.N(); i++) {    
+  for (int i = 0; i < layout.N(); i++) {
+/*
     int sampleIndex = i;
     int one_dim = std::floor(sqrt(2000));
     float x_offset = (float)(sampleIndex % one_dim) / (float)one_dim;
     float y_offset = (float)std::floor(sampleIndex / one_dim) / (float)one_dim;
     vertices.push_back(x_offset - 0.5f);
     vertices.push_back(y_offset - 0.5f);
-    // vertices.push_back(layout(0, i));
-    // vertices.push_back(layout(1, i));
+ */
+    vertices.push_back(layout(0, i));
+    vertices.push_back(layout(1, i));
   }
 
   std::cout << "FLAG = " << flag << std::endl;
