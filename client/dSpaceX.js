@@ -274,7 +274,7 @@ function wvUpdateUI()
             // second part of 'q' operation
             if (wv.picking == 113) {
                 postMessage("Picked: " + wv.picked.gprim);
-                wv.socketUt.send("Picked: " + wv.picked.gprim);
+                wv.socketUt.send("Picked " + wv.picked.gprim);
             }
 
             wv.picked  = undefined;
@@ -292,6 +292,36 @@ function wvUpdateUI()
         wv.keyPress = -1;
         wv.dragging = false;
     }
+  
+    // special code for delayed-locating mode
+    if (wv.locating > 0) {
+
+        // if something is picked, post a message
+        if (wv.located !== undefined) {
+
+            // second part of 'g' operation
+            if (wv.locating == 103) {
+                postMessage("Located: " + wv.located[0] + " " +
+                            wv.located[1] + " " + wv.located[2]);
+                wv.socketUt.send("Located " + wv.located[0] + " " +
+                                 wv.located[1] + " " + wv.located[2]);
+            }
+
+            wv.located  = undefined;
+            wv.locating = 0;
+            wv.locate   = 0;
+
+        // abort picking on mouse motion
+        } else if (wv.dragging) {
+            postMessage("Locating aborted");
+
+            wv.locating = 0;
+            wv.locate   = 0;
+        }
+
+        wv.keyPress = -1;
+        wv.dragging = false;
+    }
 
     // if the tree has not been created but the scene graph (possibly) exists...
     if (wv.sgUpdate == 1 && (wv.sceneGraph !== undefined)) {
@@ -304,11 +334,13 @@ function wvUpdateUI()
         // '?' -- help
         if (wv.keyPress ==  63) {
             postMessage("C - next case");
-            postMessage("N - next scalar");
+            postMessage("g - get XYZ at cursor");
+            postMessage("l - locate in scatter plot");
             postMessage("L - change scalar limits");
             postMessage("q - query at cursor");
             postMessage("m - set view matrix");
             postMessage("M - current view matrix");
+            postMessage("N - next scalar");
             postMessage("x - view from -X direction");
             postMessage("X - view from +X direction");
             postMessage("y - view from -Y direction");
@@ -321,6 +353,12 @@ function wvUpdateUI()
         // "C" -- case
         } else if (wv.keyPress == 67) {
             wv.socketUt.send("case");
+          
+        // "g" -- get XYZ
+        } else if (wv.keyPress == 103) {
+          wv.locating = 103;
+          wv.locate   = 1;
+          wv.sceneUpd = 1;
           
         // "l" -- 2D locate
         } else if (wv.keyPress == 108) {

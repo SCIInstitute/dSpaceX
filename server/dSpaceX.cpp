@@ -316,6 +316,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     float yloc  = atof(word1);
     float dist2 = 10000.0;
     icase = 1;
+    /* note: does not take into account the application of "focus" */
     for (int i = 0; i < layout.N(); i++) {
       float d = (layout(0,i)-xloc)*(layout(0,i)-xloc) +
                 (layout(1,i)-yloc)*(layout(1,i)-yloc);
@@ -338,6 +339,18 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       stat = wv_thumbNail(cntxt, width, height, image);
       if (stat != 0) printf(" wv_thumbnail  = %d\n", stat);
     }
+    return;
+  }
+  
+  /* 3D picked request */
+  if (strcmp(word,"Picked") == 0) {
+    printf(" %s\n", text);
+    return;
+  }
+  
+  /* 3D locating request */
+  if (strcmp(word,"Located") == 0) {
+    printf(" %s\n", text);
     return;
   }
   

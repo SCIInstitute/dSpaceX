@@ -251,15 +251,15 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     vertices.push_back(layout(1, i));
   }
 
+/*
   std::cout << "FLAG = " << flag << std::endl;
   std::cout << "vertices.size() = " << vertices.size() << std::endl;
   std::cout << "edgeIndices.size() = " << edgeIndices.size() << std::endl;
   std::cout << "layout.N() = " << layout.N() << std::endl;
   std::cout << "y.N() = " << y.N() << std::endl;
+*/
 
   std::vector<float> colors(3*y.N());
-  std::cout << "colors.size() = " << colors.size() << std::endl;
-
   if (key == -1) {
     for (size_t i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
   } else {
