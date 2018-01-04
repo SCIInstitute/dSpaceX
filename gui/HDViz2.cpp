@@ -24,7 +24,9 @@
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "util/DenseVectorSample.h"
+#include "util/csv/csv.h"
 
+#include <cassert>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
@@ -158,6 +160,14 @@ int main(int argc, char **argv) {
     DenseVectorSample *sample = new DenseVectorSample(vector);
     samples.push_back(sample);
   }
+
+  // Load temporary CSV dataset.
+  FortranLinalg::DenseMatrix<Precision> md = 
+      loadCSVMatrix("/home/sci/bronson/collab/mukund/dist.csv");
+
+  FortranLinalg::DenseVector<Precision> mv = 
+      loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
+  
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   DenseVectorEuclideanMetric metric;
