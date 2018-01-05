@@ -130,7 +130,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     float minY=layout(0,0);
     float maxY=layout(0,0);
     for (int i=0; i < layout.N(); i++) {
-      std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
+      // std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
       minX = layout(0,i) < minX ? layout(0,i) : minX;
       maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
       minY = layout(1,i) < minY ? layout(1,i) : minY;

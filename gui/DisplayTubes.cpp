@@ -448,19 +448,27 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
       drawOverlay = !drawOverlay;    
       break;
     case ']':
+      // TODO: Move into a function.
       state->selectedCell++;
       // if((unsigned int) state->selectedCell >= data->getCrystals(state->currentLevel).N()){
       if((unsigned int) state->selectedCell >= topoData->getComplex(state->currentLevel)->getCrystals().size()) {
         state->selectedCell = 0;
       }
+      std::cout << "Now viewing crystal " << state->selectedCell << std::endl;
+      std::cout << "This crystal contains " 
+                << topoData->getComplex(state->currentLevel)->getCrystals()[state->selectedCell]->getAllSamples().size() << " samples." << std::endl;
       notifyChange();
       break;
     case '[':
+      // TODO: Move into a function.
       state->selectedCell--;
       if(state->selectedCell < 0){
         // state->selectedCell = data->getCrystals(state->currentLevel).N()-1;
         state->selectedCell = topoData->getComplex(state->currentLevel)->getCrystals().size()-1;
       }
+      std::cout << "Now viewing crystal " << state->selectedCell << std::endl;
+      std::cout << "This crystal contains " 
+                << topoData->getComplex(state->currentLevel)->getCrystals()[state->selectedCell]->getAllSamples().size() << " samples." << std::endl;
       notifyChange();
       break;        
     case '>':
@@ -611,6 +619,15 @@ void DisplayTubes<TPrecision>::setPersistenceLevel(int pl, bool update) {
   if (state->selectedCell >= crystalCount) {
     state->selectedCell = crystalCount - 1;
   }
+
+  auto crystals = topoData->getComplex(state->currentLevel)->getCrystals();
+  int sampleCount = crystals[state->selectedCell]->getAllSamples().size();
+
+  std::cout << "Now viewing persistence level " << state->currentLevel << std::endl;
+  std::cout << "This level is composed of " << crystalCount << " crystals." << std::endl;
+  std::cout << "Now viewing crystal " << state->selectedCell << std::endl;
+  std::cout << "This crystal contains " << sampleCount << " samples." << std::endl;
+  
   if (update) {
     notifyChange();
   }

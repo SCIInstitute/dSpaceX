@@ -164,6 +164,7 @@ int main(int argc, char **argv) {
   // Load temporary CSV dataset.
   FortranLinalg::DenseMatrix<Precision> md = 
       loadCSVMatrix("/home/sci/bronson/collab/mukund/dist.csv");
+  std::cout << "Truss data contains " << md.N() << " samples." << std::endl;
 
   FortranLinalg::DenseVector<Precision> mv = 
       loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
