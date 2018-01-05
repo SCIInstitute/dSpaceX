@@ -129,8 +129,8 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     maxY = layout(1,i) > maxY ? layout(1,i) : maxY;
   }
   for (int i=0; i < layout.N(); i++) {
-    layout(0,i) = (layout(0,i) - minX) / (maxX - minX);
-    layout(1,i) = (layout(1,i) - minY) / (maxY - minY);
+    layout(0,i) = (layout(0,i) - minX) / (maxX - minX) - 0.5;
+    layout(1,i) = (layout(1,i) - minY) / (maxY - minY) - 0.5;
   }
 
   //
