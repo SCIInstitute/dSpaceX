@@ -64,10 +64,12 @@ TEST(FileCachedHDVizDataImpl, loadsFiles) {
   }
 }
 
+/*
 TEST(SimpleHDVizDataImpl, loadData) {
   HDProcessResult result;
   HDVizData* data = new SimpleHDVizDataImpl(&result);
 }
+*/
 
 
 /** 
