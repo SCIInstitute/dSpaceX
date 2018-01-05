@@ -110,27 +110,36 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   EuclideanMetric<Precision> metric;
   MetricMDS<Precision> mds;
 
-  FortranLinalg::DenseMatrix<Precision> layout = mds.embed(dSubset, 2);
-  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(state->distances, 2);
-  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
-  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(X, metric, 2);
-  // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
+  std::cout << "dSubset size = " << dSubset.M() << " x " << dSubset.N() << std::endl;
+  FortranLinalg::DenseMatrix<Precision> layout;
+  if (dSubset.N() == 1) {
+    layout = FortranLinalg::DenseMatrix<Precision>(2,1);
+    layout(0,0) = 0;
+    layout(1,0) = 0;
+  } else {
+    layout = mds.embed(dSubset, 2);
+  
+    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(state->distances, 2);
+    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
+    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(X, metric, 2);
+    // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
 
-  // scale to range of [0,1]
-  float minX=layout(0,0);
-  float maxX=layout(0,0);
-  float minY=layout(0,0);
-  float maxY=layout(0,0);
-  for (int i=0; i < layout.N(); i++) {
-    std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
-    minX = layout(0,i) < minX ? layout(0,i) : minX;
-    maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
-    minY = layout(1,i) < minY ? layout(1,i) : minY;
-    maxY = layout(1,i) > maxY ? layout(1,i) : maxY;
-  }
-  for (int i=0; i < layout.N(); i++) {
-    layout(0,i) = (layout(0,i) - minX) / (maxX - minX) - 0.5;
-    layout(1,i) = (layout(1,i) - minY) / (maxY - minY) - 0.5;
+    // scale to range of [0,1]
+    float minX=layout(0,0);
+    float maxX=layout(0,0);
+    float minY=layout(0,0);
+    float maxY=layout(0,0);
+    for (int i=0; i < layout.N(); i++) {
+      std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
+      minX = layout(0,i) < minX ? layout(0,i) : minX;
+      maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
+      minY = layout(1,i) < minY ? layout(1,i) : minY;
+      maxY = layout(1,i) > maxY ? layout(1,i) : maxY;
+    }
+    for (int i=0; i < layout.N(); i++) {
+      layout(0,i) = (layout(0,i) - minX) / (maxX - minX) - 0.5;
+      layout(1,i) = (layout(1,i) - minY) / (maxY - minY) - 0.5;
+    }
   }
 
   //
