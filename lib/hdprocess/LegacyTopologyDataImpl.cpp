@@ -39,8 +39,8 @@ unsigned int LegacyTopologyDataImpl::getMaxPersistenceLevel() {
 }
 
 MorseSmaleComplex* LegacyTopologyDataImpl::getComplex(unsigned int persistenceLevel) {
-  // int index = persistenceLevel - getMinPersistenceLevel();
-  unsigned int index = persistenceLevel;
+  int index = persistenceLevel - getMinPersistenceLevel();
+  // unsigned int index = persistenceLevel;
   if (index < 0 || index >= m_morseSmaleComplexes.size()) {
     throw std::out_of_range(std::string("Invalid Persistence Level") + std::to_string(persistenceLevel));
   }

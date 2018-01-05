@@ -16,9 +16,16 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   m_numberOfSamples = k_defaultSamplesCount;
 
   // TEMP DEBUG CODE
+  
   std::cout << "VECTOR / MATRIX SIZES" << std::endl;
   std::cout << "scaledPersistence.N() = " << m_data->scaledPersistence.N() << std::endl;
   std::cout << "minLevel.N() = " << m_data->minLevel.N() << std::endl;
+  std::cout << "getMinPersistenceLevel() = " << getMinPersistenceLevel() << std::endl;
+  std::cout << "getMaxPersistenceLevel() = " << getMaxPersistenceLevel() << std::endl;
+  for (unsigned int level = 0; level <= getMaxPersistenceLevel(); level++) {
+    std::cout << " m_data->extremaValues[" << level << "].N() = " << m_data->extremaValues[level].N() << std::endl;
+  }
+  /*
   std::cout << "X.N() = " << m_data->X.N() << std::endl;
   std::cout << "Y.N() = " << m_data->Y.N() << std::endl;
   for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
@@ -35,7 +42,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
       std::cout << "     spdf[" << crystal << "].N() = " << m_data->spdf[level][crystal].N() << std::endl;
     }    
   }
-
+  */
   // TEMP DEBUG CODE
 
   // Create Normalized Extrema Values, Mean Values, and Mins/Maxs
@@ -56,7 +63,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   widthMin.resize(m_data->scaledPersistence.N());
   widthMax.resize(m_data->scaledPersistence.N());
 
-  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
+  for (unsigned int level = getMinPersistenceLevel(); level < m_data->scaledPersistence.N(); level++) {
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
     efmax[level] = FortranLinalg::Linalg<Precision>::Max(ef);
@@ -132,7 +139,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
   Rsmax.resize(m_data->scaledPersistence.N());
   gRmin.resize(m_data->scaledPersistence.N());
   gRmax.resize(m_data->scaledPersistence.N());
-  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {
+  for (unsigned int level = getMinPersistenceLevel(); level < m_data->scaledPersistence.N(); level++) {
     Rsmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
     Rsmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->R[level][0], 0);
     gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
@@ -172,7 +179,7 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
   scaledPCAExtremaLayout.resize(m_data->scaledPersistence.N());
   scaledPCA2ExtremaLayout.resize(m_data->scaledPersistence.N());
 
-  for (unsigned int level = 0; level < m_data->scaledPersistence.N(); level++) {    
+  for (unsigned int level = getMinPersistenceLevel(); level < m_data->scaledPersistence.N(); level++) {    
     // Resize vectors
     scaledIsoLayout[level].resize(m_data->crystals[level].N());
     scaledPCALayout[level].resize(m_data->crystals[level].N());

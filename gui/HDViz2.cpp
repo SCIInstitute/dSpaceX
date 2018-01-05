@@ -177,8 +177,8 @@ int main(int argc, char **argv) {
   HDProcessResult *result = nullptr;  
   try {        
     result = genericProcessor.processOnMetric(
-        distances /* distance matrix */,
-        y /* qoi */,
+        md, // distances /* distance matrix */,
+        mv, // y /* qoi */,
         knnArg.getValue() /* knn */,        
         samplesArg.getValue() /* samples */,
         pArg.getValue() /* persistence */,        
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
         
   HDVizData *data = new SimpleHDVizDataImpl(result);
   TopologyData *topoData = new LegacyTopologyDataImpl(data);
-  HDVizState state(data, distances);
+  HDVizState state(data, md); // distances);
 
   // Init GL stuff. Initialize Visualization Windows
   glutInit(&argc, argv);

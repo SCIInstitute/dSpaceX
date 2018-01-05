@@ -82,6 +82,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     ySubset(i) = Y(samples[i]);
   }
 
+
   FortranLinalg::DenseMatrix<Precision> dSubset(samples.size(), samples.size());
   for (int i=0; i < samples.size(); i++) {
     for (int j=0; j < samples.size(); j++) {    
@@ -110,9 +111,29 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   MetricMDS<Precision> mds;
 
   FortranLinalg::DenseMatrix<Precision> layout = mds.embed(dSubset, 2);
+  // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(state->distances, 2);
   // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
   // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(X, metric, 2);
   // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
+
+  // scale to range of [0,1]
+  float minX=layout(0,0);
+  float maxX=layout(0,0);
+  float minY=layout(0,0);
+  float maxY=layout(0,0);
+  for (int i=0; i < layout.N(); i++) {
+    std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
+    minX = layout(0,i) < minX ? layout(0,i) : minX;
+    maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
+    minY = layout(1,i) < minY ? layout(1,i) : minY;
+    maxY = layout(1,i) > maxY ? layout(1,i) : maxY;
+  }
+  for (int i=0; i < layout.N(); i++) {
+    layout(0,i) = (layout(0,i) - minX) / (maxX - minX);
+    layout(1,i) = (layout(1,i) - minY) / (maxY - minY);
+  }
+
+  //
 
   float range = 50.0f;
 
@@ -126,8 +147,8 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
       // vertices.push_back(range*(randf() - 0.5f));
       // vertices.push_back(range*(randf() - 0.5f));   // y
-      //vertices.push_back(range * (x_offset - 0.5f));
-      // vertices.push_back(range * (y_offset - 0.5f));
+   //vertices.push_back(range * (x_offset - 0.5f));
+   //vertices.push_back(range * (y_offset - 0.5f));
    vertices.push_back(range*layout(0, i));
    vertices.push_back(range*layout(1, i));
       // vertices.push_back(range*layout(0, samples[i]));
