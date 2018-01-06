@@ -163,38 +163,35 @@ float randf() {
 
 void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
-  std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
-  std::string pngSuffix = ".png";
-  std::string filename = imagesPathPrefix + std::to_string(996) + pngSuffix;
+  imageTextureID = new GLuint[1000];
+  glGenTextures(1000, imageTextureID);
 
-  GLubyte *textureImage;
-  int width, height;
-  bool hasAlpha;
-  bool success = loadPNG(filename, &width, &height, &hasAlpha, &textureImage);
-  if (success) {    
-    std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
-  }
-  for (int y=0; y < height; y++) {
-    for (int x=0; x < width; x++) {
-      std::cout << (int)textureImage[3*(y*width + x)] << " ";
+  for (int i = 0; i < 1000; i++) {
+    std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
+    std::string pngSuffix = ".png";
+    std::string filename = imagesPathPrefix + std::to_string(i) + pngSuffix;
+    std::cout << "Loading image: " << filename << std::endl;
+
+    GLubyte *textureImage;
+    int width, height;
+    bool hasAlpha;
+    bool success = loadPNG(filename, &width, &height, &hasAlpha, &textureImage);
+    if (success) {    
+      std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
     }
-    std::cout << std::endl;
+    hasAlpha = true;
+     
+    glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+                 textureImage);    
+    glBindTexture(GL_TEXTURE_2D, 0);
   }
-
-  hasAlpha = true;
-   
-  glGenTextures(1, &imageTextureID);
-  glBindTexture(GL_TEXTURE_2D, imageTextureID);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
-               height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-               textureImage);    
-  glBindTexture(GL_TEXTURE_2D, 0);
-
 
 
   m_currentLevel = persistenceLevel;
@@ -786,7 +783,7 @@ void DisplayGraph::display(void) {
 
   
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, imageTextureID);
+  glBindTexture(GL_TEXTURE_2D, imageTextureID[996]);
    
 
   GLuint nodeRadiusID = glGetUniformLocation(m_shaderProgram, "nodeRadius");  

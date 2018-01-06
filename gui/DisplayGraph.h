@@ -84,5 +84,5 @@ class DisplayGraph : public Display{
     GLuint m_edgeFragmentShader { 0 };
     GLuint m_edgeShaderProgram { 0 };
 
-    GLuint imageTextureID { 0 };
+    GLuint *imageTextureID;
 };

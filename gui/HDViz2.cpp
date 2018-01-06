@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
   // Create Sparse Matrix of KNN distances.
 	FortranLinalg::DenseMatrix<Precision> isomapDistance(n, n);
   // Initialize Distances
-  /*
+  
   for (int i=0; i < isomapDistance.M(); i++) {
     for (int j=0; j < isomapDistance.N(); j++) {
       isomapDistance(i,j) = (i==j) ? 0 : 1e12;
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
       }
     }
   }
-  */
+  
   
   //-------------------------------------------------------------
   // End Isomap Logic
