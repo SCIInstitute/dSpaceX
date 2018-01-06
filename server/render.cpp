@@ -319,36 +319,23 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 void
 dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
 {
-  int          i, j, k, k1, m, stat, index, segs[2*24], tris[6*18*24];
-  double       ang, rad;
-  float        xz[25*2], width[25], xyzs[25*3], colrs[3*25], focus[4];
-  float        tube[3*18*25];
+  int          i, j, k, k1, m, n, stat, index, segs[2*24], tris[6*18*24];
+  float        width[25], xyzs[25*3], colrs[3*25], tube[3*18*25], focus[4];
+  float        norm[3], xn[3], yn[3], xt[3], ang, rad, xmag;
   static float scalar[25];
   char         gpname[33];
   wvData       items[3];
   
   focus[0] = focus[1] = focus[2] = 0.0;
   focus[3] = 2.0;
+  /* note: dimensions above top out at 25 */
+  n        = 25;
   
-  /* fill up a single branch */
-  if (flag == 0) {
-    for (i = 0; i < 25; i++) {
-      xz[2*i  ] =       sin(i*PI/50.0);
-      xz[2*i+1] = 1.0 - cos(i*PI/50.0);
-      scalar[i] = lims[0] + i*(lims[1]-lims[0])/24.0;
-      width[i]  = 0.05 + 0.2*sin(i*PI/24.0);
-    }
-    for (i = 0; i < 24; i++) {
-      segs[2*i  ] = i;
-      segs[2*i+1] = i+1;
-    }
-    wv_removeAll(cntxt);
-  }
+  /* remove any old graphics */
+  if (flag == 0) wv_removeAll(cntxt);
   
   /* draw our crystals */
   for (j = 0; j < nCrystal; j++) {
-    ang  = 2.0*PI*j;
-    ang /= nCrystal;
     
     /* plot core as a line */
     sprintf(gpname, "Crystal %d Core 1", j+1);
@@ -356,10 +343,14 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
     if (flag == 0) {
       
       /* plot the entire suite */
-      for (i = 0; i < 25; i++) {
-        xyzs[3*i  ] = xz[2*i+1]*cos(ang);
-        xyzs[3*i+1] = xz[2*i+1]*sin(ang);
-        xyzs[3*i+2] = xz[2*i  ];
+      ang  = 2.0*PI*j;
+      ang /= nCrystal;
+      for (i = 0; i < n; i++) {
+        xyzs[3*i  ] = (1.0 - cos(i*PI/50.0))*cos(ang);   /* faked coordinates */
+        xyzs[3*i+1] = (1.0 - cos(i*PI/50.0))*sin(ang);
+        xyzs[3*i+2] =        sin(i*PI/50.0);
+        scalar[i]   = lims[0] + i*(lims[1]-lims[0])/(n-1); /* faked QoI value */
+        width[i]    = 0.05 + 0.2*sin(i*PI/24.0);          /* faked S.D. in 3D */
         if (key == -1) {
           float scalr = j;
           spec_col(lims, scalr,     &colrs[3*i]);
@@ -367,18 +358,24 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
           spec_col(lims, scalar[i], &colrs[3*i]);
         }
       }
-      stat = wv_setData(WV_REAL32, 25, (void *) xyzs,  WV_VERTICES, &items[0]);
+      
+      for (i = 0; i < n-1; i++) {
+        segs[2*i  ] = i;
+        segs[2*i+1] = i+1;
+      }
+      
+      stat = wv_setData(WV_REAL32, n, (void *) xyzs,  WV_VERTICES, &items[0]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
         continue;
       }
       wv_adjustVerts(&items[0], focus);
-      stat = wv_setData(WV_INT32, 2*24, (void *) segs, WV_INDICES, &items[1]);
+      stat = wv_setData(WV_INT32, 2*(n-1), (void *) segs, WV_INDICES, &items[1]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
         continue;
       }
-      stat = wv_setData(WV_REAL32, 25, (void *) colrs,  WV_COLORS, &items[2]);
+      stat = wv_setData(WV_REAL32, n, (void *) colrs,  WV_COLORS, &items[2]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 2!\n", stat, gpname);
         continue;
@@ -389,15 +386,69 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       
       /* plot extent transparent */
       sprintf(gpname, "Crystal %d Tube 1", j+1);
-      for (m = i = 0; i < 25; i++)
+      /* set x-dir for the entire crystal -- may need a better method */
+      xt[0] = xyzs[3*n-3] - xyzs[0];
+      xt[1] = xyzs[3*n-2] - xyzs[1];
+      xt[2] = xyzs[3*n-1] - xyzs[2];
+      xmag  = sqrt(xt[0]*xt[0] + xt[1]*xt[1] + xt[2]*xt[2]);
+      xt[0] = fabs(xt[0]/xmag);
+      xt[1] = fabs(xt[1]/xmag);
+      xt[2] = fabs(xt[2]/xmag);
+      xn[0] = xn[1] = xn[2] = 1.0;
+      if (xt[0] < 0.4) {
+        xn[1] = xn[2] = 0.0;
+      } else if (xt[1] < 0.4) {
+        xn[0] = xn[2] = 0.0;
+      } else if (xt[2] < 0.4) {
+        xn[0] = xn[1] = 0.0;
+      } else if ((xt[0] > xt[1]) && (xt[0] > xt[2])) {
+        xn[0] = 0.0;
+      } else if (xt[1] > xt[2]) {
+        xn[1] = 0.0;
+      } else {
+        xn[2] = 0.0;
+      }
+      xmag    = sqrt(xn[0]*xn[0] + xn[1]*xn[1] + xn[2]*xn[2]);
+      xn[0]  /= xmag;
+      xn[1]  /= xmag;
+      xn[2]  /= xmag;
+      /* make the tube */
+      for (m = i = 0; i < n; i++) {
+        /* get the curve normal */
+        if (i == 0) {
+          norm[0] = xyzs[3*i+3] - xyzs[3*i  ];
+          norm[1] = xyzs[3*i+4] - xyzs[3*i+1];
+          norm[2] = xyzs[3*i+5] - xyzs[3*i+2];
+        } else if (i == n-1) {
+          norm[0] = xyzs[3*i  ] - xyzs[3*i-3];
+          norm[1] = xyzs[3*i+1] - xyzs[3*i-2];
+          norm[2] = xyzs[3*i+2] - xyzs[3*i-1];
+        } else {
+          norm[0] = xyzs[3*i+3] - xyzs[3*i-3];
+          norm[1] = xyzs[3*i+4] - xyzs[3*i-2];
+          norm[2] = xyzs[3*i+5] - xyzs[3*i-1];
+        }
+        xmag = sqrt(norm[0]*norm[0] + norm[1]*norm[1] + norm[2]*norm[2]);
+        if (xmag != 0.0) {
+          norm[0] /= xmag;
+          norm[1] /= xmag;
+          norm[2] /= xmag;
+        }
+        /* set the y-dir -- cross constant x-dir with normal */
+        yn[0] = norm[1]*xn[2] - norm[2]*xn[1];
+        yn[1] = norm[2]*xn[0] - norm[0]*xn[2];
+        yn[2] = norm[0]*xn[1] - norm[1]*xn[0];
+        /* set the tube points */
         for (k = 0; k < 18; k++, m++) {
           rad          = 2.0*PI*k;
           rad         /= 18.0;
-          tube[3*m  ]  = xyzs[3*i  ] + width[i]*sin(i*PI/50.0)*cos(rad);
-          tube[3*m+1]  = xyzs[3*i+1] + width[i]*cos(i*PI/50.0)*sin(rad);
-          tube[3*m+2]  = xyzs[3*i+2];
+          tube[3*m  ]  = xyzs[3*i  ] + width[i]*(xn[0]*cos(rad)+yn[0]*sin(rad));
+          tube[3*m+1]  = xyzs[3*i+1] + width[i]*(xn[1]*cos(rad)+yn[1]*sin(rad));
+          tube[3*m+2]  = xyzs[3*i+2] + width[i]*(xn[2]*cos(rad)+yn[2]*sin(rad));
         }
-      for (m = i = 0; i < 24; i++) {
+      }
+      /* make the tringles in strips */
+      for (m = i = 0; i < n-1; i++) {
         for (k = 0; k < 18; k++, m++) {
                        k1 = k + 1;
           if (k == 17) k1 = 0;
@@ -409,13 +460,13 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
           tris[6*m+5] = (i+1)*18 + k;
         }
       }
-      stat = wv_setData(WV_REAL32, 18*25, (void *) tube,  WV_VERTICES, &items[0]);
+      stat = wv_setData(WV_REAL32, 18*n, (void *) tube,  WV_VERTICES, &items[0]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
         continue;
       }
       wv_adjustVerts(&items[0], focus);
-      stat = wv_setData(WV_INT32, 6*18*24, (void *) tris, WV_INDICES, &items[1]);
+      stat = wv_setData(WV_INT32, 6*18*(n-1), (void *) tris, WV_INDICES, &items[1]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
         continue;
@@ -439,11 +490,11 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       index = wv_indexGPrim(cntxt, gpname);
       if (key == -1) {
         float scalr = j;
-        for (i = 0; i < 25; i++) spec_col(lims, scalr,     &colrs[3*i]);
+        for (i = 0; i < n; i++) spec_col(lims, scalr,     &colrs[3*i]);
       } else {
-        for (i = 0; i < 25; i++) spec_col(lims, scalar[i], &colrs[3*i]);
+        for (i = 0; i < n; i++) spec_col(lims, scalar[i], &colrs[3*i]);
       }
-      stat = wv_setData(WV_REAL32, 25, (void *) colrs,  WV_COLORS, &items[0]);
+      stat = wv_setData(WV_REAL32, n, (void *) colrs,  WV_COLORS, &items[0]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
         continue;
