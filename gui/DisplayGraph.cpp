@@ -98,9 +98,9 @@ bool loadPNG(std::string filename, int *width, int *height, bool *hasAlpha, png_
   png_byte *image_data = (png_byte*) malloc(row_bytes * (*height) * sizeof(png_byte)+15);
 
   png_bytep *row_pointers = (png_bytep*) malloc(*height * sizeof(png_bytep));
-  for (int y = 0; y < *height; y++) {
-    // row_pointers[*height - 1 - y] = image_data + i * rowbytes;
-    row_pointers[y] = image_data + y*row_bytes;
+  for (int y = 0; y < *height; y++) {    
+    row_pointers[*height - 1 - y] = image_data + y*row_bytes;
+    // row_pointers[y] = image_data + y*row_bytes;
   }
   
 
@@ -165,7 +165,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
   std::string pngSuffix = ".png";
-  std::string filename = imagesPathPrefix + std::to_string(0) + pngSuffix;
+  std::string filename = imagesPathPrefix + std::to_string(996) + pngSuffix;
 
   GLubyte *textureImage;
   int width, height;
@@ -180,7 +180,21 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     }
     std::cout << std::endl;
   }
-  exit(0);
+
+  hasAlpha = true;
+   
+  glGenTextures(1, &imageTextureID);
+  glBindTexture(GL_TEXTURE_2D, imageTextureID);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+               height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+               textureImage);    
+  glBindTexture(GL_TEXTURE_2D, 0);
+
 
 
   m_currentLevel = persistenceLevel;
@@ -452,6 +466,7 @@ void DisplayGraph::compileNodeShaders() {
   "#version 150\n"
   "uniform float nodeOutline;                                               "
   "uniform float nodeSmoothness;                                            "
+  "uniform sampler2D imageTex;                                              "
   "in vec2 Vertex_UV;"
   "in vec3 geom_color;"
   "out vec4 frag_color;"
@@ -474,8 +489,12 @@ void DisplayGraph::compileNodeShaders() {
   "  "
   "  float step1 = thickness;"
   "  float step2 = thickness + blur;"  
-  "  frag_color = mix(lineColor, fill, smoothstep(step1, step2, t));"
-  "}";
+  // "  frag_color = mix(lineColor, fill, smoothstep(step1, step2, t));"
+  " frag_color = vec4(texture2D(imageTex, Vertex_UV).rgb, 1);"
+  " if (uv.x <= 0.02 || uv.x >= 0.98 || uv.y <= 0.02 || uv.y >= 0.98) {  "
+  "     frag_color = black;                                      "
+  " }                                                            "
+  "}                                                             ";
 
   // Compile Vertex Shader
   m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -765,9 +784,16 @@ void DisplayGraph::display(void) {
   GLuint edgeThicknessID = glGetUniformLocation(m_edgeShaderProgram, "edgeThickness");  
   GLuint edgeOpacityID = glGetUniformLocation(m_edgeShaderProgram, "edgeOpacity");  
 
+  
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, imageTextureID);
+   
+
   GLuint nodeRadiusID = glGetUniformLocation(m_shaderProgram, "nodeRadius");  
   GLuint nodeOutlineID = glGetUniformLocation(m_shaderProgram, "nodeOutline");  
   GLuint nodeSmoothnessID = glGetUniformLocation(m_shaderProgram, "nodeSmoothness");  
+  GLint texLoc = glGetUniformLocation(m_shaderProgram, "imageTex");
+  glUniform1i(texLoc, 0);
 
   glBindVertexArray(m_vertexArrayObject);  
 
