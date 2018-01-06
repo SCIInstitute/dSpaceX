@@ -168,17 +168,76 @@ int main(int argc, char **argv) {
 
   FortranLinalg::DenseVector<Precision> mv = 
       loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
-  
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   DenseVectorEuclideanMetric metric;
   FortranLinalg::DenseMatrix<Precision> distances = 
         genericProcessor.computeDistances(samples, metric);
 
+	//-------------------------------------------------------------
+  // Isomap Distance Function
+  //-------------------------------------------------------------
+  // 1. Begin with an NxN euclidean distance matrix.
+  //           and an NxM k-nearest neighbor matrix.
+  // 2. Create a new NxN manifold distance matrix by
+  //    only copying values if the neighbor pair exists
+  //    in the k-nearerst neighbor matrix.
+  // 3. Fill in missing distances using bread-first search.
+  //-------------------------------------------------------------
+  int n = md.N();
+  int knn = knnArg.getValue();
+  auto KNN = FortranLinalg::DenseMatrix<int>(knn, n);
+  auto KNND = FortranLinalg::DenseMatrix<Precision>(knn, n);
+  Distance<Precision>::findKNN(md, KNN, KNND);
+
+
+
+  // Create Sparse Matrix of KNN distances.
+	FortranLinalg::DenseMatrix<Precision> isomapDistance(n, n);
+  // Initialize Distances
+  /*
+  for (int i=0; i < isomapDistance.M(); i++) {
+    for (int j=0; j < isomapDistance.N(); j++) {
+      isomapDistance(i,j) = (i==j) ? 0 : 1e12;
+    }
+  }
+
+  for (int i=0; i < KNN.N(); i++) {
+    for (int k=0; k < KNN.M(); k++) {
+      int node1 = i;
+      int node2 = KNN(k, i);
+      isomapDistance(node1, node2) = KNND(k, i);
+      isomapDistance(node2, node1) = KNND(k, i);
+    }
+  }
+
+  // Go back through and compute shortest distances.
+  // Add each vertex to the active set of intermediate pairs.
+  for (int k=0; k < n; k++) {
+    std::cout << "Floyd–Warshall progress: " << (float)k*100.0f/(float)n << "%" << std::endl;
+    // Pick all vertices as source one by one
+    for (int i=0; i < n; i++) {
+      // Pick all vertices for destination of the above picked source.
+      for (int j=0; j < n; j++) {
+        // If vertex k is on the shortest path from i to j, then update
+        // the value of dist[i][j]
+        double pathDistance = isomapDistance(i,k) + isomapDistance(k,j);
+        if (pathDistance < isomapDistance(i,j)) {
+          isomapDistance(i,j) = pathDistance;
+        }
+      }
+    }
+  }
+  */
+  
+  //-------------------------------------------------------------
+  // End Isomap Logic
+  //-------------------------------------------------------------
+
   HDProcessResult *result = nullptr;  
   try {        
     result = genericProcessor.processOnMetric(
-        md, // distances /* distance matrix */,
+        isomapDistance, // md /* distance matrix */,
         mv, // y /* qoi */,
         knnArg.getValue() /* knn */,        
         samplesArg.getValue() /* samples */,
@@ -198,7 +257,7 @@ int main(int argc, char **argv) {
         
   HDVizData *data = new SimpleHDVizDataImpl(result);
   TopologyData *topoData = new LegacyTopologyDataImpl(data);
-  HDVizState state(data, md); // distances);
+  HDVizState state(data, isomapDistance); // distances);
 
   // Init GL stuff. Initialize Visualization Windows
   glutInit(&argc, argv);
