@@ -386,7 +386,7 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       
       /* plot extent transparent */
       sprintf(gpname, "Crystal %d Tube 1", j+1);
-      /* set x-dir for the entire crystal -- may need a better method */
+      /* set constant dir for the entire crystal */
       xt[0] = xyzs[3*n-3] - xyzs[0];
       xt[1] = xyzs[3*n-2] - xyzs[1];
       xt[2] = xyzs[3*n-1] - xyzs[2];
@@ -408,10 +408,10 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       } else {
         xn[2] = 0.0;
       }
-      xmag    = sqrt(xn[0]*xn[0] + xn[1]*xn[1] + xn[2]*xn[2]);
-      xn[0]  /= xmag;
-      xn[1]  /= xmag;
-      xn[2]  /= xmag;
+      xmag  = sqrt(xn[0]*xn[0] + xn[1]*xn[1] + xn[2]*xn[2]);
+      xt[0] = xn[0]/xmag;
+      xt[1] = xn[1]/xmag;
+      xt[2] = xn[2]/xmag;
       /* make the tube */
       for (m = i = 0; i < n; i++) {
         /* get the curve normal */
@@ -434,7 +434,11 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
           norm[1] /= xmag;
           norm[2] /= xmag;
         }
-        /* set the y-dir -- cross constant x-dir with normal */
+        /* set the x-dir as cross of constant dir and normal */
+        xn[0] = norm[1]*xt[2] - norm[2]*xt[1];
+        xn[1] = norm[2]*xt[0] - norm[0]*xt[2];
+        xn[2] = norm[0]*xt[1] - norm[1]*xt[0];
+        /* set the y-dir -- cross x-dir with normal */
         yn[0] = norm[1]*xn[2] - norm[2]*xn[1];
         yn[1] = norm[2]*xn[0] - norm[0]*xn[2];
         yn[2] = norm[0]*xn[1] - norm[1]*xn[0];
