@@ -394,6 +394,7 @@ void DisplayGraph::init(){
   //glBindVertexArray(0);
   //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+  std::cout << "Compiling GLSL shaders..." << std::endl;
   compileShaders();
 }
 
@@ -463,7 +464,6 @@ void DisplayGraph::compileNodeShaders() {
   "#version 150\n"
   "uniform float nodeOutline;                                               "
   "uniform float nodeSmoothness;                                            "
-  "uniform sampler2D imageTex;                                              "
   "in vec2 Vertex_UV;"
   "in vec3 geom_color;"
   "out vec4 frag_color;"
@@ -486,12 +486,28 @@ void DisplayGraph::compileNodeShaders() {
   "  "
   "  float step1 = thickness;"
   "  float step2 = thickness + blur;"  
-  // "  frag_color = mix(lineColor, fill, smoothstep(step1, step2, t));"
-  " frag_color = vec4(texture2D(imageTex, Vertex_UV).rgb, 1);"
-  " if (uv.x <= 0.02 || uv.x >= 0.98 || uv.y <= 0.02 || uv.y >= 0.98) {  "
-  "     frag_color = black;                                      "
-  " }                                                            "
+  "  frag_color = mix(lineColor, fill, smoothstep(step1, step2, t));"
   "}                                                             ";
+  
+  const char* thumbnail_shader_src = 
+  "#version 150\n"
+  "uniform float nodeOutline;                                               "
+  "uniform float nodeSmoothness;                                            "
+  "uniform sampler2D imageTex;                                              "
+  "in vec2 Vertex_UV;"
+  "in vec3 geom_color;"
+  "out vec4 frag_color;"
+  "void main() {"
+  "  vec2 uv = Vertex_UV.xy;"
+  "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);                                 "
+  "  vec4 lineColor = vec4(mix(black.xyz, geom_color, 0.4), 1.0);           "
+  "  frag_color = vec4(texture2D(imageTex, Vertex_UV).rgb, 1);              "
+  "  if (uv.x <= 0.05 || uv.x >= 0.95 || uv.y <= 0.05 || uv.y >= 0.95) {    "
+  "    frag_color = lineColor;                                              "
+  "  }                                                                      "
+  "}                                                                        ";
+
+
 
   // Compile Vertex Shader
   m_vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -545,7 +561,23 @@ void DisplayGraph::compileNodeShaders() {
     exit(0);
   }
 
+  // Compile Thumbnail Shader
+  m_thumbnailFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(m_thumbnailFragmentShader, 1, &thumbnail_shader_src, NULL);
+  glCompileShader(m_thumbnailFragmentShader);
 
+   // Check for Thumbnail Shader Errors
+  glGetShaderiv(m_thumbnailFragmentShader, GL_COMPILE_STATUS, &success);
+  if (success == GL_FALSE) {
+    GLint logSize = 0;
+    glGetShaderiv(m_thumbnailFragmentShader, GL_INFO_LOG_LENGTH, &logSize);
+    GLchar *errorLog = new GLchar[logSize];
+    glGetShaderInfoLog(m_thumbnailFragmentShader, logSize, &logSize, &errorLog[0]);
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+  // Compile Shader Program
   m_shaderProgram = glCreateProgram();
   glAttachShader(m_shaderProgram, m_vertexShader);
   glAttachShader(m_shaderProgram, m_fragmentShader);
@@ -569,6 +601,33 @@ void DisplayGraph::compileNodeShaders() {
     std::cout << errorLog << std::endl;
     exit(0);
   }
+
+  // Compile Thumbnail Shader Program
+  m_thumbnailShaderProgram = glCreateProgram();
+  glAttachShader(m_thumbnailShaderProgram, m_vertexShader);
+  glAttachShader(m_thumbnailShaderProgram, m_thumbnailFragmentShader);
+  glAttachShader(m_thumbnailShaderProgram, m_geometryShader);
+  // glBindAttribLocation(m_thumbnailShaderProgram, 0, "vertex_position");
+  // glBindAttribLocation(m_thumbnailShaderProgram, 1, "vertex_color");
+  glLinkProgram(m_thumbnailShaderProgram);
+
+  isLinked = 0;
+  glGetProgramiv(m_thumbnailShaderProgram, GL_LINK_STATUS, &isLinked);
+  if(isLinked == GL_FALSE)
+  {
+    GLint maxLength = 0;
+    glGetProgramiv(m_thumbnailShaderProgram, GL_INFO_LOG_LENGTH, &maxLength);
+    
+    GLchar *errorLog = new GLchar[maxLength];    
+    glGetProgramInfoLog(m_thumbnailShaderProgram, maxLength, &maxLength, &errorLog[0]);
+    
+    glDeleteProgram(m_thumbnailShaderProgram);    
+    std::cout << errorLog << std::endl;
+    exit(0);
+  }
+
+  // Set Active Node Shader
+  m_activeNodeShader = m_shaderProgram;
 }
 
 void DisplayGraph::compileEdgeShaders() {
@@ -786,10 +845,10 @@ void DisplayGraph::display(void) {
   glBindTexture(GL_TEXTURE_2D, imageTextureID[996]);
    
 
-  GLuint nodeRadiusID = glGetUniformLocation(m_shaderProgram, "nodeRadius");  
-  GLuint nodeOutlineID = glGetUniformLocation(m_shaderProgram, "nodeOutline");  
-  GLuint nodeSmoothnessID = glGetUniformLocation(m_shaderProgram, "nodeSmoothness");  
-  GLint texLoc = glGetUniformLocation(m_shaderProgram, "imageTex");
+  GLuint nodeRadiusID = glGetUniformLocation(m_activeNodeShader, "nodeRadius");  
+  GLuint nodeOutlineID = glGetUniformLocation(m_activeNodeShader, "nodeOutline");  
+  GLuint nodeSmoothnessID = glGetUniformLocation(m_activeNodeShader, "nodeSmoothness");  
+  GLint texLoc = glGetUniformLocation(m_activeNodeShader, "imageTex");
   glUniform1i(texLoc, 0);
 
   glBindVertexArray(m_vertexArrayObject);  
@@ -809,8 +868,8 @@ void DisplayGraph::display(void) {
   glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
 
   // render nodes
-  glUseProgram(m_shaderProgram);
-  projectionMatrixID = glGetUniformLocation(m_shaderProgram, "projectionMatrix");  
+  glUseProgram(m_activeNodeShader);
+  projectionMatrixID = glGetUniformLocation(m_activeNodeShader, "projectionMatrix");  
   GLfloat radius[1] = { m_nodeRadius };
   glUniform1fv(nodeRadiusID, 1, radius);
 
@@ -878,15 +937,26 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
       break;
     case 'm':
       m_edgeThickness = std::max(0.005, m_edgeThickness / 1.1);
+      std::cout << "m_edgeThickness = " << m_edgeThickness << std::endl;
       break;
     case 'k':
       m_edgeThickness *= 1.1;
+      std::cout << "m_edgeThickness = " << m_edgeThickness << std::endl;
       break;
     case 'n':
       m_edgeOpacity = std::max(0.01, m_edgeOpacity / 1.1);
+      std::cout << "m_edgeOpacity = " << m_edgeOpacity << std::endl;
       break;
     case 'j':
       m_edgeOpacity *= 1.1;
+      std::cout << "m_edgeOpacity = " << m_edgeOpacity << std::endl;
+      break;
+    case 't':
+      if (m_activeNodeShader == m_shaderProgram) {
+        m_activeNodeShader = m_thumbnailShaderProgram;
+      } else {
+        m_activeNodeShader = m_shaderProgram;
+      }
       break;
     case ' ':  // spacebar    
       resetView();

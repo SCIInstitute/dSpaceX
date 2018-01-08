@@ -66,13 +66,16 @@ class DisplayGraph : public Display{
     float m_nodeSmoothness { 0.05 };
     float m_edgeThickness { 0.075 };
     float m_edgeSmoothness { 0.1 };
-    float m_edgeOpacity { 0.15 };
+    float m_edgeOpacity { 0.06 };
 
     int m_count { 0 };
 
     std::vector<GLuint> edgeIndices;
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> colors;
+
+    GLuint m_thumbnailFragmentShader { 0 };
+    GLuint m_thumbnailShaderProgram { 0 };
 
     GLuint m_vertexShader { 0 };
     GLuint m_geometryShader { 0 };
@@ -83,6 +86,8 @@ class DisplayGraph : public Display{
     GLuint m_edgeGeometryShader { 0 };
     GLuint m_edgeFragmentShader { 0 };
     GLuint m_edgeShaderProgram { 0 };
+
+    GLuint m_activeNodeShader { 0 };
 
     GLuint *imageTextureID;
 };
