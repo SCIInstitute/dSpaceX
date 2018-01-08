@@ -34,6 +34,7 @@ class DisplayGraph : public Display{
     void compileShaders();
     void compileNodeShaders();
     void compileEdgeShaders();
+    void initTextures();
     void resetView();
 
     int m_currentLevel = -1;

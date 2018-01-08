@@ -163,37 +163,6 @@ float randf() {
 
 void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
-  imageTextureID = new GLuint[1000];
-  glGenTextures(1000, imageTextureID);
-
-  for (int i = 0; i < 1000; i++) {
-    std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
-    std::string pngSuffix = ".png";
-    std::string filename = imagesPathPrefix + std::to_string(i) + pngSuffix;
-    std::cout << "Loading image: " << filename << std::endl;
-
-    GLubyte *textureImage;
-    int width, height;
-    bool hasAlpha;
-    bool success = loadPNG(filename, &width, &height, &hasAlpha, &textureImage);
-    if (success) {    
-      std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
-    }
-    hasAlpha = true;
-     
-    glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
-                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-                 textureImage);    
-    glBindTexture(GL_TEXTURE_2D, 0);
-  }
-
-
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;
 
@@ -396,6 +365,41 @@ void DisplayGraph::init(){
 
   std::cout << "Compiling GLSL shaders..." << std::endl;
   compileShaders();
+
+  std::cout << "Loading Textures and Building Texture Atlas..." << std::endl;
+  initTextures();
+}
+
+void DisplayGraph::initTextures() {  
+  imageTextureID = new GLuint[1000];
+  glGenTextures(1000, imageTextureID);
+
+  for (int i = 0; i < 1000; i++) {
+    std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
+    std::string pngSuffix = ".png";
+    std::string filename = imagesPathPrefix + std::to_string(i) + pngSuffix;
+    std::cout << "Loading image: " << filename << std::endl;
+
+    GLubyte *textureImage;
+    int width, height;
+    bool hasAlpha;
+    bool success = loadPNG(filename, &width, &height, &hasAlpha, &textureImage);
+    if (success) {    
+      std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
+    }
+    hasAlpha = true;
+     
+    glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+                 textureImage);    
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
 }
 
 
