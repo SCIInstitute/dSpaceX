@@ -275,10 +275,10 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
       // vertices.push_back(range*(randf() - 0.5f));
       // vertices.push_back(range*(randf() - 0.5f));   // y
-  //  vertices.push_back(range * (x_offset - 0.5f));
-  //  vertices.push_back(range * (y_offset - 0.5f));
-  vertices.push_back(range*layout(0, i));
-  vertices.push_back(range*layout(1, i));
+  // vertices.push_back(range * (x_offset - 0.5f));
+  // vertices.push_back(range * (y_offset - 0.5f));
+    vertices.push_back(range*layout(0, i));
+    vertices.push_back(range*layout(1, i));
       // vertices.push_back(range*layout(0, samples[i]));
       // vertices.push_back(range*layout(1, samples[i]));
       vertices.push_back(0.0f);   // z
@@ -588,56 +588,41 @@ void DisplayGraph::compileNodeShaders() {
   "flat in uint geom_thumbnail;                                             "
   "out vec4 frag_color;                                                     "
   "                                                                         "
-  "float colormap_red(float x) {                                            "
-  " if (x < 100.0) {                                                        "
-  "   return (-9.55123422981038E-02 * x + 5.86981763554179E+00) * x - 3.13964093701986E+00; "
-  " } else {"
-  "  return 5.25591836734694E+00 * x - 8.32322857142857E+02;"
-  " }"
-  "}"
-  "                                                                         "
-  "float colormap_green(float x) { "
-  "if (x < 150.0) {"
-  "  return 5.24448979591837E+00 * x - 3.20842448979592E+02;"
-  "} else {"
-  "  return -5.25673469387755E+00 * x + 1.34195877551020E+03;"
-  " }"
-  "}"
-  "                                                                         "
-  "float colormap_blue(float x) {"
-      "if (x < 80.0) {"
-          "return 4.59774436090226E+00 * x - 2.26315789473684E+00;"
-      "} else {"
-          "return -5.25112244897959E+00 * x + 8.30385102040816E+02;"
-      "}"
-  "}"
-  "                                                                         "
-  "vec4 colormap(float x) {"
-      "float t = x * 255.0;"
-      "float r = clamp(colormap_red(t) / 255.0, 0.0, 1.0);"
-      "float g = clamp(colormap_green(t) / 255.0, 0.0, 1.0);"
-      "float b = clamp(colormap_blue(t) / 255.0, 0.0, 1.0);"
-      "return vec4(r, g, b, 1.0);"
-  "}"
-  "                                                                         "
   "void main() {                                                            "
   "  vec2 uv = Vertex_UV.xy;                                                "
   "  int MAX_TEXTURE_SIZE = 2048;                                           "
   "  int THUMBNAIL_WIDTH = 80;                                              "
-  "  int THUMBNAIL_HEIGHT = 40;                                             "
+  "  int THUMBNAIL_HEIGHT = 40;                                             "  
   "  int thumbnailsPerTextureRow = 25;                                      "
+  "  float aspect_ratio = float(THUMBNAIL_HEIGHT) / float(THUMBNAIL_WIDTH); "
+  "  float inv_aspect = 1.0 / aspect_ratio;                                 "
   "  float uscale = float(THUMBNAIL_WIDTH) / float(MAX_TEXTURE_SIZE);       "
   "  float vscale = float(THUMBNAIL_HEIGHT) / float(MAX_TEXTURE_SIZE);      "
   "  int atlasOffsetX = int(geom_thumbnail) % thumbnailsPerTextureRow;      "  
   "  int atlasOffsetY = int(geom_thumbnail) / thumbnailsPerTextureRow;      "
-    
-  "  float atlas_u = (atlasOffsetX + uv.x) * uscale;"
-  "  float atlas_v = (atlasOffsetY + uv.y) * vscale;"
+  "                                                                         "
+  "  // Account for Thumbnail Aspect Ratio - Scale to Fit\n                 "
+  "  float aspect_u = uv.x;                                                 "  
+  "  float aspect_v = (uv.y - 0.5*(1 - aspect_ratio)) / aspect_ratio;       "
+  "                                                                         "
+  "  // Account for Lookup into Texture Atlas\n                             "
+  "  float atlas_u = (atlasOffsetX + aspect_u) * uscale;                    "
+  "  float atlas_v = (atlasOffsetY + aspect_v) * vscale;                    "
   "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);                                 "
+  "  vec4 transparent = vec4(0.0, 0.0, 0.0, 0.0);                           "
   "  vec4 lineColor = vec4(mix(black.xyz, geom_color, 0.4), 1.0);           "
   "  frag_color = vec4(texture2D(imageTex, vec2(atlas_u,atlas_v)).rgb, 1);  "
-  "  if (uv.x <= 0.05 || uv.x >= 0.95 || uv.y <= 0.05 || uv.y >= 0.95) {    "
+  "                                                                         "
+  "  // Add QoI outline color\n                                             "
+  "  if (aspect_u <= nodeOutline || aspect_u >= (1- nodeOutline) ||         "
+  "      aspect_v <= inv_aspect*nodeOutline ||                              "
+  "      aspect_v >= (1 - inv_aspect*nodeOutline)) {                        "
   "    frag_color = vec4(geom_color, 1.0);                                  "
+  "  }                                                                      "
+  "                                                                         "
+  "  // Make area outside of thumbnail transparent.\n                       "
+  "  if (aspect_u < 0 || aspect_u > 1 || aspect_v < 0 || aspect_v > 1) {    "
+  "    frag_color = transparent;                                            "
   "  }                                                                      "
   "}                                                                        ";
 
