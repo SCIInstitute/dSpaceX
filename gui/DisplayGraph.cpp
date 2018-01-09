@@ -14,7 +14,9 @@
 #include <cstdlib>
 
 
-
+/**
+ * Load a PNG image into the imageData buffer.
+ */
 bool loadPNG(std::string filename, int *width, int *height, bool *hasAlpha, png_byte **imageData) {
   int x, y;
   
@@ -168,6 +170,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   vertices.clear();
   colors.clear();
+  thumbnails.clear();
   edgeIndices.clear();
 
   // m_count = data->getNearestNeighbors().N();
@@ -272,10 +275,10 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
       // vertices.push_back(range*(randf() - 0.5f));
       // vertices.push_back(range*(randf() - 0.5f));   // y
-   //vertices.push_back(range * (x_offset - 0.5f));
-   //vertices.push_back(range * (y_offset - 0.5f));
-   vertices.push_back(range*layout(0, i));
-   vertices.push_back(range*layout(1, i));
+  //  vertices.push_back(range * (x_offset - 0.5f));
+  //  vertices.push_back(range * (y_offset - 0.5f));
+  vertices.push_back(range*layout(0, i));
+  vertices.push_back(range*layout(1, i));
       // vertices.push_back(range*layout(0, samples[i]));
       // vertices.push_back(range*layout(1, samples[i]));
       vertices.push_back(0.0f);   // z
@@ -293,6 +296,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       colors.push_back(color[0]);      
       colors.push_back(color[1]);
       colors.push_back(color[2]);
+      thumbnails.push_back(sampleIndex);
   }
 
   for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
@@ -310,10 +314,13 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   // bind new data to buffers
   glBindBuffer(GL_ARRAY_BUFFER, m_positionsVBO);
-  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &vertices[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &vertices[0], GL_DYNAMIC_DRAW);
     
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
   glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_DYNAMIC_DRAW);
+
+  glBindBuffer(GL_ARRAY_BUFFER, m_thumbnailsVBO);
+  glBufferData(GL_ARRAY_BUFFER, m_count*sizeof(GLuint), &thumbnails[0], GL_DYNAMIC_DRAW);
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_DYNAMIC_DRAW);
@@ -347,6 +354,10 @@ void DisplayGraph::init(){
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
   glBufferData(GL_ARRAY_BUFFER, m_count*3*sizeof(GLfloat), &colors[0], GL_STATIC_DRAW);
 
+  glGenBuffers(1, &m_thumbnailsVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_thumbnailsVBO);
+  glBufferData(GL_ARRAY_BUFFER, m_count*sizeof(GLuint), &thumbnails[0], GL_STATIC_DRAW);
+
   glGenBuffers(1, &m_edgeElementVBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_edgeElementVBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, edgeIndices.size() * sizeof(GLuint), &edgeIndices[0], GL_STATIC_DRAW);
@@ -355,10 +366,13 @@ void DisplayGraph::init(){
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
   glBindBuffer(GL_ARRAY_BUFFER, m_colorsVBO);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  glBindBuffer(GL_ARRAY_BUFFER, m_thumbnailsVBO);
+  glVertexAttribIPointer(2, 1, GL_UNSIGNED_INT, 0, NULL);
 
   // Enable Vertex Arrays 0 and 1 in the VAO
   glEnableVertexAttribArray(0);  
   glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
   //glBindVertexArray(0);
   //glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -371,10 +385,43 @@ void DisplayGraph::init(){
 }
 
 void DisplayGraph::initTextures() {  
-  imageTextureID = new GLuint[1000];
-  glGenTextures(1000, imageTextureID);
+  int thumbnailCount = 1000;
 
-  for (int i = 0; i < 1000; i++) {
+  const int MAX_TEXTURE_SIZE = 2048;
+  const int THUMBNAIL_WIDTH = 80;
+  const int THUMBNAIL_HEIGHT = 40;
+
+  int thumbnailsPerTextureRow = MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH;
+  int thumbnailsPerTextureCol = MAX_TEXTURE_SIZE / THUMBNAIL_HEIGHT;
+  int thumbnailsPerTexture = thumbnailsPerTextureRow * thumbnailsPerTextureCol;
+  int atlasCount = std::ceil(thumbnailCount / (float)thumbnailsPerTexture);
+
+  std::cout << "Max Texture size: " << MAX_TEXTURE_SIZE << "x" << MAX_TEXTURE_SIZE << std::endl;
+  std::cout << "Thumbnail size: " << THUMBNAIL_WIDTH << "x" << THUMBNAIL_HEIGHT << std::endl;
+  std::cout << "Thumbnails per row: " << thumbnailsPerTextureRow << std::endl;
+  std::cout << "Thumbnails per height: " << thumbnailsPerTextureCol << std::endl;
+  std::cout << "Thumbnails per texture: " << thumbnailsPerTexture << std::endl;
+
+  std::cout << "Building a Texture Atlas of " << thumbnailCount 
+            << " thumbnails will require a total of " << atlasCount << " textures "
+            << " of size " << MAX_TEXTURE_SIZE << "x" << MAX_TEXTURE_SIZE << std::endl;
+
+  // Allocating Memory;
+  GLubyte *textureAtlas = new GLubyte[MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE*4];
+
+  // ----
+  imageTextureID = new GLuint[atlasCount];
+  for (int i=0; i < MAX_TEXTURE_SIZE; i++) {
+    for (int j=0; j < MAX_TEXTURE_SIZE; j++) {
+      textureAtlas[4*(MAX_TEXTURE_SIZE*j + i) + 0] = 255;
+      textureAtlas[4*(MAX_TEXTURE_SIZE*j + i) + 1] = 255;
+      textureAtlas[4*(MAX_TEXTURE_SIZE*j + i) + 2] = 255;
+      textureAtlas[4*(MAX_TEXTURE_SIZE*j + i) + 3] = 255;
+    }
+  }
+  glGenTextures(atlasCount, imageTextureID);  
+
+  for (int i = 0; i < thumbnailCount; i++) {
     std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
     std::string pngSuffix = ".png";
     std::string filename = imagesPathPrefix + std::to_string(i) + pngSuffix;
@@ -388,18 +435,46 @@ void DisplayGraph::initTextures() {
       std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
     }
     hasAlpha = true;
-     
-    glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
-                 height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-                 textureImage);    
-    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // Copy texture into atlas
+    int atlasOffsetY = i / thumbnailsPerTextureRow;
+    int atlasOffsetX = i % thumbnailsPerTextureRow;
+    int y = (atlasOffsetY * THUMBNAIL_HEIGHT);
+    int x = (atlasOffsetX * THUMBNAIL_WIDTH);
+    for (int h=0; h < height; h++) {
+      for (int w=0; w < width; w++) {        
+        int index = ((y+h)*MAX_TEXTURE_SIZE) + x + w;
+        textureAtlas[4*index+0] = textureImage[4*(width*h + w) + 0];
+        textureAtlas[4*index+1] = textureImage[4*(width*h + w) + 1];
+        textureAtlas[4*index+2] = textureImage[4*(width*h + w) + 2];
+        // textureAtlas[4*index+3] = 255;// textureImage[4*(width*h + w) + 3];
+      }
+    }
+
+
+    // Load Thumbnail into a Texture
+    // glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
+    //              height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+    //              textureImage);    
+    // glBindTexture(GL_TEXTURE_2D, 0);
   }
+
+  glBindTexture(GL_TEXTURE_2D, imageTextureID[0]);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, true /*hasAlpha*/ ? 4 : 3, MAX_TEXTURE_SIZE,
+               MAX_TEXTURE_SIZE, 0, true /*hasAlpha*/ ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+               textureAtlas);    
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -411,13 +486,17 @@ void DisplayGraph::compileShaders() {
 void DisplayGraph::compileNodeShaders() {
   // Create Shaders
   const char* vertex_shader_src =
+  "#version 150 core\n                          "
   "in vec3 vertex_position;                     "
   "in vec3 vertex_color;                        "
+  "in uint vertex_thumbnail;                    "
   "                                             "
-  "varying out vec3 color;                      "
+  "out vec3 color;                              "
+  "flat out uint thumbnail;                     "
   "                                             " 
   "void main() {                                "
   "  color = vertex_color;                      "
+  "  thumbnail = vertex_thumbnail;              "
   "  gl_Position = vec4(vertex_position, 1.0);  "
   "}                                            ";
 
@@ -430,8 +509,10 @@ void DisplayGraph::compileNodeShaders() {
   "uniform float nodeRadius;                                                "
   "uniform mat4 projectionMatrix;                                           "
   "in vec3 color[];                                                         "
+  "flat in uint thumbnail[];                                                "
   "out vec2 Vertex_UV;                                                      "
   "out vec3 geom_color;                                                     "
+  "flat out uint geom_thumbnail;                                            "
   "                                                                         "
   "const float radius = 0.5;                                                "
   "                                                                         "
@@ -440,24 +521,28 @@ void DisplayGraph::compileNodeShaders() {
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 0.0);"
   "  geom_color = color[0];                                                 "
+  "  geom_thumbnail = thumbnail[0];                                         "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4(-1 * nodeRadius,  1 * nodeRadius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(0.0, 1.0);"
   "  geom_color = color[0];                                                 "
+  "  geom_thumbnail = thumbnail[0];                                         "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * nodeRadius, -1 * nodeRadius, 0.0, 0.0); "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 0.0);"
   "  geom_color = color[0];                                                 "
+  "  geom_thumbnail = thumbnail[0];                                         "
   "  EmitVertex();                                                          "
   "                                                                         "  
   "  gl_Position = gl_in[0].gl_Position + vec4( 1 * nodeRadius,  1 * nodeRadius, 0.0, 0.0);  "  
   "  gl_Position = projectionMatrix * gl_Position;"
   "  Vertex_UV = vec2(1.0, 1.0);"
   "  geom_color = color[0];                                                 "
+  "  geom_thumbnail = thumbnail[0];                                         "
   "  EmitVertex();                                                          "
   "                                                                         "    
   "                                                                         "  
@@ -494,20 +579,65 @@ void DisplayGraph::compileNodeShaders() {
   "}                                                             ";
   
   const char* thumbnail_shader_src = 
-  "#version 150\n"
+  "#version 150\n                                                           "
   "uniform float nodeOutline;                                               "
   "uniform float nodeSmoothness;                                            "
   "uniform sampler2D imageTex;                                              "
-  "in vec2 Vertex_UV;"
-  "in vec3 geom_color;"
-  "out vec4 frag_color;"
-  "void main() {"
-  "  vec2 uv = Vertex_UV.xy;"
+  "in vec2 Vertex_UV;                                                       "
+  "in vec3 geom_color;                                                      "
+  "flat in uint geom_thumbnail;                                             "
+  "out vec4 frag_color;                                                     "
+  "                                                                         "
+  "float colormap_red(float x) {                                            "
+  " if (x < 100.0) {                                                        "
+  "   return (-9.55123422981038E-02 * x + 5.86981763554179E+00) * x - 3.13964093701986E+00; "
+  " } else {"
+  "  return 5.25591836734694E+00 * x - 8.32322857142857E+02;"
+  " }"
+  "}"
+  "                                                                         "
+  "float colormap_green(float x) { "
+  "if (x < 150.0) {"
+  "  return 5.24448979591837E+00 * x - 3.20842448979592E+02;"
+  "} else {"
+  "  return -5.25673469387755E+00 * x + 1.34195877551020E+03;"
+  " }"
+  "}"
+  "                                                                         "
+  "float colormap_blue(float x) {"
+      "if (x < 80.0) {"
+          "return 4.59774436090226E+00 * x - 2.26315789473684E+00;"
+      "} else {"
+          "return -5.25112244897959E+00 * x + 8.30385102040816E+02;"
+      "}"
+  "}"
+  "                                                                         "
+  "vec4 colormap(float x) {"
+      "float t = x * 255.0;"
+      "float r = clamp(colormap_red(t) / 255.0, 0.0, 1.0);"
+      "float g = clamp(colormap_green(t) / 255.0, 0.0, 1.0);"
+      "float b = clamp(colormap_blue(t) / 255.0, 0.0, 1.0);"
+      "return vec4(r, g, b, 1.0);"
+  "}"
+  "                                                                         "
+  "void main() {                                                            "
+  "  vec2 uv = Vertex_UV.xy;                                                "
+  "  int MAX_TEXTURE_SIZE = 2048;                                           "
+  "  int THUMBNAIL_WIDTH = 80;                                              "
+  "  int THUMBNAIL_HEIGHT = 40;                                             "
+  "  int thumbnailsPerTextureRow = 25;                                      "
+  "  float uscale = float(THUMBNAIL_WIDTH) / float(MAX_TEXTURE_SIZE);       "
+  "  float vscale = float(THUMBNAIL_HEIGHT) / float(MAX_TEXTURE_SIZE);      "
+  "  int atlasOffsetX = int(geom_thumbnail) % thumbnailsPerTextureRow;      "  
+  "  int atlasOffsetY = int(geom_thumbnail) / thumbnailsPerTextureRow;      "
+    
+  "  float atlas_u = (atlasOffsetX + uv.x) * uscale;"
+  "  float atlas_v = (atlasOffsetY + uv.y) * vscale;"
   "  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);                                 "
   "  vec4 lineColor = vec4(mix(black.xyz, geom_color, 0.4), 1.0);           "
-  "  frag_color = vec4(texture2D(imageTex, Vertex_UV).rgb, 1);              "
+  "  frag_color = vec4(texture2D(imageTex, vec2(atlas_u,atlas_v)).rgb, 1);  "
   "  if (uv.x <= 0.05 || uv.x >= 0.95 || uv.y <= 0.05 || uv.y >= 0.95) {    "
-  "    frag_color = lineColor;                                              "
+  "    frag_color = vec4(geom_color, 1.0);                                  "
   "  }                                                                      "
   "}                                                                        ";
 
@@ -589,6 +719,7 @@ void DisplayGraph::compileNodeShaders() {
 
   glBindAttribLocation(m_shaderProgram, 0, "vertex_position");
   glBindAttribLocation(m_shaderProgram, 1, "vertex_color");
+  glBindAttribLocation(m_shaderProgram, 2, "vertex_thumbnail");
   glLinkProgram(m_shaderProgram);
 
   GLint isLinked = 0;
@@ -611,8 +742,9 @@ void DisplayGraph::compileNodeShaders() {
   glAttachShader(m_thumbnailShaderProgram, m_vertexShader);
   glAttachShader(m_thumbnailShaderProgram, m_thumbnailFragmentShader);
   glAttachShader(m_thumbnailShaderProgram, m_geometryShader);
-  // glBindAttribLocation(m_thumbnailShaderProgram, 0, "vertex_position");
-  // glBindAttribLocation(m_thumbnailShaderProgram, 1, "vertex_color");
+  glBindAttribLocation(m_thumbnailShaderProgram, 0, "vertex_position");
+  glBindAttribLocation(m_thumbnailShaderProgram, 1, "vertex_color");
+  glBindAttribLocation(m_thumbnailShaderProgram, 2, "vertex_thumbnail");
   glLinkProgram(m_thumbnailShaderProgram);
 
   isLinked = 0;
@@ -846,7 +978,7 @@ void DisplayGraph::display(void) {
 
   
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, imageTextureID[996]);
+  glBindTexture(GL_TEXTURE_2D, imageTextureID[0]);
    
 
   GLuint nodeRadiusID = glGetUniformLocation(m_activeNodeShader, "nodeRadius");  

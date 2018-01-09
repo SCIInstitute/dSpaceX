@@ -60,6 +60,7 @@ class DisplayGraph : public Display{
     GLuint m_vertexArrayObject { 0 };
     GLuint m_positionsVBO { 0 };
     GLuint m_colorsVBO { 0 };
+    GLuint m_thumbnailsVBO { 0 };
     GLuint m_edgeElementVBO { 0 };
 
     float m_nodeRadius { 0.5 };
@@ -67,13 +68,14 @@ class DisplayGraph : public Display{
     float m_nodeSmoothness { 0.05 };
     float m_edgeThickness { 0.075 };
     float m_edgeSmoothness { 0.1 };
-    float m_edgeOpacity { 0.06 };
+    float m_edgeOpacity { 0.05 };
 
     int m_count { 0 };
 
     std::vector<GLuint> edgeIndices;
     std::vector<GLfloat> vertices;
     std::vector<GLfloat> colors;
+    std::vector<GLuint> thumbnails;
 
     GLuint m_thumbnailFragmentShader { 0 };
     GLuint m_thumbnailShaderProgram { 0 };
