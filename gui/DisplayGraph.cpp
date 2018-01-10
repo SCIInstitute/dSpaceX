@@ -275,10 +275,13 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
       // vertices.push_back(range*(randf() - 0.5f));
       // vertices.push_back(range*(randf() - 0.5f));   // y
-  // vertices.push_back(range * (x_offset - 0.5f));
-  // vertices.push_back(range * (y_offset - 0.5f));
-    vertices.push_back(range*layout(0, i));
-    vertices.push_back(range*layout(1, i));
+      if(m_useDebugLayout) {
+        vertices.push_back(range * (x_offset - 0.5f));
+        vertices.push_back(range * (y_offset - 0.5f));
+      } else {
+        vertices.push_back(range*layout(0, i));
+        vertices.push_back(range*layout(1, i));
+      }
       // vertices.push_back(range*layout(0, samples[i]));
       // vertices.push_back(range*layout(1, samples[i]));
       vertices.push_back(0.0f);   // z
@@ -1038,6 +1041,10 @@ void DisplayGraph::keyboard(unsigned char key, int x, int y) {
     case 'Q':
       exit(0);
       break;
+    case 'd':
+      m_useDebugLayout = !m_useDebugLayout;
+      setCrystal(m_currentLevel, m_currentCrystal);
+      break; 
     case '/':
       m_nodeRadius = std::max(0.1, m_nodeRadius / 1.1);
       break;

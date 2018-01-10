@@ -56,6 +56,8 @@ class DisplayGraph : public Display{
     void setupOrtho(int w, int h);
     int width, height;
 
+    bool m_useDebugLayout = false;
+
     // OpenGL variables
     GLuint m_vertexArrayObject { 0 };
     GLuint m_positionsVBO { 0 };
