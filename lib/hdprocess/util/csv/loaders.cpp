@@ -19,8 +19,7 @@ FortranLinalg::DenseMatrix<Precision> loadCSVMatrix(std::string filename) {
     }
     matrix.push_back(row);    
   }
-
-  assert(matrix.size() == matrix[0].size());
+  
   FortranLinalg::DenseMatrix<Precision> m(matrix.size(),matrix.size());
   for (int i = 0; i < matrix.size(); i++) {
     for (int j = 0; j < matrix.size(); j++) {
