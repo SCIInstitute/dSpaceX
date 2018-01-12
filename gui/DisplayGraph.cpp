@@ -4,8 +4,10 @@
 #include "Precision.h"
 #include "LinalgIO.h"
 #include "EuclideanMetric.h"
+#include "util/csv/csv.h"
 
 #include <png.h>
+
 
 #include <iostream>
 #include <fstream>

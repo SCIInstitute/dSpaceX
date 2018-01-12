@@ -24,7 +24,7 @@
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "util/DenseVectorSample.h"
-#include "util/csv/csv.h"
+#include "util/csv/loaders.h"
 
 #include <cassert>
 #include <iostream>
@@ -37,49 +37,6 @@
 #define MAKE_STRING(x) MAKE_STRING_(x)
 
 Display *mainD, *graphD;
-
-FortranLinalg::DenseMatrix<Precision> loadCSVMatrix(std::string filename) {
-  std::ifstream fstream(filename);
-  std::string line; 
-  std::string token;
-  
-  std::vector<std::vector<double>> matrix;
-  while (std::getline(fstream, line)) {
-    std::istringstream ss(line);
-    std::vector<double> row;
-    while (std::getline(ss, token, ',')) {
-      row.push_back(std::stod(token));
-    }
-    matrix.push_back(row);    
-  }
-
-  assert(matrix.size() == matrix[0].size());
-  FortranLinalg::DenseMatrix<Precision> m(matrix.size(),matrix.size());
-  for (int i = 0; i < matrix.size(); i++) {
-    for (int j = 0; j < matrix.size(); j++) {
-      m(i,j) = matrix[i][j];
-    }
-  }
-
-  return m;
-}
-
-FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename, std::string columnName) {
-  io::CSVReader<1> in(filename.c_str());
-  in.read_header(io::ignore_extra_column, columnName);
-  double value;  
-  std::vector<double> vec;
-  while (in.read_row(value)) {
-    vec.push_back(value);
-  }
-    
-  FortranLinalg::DenseVector<Precision> v(vec.size());
-  for (int i = 0; i < vec.size(); i++) {
-    v(i) = vec[i];
-  }
-
-  return v;
-}
 
 
 void printHelp() {
@@ -163,11 +120,11 @@ int main(int argc, char **argv) {
 
   // Load temporary CSV dataset.
   FortranLinalg::DenseMatrix<Precision> md = 
-      loadCSVMatrix("/home/sci/bronson/collab/mukund/dist.csv");
+      HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist.csv");
   std::cout << "Truss data contains " << md.N() << " samples." << std::endl;
 
   FortranLinalg::DenseVector<Precision> mv = 
-      loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
+      HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   DenseVectorEuclideanMetric metric;
