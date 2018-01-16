@@ -199,15 +199,15 @@ dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name)
 }
 
 
-/* place-holder for scatter-plot rendering */
+/* scatter-plot rendering */
 void
 dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
            FortranLinalg::DenseMatrix<Precision> layout,
            std::vector<unsigned int> &edgeIndices,
-           FortranLinalg::DenseVector<int> parts, float *lims, int nCrystal,
+           FortranLinalg::DenseVector<int> parts, float *lims,
            int key, int flag)
 {
-  int    i, stat, segs[8];
+  int    i, stat, index, segs[8];
   float  xy[12], focus[3], colrs[3];
   char   gpname[33];
   wvData items[3];
@@ -222,8 +222,8 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     }
     
     sprintf(gpname, "Scatter Dots");
-    int index = wv_indexGPrim(cntxt, gpname);
-    stat = wv_setData(WV_REAL32, y.N(), (void *) &colors[0], WV_COLORS, &items[0]);
+    index = wv_indexGPrim(cntxt, gpname);
+    stat  = wv_setData(WV_REAL32, y.N(), (void *) &colors[0], WV_COLORS, &items[0]);
     if (stat < 0) {
       printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
       return;
@@ -239,25 +239,9 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   std::vector<float> vertices;
   
   for (int i = 0; i < layout.N(); i++) {
-/*
-    int sampleIndex = i;
-    int one_dim = std::floor(sqrt(2000));
-    float x_offset = (float)(sampleIndex % one_dim) / (float)one_dim;
-    float y_offset = (float)std::floor(sampleIndex / one_dim) / (float)one_dim;
-    vertices.push_back(x_offset - 0.5f);
-    vertices.push_back(y_offset - 0.5f);
- */
     vertices.push_back(layout(0, i));
     vertices.push_back(layout(1, i));
   }
-
-/*
-  std::cout << "FLAG = " << flag << std::endl;
-  std::cout << "vertices.size() = " << vertices.size() << std::endl;
-  std::cout << "edgeIndices.size() = " << edgeIndices.size() << std::endl;
-  std::cout << "layout.N() = " << layout.N() << std::endl;
-  std::cout << "y.N() = " << y.N() << std::endl;
-*/
 
   std::vector<float> colors(3*y.N());
   if (key == -1) {
@@ -267,8 +251,9 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   }
   
   sprintf(gpname, "Scatter Lines");
-  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
-                       focus, &items[0]);
+  index = wv_indexGPrim(cntxt, gpname);
+  stat  = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
+                        focus, &items[0]);
   if (stat < 0) {
     printf(" wv_setVerts2D = %d for %s/item 0!\n", stat, gpname);
     return;
@@ -286,28 +271,43 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     printf(" wv_setData = %d for %s/item 2!\n", stat, gpname);
     return;
   }
-  stat = wv_addGPrim(cntxt, gpname, WV_LINE2D, WV_ON, 3, items);
-  if (stat < 0)
-    printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
+  if (index < 0) {
+    stat = wv_addGPrim(cntxt, gpname, WV_LINE2D, WV_ON, 3, items);
+  } else {
+    stat = wv_modGPrim(cntxt, index, 3, items);
+  }
+  if (stat < 0) {
+    if (index < 0) {
+      printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
+    } else {
+      printf(" wv_modGPrim = %d for %s!\n", stat, gpname);
+    }
+  }
 
   sprintf(gpname, "Scatter Dots");
-  stat = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
-                       focus, &items[0]);
+  index = wv_indexGPrim(cntxt, gpname);
+  stat  = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
+                        focus, &items[0]);
   if (stat < 0) {
     printf(" wv_setVerts2D = %d for %s/item 0!\n", stat, gpname);
     return;
   }
-  // colrs[0]  = 0.0;
-  // colrs[1]  = 0.0;
-  // colrs[2]  = 1.0;
   stat = wv_setData(WV_REAL32, vertices.size()/2, (void *) &colors[0],  WV_COLORS, &items[1]);
   if (stat < 0) {
     printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
     return;
   }
-  stat = wv_addGPrim(cntxt, gpname, WV_POINT2D, WV_ON | WV_SHADING, 2, items);
+  if (index < 0) {
+    stat = wv_addGPrim(cntxt, gpname, WV_POINT2D, WV_ON | WV_SHADING, 2, items);
+  } else {
+    stat = wv_modGPrim(cntxt, index, 2, items);
+  }
   if (stat < 0) {
-    printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
+    if (index < 0) {
+      printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
+    } else {
+      printf(" wv_modGPrim = %d for %s!\n", stat, gpname);
+    }
   } else {
     cntxt->gPrims[stat].pSize = 5.0;
   }

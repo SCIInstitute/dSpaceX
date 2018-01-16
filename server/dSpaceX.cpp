@@ -43,7 +43,7 @@ extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y
                        FortranLinalg::DenseMatrix<Precision> layout,
                        std::vector<unsigned int> &edgeIndices,
                        FortranLinalg::DenseVector<int> parts,
-                       float *lims, int nCrystal, int key, int flag);
+                       float *lims, int key, int flag);
 
 
 std::vector<DenseVectorSample*> samples;
@@ -146,11 +146,11 @@ sendCase(void *wsi, int icase, int nParams, double *cases, char **pNames,
 
 extern "C" void browserMessage(void *wsi, char *text, int lena)
 {
-  int           i, width, height, stat, color_only = 1;
+  int           i, j, width, height, stat, color_only = 1;
   char          copy[133], *word, *word1, *lasts, sep[2] = " ";
   static float  lims[2] = {-1.0, +1.0};
   unsigned char *image;
-  static int    nCases, nParams, nQoIs, nCrystal, maxP, persistence;
+  static int    nCases, nParams, nQoIs, nCrystal, maxP, persistence, iCrystal;
   static int    icase = 1, key = -1;
   static double *cases = NULL, *QoIs = NULL;
   static char   **pNames, **qNames;
@@ -158,11 +158,11 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   static HDProcessResult *result = nullptr;  
   static HDVizData *data = nullptr;
   static TopologyData *topoData = nullptr;
-  static FortranLinalg::DenseMatrix<Precision> layout;
-  static std::vector<unsigned int> edgeIndices;
-  static FortranLinalg::DenseVector<int> parts;
-
-
+  static FortranLinalg::DenseMatrix<Precision>  lCrystal, layout, distances;
+  static std::vector<unsigned int> edgeIndices, eCrystal;
+  static FortranLinalg::DenseVector<int> parts, pCrystal;
+  static FortranLinalg::DenseVector<Precision>  yCrystal;
+  
 /*
   printf(" pWSI = %lx\n", (unsigned long) wsi);
   {
@@ -199,9 +199,9 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
       
       // Build Sample Vector from Input Data
-      for (int j=0; j < x.N(); j++) {
+      for (j = 0; j < x.N(); j++) {
         FortranLinalg::DenseVector<Precision> vector(x.M());
-        for (int i=0; i < x.M(); i++) {
+        for (i = 0; i < x.M(); i++) {
           vector(i) = x(i, j);
         }
         DenseVectorSample *sample = new DenseVectorSample(vector);
@@ -210,26 +210,25 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
 
       HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
       DenseVectorEuclideanMetric metric;
-      FortranLinalg::DenseMatrix<Precision> distances = 
-            genericProcessor.computeDistances(samples, metric);
+      distances = genericProcessor.computeDistances(samples, metric);
         
       result = genericProcessor.processOnMetric(
-          distances /* distance matrix */,
-          y /* qoi */,
-          15 /* knn */,        
-          5 /* samples */,
-          20 /* persistence */,        
-          true /* random */,
-          0.25 /* sigma */,
-          0 /* smooth */);
+                                 distances /* distance matrix */,
+                                 y         /* qoi */,
+                                 15        /* knn */,
+                                 5         /* samples */,
+                                 20        /* persistence */,
+                                 true      /* random */,
+                                 0.25      /* sigma */,
+                                 0         /* smooth */);
       data = new SimpleHDVizDataImpl(result);
       topoData = new LegacyTopologyDataImpl(data);  
 
       MetricMDS<Precision> mds;
       layout = mds.embed(distances, 2);
 
-      for (int i = 0; i < data->getNearestNeighbors().N(); i++) {
-        for (int j = 0; j < data->getNearestNeighbors().M(); j++) {      
+      for (i = 0; i < data->getNearestNeighbors().N(); i++) {
+        for (j = 0; j < data->getNearestNeighbors().M(); j++) {
           int neighbor = data->getNearestNeighbors()(j, i);
             edgeIndices.push_back(i);
             edgeIndices.push_back(neighbor);
@@ -264,6 +263,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     for (int i = 0; i < parts.N(); i++)
       if (parts(i) > nCrystal) nCrystal = parts(i);
     nCrystal++;
+    iCrystal = 0;
     printf(" nCrystals is %d\n", nCrystal);
     
     /* put up key & render */
@@ -291,6 +291,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       for (int i = 0; i < parts.N(); i++)
         if (parts(i) > nCrystal) nCrystal = parts(i);
       nCrystal++;
+      iCrystal = 0;
       printf(" nCrystals is %d\n", nCrystal);
       
       if (key == -1) {
@@ -302,7 +303,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       /* set 3D rendering of the result */
       dsx_draw3D(cntxt, lims, nCrystal, key, 0);
       /* set 2D rendering of the result */
-      dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, nCrystal, key, 0);
+      dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, 0);
     }
 
     return;
@@ -315,17 +316,29 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     float xloc  = atof(word);
     float yloc  = atof(word1);
     float dist2 = 10000.0;
+    int   ipart = iCrystal;
     icase = 1;
     /* note: does not take into account the application of "focus" */
-    for (int i = 0; i < layout.N(); i++) {
-      float d = (layout(0,i)-xloc)*(layout(0,i)-xloc) +
-                (layout(1,i)-yloc)*(layout(1,i)-yloc);
-      if (d >= dist2) continue;
-      dist2 = d;
-      icase = i+1;
+    if (iCrystal == 0) {
+      for (i = 0; i < layout.N(); i++) {
+        float d = (layout(0,i)-xloc)*(layout(0,i)-xloc) +
+                  (layout(1,i)-yloc)*(layout(1,i)-yloc);
+        if (d >= dist2) continue;
+        dist2 = d;
+        icase = i+1;
+        ipart = parts(i);
+      }
+    } else {
+      for (i = 0; i < layout.N(); i++) {
+        float d = (lCrystal(0,i)-xloc)*(lCrystal(0,i)-xloc) +
+                  (lCrystal(1,i)-yloc)*(lCrystal(1,i)-yloc);
+        if (d >= dist2) continue;
+        dist2 = d;
+        icase = i+1;
+      }
     }
     printf(" locate2D = (%f %f), case# = %d, crystal = %d\n", xloc, yloc,
-           icase, parts(icase-1));
+           icase, ipart);
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
     return;
   }
@@ -344,7 +357,59 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   
   /* 3D picked request */
   if (strcmp(word,"Picked") == 0) {
-    printf(" %s\n", text);
+    word = strtok_r(NULL, sep, &lasts);
+    if (word != NULL) {
+      word = strtok_r(NULL, sep, &lasts);
+      if (word != NULL) {
+        i = atoi(word);
+        if (i == iCrystal) return;
+        iCrystal = i;
+        if (iCrystal < 0) iCrystal = 0;
+        printf(" current Crystal = %d\n", iCrystal);
+        if (iCrystal == 0) {
+          dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, 0);
+        } else {
+          MorseSmaleComplex *complex = topoData->getComplex(persistence);
+          Crystal *crystal = complex->getCrystals()[iCrystal-1];
+          std::vector<unsigned int> samples = crystal->getAllSamples();
+          FortranLinalg::DenseMatrix<Precision> dSubset(samples.size(),
+                                                        samples.size());
+          FortranLinalg::DenseVector<int>       pCry(samples.size());
+          FortranLinalg::DenseVector<Precision> yCry(samples.size());
+          pCrystal = pCry;
+          yCrystal = yCry;
+          for (i = 0; i < samples.size(); i++) {
+            pCrystal(i) = iCrystal;
+            yCrystal(i) = y(samples[i]);
+            for (j = 0; j < samples.size(); j++)
+              dSubset(j, i) = distances(samples[j], samples[i]);
+          }
+          MetricMDS<Precision> mds;
+          lCrystal = mds.embed(dSubset, 2);
+          std::vector<unsigned int> eIndices;
+          for (i = 0; i < data->getNearestNeighbors().N(); i++) {
+            for (j = 0; j < data->getNearestNeighbors().M(); j++) {
+              int neighbor = data->getNearestNeighbors()(j, i);
+              
+              std::vector<unsigned int>::iterator iter1 =
+                              find(samples.begin(), samples.end(), neighbor);
+              std::vector<unsigned int>::iterator iter2 =
+                              find(samples.begin(), samples.end(), i);
+              if (iter1 != samples.end() && iter2 != samples.end()) {
+                eIndices.push_back((int) std::distance(samples.begin(),
+                                                          iter1));
+                eIndices.push_back((int) std::distance(samples.begin(),
+                                                          iter2));
+              }
+            }
+          }
+          eCrystal = eIndices;
+          
+          dsx_draw2D(cntxt, yCrystal, lCrystal, eCrystal, pCrystal, lims, key,
+                     0);
+        }
+      }
+    }
     return;
   }
   
@@ -406,8 +471,12 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     /* set 3D rendering of the result */
     dsx_draw3D(cntxt, lims, nCrystal, key, color_only);
     /* set 2D rendering of the result */
-    dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims,
-               nCrystal, key, color_only);
+    if (iCrystal == 0) {
+      dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, color_only);
+    } else {
+      dsx_draw2D(cntxt, yCrystal, lCrystal, eCrystal, pCrystal, lims, key,
+                 color_only);
+    }
     
     return;
   }

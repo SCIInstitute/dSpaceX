@@ -333,6 +333,7 @@ function wvUpdateUI()
 
         // '?' -- help
         if (wv.keyPress ==  63) {
+            postMessage("c - clear current Crystal");
             postMessage("C - next case");
             postMessage("g - get XYZ at cursor");
             postMessage("l - locate in scatter plot");
@@ -349,29 +350,33 @@ function wvUpdateUI()
             postMessage("Z - view from +Z direction");
             postMessage("* - center view at cursor");
             postMessage("? - get help");
-        
+      
+        // "c" -- clear current Crystal
+        } else if (wv.keyPress == 99) {
+            wv.socketUt.send("Picked Crystal 0");
+          
         // "C" -- case
         } else if (wv.keyPress == 67) {
             wv.socketUt.send("case");
           
         // "g" -- get XYZ
         } else if (wv.keyPress == 103) {
-          wv.locating = 103;
-          wv.locate   = 1;
-          wv.sceneUpd = 1;
+            wv.locating = 103;
+            wv.locate   = 1;
+            wv.sceneUpd = 1;
           
         // "l" -- 2D locate
         } else if (wv.keyPress == 108) {
-          var fact = wv.width2D/wv.height2D;
-          var scrX = -1.0 + 2.0*wv.cursrX2D/(wv.width2D -1);
-          var scrY = -1.0 + 2.0*wv.cursrY2D/(wv.height2D-1);
-          var matrix2D = new J3DIMatrix4();
-          matrix2D.load(wv.orthoMatrix2D);
-          matrix2D.multiply(wv.mvMatrix2D);
-          matrix2D.invert();
-          var vec = new J3DIVector3(scrX, scrY*fact, 0.0);
-          vec.multVecMatrix(matrix2D);
-          wv.socketUt.send(" locate2D " + vec[0] + " " + vec[1]/fact);
+            var fact = wv.width2D/wv.height2D;
+            var scrX = -1.0 + 2.0*wv.cursrX2D/(wv.width2D -1);
+            var scrY = -1.0 + 2.0*wv.cursrY2D/(wv.height2D-1);
+            var matrix2D = new J3DIMatrix4();
+            matrix2D.load(wv.orthoMatrix2D);
+            matrix2D.multiply(wv.mvMatrix2D);
+            matrix2D.invert();
+            var vec = new J3DIVector3(scrX, scrY*fact, 0.0);
+            vec.multVecMatrix(matrix2D);
+            wv.socketUt.send(" locate2D " + vec[0] + " " + vec[1]/fact);
           
         // 'T' -- thumbnail
         } else if (wv.keyPress == 84) {
