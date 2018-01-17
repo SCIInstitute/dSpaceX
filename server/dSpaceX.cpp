@@ -46,6 +46,8 @@ extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y
                        float *lims, int key, int flag);
 
 
+/* NOTE: the data read must me moved to the back-end and then
+         these globals cn be made local */
 std::vector<DenseVectorSample*> samples;
 FortranLinalg::DenseVector<Precision> y;
 
@@ -340,13 +342,26 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     printf(" locate2D = (%f %f), case# = %d, crystal = %d\n", xloc, yloc,
            icase, ipart);
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
+    dsx_drawKey(cntxt, lims, NULL);    /* turn off key */
+    stat = dsx_ThumbNail(&dsxcntxt, icase, &width, &height, &image);
+    if (stat != 0) {
+      printf(" dsx_ThumbNail = %d\n", stat);
+      if (key == -1) {
+        dsx_drawKey(cntxt, lims, "Crystal");
+      } else {
+        dsx_drawKey(cntxt, lims, qNames[key]);
+      }
+    } else {
+      stat = wv_thumbNail(cntxt, width, height, image);
+      if (stat != 0) printf(" wv_thumbnail  = %d\n", stat);
+    }
     return;
   }
   
   /* thumbnail request */
   if (strcmp(word,"thumbnail") == 0) {
     dsx_drawKey(cntxt, lims, NULL);    /* turn off key */
-    stat = dsx_ThumbNail(&dsxcntxt, 0, &width, &height, &image);
+    stat = dsx_ThumbNail(&dsxcntxt, icase, &width, &height, &image);
     printf(" dsx_ThumbNail = %d  %d %d\n", stat, width, height);
     if (stat == 0) {
       stat = wv_thumbNail(cntxt, width, height, image);
