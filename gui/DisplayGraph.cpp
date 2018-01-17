@@ -4,7 +4,7 @@
 #include "Precision.h"
 #include "LinalgIO.h"
 #include "EuclideanMetric.h"
-#include "util/csv/csv.h"
+#include "util/csv/loaders.h"
 
 #include <png.h>
 
@@ -167,6 +167,13 @@ float randf() {
 
 void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
+  // load precomputed layout data from t-SNE 
+  FortranLinalg::DenseMatrix<Precision> tSneLayout = 
+      //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
+      //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
+  //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
+  HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne-layout.csv");
+  
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;
 
@@ -198,7 +205,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
 
   for (int i=0; i < samples.size(); i++) {
      for (int j=0; j < X.M(); j++) {    
-       xSubset(j, i) = X(j, samples[i]);
+       // xSubset(j, i) = X(j, samples[i]);
      }
      ySubset(i) = Y(samples[i]);
   }
@@ -232,18 +239,25 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   MetricMDS<Precision> mds;
 
   std::cout << "dSubset size = " << dSubset.M() << " x " << dSubset.N() << std::endl;
-  FortranLinalg::DenseMatrix<Precision> layout;
-  if (dSubset.N() == 1) {
+  FortranLinalg::DenseMatrix<Precision> layout =  
+      FortranLinalg::DenseMatrix<Precision>(tSneLayout.N(), tSneLayout.M());
+  for (int i=0; i < tSneLayout.M(); i++) {
+    for (int j=0; j < tSneLayout.N(); j++) {
+      layout(j,i) = tSneLayout(i,j);
+    }
+  }
+
+  if (dSubset.N() == 1 && false) {
+    std::cout << "Single element crystal. Using special rules for layout" << std::endl;
     layout = FortranLinalg::DenseMatrix<Precision>(2,1);
     layout(0,0) = 0;
     layout(1,0) = 0;
   } else {
-    layout = mds.embed(dSubset, 2);
-  
-    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(state->distances, 2);
-    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(xSubset, metric, 2);
-    // FortranLinalg::DenseMatrix<Precision> layout = mds.embed(X, metric, 2);
-    // std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
+    // layout = mds.embed(dSubset, 2);  
+    // layout = mds.embed(state->distances, 2);
+    // layout = mds.embed(xSubset, metric, 2);
+    // layout = mds.embed(X, metric, 2);
+    std::cout << "Layout Matrix: " << layout.M() << " x " << layout.N() << std::endl;
 
     // scale to range of [0,1]
     float minX=layout(0,0);
@@ -263,30 +277,29 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     }
   }
 
-  //
+  std::cout << "layout.N() = " << layout.N() << "" << std::endl;
+  std::cout << "samples.size() = " << samples.size() << std::endl;
 
   float range = 50.0f;
 
   for (int i = 0; i < samples.size(); i++) {    
-      // vertices.push_back(range*(randf() - 0.5f));   // x
       int sampleIndex = samples[i];
-      // int one_dim = std::floor(sqrt(m_count));
       int one_dim = std::floor(sqrt(2000));
       float x_offset = (float)(sampleIndex % one_dim) / (float)one_dim;
       float y_offset = (float)std::floor(sampleIndex / one_dim) / (float)one_dim;
 
-      // vertices.push_back(range*(randf() - 0.5f));
-      // vertices.push_back(range*(randf() - 0.5f));   // y
       if(m_useDebugLayout) {
         vertices.push_back(range * (x_offset - 0.5f));
         vertices.push_back(range * (y_offset - 0.5f));
       } else {
-        vertices.push_back(range*layout(0, i));
-        vertices.push_back(range*layout(1, i));
+         //vertices.push_back(range*layout(0, i));
+         //vertices.push_back(range*layout(1, i));
+        vertices.push_back(range*layout(0, sampleIndex));
+        vertices.push_back(range*layout(1, sampleIndex));
       }
       // vertices.push_back(range*layout(0, samples[i]));
       // vertices.push_back(range*layout(1, samples[i]));
-      vertices.push_back(0.0f);   // z
+      vertices.push_back(0.0f);       // z
       // colors.push_back(randf());   // r
       // colors.push_back(randf());   // g
       // colors.push_back(randf());   // b    
@@ -297,7 +310,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       // colors.push_back(146.0f / 255.0f);
       // colors.push_back(255.0f / 255.0f);
 
-      std::vector<Precision> color = colorMapper.getColor(ySubset(i));
+      std::vector<Precision> color = colorMapper.getColor(Y(sampleIndex));
       colors.push_back(color[0]);      
       colors.push_back(color[1]);
       colors.push_back(color[2]);
@@ -427,9 +440,10 @@ void DisplayGraph::initTextures() {
   glGenTextures(atlasCount, imageTextureID);  
 
   for (int i = 0; i < thumbnailCount; i++) {
-    std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
+    // std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
+    std::string imagesPathPrefix = "/home/sci/bronson/collab/shireen/new/xs/";
     std::string pngSuffix = ".png";
-    std::string filename = imagesPathPrefix + std::to_string(i) + pngSuffix;
+    std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
 
     GLubyte *textureImage;
@@ -439,7 +453,7 @@ void DisplayGraph::initTextures() {
     if (success) {    
       std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
     }
-    hasAlpha = true;
+    // hasAlpha = true;
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;

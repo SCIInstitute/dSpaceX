@@ -30,6 +30,28 @@ FortranLinalg::DenseMatrix<Precision> loadCSVMatrix(std::string filename) {
   return m;
 }
 
+FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename) {
+  std::ifstream fstream(filename);
+  std::string line; 
+  std::string token;
+  
+  std::vector<double> vector;
+  while (std::getline(fstream, line)) {
+    std::istringstream ss(line);
+    std::vector<double> row;
+    while (std::getline(ss, token, ',')) {
+      row.push_back(std::stod(token));
+    }
+    vector.push_back(row[0]);    
+  }
+  
+  FortranLinalg::DenseVector<Precision> v(vector.size());
+  for (int i = 0; i < vector.size(); i++) {    
+    v(i) = vector[i];
+  }
+
+  return v;
+}
 
 FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename, std::string columnName) {
   io::CSVReader<1> in(filename.c_str());

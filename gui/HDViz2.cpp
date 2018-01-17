@@ -120,11 +120,18 @@ int main(int argc, char **argv) {
 
   // Load temporary CSV dataset.
   FortranLinalg::DenseMatrix<Precision> md = 
-      HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist.csv");
+      //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist3.csv");
+      //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist-f.csv");
+      HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/xs_distance_matrix.txt");
+  
   std::cout << "Truss data contains " << md.N() << " samples." << std::endl;
 
   FortranLinalg::DenseVector<Precision> mv = 
-      HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
+  //    HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
+  //    HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/max-stress.csv");
+        HDProcess::loadCSVColumn("/home/sci/bronson/collab/shireen/new/max_stress.txt");
+
+
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   DenseVectorEuclideanMetric metric;
@@ -147,8 +154,18 @@ int main(int argc, char **argv) {
   auto KNND = FortranLinalg::DenseMatrix<Precision>(knn, n);
   Distance<Precision>::findKNN(md, KNN, KNND);
 
+  std::cout << "Nearest neighbor distances" << std::endl;
+  for (int i=0; i < 10; i++) {
+    std::cout << "sample " << i << " : ";
+    for (int k=0; k < knn; k++) {
+      std::cout << KNND(k, i) << " ";
+    }
+    std::cout << std::endl;
+  } 
+  std::cout << std::endl;
 
 
+  /*
   // Create Sparse Matrix of KNN distances.
 	FortranLinalg::DenseMatrix<Precision> isomapDistance(n, n);
   // Initialize Distances
@@ -185,6 +202,7 @@ int main(int argc, char **argv) {
       }
     }
   }
+  */
   
   
   //-------------------------------------------------------------
@@ -194,12 +212,12 @@ int main(int argc, char **argv) {
   HDProcessResult *result = nullptr;  
   try {        
     result = genericProcessor.processOnMetric(
-        isomapDistance, // md /* distance matrix */,
+        md, // distances /* distance matrix */,
         mv, // y /* qoi */,
         knnArg.getValue() /* knn */,        
         samplesArg.getValue() /* samples */,
         pArg.getValue() /* persistence */,        
-        randArg.getValue() /* random */,
+        false, // randArg.getValue() /* random */,
         sigmaArg.getValue() /* sigma */,
         smoothArg.getValue() /* smooth */);
   } catch (const char *err) {
@@ -214,7 +232,7 @@ int main(int argc, char **argv) {
         
   HDVizData *data = new SimpleHDVizDataImpl(result);
   TopologyData *topoData = new LegacyTopologyDataImpl(data);
-  HDVizState state(data, isomapDistance); // distances);
+  HDVizState state(data, md); //*/ distances);
 
   // Init GL stuff. Initialize Visualization Windows
   glutInit(&argc, argv);

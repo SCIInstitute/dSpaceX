@@ -12,6 +12,8 @@ namespace HDProcess {
 
 FortranLinalg::DenseMatrix<Precision> loadCSVMatrix(std::string filename);
 
+FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename);
+
 FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename, std::string columnName);
  
 }
