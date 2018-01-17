@@ -1,0 +1,17 @@
+PROJECT(TSNE)
+
+SET(TSNE_INCLUDE_FILES 
+  tsne.h
+  vptree.h)
+
+SET(TSNE_SOURCE_FILES
+  sptree.cpp
+  tsne.cpp
+  tsne_main.cpp)
+
+
+ADD_EXECUTABLE(tSNE ${TSNE_SOURCE_FILES} ${TSNE_INCLUDE_FILES})
+
+# output library
+ADD_LIBRARY(tSNE ${HDPROCESS_INCLUDE_FILES} ${HDPROCESS_SOURCE_FILES})
+
