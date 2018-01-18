@@ -162,7 +162,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   static TopologyData *topoData = nullptr;
   static FortranLinalg::DenseMatrix<Precision>  lCrystal, layout, distances;
   static std::vector<unsigned int> edgeIndices, eCrystal;
-  static FortranLinalg::DenseVector<int> parts, pCrystal;
+  static FortranLinalg::DenseVector<int> parts, pCrystal, jCrystal;
   static FortranLinalg::DenseVector<Precision>  yCrystal;
   
 /*
@@ -319,7 +319,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     float yloc  = atof(word1);
     float dist2 = 10000.0;
     int   ipart = iCrystal;
-    icase = 1;
+    int   icasx = 1;
     /* note: does not take into account the application of "focus" */
     if (iCrystal == 0) {
       for (i = 0; i < layout.N(); i++) {
@@ -327,20 +327,25 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
                   (layout(1,i)-yloc)*(layout(1,i)-yloc);
         if (d >= dist2) continue;
         dist2 = d;
-        icase = i+1;
+        icasx = i+1;
         ipart = parts(i);
       }
     } else {
-      for (i = 0; i < layout.N(); i++) {
+      for (i = 0; i < lCrystal.N(); i++) {
         float d = (lCrystal(0,i)-xloc)*(lCrystal(0,i)-xloc) +
                   (lCrystal(1,i)-yloc)*(lCrystal(1,i)-yloc);
         if (d >= dist2) continue;
         dist2 = d;
-        icase = i+1;
+        icasx = jCrystal(i);
       }
     }
-    printf(" locate2D = (%f %f), case# = %d, crystal = %d\n", xloc, yloc,
-           icase, ipart);
+    dist2 = sqrtf(dist2);
+/*
+    printf(" locate2D = (%f, %f),  case# = %d,  crystal = %d,  dist = %f\n",
+           xloc, yloc, icasx, ipart, dist2);
+ */
+    if (dist2 > 0.05) return;
+    icase = icasx;
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
     dsx_drawKey(cntxt, lims, NULL);    /* turn off key */
     stat = dsx_ThumbNail(&dsxcntxt, icase, &width, &height, &image);
@@ -370,6 +375,16 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     return;
   }
   
+  /* hover request */
+  if (strcmp(word,"hover") == 0) {
+    if (key == -1) {
+      dsx_drawKey(cntxt, lims, "Crystal");
+    } else {
+      dsx_drawKey(cntxt, lims, qNames[key]);
+    }
+    return;
+  }
+  
   /* 3D picked request */
   if (strcmp(word,"Picked") == 0) {
     word = strtok_r(NULL, sep, &lasts);
@@ -390,11 +405,14 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
           FortranLinalg::DenseMatrix<Precision> dSubset(samples.size(),
                                                         samples.size());
           FortranLinalg::DenseVector<int>       pCry(samples.size());
+          FortranLinalg::DenseVector<int>       jCry(samples.size());
           FortranLinalg::DenseVector<Precision> yCry(samples.size());
           pCrystal = pCry;
+          jCrystal = jCry;
           yCrystal = yCry;
           for (i = 0; i < samples.size(); i++) {
             pCrystal(i) = iCrystal;
+            jCrystal(i) = samples[i] + 1;
             yCrystal(i) = y(samples[i]);
             for (j = 0; j < samples.size(); j++)
               dSubset(j, i) = distances(samples[j], samples[i]);
