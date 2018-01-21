@@ -237,6 +237,7 @@ function wvInitUI()
 //  wv.located                     // coordinates (local) that were pointed at
 //  wv.centerV                     // set to 1 to put wv into view centering mode
 //  wv.sceneUpd                    // set to 1 when scene needs rendering
+    wv.hover    =  0;              // hover mode
     wv.cursrX2D = -1;              // current cursor position
     wv.cursrY2D = -1;
     wv.startX2D = -1;              // start of dragging position
@@ -322,10 +323,23 @@ function wvUpdateUI()
         wv.keyPress = -1;
         wv.dragging = false;
     }
+  
+    if (wv.hover == 1) {
+        var fact = wv.width2D/wv.height2D;
+        var scrX = -1.0 + 2.0*wv.cursrX2D/(wv.width2D -1);
+        var scrY = -1.0 + 2.0*wv.cursrY2D/(wv.height2D-1);
+        var matrix2D = new J3DIMatrix4();
+        matrix2D.load(wv.orthoMatrix2D);
+        matrix2D.multiply(wv.mvMatrix2D);
+        matrix2D.invert();
+        var vec = new J3DIVector3(scrX, scrY*fact, 0.0);
+        vec.multVecMatrix(matrix2D);
+        wv.socketUt.send(" locate2D " + vec[0] + " " + vec[1]/fact);
+    }
 
     // if the tree has not been created but the scene graph (possibly) exists...
     if (wv.sgUpdate == 1 && (wv.sceneGraph !== undefined)) {
-      rebuildTreeWindow();
+        rebuildTreeWindow();
     }
 
     // deal with key presses
@@ -336,6 +350,7 @@ function wvUpdateUI()
             postMessage("c - clear current Crystal");
             postMessage("C - next case");
             postMessage("g - get XYZ at cursor");
+            postMessage("h - toggle hover mode");
             postMessage("l - locate in scatter plot");
             postMessage("L - change scalar limits");
             postMessage("q - query at cursor");
@@ -364,6 +379,17 @@ function wvUpdateUI()
             wv.locating = 103;
             wv.locate   = 1;
             wv.sceneUpd = 1;
+          
+        // "h" -- hover mode toggle
+        } else if (wv.keyPress == 104) {
+            if (wv.hover == 0) {
+                wv.hover = 1;
+                postMessage("Hover Mode On!");
+            } else {
+                wv.hover = 0;
+                postMessage("Hover Mode Off!");
+                wv.socketUt.send("hover off");
+            }
           
         // "l" -- 2D locate
         } else if (wv.keyPress == 108) {

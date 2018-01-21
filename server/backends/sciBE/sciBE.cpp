@@ -8,6 +8,7 @@
 
 #ifdef WIN32
 #define getcwd   _getcwd
+#define snprintf _snprintf
 #define PATH_MAX _MAX_PATH
 #else
 #include <unistd.h>
@@ -23,13 +24,14 @@
 #include "DenseVector.h"
 
 
+/* NOTE: This needs to be removed and the data read moved to Initialize */
 extern std::vector<DenseVectorSample*> samples;
 extern FortranLinalg::DenseVector<Precision> y;
 
 
 /* image file reader */
-// extern "C" int dsx_getThumbNail( const char *Name, int *Width, int *Height,
-//                              unsigned char **Image );
+extern "C" int dsx_getThumbNail( const char *Name, int *Width, int *Height,
+                                 unsigned char **Image );
 
 
 /* storage location for everything we allocate
@@ -50,9 +52,9 @@ static int       first = -1;
 
 
 /* function that gets invoked to return the data for the design setting */
-extern "C" int dsxInitialize(
-    int *nCases, int *nParams, double **params, char ***PNames, 
-    int *nQoI, double **QoIs, char ***QNames)
+extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
+                              char ***PNames, int *nQoI, double **QoIs,
+                              char ***QNames)
 {
   int    i, j, m, n, len;
   double *cases, *qois;
@@ -145,20 +147,24 @@ extern "C" int dsxInitialize(
 
 
 /* function that returns a thumbnail of the specified case */
-extern "C" int dsxThumbNail(/*@unused@*/ int caseIndex, int *width, int *height, unsigned char **image)
+extern "C" int dsxThumbNail(int caseIndex, int *width, int *height,
+                            unsigned char **image)
 {
-  int stat = 0;
+  int  stat = 0;
+  char filename[129];
   
   *width = *height = 0;
   *image = NULL;
   if (save.thumb != NULL) free(save.thumb);
   save.thumb = NULL;
 
-// #ifdef WIN32
-//   stat = dsx_getThumbNail("mach_alpha\\n33T.jpg", width, height, image);
-// #else
-//   stat = dsx_getThumbNail("mach_alpha/n33T.jpg",  width, height, image);
-// #endif
+#ifdef WIN32
+  snprintf(filename, 128, "ThumbNails\\%d.png", caseIndex-1);
+#else
+  snprintf(filename, 128, "ThumbNails/%d.png",  caseIndex-1);
+#endif
+
+  stat = dsx_getThumbNail(filename, width, height, image);
   if (stat == 0) save.thumb = *image;
   
   return stat;
