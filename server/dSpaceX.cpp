@@ -11,6 +11,7 @@
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "util/DenseVectorSample.h"
+#include "util/csv/loaders.h"
 
 #include <cstdlib>
 #include <algorithm>
@@ -51,7 +52,7 @@ extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y
 std::vector<DenseVectorSample*> samples;
 FortranLinalg::DenseVector<Precision> y;
 
- 
+
 
 int main(int argc, char *argv[])
 {
@@ -61,19 +62,19 @@ int main(int argc, char *argv[])
   float center[3] = {0.0, 0.0, 0.0};
   float up[3]     = {0.0, 1.0, 0.0};
 
-  /* get our starting application line 
-   * 
+  /* get our starting application line
+   *
    * for example on a Mac:
    * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
    */
   startapp = getenv("DSX_START");
-  
+
   if ((argc != 1) && (argc != 2)) {
     printf("\n Usage: dSpaceX [port]\n\n");
     return 1;
   }
   if (argc == 2) port = atoi(argv[1]);
-  
+
   /* initialize the back-end subsystem
      assume we have started where we can file the DLL/so */
   stat = dsx_Load(&dsxcntxt, "dSpaceXbe");
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
     /* start the server code -- at this time we only run a single server */
     stat = 0;
     if (wv_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {
-      
+
       /* we have a valid server -- stay alive a long as we have a client */
       while (wv_statusServer(0)) {
         usleep(500000);
@@ -120,7 +121,7 @@ sendCase(void *wsi, int icase, int nParams, double *cases, char **pNames,
 
   snprintf(buf, BUFLEN-1, "Case:%5d:%4d:%4d", icase, nParams, nQoIs);
   int ibuf = 20;
-  
+
   /* need to make sure we do not overflow! */
   for (int i = 0; i < nParams; i++) {
     snprintf(&buf[ibuf], BUFLEN-ibuf-1, ":%s:%lg",
@@ -157,31 +158,31 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   static double *cases = NULL, *QoIs = NULL;
   static char   **pNames, **qNames;
 
-  static HDProcessResult *result = nullptr;  
+  static HDProcessResult *result = nullptr;
   static HDVizData *data = nullptr;
   static TopologyData *topoData = nullptr;
   static FortranLinalg::DenseMatrix<Precision>  lCrystal, layout, distances;
   static std::vector<unsigned int> edgeIndices, eCrystal;
   static FortranLinalg::DenseVector<int> parts, pCrystal, jCrystal;
   static FortranLinalg::DenseVector<Precision>  yCrystal;
-  
+
 /*
   printf(" pWSI = %lx\n", (unsigned long) wsi);
   {
     int  n;
     void **interfaces;
-    
+
     stat = wv_activeInterfaces(0, &n, &interfaces);
     if (interfaces != NULL)
       for (i = 0; i < n; i++)
         printf(" iWSI = %lx\n", (unsigned long) interfaces[i]);
   } */
-  
+
   /* get token */
   strncpy(copy, text, 132);
   word = strtok_r(copy, sep, &lasts);
   if (word == NULL) return;
-  
+
   /* initialize */
   if (strcmp(word,"initialize") == 0) {
     /* are we already loaded? */
@@ -191,15 +192,20 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
 
     // Begin HDProcess Block
-    try {        
+    try {
+      FortranLinalg::DenseMatrix<Precision> md =
+          HDProcess::loadCSVMatrix("../../examples/truss/distances.csv");
+      FortranLinalg::DenseVector<Precision> mv =
+          HDProcess::loadCSVColumn("../../examples/truss/max_stress.txt");
+
       std::string xArg = "../../examples/gaussian2d/Geom.data.hdr";
       std::string fArg = "../../examples/gaussian2d/Function.data.hdr";
 
-      FortranLinalg::DenseMatrix<Precision> x = 
+      FortranLinalg::DenseMatrix<Precision> x =
           FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
-      // FortranLinalg::DenseVector<Precision> 
+      // FortranLinalg::DenseVector<Precision>
       y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
-      
+
       // Build Sample Vector from Input Data
       for (j = 0; j < x.N(); j++) {
         FortranLinalg::DenseVector<Precision> vector(x.M());
@@ -213,7 +219,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
       DenseVectorEuclideanMetric metric;
       distances = genericProcessor.computeDistances(samples, metric);
-        
+
       result = genericProcessor.processOnMetric(
                                  distances /* distance matrix */,
                                  y         /* qoi */,
@@ -224,7 +230,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
                                  0.25      /* sigma */,
                                  0         /* smooth */);
       data = new SimpleHDVizDataImpl(result);
-      topoData = new LegacyTopologyDataImpl(data);  
+      topoData = new LegacyTopologyDataImpl(data);
 
       MetricMDS<Precision> mds;
       layout = mds.embed(distances, 2);
@@ -241,7 +247,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       std::cerr << err << std::endl;
     }
     // End HDProcess Block
-  
+
     stat = dsx_Initialize(&dsxcntxt, &nCases, &nParams, &cases, &pNames,
                           &nQoIs, &QoIs, &qNames);
     printf(" dsx_Initialize = %d   nCases = %d, nParams = %d, nQoIs = %d\n",
@@ -251,10 +257,10 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       wv_killInterface(0, wsi);
       return;
     }
-    
+
     /* send case */
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
-    
+
     /* compute the Morse-Smale Complex */
     maxP = data->getMaxPersistenceLevel();
     printf(" getMinPersistenceLevel = %d\n", data->getMinPersistenceLevel());
@@ -267,12 +273,12 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     nCrystal++;
     iCrystal = 0;
     printf(" nCrystals is %d\n", nCrystal);
-    
+
     /* put up key & render */
     color_only = 0;
     word       = "next";
   }
-  
+
   /* slider change */
   if (strcmp(word,"slide") == 0) {
     word  = strtok_r(NULL, sep, &lasts);
@@ -286,7 +292,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     if (width != persistence) {
       persistence = width;
       printf(" new persistence = %d\n", persistence);
-    
+
       /* recompute the Morse-Smale Complex using new persistence */
       parts    = data->getCrystalPartitions(persistence);
       nCrystal = 0;
@@ -295,13 +301,13 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       nCrystal++;
       iCrystal = 0;
       printf(" nCrystals is %d\n", nCrystal);
-      
+
       if (key == -1) {
         lims[0] = 0.0;
         lims[1] = nCrystal-1;
         dsx_drawKey(cntxt, lims, "Crystal");
       }
-    
+
       /* set 3D rendering of the result */
       dsx_draw3D(cntxt, lims, nCrystal, key, 0);
       /* set 2D rendering of the result */
@@ -310,7 +316,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
 
     return;
   }
-  
+
   /* locate2D request */
   if (strcmp(word,"locate2D") == 0) {
     word  = strtok_r(NULL, sep, &lasts);
@@ -362,7 +368,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
     return;
   }
-  
+
   /* thumbnail request */
   if (strcmp(word,"thumbnail") == 0) {
     dsx_drawKey(cntxt, lims, NULL);    /* turn off key */
@@ -374,7 +380,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
     return;
   }
-  
+
   /* hover request */
   if (strcmp(word,"hover") == 0) {
     if (key == -1) {
@@ -384,7 +390,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
     return;
   }
-  
+
   /* 3D picked request */
   if (strcmp(word,"Picked") == 0) {
     word = strtok_r(NULL, sep, &lasts);
@@ -423,7 +429,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
           for (i = 0; i < data->getNearestNeighbors().N(); i++) {
             for (j = 0; j < data->getNearestNeighbors().M(); j++) {
               int neighbor = data->getNearestNeighbors()(j, i);
-              
+
               std::vector<unsigned int>::iterator iter1 =
                               find(samples.begin(), samples.end(), neighbor);
               std::vector<unsigned int>::iterator iter2 =
@@ -437,7 +443,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
             }
           }
           eCrystal = eIndices;
-          
+
           dsx_draw2D(cntxt, yCrystal, lCrystal, eCrystal, pCrystal, lims, key,
                      0);
         }
@@ -445,13 +451,13 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
     return;
   }
-  
+
   /* 3D locating request */
   if (strcmp(word,"Located") == 0) {
     printf(" %s\n", text);
     return;
   }
-  
+
   /* case request */
   if (strcmp(word,"case") == 0) {
     word = strtok_r(NULL, sep, &lasts);
@@ -464,10 +470,10 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
     return;
   }
-  
+
   /* just change the color mapping */
   if ((strcmp(word,"next") == 0) || (strcmp(word,"limits") == 0)) {
-    
+
     if (strcmp(word,"next") == 0) {
       key++;
       if (key >= nQoIs) {
@@ -500,7 +506,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     } else {
       dsx_drawKey(cntxt, lims, qNames[key]);
     }
-    
+
     /* set 3D rendering of the result */
     dsx_draw3D(cntxt, lims, nCrystal, key, color_only);
     /* set 2D rendering of the result */
@@ -510,7 +516,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       dsx_draw2D(cntxt, yCrystal, lCrystal, eCrystal, pCrystal, lims, key,
                  color_only);
     }
-    
+
     return;
   }
 
