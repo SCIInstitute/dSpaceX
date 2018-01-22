@@ -16,6 +16,11 @@
 #include <cstdlib>
 
 
+// FortranLinalg::DenseMatrix<Precision> tSneLayout tSNE_embedding(
+//     FortranLinalg::DenseMatrix<Precision> dsubset, int dimensions) {
+
+// }
+
 /**
  * Load a PNG image into the imageData buffer.
  */
@@ -254,6 +259,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
     layout(1,0) = 0;
   } else {
     // layout = mds.embed(dSubset, 2);  
+    // layout = tSNE_embedding(dsubset, 2);
     // layout = mds.embed(state->distances, 2);
     // layout = mds.embed(xSubset, metric, 2);
     // layout = mds.embed(X, metric, 2);
