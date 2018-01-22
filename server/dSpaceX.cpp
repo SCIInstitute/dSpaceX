@@ -338,6 +338,12 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
         lims[0] = 0.0;
         lims[1] = nCrystal-1;
         dsx_drawKey(cntxt, lims, "Crystal");
+      } else {
+        lims[0] = lims[1] = QoIs[key];
+        for (i = 1; i < nCases; i++) {
+          if (QoIs[nQoIs*i+key] < lims[0]) lims[0] = QoIs[nQoIs*i+key];
+          if (QoIs[nQoIs*i+key] > lims[1]) lims[1] = QoIs[nQoIs*i+key];
+        }
       }
 
       /* set 3D rendering of the result */
@@ -513,7 +519,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
         lims[0] = 0.0;
         lims[1] = nCrystal-1;
       } else {
-        lims[0] = lims[1] = cases[key];
+        lims[0] = lims[1] = QoIs[key];
         for (i = 1; i < nCases; i++) {
           if (QoIs[nQoIs*i+key] < lims[0]) lims[0] = QoIs[nQoIs*i+key];
           if (QoIs[nQoIs*i+key] > lims[1]) lims[1] = QoIs[nQoIs*i+key];
