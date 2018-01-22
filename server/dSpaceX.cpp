@@ -253,7 +253,6 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       float minY=layout(0,0);
       float maxY=layout(0,0);
       for (int i=0; i < layout.N(); i++) {
-        // std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
         minX = layout(0,i) < minX ? layout(0,i) : minX;
         maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
         minY = layout(1,i) < minY ? layout(1,i) : minY;
@@ -461,8 +460,33 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
             for (j = 0; j < samples.size(); j++)
               dSubset(j, i) = distances(samples[j], samples[i]);
           }
-          MetricMDS<Precision> mds;
-          lCrystal = mds.embed(dSubset, 2);
+          // MetricMDS<Precision> mds;
+          // lCrystal = mds.embed(dSubset, 2);
+          FortranLinalg::DenseMatrix<Precision> tSneLayout =
+              HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
+          lCrystal = FortranLinalg::DenseMatrix<Precision>(2, samples.size());
+          for (int i=0; i < samples.size(); i++) {
+           lCrystal(0,i) = tSneLayout(samples[i], 0);
+           lCrystal(1,i) = tSneLayout(samples[i], 1);
+          }
+          // scale to range of [0,1]
+          float minX=tSneLayout(0,0);
+          float maxX=tSneLayout(0,0);
+          float minY=tSneLayout(0,0);
+          float maxY=tSneLayout(0,0);
+          for (int i=0; i < tSneLayout.N(); i++) {
+            minX = tSneLayout(0,i) < minX ? tSneLayout(0,i) : minX;
+            maxX = tSneLayout(0,i) > maxX ? tSneLayout(0,i) : maxX;
+            minY = tSneLayout(1,i) < minY ? tSneLayout(1,i) : minY;
+            maxY = tSneLayout(1,i) > maxY ? tSneLayout(1,i) : maxY;
+          }
+          for (int i=0; i < lCrystal.N(); i++) {
+            lCrystal(0,i) = (lCrystal(0,i) - minX) / (maxX - minX) - 0.5;
+            lCrystal(1,i) = (lCrystal(1,i) - minY) / (maxY - minY) - 0.5;
+          }
+
+
+
           std::vector<unsigned int> eIndices;
           for (i = 0; i < data->getNearestNeighbors().N(); i++) {
             for (j = 0; j < data->getNearestNeighbors().M(); j++) {
