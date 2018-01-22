@@ -297,7 +297,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     maxP = data->getMaxPersistenceLevel();
     printf(" getMinPersistenceLevel = %d\n", minP);
     printf(" getMaxPersistenceLevel = %d\n", maxP);
-    persistence = minP;
+    persistence = maxP;
     parts       = data->getCrystalPartitions(persistence);
     nCrystal    = 0;
     for (int i = 0; i < parts.N(); i++)
