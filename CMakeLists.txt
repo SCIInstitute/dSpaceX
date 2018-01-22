@@ -15,7 +15,7 @@ OPTION(BUILD_SERVER "Build server" ON)
 
 
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -stdlib=libc++")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/")
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
     "Single output directory for building all executables.")
@@ -26,24 +26,24 @@ INCLUDE_DIRECTORIES(
   include/
   lib/hdprocess
   external/
-  external/gle/lib 
-  external/dimred/lib 
-  external/graph/lib 
-  external/imageutils/lib 
-  external/morsesmale/lib 
-  external/morsesmale/external/annmod/lib 
-  external/morsesmale/external/annmod/lib/ann 
-  external/morsesmale/external/utils/lib 
-  external/morsesmale/external/kernelstats/lib 
-  external/morsesmale/external/kernelstats/external/metrics/lib 
-  external/morsesmale/external/kernelstats/external/flinalg/lib 
+  external/gle/lib
+  external/dimred/lib
+  external/graph/lib
+  external/imageutils/lib
+  external/morsesmale/lib
+  external/morsesmale/external/annmod/lib
+  external/morsesmale/external/annmod/lib/ann
+  external/morsesmale/external/utils/lib
+  external/morsesmale/external/kernelstats/lib
+  external/morsesmale/external/kernelstats/external/metrics/lib
+  external/morsesmale/external/kernelstats/external/flinalg/lib
   external/morsesmale/external/kernelstats/external/flinalg/commandline/
-  ${ANN_INCLUDE_FILES} 
+  ${ANN_INCLUDE_FILES}
 )
 
 
 ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
-ADD_SUBDIRECTORY(lib/tSNE)
+# ADD_SUBDIRECTORY(lib/tSNE)
 ADD_SUBDIRECTORY(lib/hdprocess)
 if(BUILD_SERVER_LIB)
   ADD_SUBDIRECTORY(lib/serverlib)
