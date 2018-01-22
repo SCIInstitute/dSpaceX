@@ -159,11 +159,10 @@ extern "C" int dsxThumbNail(int caseIndex, int *width, int *height,
   save.thumb = NULL;
 
 #ifdef WIN32
-  snprintf(filename, 128, "ThumbNails\\%d.png", caseIndex-1);
+  snprintf(filename, 128, "ThumbNails\\%d.png", caseIndex);
 #else
-  snprintf(filename, 128, "ThumbNails/%d.png",  caseIndex-1);
+  snprintf(filename, 128, "ThumbNails/%d.png",  caseIndex);
 #endif
-
   stat = dsx_getThumbNail(filename, width, height, image);
   if (stat == 0) save.thumb = *image;
 
