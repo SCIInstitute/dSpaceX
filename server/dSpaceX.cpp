@@ -153,7 +153,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   char          copy[133], *word, *word1, *lasts, sep[2] = " ";
   static float  lims[2] = {-1.0, +1.0};
   unsigned char *image;
-  static int    nCases, nParams, nQoIs, nCrystal, maxP, persistence, iCrystal;
+  static int    nCases, nParams, nQoIs, nCrystal, minP, maxP, persistence, iCrystal;
   static int    icase = 1, key = -1;
   static double *cases = NULL, *QoIs = NULL;
   static char   **pNames, **qNames;
@@ -193,11 +193,15 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
 
     // Begin HDProcess Block
     try {
+      // Load Truss Dataset.
       FortranLinalg::DenseMatrix<Precision> md =
           HDProcess::loadCSVMatrix("../../examples/truss/distances.csv");
       FortranLinalg::DenseVector<Precision> mv =
-          HDProcess::loadCSVColumn("../../examples/truss/max_stress.txt");
+          HDProcess::loadCSVColumn("../../examples/truss/max_stress.csv");
+      FortranLinalg::DenseMatrix<Precision> tSneLayout =
+          HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
 
+      // Load Multi-Gaussian Dataset
       std::string xArg = "../../examples/gaussian2d/Geom.data.hdr";
       std::string fArg = "../../examples/gaussian2d/Function.data.hdr";
 
@@ -205,11 +209,13 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
           FortranLinalg::LinalgIO<Precision>::readMatrix(xArg);
       // FortranLinalg::DenseVector<Precision>
       y = FortranLinalg::LinalgIO<Precision>::readVector(fArg);
+      y = mv;
+
 
       // Build Sample Vector from Input Data
-      for (j = 0; j < x.N(); j++) {
+      for (int j = 0; j < x.N(); j++) {
         FortranLinalg::DenseVector<Precision> vector(x.M());
-        for (i = 0; i < x.M(); i++) {
+        for (int i = 0; i < x.M(); i++) {
           vector(i) = x(i, j);
         }
         DenseVectorSample *sample = new DenseVectorSample(vector);
@@ -217,8 +223,9 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       }
 
       HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-      DenseVectorEuclideanMetric metric;
-      distances = genericProcessor.computeDistances(samples, metric);
+      // DenseVectorEuclideanMetric metric;
+      // distances = genericProcessor.computeDistances(samples, metric);
+      distances = md;
 
       result = genericProcessor.processOnMetric(
                                  distances /* distance matrix */,
@@ -232,9 +239,33 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       data = new SimpleHDVizDataImpl(result);
       topoData = new LegacyTopologyDataImpl(data);
 
-      MetricMDS<Precision> mds;
-      layout = mds.embed(distances, 2);
+      // MetricMDS<Precision> mds;
+      // layout = mds.embed(md, 2);
+      layout = FortranLinalg::DenseMatrix<Precision>(tSneLayout.N(), tSneLayout.M());
+      for (int i=0; i < tSneLayout.M(); i++) {
+        for (int j=0; j < tSneLayout.N(); j++) {
+          layout(j,i) = tSneLayout(i,j);
+        }
+      }
+      // scale to range of [0,1]
+      float minX=layout(0,0);
+      float maxX=layout(0,0);
+      float minY=layout(0,0);
+      float maxY=layout(0,0);
+      for (int i=0; i < layout.N(); i++) {
+        // std::cout << "layout(" << i << "):   x=" << layout(0,i) << ", y=" << layout(1,i) << std::endl;
+        minX = layout(0,i) < minX ? layout(0,i) : minX;
+        maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
+        minY = layout(1,i) < minY ? layout(1,i) : minY;
+        maxY = layout(1,i) > maxY ? layout(1,i) : maxY;
+      }
+      for (int i=0; i < layout.N(); i++) {
+        layout(0,i) = (layout(0,i) - minX) / (maxX - minX) - 0.5;
+        layout(1,i) = (layout(1,i) - minY) / (maxY - minY) - 0.5;
+      }
 
+
+      // construct edges
       for (i = 0; i < data->getNearestNeighbors().N(); i++) {
         for (j = 0; j < data->getNearestNeighbors().M(); j++) {
           int neighbor = data->getNearestNeighbors()(j, i);
@@ -262,10 +293,11 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     sendCase(wsi, icase, nParams, cases, pNames, nQoIs, QoIs, qNames);
 
     /* compute the Morse-Smale Complex */
+    minP = data->getMinPersistenceLevel();
     maxP = data->getMaxPersistenceLevel();
-    printf(" getMinPersistenceLevel = %d\n", data->getMinPersistenceLevel());
+    printf(" getMinPersistenceLevel = %d\n", minP);
     printf(" getMaxPersistenceLevel = %d\n", maxP);
-    persistence = 0;
+    persistence = data->getMaxPersistenceLevel();
     parts       = data->getCrystalPartitions(persistence);
     nCrystal    = 0;
     for (int i = 0; i < parts.N(); i++)
@@ -286,9 +318,9 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       printf(" No slider data!\n");
       return;
     }
-    float slide = (maxP+1)/100.0;
+    float slide = (maxP-minP+1)/100.0;
     width       = (atoi(word)-1)*slide;
-    width       = maxP - width;
+    width       = minP + width;
     if (width != persistence) {
       persistence = width;
       printf(" new persistence = %d\n", persistence);

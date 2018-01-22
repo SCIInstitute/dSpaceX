@@ -1,6 +1,6 @@
 /*
  *  dSpaceX - sample dynamicly loaded back-end
- */ 
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,7 +60,7 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
   double *cases, *qois;
   char   text[133], **pNames, **qNames;
   FILE   *fp;
-  
+
   if (first == -1) {
     save.nParam = 0;
     save.nQoI   = 0;
@@ -74,15 +74,15 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
   *nCases = *nParams = *nQoI = 0;
   *params = *QoIs    = NULL;
   *PNames = *QNames  = NULL;
-  
+
   // fp = fopen("aeroDB_ALL.dat", "r");
   // if (fp == NULL) return -1;
   // fscanf(fp, "%d %d %d", nParams, nQoI, nCases);
-  *nCases = samples.size();
+  *nCases = y.N(); // samples.size();
   *nQoI = 1;
   *nParams = 1;
 
-  
+
   len    = *nCases;
   cases  = (double *) malloc(*nParams*len*sizeof(double));
   qois   = (double *) malloc(*nQoI*   len*sizeof(double));
@@ -96,7 +96,7 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
     if (qNames != NULL) free(qNames);
     return -2;
   }
-  
+
   for (i = 0; i < *nParams; i++) {
     // fscanf(fp, " \"%[^\"]\"", text);
     strcpy(text, "parameters\0");
@@ -113,7 +113,7 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
     if (qNames[i] == NULL) continue;
     for (j = 0; j < len; j++) qNames[i][j] = text[j];
   }
-  
+
   for (m = n = j = 0; j < *nCases; j++) {
     for (i = 0; i < *nParams; i++, m++) {
       // fscanf(fp, "%lf", &cases[m]);
@@ -125,11 +125,11 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
     }
   }
   // fclose(fp);
-  
+
   /* get our current location */
   (void) getcwd(save.currentPath, PATH_MAX);
   printf("Path = %s\n", save.currentPath);
-  
+
   save.nParam = *nParams;
   save.nQoI   = *nQoI;
   save.cases  = cases;
@@ -140,7 +140,7 @@ extern "C" int dsxInitialize( int *nCases, int *nParams, double **params,
   *QoIs       = qois;
   *PNames     = pNames;
   *QNames     = qNames;
-  
+
   first++;
   return 0;
 }
@@ -152,7 +152,7 @@ extern "C" int dsxThumbNail(int caseIndex, int *width, int *height,
 {
   int  stat = 0;
   char filename[129];
-  
+
   *width = *height = 0;
   *image = NULL;
   if (save.thumb != NULL) free(save.thumb);
@@ -166,7 +166,7 @@ extern "C" int dsxThumbNail(int caseIndex, int *width, int *height,
 
   stat = dsx_getThumbNail(filename, width, height, image);
   if (stat == 0) save.thumb = *image;
-  
+
   return stat;
 }
 
@@ -175,7 +175,7 @@ extern "C" int dsxThumbNail(int caseIndex, int *width, int *height,
 extern "C" int dsxDistance(/*@unused@*/ int case1, /*@unused@*/ int case2, double *distance)
 {
   *distance = 0.0;
-  
+
   return 0;
 }
 
