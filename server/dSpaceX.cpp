@@ -250,8 +250,8 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       // scale to range of [0,1]
       float minX=layout(0,0);
       float maxX=layout(0,0);
-      float minY=layout(0,0);
-      float maxY=layout(0,0);
+      float minY=layout(1,0);
+      float maxY=layout(1,0);
       for (int i=0; i < layout.N(); i++) {
         minX = layout(0,i) < minX ? layout(0,i) : minX;
         maxX = layout(0,i) > maxX ? layout(0,i) : maxX;
@@ -262,7 +262,6 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
         layout(0,i) = (layout(0,i) - minX) / (maxX - minX) - 0.5;
         layout(1,i) = (layout(1,i) - minY) / (maxY - minY) - 0.5;
       }
-
 
       // construct edges
       for (i = 0; i < data->getNearestNeighbors().N(); i++) {
@@ -472,20 +471,18 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
           // scale to range of [0,1]
           float minX=tSneLayout(0,0);
           float maxX=tSneLayout(0,0);
-          float minY=tSneLayout(0,0);
-          float maxY=tSneLayout(0,0);
-          for (int i=0; i < tSneLayout.N(); i++) {
-            minX = tSneLayout(0,i) < minX ? tSneLayout(0,i) : minX;
-            maxX = tSneLayout(0,i) > maxX ? tSneLayout(0,i) : maxX;
-            minY = tSneLayout(1,i) < minY ? tSneLayout(1,i) : minY;
-            maxY = tSneLayout(1,i) > maxY ? tSneLayout(1,i) : maxY;
+          float minY=tSneLayout(0,1);
+          float maxY=tSneLayout(0,1);
+          for (int i=0; i < tSneLayout.M(); i++) {
+            minX = tSneLayout(i, 0) < minX ? tSneLayout(i,0) : minX;
+            maxX = tSneLayout(i, 0) > maxX ? tSneLayout(i,0) : maxX;
+            minY = tSneLayout(i, 1) < minY ? tSneLayout(i,1) : minY;
+            maxY = tSneLayout(i, 1) > maxY ? tSneLayout(i,1) : maxY;
           }
           for (int i=0; i < lCrystal.N(); i++) {
             lCrystal(0,i) = (lCrystal(0,i) - minX) / (maxX - minX) - 0.5;
             lCrystal(1,i) = (lCrystal(1,i) - minY) / (maxY - minY) - 0.5;
           }
-
-
 
           std::vector<unsigned int> eIndices;
           for (i = 0; i < data->getNearestNeighbors().N(); i++) {
