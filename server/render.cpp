@@ -337,7 +337,7 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
 
   /* note: dimensions above top out at 25, so n-samples to HDProcess must=25 */
   int n = data->getNumberOfSamples();
-  auto layout = data->getLayout(HDVizLayout::ISOMAP, persistenceLevel)[crystalId];
+  auto layout = data->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
 
   /* remove any old graphics */
   if (flag == 0) wv_removeAll(cntxt);
@@ -357,14 +357,14 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
         xyzs[3*i  ] = (1.0 - cos(i*PI/50.0))*cos(ang);   /* faked coordinates */
         xyzs[3*i+1] = (1.0 - cos(i*PI/50.0))*sin(ang);
         xyzs[3*i+2] =        sin(i*PI/50.0);
-        // xyzs[3*i+0] = layout(0, i);  /* real data */
-        // xyzs[3*i+1] = layout(1, i);  /* real data */
-        // xyzs[3*i+2] = 0;
+        xyzs[3*i+0] = layout[j](0, i);  /* real data */
+        xyzs[3*i+1] = layout[j](1, i);  /* real data */
+        xyzs[3*i+2] = data->getMeanNormalized(persistenceLevel)[j](i);
 
         scalar[i]   = lims[0] + i*(lims[1]-lims[0])/(n-1); /* faked QoI value */
-        // scalar[i]   = data->getMean(persistenceLevel)[crystalId](i);  /* real QoI */
+        scalar[i]   = data->getMean(persistenceLevel)[j](i);  /* real QoI */
         width[i]    = 0.05 + 0.2*sin(i*PI/24.0);          /* faked S.D. in 3D */
-        // width[i] = 0.05 + 0.2*data->getWidthScaled(persistenceLevel)[crystalId](i); /* real S.D. */
+        width[i] = 0.05 + 0.2*data->getWidthScaled(persistenceLevel)[j](i); /* real S.D. */
         if (key == -1) {
           float scalr = j;
           spec_col(lims, scalr,     &colrs[3*i]);
