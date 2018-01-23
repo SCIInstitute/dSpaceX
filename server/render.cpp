@@ -322,7 +322,7 @@ void
 dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
            int persistenceLevel, int crystalId, float *lims, int key, int flag)
 {
-  int          i, j, k, k1, m, n, stat, index, segs[2*24], tris[6*18*24];
+  int          i, j, k, k1, m, stat, index, segs[2*24], tris[6*18*24];
   float        width[25], xyzs[25*3], colrs[3*25], tube[3*18*25], focus[4];
   float        norm[3], xn[3], yn[3], xt[3], ang, rad, xmag;
   static float scalar[25];
@@ -334,10 +334,9 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
 
   focus[0] = focus[1] = focus[2] = 0.0;
   focus[3] = 2.0;
-  /* note: dimensions above top out at 25 */
-  n        = 25;
-  // TODO:  Grab n from HDVizData.
-  //        n = data->getNumberOfSamples();
+
+  /* note: dimensions above top out at 25, so n-samples to HDProcess must=25 */
+  int n = data->getNumberOfSamples();
 
 
   /* remove any old graphics */
