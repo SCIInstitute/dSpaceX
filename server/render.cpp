@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <vector>
 
+#include "HDVizData.h"
+#include "TopologyData.h"
 #include "Precision.h"
 #include "Linalg.h"
 #include "LinalgIO.h"
@@ -155,7 +157,7 @@ spec_col(float *lims, float scalar, float color[])
 {
   int   indx;
   float frac;
-  
+
   if (lims[0] == lims[1]) {
     color[0] = 0.0;
     color[1] = 1.0;
@@ -189,7 +191,7 @@ void
 dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name)
 {
   int stat;
-  
+
   if (name == NULL) {
     stat = wv_setKey(cntxt,      0, color_map, lims[0], lims[1], name);
   } else {
@@ -220,7 +222,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
     } else {
       for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
     }
-    
+
     sprintf(gpname, "Scatter Dots");
     index = wv_indexGPrim(cntxt, gpname);
     stat  = wv_setData(WV_REAL32, y.N(), (void *) &colors[0], WV_COLORS, &items[0]);
@@ -233,11 +235,11 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
       printf(" wv_modGPrim = %d for %s (%d)!\n", stat, gpname, index);
     return;
   }
-  
+
   focus[0] = focus[1] = 0.0;
   focus[2] = 1.0;
   std::vector<float> vertices;
-  
+
   for (int i = 0; i < layout.N(); i++) {
     vertices.push_back(layout(0, i));
     vertices.push_back(layout(1, i));
@@ -249,7 +251,7 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   } else {
     for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
   }
-  
+
   sprintf(gpname, "Scatter Lines");
   index = wv_indexGPrim(cntxt, gpname);
   stat  = wv_setVerts2D(WV_REAL32, vertices.size()/2, (void *) &vertices[0],
@@ -311,13 +313,14 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   } else {
     cntxt->gPrims[stat].pSize = 5.0;
   }
-  
+
 }
 
 
 /* place-holder for Morse-Smale Complex rendering */
 void
-dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
+dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
+           int persistenceLevel, int crystalId, float *lims, int key, int flag)
 {
   int          i, j, k, k1, m, n, stat, index, segs[2*24], tris[6*18*24];
   float        width[25], xyzs[25*3], colrs[3*25], tube[3*18*25], focus[4];
@@ -325,23 +328,29 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
   static float scalar[25];
   char         gpname[33];
   wvData       items[3];
-  
+
+  auto *complex = topoData->getComplex(persistenceLevel);
+  int nCrystal = complex->getCrystals().size();
+
   focus[0] = focus[1] = focus[2] = 0.0;
   focus[3] = 2.0;
   /* note: dimensions above top out at 25 */
   n        = 25;
-  
+  // TODO:  Grab n from HDVizData.
+  //        n = data->getNumberOfSamples();
+
+
   /* remove any old graphics */
   if (flag == 0) wv_removeAll(cntxt);
-  
+
   /* draw our crystals */
   for (j = 0; j < nCrystal; j++) {
-    
+
     /* plot core as a line */
     sprintf(gpname, "Crystal %d Core 1", j+1);
-    
+
     if (flag == 0) {
-      
+
       /* plot the entire suite */
       ang  = 2.0*PI*j;
       ang /= nCrystal;
@@ -358,12 +367,12 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
           spec_col(lims, scalar[i], &colrs[3*i]);
         }
       }
-      
+
       for (i = 0; i < n-1; i++) {
         segs[2*i  ] = i;
         segs[2*i+1] = i+1;
       }
-      
+
       stat = wv_setData(WV_REAL32, n, (void *) xyzs,  WV_VERTICES, &items[0]);
       if (stat < 0) {
         printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
@@ -383,7 +392,7 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       stat = wv_addGPrim(cntxt, gpname, WV_LINE, WV_ON|WV_SHADING, 3, items);
       if (stat < 0)
         printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
-      
+
       /* plot extent transparent */
       sprintf(gpname, "Crystal %d Tube 1", j+1);
       /* set constant dir for the entire crystal */
@@ -487,9 +496,9 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
                          3, items);
       if (stat < 0)
         printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
-      
+
     } else {
-      
+
       /* only the colors have changed */
       index = wv_indexGPrim(cntxt, gpname);
       if (key == -1) {
@@ -507,6 +516,6 @@ dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key, int flag)
       if (stat < 0)
         printf(" wv_modGPrim = %d for %s (%d)!\n", stat, gpname, index);
     }
-    
+
   }
 }

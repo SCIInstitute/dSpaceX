@@ -38,8 +38,8 @@ static dsxContext dsxcntxt;
 
 
 extern void dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name);
-extern void dsx_draw3D(wvContext *cntxt, float *lims, int nCrystal, int key,
-                       int flag);
+extern void dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
+                       int persistenceLevel, int crystalId, float *lims, int key, int flag);
 extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
                        FortranLinalg::DenseMatrix<Precision> layout,
                        std::vector<unsigned int> &edgeIndices,
@@ -231,7 +231,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
                                  distances /* distance matrix */,
                                  y         /* qoi */,
                                  15        /* knn */,
-                                 5         /* samples */,
+                                 25        /* samples */,
                                  20        /* persistence */,
                                  true      /* random */,
                                  0.25      /* sigma */,
@@ -345,7 +345,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       }
 
       /* set 3D rendering of the result */
-      dsx_draw3D(cntxt, lims, nCrystal, key, 0);
+      dsx_draw3D(cntxt, data, topoData, persistence, iCrystal, lims, key, 0);
       /* set 2D rendering of the result */
       dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, 0);
     }
@@ -567,7 +567,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
 
     /* set 3D rendering of the result */
-    dsx_draw3D(cntxt, lims, nCrystal, key, color_only);
+    dsx_draw3D(cntxt, data, topoData, persistence, iCrystal, lims, key, color_only);
     /* set 2D rendering of the result */
     if (iCrystal == 0) {
       dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, color_only);
