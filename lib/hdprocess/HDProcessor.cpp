@@ -39,7 +39,14 @@ HDProcessResult* HDProcessor::processOnMetric(
   // Initialize processing result output object.
   m_result = new HDProcessResult();
 
-  // Store input data as member variables.  
+  // Embed Distance Metric into 3D space
+  EuclideanMetric<Precision> metric;
+  MetricMDS<Precision> mds;
+  // Store input data as member variables.
+  std::cout << "knn = " << knn << std::endl;
+  // make copy of distances so embedder won't trash data.
+  auto dd = Linalg<Precision>::Copy(d);
+  Xall = mds.embed(dd, 3);
   yall = qoi;
   
   // Add noise to yall in case of equivalent values 
@@ -56,9 +63,11 @@ HDProcessResult* HDProcessor::processOnMetric(
   // Store Nearest Neighbors
   m_result->knn = msComplex.getNearestNeighbors();
 
+  // Embed Distances into 3D for regression.
   
-  // Save QoI function values
-  m_result->X = FortranLinalg::DenseMatrix<Precision>(2, yall.N());
+  
+  // Save QoI function values  
+  m_result->X = Linalg<Precision>::Copy(Xall);
   m_result->Y = Linalg<Precision>::Copy(yall);  
 
   // Scale persistence to be in [0,1]
@@ -123,7 +132,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, false /*computeRegression*/);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
 
   // detach and return processed result
@@ -370,6 +379,7 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   // ------------------------------------------------------------
   // Only Proceed Below if Regression can be ran over input.
   // ------------------------------------------------------------
+  std::cout << "Before Regression: crystals.N() = " << crystals.N() << std::endl;
 
   DenseMatrix<Precision> S(Xall.M(), crystals.N()*nSamples + nExt);
   std::vector<DenseMatrix<Precision>> ScrystalIDs(crystals.N());  
