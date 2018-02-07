@@ -218,9 +218,9 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
   if (flag != 0) {
     std::vector<float> colors(3*y.N());
     if (key == -1) {
-      for (size_t i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
+      for (i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
     } else {
-      for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
+      for (i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
     }
 
     sprintf(gpname, "Scatter Dots");
@@ -247,9 +247,9 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 
   std::vector<float> colors(3*y.N());
   if (key == -1) {
-    for (size_t i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
+    for (i = 0; i < y.N(); i++) spec_col(lims, parts(i), &colors[3*i]);
   } else {
-    for (size_t i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
+    for (i = 0; i < y.N(); i++) spec_col(lims, y(i),     &colors[3*i]);
   }
 
   sprintf(gpname, "Scatter Lines");
@@ -317,10 +317,12 @@ dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
 }
 
 
-/* place-holder for Morse-Smale Complex rendering */
+/* Morse-Smale Complex rendering */
 void
-dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
-           int persistenceLevel, int crystalId, float *lims, int key, int flag)
+dsx_draw3D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
+           HDVizData *data, TopologyData *topoData, int persistenceLevel,
+           int crystalId, FortranLinalg::DenseVector<int> parts,
+           float *lims, int key, int flag)
 {
   int          i, j, k, k1, m, stat, index, segs[2*24], tris[6*18*24];
   float        width[25], xyzs[25*3], colrs[3*25], tube[3*18*25], focus[4];
@@ -330,13 +332,16 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
   wvData       items[3];
 
   auto *complex = topoData->getComplex(persistenceLevel);
-  int nCrystal = complex->getCrystals().size();
+  int  nCrystal = complex->getCrystals().size();
+  auto &X       = data->getX();
+  std::cout << " X is a " << X.M() << " x " << X.N() << " matrix" <<
+  std::endl;
 
   focus[0] = focus[1] = focus[2] = 0.0;
   focus[3] = 2.0;
 
   /* note: dimensions above top out at 25, so n-samples to HDProcess must=25 */
-  int n = data->getNumberOfSamples();
+  int  n      = data->getNumberOfSamples();
   auto layout = data->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
 
   /* remove any old graphics */
@@ -354,17 +359,17 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
       ang  = 2.0*PI*j;
       ang /= nCrystal;
       for (i = 0; i < n; i++) {
-        xyzs[3*i  ] = (1.0 - cos(i*PI/50.0))*cos(ang);   /* faked coordinates */
+/*      xyzs[3*i  ] = (1.0 - cos(i*PI/50.0))*cos(ang);   // faked coordinates
         xyzs[3*i+1] = (1.0 - cos(i*PI/50.0))*sin(ang);
-        xyzs[3*i+2] =        sin(i*PI/50.0);
-        xyzs[3*i+0] = layout[j](0, i);  /* real data */
-        xyzs[3*i+1] = layout[j](1, i);  /* real data */
+        xyzs[3*i+2] =        sin(i*PI/50.0);             */
+        xyzs[3*i  ] = layout[j](0, i);
+        xyzs[3*i+1] = layout[j](1, i);
         xyzs[3*i+2] = data->getMeanNormalized(persistenceLevel)[j](i);
 
-        scalar[i]   = lims[0] + i*(lims[1]-lims[0])/(n-1); /* faked QoI value */
-        scalar[i]   = data->getMean(persistenceLevel)[j](i);  /* real QoI */
-        width[i]    = 0.05 + 0.2*sin(i*PI/24.0);          /* faked S.D. in 3D */
-        width[i] = 0.05 + 0.2*data->getWidthScaled(persistenceLevel)[j](i); /* real S.D. */
+/*      scalar[i]   = lims[0] + i*(lims[1]-lims[0])/(n-1); // faked QoI value */
+        scalar[i]   = data->getMean(persistenceLevel)[j](i);
+/*      width[i]    = 0.05 + 0.2*sin(i*PI/24.0);           // faked SD in 3D */
+        width[i]    = 0.05 + 0.2*data->getWidthScaled(persistenceLevel)[j](i);
         if (key == -1) {
           float scalr = j;
           spec_col(lims, scalr,     &colrs[3*i]);
@@ -465,7 +470,7 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
           tube[3*m+2]  = xyzs[3*i+2] + width[i]*(xn[2]*cos(rad)+yn[2]*sin(rad));
         }
       }
-      /* make the tringles in strips */
+      /* make the triangles in strips */
       for (m = i = 0; i < n-1; i++) {
         for (k = 0; k < 18; k++, m++) {
                        k1 = k + 1;
@@ -502,6 +507,50 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
       if (stat < 0)
         printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
 
+      /* plot cases as points */
+      sprintf(gpname, "Crystal %d Case 1", j+1);
+      for (m = i = 0; i < X.N(); i++) if (parts(i) == j) m++;
+      if (m != 0) {
+        float *xyz = new float[3*m];
+        float *col = new float[3*m];
+        for (m = i = 0; i < X.N(); i++) {
+          if (parts(i) != j) continue;
+          xyz[3*m  ] = X(0,i);
+          xyz[3*m+1] = X(1,i);
+          xyz[3*m+2] = X(2,i);
+          if (key == -1) {
+            float scalr = j;
+            spec_col(lims, scalr, &col[3*m]);
+          } else {
+            spec_col(lims, y(i),  &col[3*m]);
+          }
+/*
+          printf(" %d: %f %f %f   %f %f %f\n", parts(i), xyz[3*i  ], xyz[3*i+1],
+                                 xyz[3*i+2], col[3*i  ], col[3*i+1], col[3*i+2]);
+ */
+          m++;
+        }
+        stat = wv_setData(WV_REAL32, m, (void *) xyz,  WV_VERTICES, &items[0]);
+        if (stat < 0) {
+          printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
+          continue;
+        }
+        focus[3] = 10.0;  // remove
+        wv_adjustVerts(&items[0], focus);
+        focus[3] = 2.0;   // remove
+        stat = wv_setData(WV_REAL32, m, (void *) col,  WV_COLORS, &items[1]);
+        if (stat < 0) {
+          printf(" wv_setData = %d for %s/item 1!\n", stat, gpname);
+          continue;
+        }
+        stat = wv_addGPrim(cntxt, gpname, WV_POINT, WV_ON | WV_SHADING, 2, items);
+        if (stat < 0) {
+          printf(" wv_addGPrim = %d for %s!\n", stat, gpname);
+        } else {
+          cntxt->gPrims[stat].pSize = 4.0;
+        }
+      }
+      
     } else {
 
       /* only the colors have changed */
@@ -520,6 +569,31 @@ dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
       stat = wv_modGPrim(cntxt, index, 1, items);
       if (stat < 0)
         printf(" wv_modGPrim = %d for %s (%d)!\n", stat, gpname, index);
+      
+      for (m = i = 0; i < X.N(); i++) if (parts(i) == j) m++;
+      if (m != 0) {
+        sprintf(gpname, "Crystal %d Case 1", j+1);
+        index = wv_indexGPrim(cntxt, gpname);
+        float *col = new float[3*m];
+        for (m = i = 0; i < y.N(); i++) {
+          if (parts(i) != j) continue;
+          if (key == -1) {
+            float scalr = j;
+            spec_col(lims, scalr, &col[3*m]);
+          } else {
+            spec_col(lims, y(i),  &col[3*m]);
+          }
+          m++;
+        }
+        stat = wv_setData(WV_REAL32, m, (void *) col,  WV_COLORS, &items[0]);
+        if (stat < 0) {
+          printf(" wv_setData = %d for %s/item 0!\n", stat, gpname);
+          continue;
+        }
+        stat = wv_modGPrim(cntxt, index, 1, items);
+        if (stat < 0)
+          printf(" wv_modGPrim = %d for %s (%d)!\n", stat, gpname, index);
+      }
     }
 
   }

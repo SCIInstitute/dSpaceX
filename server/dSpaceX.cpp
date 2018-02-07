@@ -38,8 +38,10 @@ static dsxContext dsxcntxt;
 
 
 extern void dsx_drawKey(wvContext *cntxt, float *lims, /*@null@*/ char *name);
-extern void dsx_draw3D(wvContext *cntxt, HDVizData *data, TopologyData *topoData,
-                       int persistenceLevel, int crystalId, float *lims, int key, int flag);
+extern void dsx_draw3D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
+                       HDVizData *data, TopologyData *topoData, int pLevel,
+                       int crystalId, FortranLinalg::DenseVector<int> parts,
+                       float *lims, int key, int flag);
 extern void dsx_draw2D(wvContext *cntxt, FortranLinalg::DenseVector<Precision> y,
                        FortranLinalg::DenseMatrix<Precision> layout,
                        std::vector<unsigned int> &edgeIndices,
@@ -236,7 +238,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
                                  true      /* random */,
                                  0.25      /* sigma */,
                                  0         /* smooth */);
-      data = new SimpleHDVizDataImpl(result);
+      data     = new SimpleHDVizDataImpl(result);
       topoData = new LegacyTopologyDataImpl(data);
 
       // MetricMDS<Precision> mds;
@@ -335,6 +337,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       if (key == -1) {
         lims[0] = 0.0;
         lims[1] = nCrystal-1;
+        if (lims[1] == 0.0) lims[1] = 1.0;
         dsx_drawKey(cntxt, lims, "Crystal");
       } else {
         lims[0] = lims[1] = QoIs[key];
@@ -345,7 +348,8 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
       }
 
       /* set 3D rendering of the result */
-      dsx_draw3D(cntxt, data, topoData, persistence, iCrystal, lims, key, 0);
+      dsx_draw3D(cntxt, y, data, topoData, persistence, iCrystal, parts, lims,
+                 key, 0);
       /* set 2D rendering of the result */
       dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, 0);
     }
@@ -539,6 +543,7 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
         key = -1;
         lims[0] = 0.0;
         lims[1] = nCrystal-1;
+        if (lims[1] == 0.0) lims[1] = 1.0;
       } else {
         lims[0] = lims[1] = QoIs[key];
         for (i = 1; i < nCases; i++) {
@@ -567,7 +572,8 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
     }
 
     /* set 3D rendering of the result */
-    dsx_draw3D(cntxt, data, topoData, persistence, iCrystal, lims, key, color_only);
+    dsx_draw3D(cntxt, y, data, topoData, persistence, iCrystal, parts, lims,
+               key, color_only);
     /* set 2D rendering of the result */
     if (iCrystal == 0) {
       dsx_draw2D(cntxt, y, layout, edgeIndices, parts, lims, key, color_only);
