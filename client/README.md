@@ -10,7 +10,7 @@ Recommend version: 8.9.4 LTS
 This will create a local directory called ./node_modules containing all the source code for dependencies pulled in through the package manager.
 
 
-# Building the javascript bundle
+# Build the javascript bundle
     ./dSpaceX/client $ npm run build
 
 This will create a file called 'client.bundle.js' in the client/build folder.
