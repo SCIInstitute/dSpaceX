@@ -3,6 +3,7 @@ import Drawer from 'material-ui/Drawer';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from 'material-ui/Toolbar';
+import WebGLWindow from './webGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
 
@@ -14,6 +15,7 @@ const styles = theme => ({
     overflow: 'hidden',
     position: 'relative',
     display: 'flex',
+    height: 'calc(100vh)',
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
@@ -27,8 +29,14 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     minWidth: 0,
-    backgroundColor: '#eef',
-    padding: '10px',
+    backgroundColor: '#eef',   
+  },
+  workspace: {
+    display: 'grid',
+    height: 'calc(100vh - 64px)',
+    gridTemplateColumns: '1fr 1fr',
+    gridTemplateRows: '1fr',
+    gridGap: '0em',
   },
   toolbar: theme.mixins.toolbar,
 })
@@ -67,7 +75,10 @@ class Application extends React.Component {
         <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
             <div className={classes.toolbar} />
-            Insert Application Here.
+            <div className={classes.workspace}>
+              <WebGLWindow/>
+              <WebGLWindow/>
+            </div>
         </Workspace>
       </div>
     );
