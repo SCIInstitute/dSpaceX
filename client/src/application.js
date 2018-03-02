@@ -1,5 +1,3 @@
-import AppBar from 'material-ui/AppBar';
-import Button from 'material-ui/Button';
 import CasesPanel from './panels/casesPanel';
 import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
@@ -12,8 +10,7 @@ import React from 'react';
 import Paper from 'material-ui/Paper';
 import PropTypes from 'prop-types';
 import Select from 'material-ui/Select';
-import Toolbar from 'material-ui/Toolbar';
-import Typography from 'material-ui/Typography';
+import Toolbar from './toolbar';
 import WebGLWindow from './windows/webGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
@@ -80,21 +77,8 @@ class Application extends React.Component {
     const { classes } = this.props;
     return (
       <div className={classes.root}>
-        { /* TODO: Extract an applicationbar component */ }
-        <AppBar position='absolute' className={classes.appBar}>
-          <Toolbar>
-            <Typography variant="title" color="inherit">
-              dSpaceX
-            </Typography>
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'row-reverse' }}>
-              <Button variant="raised" style={{ backgroundColor: 'white' }}
-                      className={classes.button} onClick={this.connectButtonClicked} >
-                Connect
-              </Button>
-              <ConnectionDialog ref='connectiondialog'/>
-            </div>
-          </Toolbar>
-        </AppBar>
+        <Toolbar className={classes.appBar} onConnectClick={this.connectButtonClicked} />
+        <ConnectionDialog ref='connectiondialog'/>
         <Drawer variant='permanent' 
                 classes={{ paper: classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
