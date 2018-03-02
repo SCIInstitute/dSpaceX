@@ -8,6 +8,7 @@ import Select from 'material-ui/Select';
 import { withStyles } from 'material-ui/styles';
 
 
+// TODO: This list should be populated from the server.
 const datasetList = [ 'Colorado', 'Sandia' ];
 
 class DatasetPanel extends React.Component {
