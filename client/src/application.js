@@ -1,7 +1,7 @@
 import AppBar from 'material-ui/AppBar';
-import CasesPanel from './casesPanel';
-import DatasetPanel from './datasetPanel';
-import DisplayPanel from './displayPanel';
+import CasesPanel from './panels/casesPanel';
+import DatasetPanel from './panels/datasetPanel';
+import DisplayPanel from './panels/displayPanel';
 import Drawer from 'material-ui/Drawer';
 import { FormControl, FormHelperText } from 'material-ui/Form';
 import Input, { InputLabel } from 'material-ui/Input';
@@ -12,7 +12,7 @@ import PropTypes from 'prop-types';
 import Select from 'material-ui/Select';
 import Toolbar from 'material-ui/Toolbar';
 import Typography from 'material-ui/Typography';
-import WebGLWindow from './webGLWindow';
+import WebGLWindow from './windows/webGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
 
