@@ -1,5 +1,7 @@
 import AppBar from 'material-ui/AppBar';
+import Button from 'material-ui/Button';
 import CasesPanel from './panels/casesPanel';
+import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
 import DisplayPanel from './panels/displayPanel';
 import Drawer from 'material-ui/Drawer';
@@ -57,6 +59,8 @@ const styles = theme => ({
 class Application extends React.Component {
   constructor(props) {
     super(props);
+
+    this.connectButtonClicked = this.connectButtonClicked.bind(this);
   }
 
   componentWillMount() {
@@ -67,15 +71,28 @@ class Application extends React.Component {
     console.log('Application Ready.');
   }
 
+  // TODO: Move out of main application class.
+  connectButtonClicked() {
+    this.refs.connectiondialog.open();
+  }
+
   render() {
     const { classes } = this.props;
     return (
       <div className={classes.root}>
+        { /* TODO: Extract an applicationbar component */ }
         <AppBar position='absolute' className={classes.appBar}>
           <Toolbar>
             <Typography variant="title" color="inherit">
               dSpaceX
             </Typography>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'row-reverse' }}>
+              <Button variant="raised" color='secondary' 
+                      className={classes.button} onClick={this.connectButtonClicked} >
+                Connect
+              </Button>
+              <ConnectionDialog ref='connectiondialog'/>
+            </div>
           </Toolbar>
         </AppBar>
         <Drawer variant='permanent' 
