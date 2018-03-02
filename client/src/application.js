@@ -87,7 +87,7 @@ class Application extends React.Component {
               dSpaceX
             </Typography>
             <div style={{ width: '100%', display: 'flex', flexDirection: 'row-reverse' }}>
-              <Button variant="raised" color='secondary' 
+              <Button variant="raised" style={{ backgroundColor: 'white' }}
                       className={classes.button} onClick={this.connectButtonClicked} >
                 Connect
               </Button>
