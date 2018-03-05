@@ -4,6 +4,7 @@ const path = require('path');
 let config = {
   target: 'web',
   mode: 'development',
+  devtool: 'source-map',
   entry: ['./src/main.js'],
   output: {
     path: path.resolve(__dirname, "build"),
