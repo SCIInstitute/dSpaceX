@@ -18,6 +18,8 @@
 #endif
 
 #include "libwebsockets.h"
+#include "wstypes.h"
+
 #include "wsss.h"
 
 #ifdef STANDALONE
@@ -41,16 +43,19 @@
   /* UI test message call-back */
   extern void  browserMessage(struct libwebsocket *wsi, char *buf, int len);
 
+  /* message call-backs */
+  extern void  browserText( struct libwebsocket *wsi, char *buf, int len );
+  extern void  browserData( struct libwebsocket *wsi, wstData *data );
 
-enum wv_protocols {
-	/* always first */
-	PROTOCOL_HTTP = 0,
+enum wst_protocols {
+  /* always first */
+  PROTOCOL_HTTP = 0,
 
-	PROTOCOL_GPRIM_BINARY,
-	PROTOCOL_UI_TEXT,
+  PROTOCOL_DATA_BINARY,
+  PROTOCOL_UI_TEXT,
 
-	/* always last */
-	WV_PROTOCOL_COUNT
+  /* always last */
+  WV_PROTOCOL_COUNT
 };
 
 
@@ -79,6 +84,16 @@ static int ThreadCreate(void (*entry)(), void *arg)
 
 #endif
 
+
+typedef struct {
+        int                         nClient;       /* # active clients */
+        struct libwebsocket         **wsi;         /* the text wsi per client */
+        int                         loop;          /* 1 for continue;
+                                                      0 for done */
+        int                         index;         /* server index */
+        struct libwebsocket_context *WScontext;    /* WebSocket context */
+        wstContext                  *WSTcontext;   /* WebSocket Transport context */
+} wstServer;
 
 typedef struct {
         int                         nClient;       /* # active clients */
@@ -292,6 +307,121 @@ callback_gprim_binary(struct libwebsocket_context *context,
 }
 
 
+/* binary protocol */
+
+/*
+ * one of these is auto-created for each connection and a pointer to the
+ * appropriate instance is passed to the callback in the user parameter
+ *
+ */
+
+struct per_session_data__data_binary {
+        struct libwebsocket *wsi;
+};
+
+static int
+callback_data_binary(struct libwebsocket_context *context,
+                     struct libwebsocket *wsi,
+                     enum libwebsocket_callback_reasons reason,
+                     void *user, void *in, size_t len)
+{
+  int     i, slot, ioff, *ibuf;
+        char    *cbuf;
+        size_t  dlen;
+        wstData *wstdata;
+  struct per_session_data__data_binary *pss = user;
+
+        for (slot = 0; slot < nServers; slot++)
+                if (servers[slot].WScontext == context) break;
+        if (slot == nServers) {
+                fprintf(stderr, "ERROR no Slot!");
+                exit(1);          
+        }
+
+  switch (reason) {
+
+        /*
+         * invoked when initial connection is made
+         */
+         
+  case LWS_CALLBACK_ESTABLISHED:
+    fprintf(stderr, "callback_data_binary: LWS_CALLBACK_ESTABLISHED\n");
+                pss->wsi = wsi;
+    break;
+
+  case LWS_CALLBACK_BROADCAST:
+                i = libwebsocket_write(wsi, in, len, LWS_WRITE_BINARY);
+                if (i < 0) fprintf(stderr, "binary data write failed\n");
+    break;
+
+  case LWS_CALLBACK_RECEIVE:
+                /* convert the incoming stream to wstData */
+                wstdata = (wstData *) wst_alloc(sizeof(wstData));
+                if (wstdata == NULL) {
+                    browserData(wsi, NULL);
+                } else {
+                    ibuf = (int *)  in;
+                    cbuf = (char *) in;
+                    wstdata->name = (char *) wst_alloc((ibuf[0]+1)*sizeof(char));
+                    if (wstdata->name == NULL) {
+                      wst_free(wstdata);
+                      browserData(wsi, NULL);
+                    } else {
+                      for (i = 0; i < ibuf[0]; i++)
+                        wstdata->name[i] = cbuf[i+4];
+                      wstdata->name[ibuf[0]] = 0;
+                      i = ioff = ibuf[0]/4;
+                      if (i*4 != ibuf[0]) ioff++;
+                      ioff++;
+                      wstdata->type = ibuf[ioff++];
+                      wstdata->hlen = ibuf[ioff++];
+                      wstdata->header = (int *) wst_alloc(wstdata->hlen*sizeof(int));
+                      if (wstdata->header == NULL) {
+                        wst_free(wstdata->name);
+                        wst_free(wstdata);
+                        browserData(wsi, NULL);
+                      } else {
+                        for (i = 0; i < wstdata->hlen; i++)
+                          wstdata->header[i] = ibuf[ioff++];
+                        wstdata->len = ibuf[ioff++];
+                        dlen = wstdata->len*TypedArrayBytes[wstdata->type];
+                        wstdata->data = wst_alloc(dlen*sizeof(char));
+                        if (wstdata->data == NULL) {
+                          wst_free(wstdata->header);
+                          wst_free(wstdata->name);
+                          wst_free(wstdata);
+                          browserData(wsi, NULL);
+                        } else {
+                          memcpy(wstdata->data, &ibuf[ioff], dlen);
+                          browserData(wsi, wstdata);
+                        }
+                      }
+                    }
+                }
+    break;
+                
+        case LWS_CALLBACK_CLOSED:
+                fprintf(stderr, "callback_data_binary: LWS_CALLBACK_CLOSED\n");
+                break;
+        
+  /*
+   * this just demonstrates how to use the protocol filter. If you won't
+   * study and reject connections based on header content, you don't need
+   * to handle this callback
+   */
+
+  case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+    dump_handshake_info((struct lws_tokens *) user);
+    /* you could return non-zero here and kill the connection */
+    break;
+
+  default:
+    break;
+  }
+
+  return 0;
+}
+
 /* ui_text protocol */
 
 struct per_session_data__ui_text {
@@ -397,11 +527,11 @@ callback_ui_text(struct libwebsocket_context *context,
 		callback_http,		/* callback */
 		0			/* per_session_data_size */
 	},
-	{
-		"gprim-binary-protocol",
-		callback_gprim_binary,
-		sizeof(struct per_session_data__gprim_binary),
-	},
+  {
+    "data-binary-protocol",
+    callback_data_binary,
+    sizeof(struct per_session_data__data_binary),
+  },
 	{
 		"ui-text-protocol",
 		callback_ui_text,
@@ -413,40 +543,24 @@ callback_ui_text(struct libwebsocket_context *context,
   };
 
 
-static void serverThread(wvServer *server)
+static void serverThread(wstServer *server)
 {
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 128 +
-                          LWS_SEND_BUFFER_POST_PADDING];
-
-	buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
-
-	while (server->loop) {
-
-                usleep(50000);
-                libwebsocket_service(server->WScontext, 0);
-
-                wv_prepareForSends(server->WVcontext);
-
-		/*
-		 * This broadcasts to all gprim-binary-protocol connections
-		 *
-		 * We're just sending a character 'x', in these examples the
-		 * callbacks send their own per-connection content.
-		 *
-		 * We take care of pre-and-post padding allocation.
-		 */
-
-		libwebsockets_broadcast(&wv_protocols[PROTOCOL_GPRIM_BINARY],
-                                        &buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
-                
-                /* clean up after all has been sent */
-                wv_finishSends(server->WVcontext);
-	}
-        
-        /* mark the thread as down */
-        server->loop = -1;
-        wv_destroyContext(&server->WVcontext);
-        libwebsocket_context_destroy(server->WScontext);
+  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 128 +
+                    LWS_SEND_BUFFER_POST_PADDING];
+  
+  buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
+  
+  while (server->loop) {
+    
+    usleep(50000);
+    libwebsocket_service(server->WScontext, 0);
+    
+  }
+  
+  /* mark the thread as down */
+  server->loop = -1;
+  wst_destroyContext(&server->WSTcontext);
+  libwebsocket_context_destroy(server->WScontext);
 }
 
 
@@ -624,6 +738,38 @@ void browserMessage(/*@unused@*/ struct libwebsocket *wsi, char *text,
 }
 
 
+
+void browserText(struct libwebsocket *wsi, char *text, /*@unused@*/ int len)
+{
+  printf(" RXt %lx: %s\n", (long) wsi, text);
+  /* bounce it back */
+  wst_sendText(wsi, text);
+}
+
+
+void browserData(struct libwebsocket *wsi, wstData *data)
+{
+
+  int     header[4] = {4, 4, 4, 4};
+  double  vec[10]   = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5};
+  wstData *newData;
+
+  if (data == NULL) {
+    printf(" RXd: Malloc Error!\n");
+  } else {
+    printf(" RXd %lx: %s\n", (long) wsi, data->name);
+    /* bounce it back */
+    wst_sendData(wsi, data);
+    wst_freeData(data);
+    /* add our own */
+    newData = wst_createData("doubleName", WST_Float64, 4, header, 10, vec);
+/*  wst_sendData(wsi, newData);  */
+    wst_broadcastData(newData);
+    wst_freeData(newData);
+  }
+}
+
+
 static void createBox(wvContext *cntxt, char *name, int attr, float *offset)
 {
     int    i, n, attrs;
@@ -793,6 +939,7 @@ static void createPoints(wvContext *cntxt, char *name, int attr, float *offset)
       printf(" wv_addGPrim = %d for %s!\n", i, name);
 
 }
+
 
 
 int main(/*@unused@*/ int argc, /*@unused@*/ char **argv)

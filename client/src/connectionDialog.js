@@ -1,3 +1,4 @@
+import Client from './client';
 import Button from 'material-ui/Button';
 import Dialog from 'material-ui/Dialog';
 import { DialogActions } from 'material-ui/Dialog';
@@ -14,11 +15,13 @@ class ConnectionDialog extends React.Component {
 
     this.state = {
       open: false,
-      host: 'localhost:7681'
+      host: 'localhost:7681',
+      isConnecting: false,
     };
 
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
+    this.connect = this.connect.bind(this);
     this.handleHostChange = this.handleHostChange.bind(this);
   }
 
@@ -28,6 +31,14 @@ class ConnectionDialog extends React.Component {
 
   close() {
     this.setState({ open: false });
+  }
+
+  connect() {
+    // Show Connecting Spinner
+    let client = new Client();
+    client.connect(this.state.host);
+    this.setState({ isConnecting: true });
+    this.close();
   }
 
   handleHostChange(event) {
@@ -43,11 +54,19 @@ class ConnectionDialog extends React.Component {
           onClose={this.close}
           aria-labelledby="form-dialog-title"
         >
-          <DialogTitle id="form-dialog-title">Connect to Server</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Please enter the [host]:[port] of the server.
-            </DialogContentText>
+         {
+           this.state.isConnecting ? 
+           <DialogTitle id="form-dialog-title">Connecting...</DialogTitle> :
+           <DialogTitle id="form-dialog-title">Connect to Server</DialogTitle>
+         }
+          <DialogContent>          
+            {
+              this.state.isConnecting ? ''  :
+                <DialogContentText>
+                  Please enter the [host]:[port] of the server.
+                </DialogContentText>
+            }
+
             <TextField
               autoFocus
               margin="dense"
@@ -57,13 +76,14 @@ class ConnectionDialog extends React.Component {
               value={this.state.host}
               onChange={this.handleHostChange}
               fullWidth
+              disabled={this.state.isConnecting}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={this.close} color="primary">
               Cancel
             </Button>
-            <Button onClick={this.close} color="primary">
+            <Button onClick={this.connect} color="primary">
               Connect
             </Button>
           </DialogActions>

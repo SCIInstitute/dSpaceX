@@ -148,7 +148,6 @@ sendCase(void *wsi, int icase, int nParams, double *cases, char **pNames,
  *   - this code must keep track of individual client differences
  *   - all data in the binary protocol is handled via brodcasts
  */
-
 extern "C" void browserMessage(void *wsi, char *text, int lena)
 {
   int           i, j, width, height, stat, color_only = 1;
@@ -586,4 +585,9 @@ extern "C" void browserMessage(void *wsi, char *text, int lena)
   }
 
   printf(" Unknown Token: %s (%d)\n", text, lena);
+}
+
+extern "C" void browserData(void *wsi, void *data)
+{
+  // TODO:  Implement
 }
