@@ -18,16 +18,16 @@ class Client {
 
     this.socketBd = new WebSocket(protocolPrefix + url, "data-binary-protocol");
     this.socketBd.binaryType = 'arraybuffer';
-    this.socketBd.onopen     = this.onSocketBdOpen.bind(this);
-    this.socketBd.onclose    = this.onSocketBdClose.bind(this);
-    this.socketBd.onmessage  = this.onSocketBdMessage.bind(this);
-    this.socketBd.onerror    = this.onSocketBdError.bind(this);
+    this.socketBd.onopen     = this.onSocketBdOpen_.bind(this);
+    this.socketBd.onclose    = this.onSocketBdClose_.bind(this);
+    this.socketBd.onmessage  = this.onSocketBdMessage_.bind(this);
+    this.socketBd.onerror    = this.onSocketBdError_.bind(this);
 
     this.socketUt = new WebSocket(protocolPrefix + url, "ui-text-protocol");
-    this.socketUt.onopen    = this.onSocketUtOpen.bind(this);
-    this.socketUt.onclose   = this.onSocketUtClose.bind(this);
-    this.socketUt.onmessage = this.onSocketUtMessage.bind(this);
-    this.socketUt.onerror   = this.onSocketUtError.bind(this);
+    this.socketUt.onopen    = this.onSocketUtOpen_.bind(this);
+    this.socketUt.onclose   = this.onSocketUtClose_.bind(this);
+    this.socketUt.onmessage = this.onSocketUtMessage_.bind(this);
+    this.socketUt.onerror   = this.onSocketUtError_.bind(this);
   }
 
   disconnect() {
@@ -38,44 +38,44 @@ class Client {
     console.log('wst: ' + message);
   }
 
-  sendData(data) {
+  sendData_(data) {
 
   }
 
-  onSocketUtOpen(event) {
+  onSocketUtOpen_(event) {
     this.log(' UI-text WebSocket Connected!');
     // if (wst.txtInit != undefined) {
     //   wst.socketUt.send(wst.txtInit);
     // }
   }
 
-  onSocketUtClose(event) {
+  onSocketUtClose_(event) {
     this.log(' UI-text WebSocket Disconnected!');
     // wstServerDown();
   }
 
-  onSocketUtMessage(event) {
+  onSocketUtMessage_(event) {
     //  wst.log(" UI-text WebSocket getMessage: " + evt.data);
     // wstServerTextMessage(evt.data);
   }
 
-  onSocketUtError(event) {
+  onSocketUtError_(event) {
     this.log(' UI-text WebSocket Error: ' + event.data);
   }
 
-  onSocketBdOpen(event) {
+  onSocketBdOpen_(event) {
     this.log(' Data-binary WebSocket Connected!');
   }
 
-  onSocketBdClose(event) {
+  onSocketBdClose_(event) {
     this.log(' Data-binary WebSocket Disconnected!');
   }
 
-  onSocketBdMessage(event) {
+  onSocketBdMessage_(event) {
 
   }
   
-  onSocketBdError(event) {
+  onSocketBdError_(event) {
     alert(' Not connected to Server: Try reloading the page!');
     this.log(' Data-binary WebSocket Error: ' + event.data);
   }
