@@ -9,9 +9,36 @@ class Client {
    * @param {string} url The address:port of the server.
    */
   constructor() {
+    // Binary Data Socket
     this.socketBd = null;
+
+    // UI Text Socket
     this.socketUt = null;
+
+    // Unique Message Index
     this.messageIndex = 0;
+
+    this.initializeEventHandling_();
+  }
+
+  /**
+   * This method uses the DOM Event Handling framework
+   * to provide event handling for the Client class.
+   */
+  initializeEventHandling_() {
+    // DOM EventTarget Object
+    let target = document.createTextNode(null);
+    
+    // Pass EventTarget interface calls to DOM EventTarget object.
+    this.addEventListener = target.addEventListener.bind(target);
+    this.removeEventListener = target.removeEventListener.bind(target);
+    this.dispatchEvent = target.dispatchEvent.bind(target);
+  }
+
+  dispatch(eventName) {
+    let event = document.createEvent('Event');
+    event.initEvent(eventName, true, true);
+    this.dispatchEvent(event);
   }
 
   connect(url) {    
@@ -33,6 +60,15 @@ class Client {
 
   disconnect() {
     // TODO: Implement this method.
+  }
+
+  maybeUpdateState() {
+    if (this.socketBd.readyState === WebSocket.OPEN &&
+        this.socketUt.readyState === WebSocket.OPEN) {
+      this.dispatch('connected');
+    } else {
+
+    }
   }
 
   log(message) {
@@ -73,6 +109,7 @@ class Client {
     // if (wst.txtInit != undefined) {
     //   wst.socketUt.send(wst.txtInit);
     // }
+    this.maybeUpdateState();
   }
 
   onSocketUtClose_(event) {
@@ -87,10 +124,12 @@ class Client {
 
   onSocketUtError_(event) {
     this.log(' UI-text WebSocket Error: ' + event.data);
+    this.dispatch('error');
   }
 
   onSocketBdOpen_(event) {
     this.log(' Data-binary WebSocket Connected!');
+    this.maybeUpdateState();
   }
 
   onSocketBdClose_(event) {
@@ -102,8 +141,9 @@ class Client {
   }
   
   onSocketBdError_(event) {
-    alert(' Not connected to Server: Try reloading the page!');
+    // alert(' Not connected to Server: Try reloading the page!');
     this.log(' Data-binary WebSocket Error: ' + event.data);
+    this.dispatch('error');
   }
 }
 
