@@ -1,4 +1,5 @@
 import CasesPanel from './panels/casesPanel';
+import Client from './client';
 import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
 import DisplayPanel from './panels/displayPanel';
@@ -57,6 +58,7 @@ class Application extends React.Component {
   constructor(props) {
     super(props);
 
+    this.client = new Client();
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
   }
 
@@ -78,7 +80,7 @@ class Application extends React.Component {
     return (
       <div className={classes.root}>
         <Toolbar className={classes.appBar} onConnectClick={this.connectButtonClicked} />
-        <ConnectionDialog ref='connectiondialog'/>
+        <ConnectionDialog ref='connectiondialog' client={this.client}/>
         <Drawer variant='permanent' 
                 classes={{ paper: classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }

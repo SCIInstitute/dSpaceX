@@ -1,4 +1,3 @@
-import Client from './client';
 import Button from 'material-ui/Button';
 import Dialog from 'material-ui/Dialog';
 import { DialogActions } from 'material-ui/Dialog';
@@ -19,6 +18,7 @@ class ConnectionDialog extends React.Component {
       isConnecting: false,
     };
 
+    this.client = this.props.client;
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
     this.connect = this.connect.bind(this);
@@ -34,9 +34,7 @@ class ConnectionDialog extends React.Component {
   }
 
   connect() {
-    // Show Connecting Spinner
-    let client = new Client();
-    client.connect(this.state.host);
+    this.client.connect(this.state.host);
     this.setState({ isConnecting: true });
     this.close();
   }
