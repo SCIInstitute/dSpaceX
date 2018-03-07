@@ -11,6 +11,7 @@ class Client {
   constructor() {
     this.socketBd = null;
     this.socketUt = null;
+    this.messageIndex = 0;
   }
 
   connect(url) {    
@@ -41,6 +42,31 @@ class Client {
   sendData_(data) {
 
   }
+
+  /**
+   * Grab a list of the available datasets from the server.
+   */
+  fetchDatasetList() {
+    // TODO: Implement
+  }
+
+  /**
+   * Grab data for the specified dataset
+   * @param {string} datasetId
+   */
+  fetchDataset(datasetId) {
+    // TODO: Implement
+  }
+
+  /**
+   * Compute Morse-Smale Decomposition
+   * @param {string} datasetId
+   * @param {number} k number of neighbors.
+   */
+  fetchMorseSmaleDecomposition(datasetId, k) {
+
+  }
+
 
   onSocketUtOpen_(event) {
     this.log(' UI-text WebSocket Connected!');
