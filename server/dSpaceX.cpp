@@ -101,51 +101,6 @@ int main(int argc, char *argv[])
 }
 
 
-/* call-back invoked when a message arrives from the browser
- *   - each client in multi-browser setting is handled by a differnt thread
- *   - thread IDs are not used, but text websocket interface pointers are
- *   - this code must keep track of individual client differences
- *   - all data in the binary protocol is handled via brodcasts
- */
-extern "C" void browserMessage(void *wsi, char *text, int lena)
-{
-  int           i, j, width, height, stat, color_only = 1;
-  char          copy[133], *word, *word1, *lasts, sep[2] = " ";
-  static float  lims[2] = {-1.0, +1.0};
-  unsigned char *image;
-  static int    nCases, nParams, nQoIs, nCrystal, minP, maxP, persistence, iCrystal;
-  static int    icase = 1, key = -1;
-  static double *cases = NULL, *QoIs = NULL;
-  static char   **pNames, **qNames;
-
-  static HDProcessResult *result = nullptr;
-  static HDVizData *data = nullptr;
-  static TopologyData *topoData = nullptr;
-  static FortranLinalg::DenseMatrix<Precision>  lCrystal, layout, distances;
-  static std::vector<unsigned int> edgeIndices, eCrystal;
-  static FortranLinalg::DenseVector<int> parts, pCrystal, jCrystal;
-  static FortranLinalg::DenseVector<Precision>  yCrystal;
-
-  printf(" pWSI = %lx\n", (unsigned long) wsi);
-  {
-    int  n;
-    void **interfaces;
-
-    stat = wst_activeTextInterfaces(0, &n, &interfaces);
-    if (interfaces != NULL)
-      for (i = 0; i < n; i++)
-        printf(" iWSI = %lx\n", (unsigned long) interfaces[i]);
-  }
-
-  /* get token */
-  strncpy(copy, text, 132);
-  word = strtok_r(copy, sep, &lasts);
-  if (word == NULL) return;
-
-
-  printf(" Unknown Token: %s (%d)\n", text, lena);
-}
-
 extern "C" void browserData(void *wsi, void *data)
 {
   // TODO:  Implement
