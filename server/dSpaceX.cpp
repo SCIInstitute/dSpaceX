@@ -13,6 +13,10 @@
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
 
+#include <jsoncpp/json.h>
+
+#include <exception>
+#include <string>
 #include <cstdlib>
 #include <algorithm>
 #include <stdio.h>
@@ -107,6 +111,32 @@ extern "C" void browserData(void *wsi, void *data)
 }
 
 extern "C" void browserText(void *wsi, char *text, int lena)
-{
-  // TODO:  Implement 
+{  
+  std::string message(text);
+  Json::Reader reader; 
+  Json::Value object;
+
+  try {
+    reader.parse(message, object);
+
+    std::string commandName = object["name"].asString();
+    
+    if(commandName == "fetchDatasetList") {
+      std::cout << "Received request for avaliable datasets." << std::endl;
+    } else {
+      std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
+    }
+  } catch(const std::exception &e) {
+    std::cerr << "Command Parsing Error." << e.what() << std::endl;     
+    // TODO: Send back an error message.
+  }
+
+  
+
+  // if (strcmp(word,"fetchDatasetList") == 0) {
+  //   std::cout << "Received request for avaliable datasets." << std::endl;
+  //   return;
+  // }
+
+  // printf(" Unknown Token: %s (%d)\n", text, lena);
 }

@@ -799,7 +799,7 @@ int main(/*@unused@*/ int argc, /*@unused@*/ char **argv)
         stat++;
       }
       if (wst_nClientServer(0) == 0) continue;
-//    wst_broadcastText("I'm here!");
+      // wst_broadcastText("I'm here!");
     }
   }
 

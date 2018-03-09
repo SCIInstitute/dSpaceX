@@ -44,6 +44,7 @@ INCLUDE_DIRECTORIES(
 
 ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
 # ADD_SUBDIRECTORY(lib/tSNE)
+ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/hdprocess)
 if(BUILD_SERVER_LIB)
   ADD_SUBDIRECTORY(lib/serverlib)

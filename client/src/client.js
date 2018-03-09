@@ -22,6 +22,15 @@ class Client {
   }
 
   /**
+   * Increments the message index and returns the new value.
+   * This method is responsible for ensuring all messages have 
+   * unique ids.
+   */
+  _newMessageId() {
+    return ++this.messageIndex;
+  }
+
+  /**
    * This method uses the DOM Event Handling framework
    * to provide event handling for the Client class.
    */
@@ -103,7 +112,11 @@ class Client {
    * Grab a list of the available datasets from the server.
    */
   fetchDatasetList() {
-    // TODO: Implement
+    let command = {
+      name: 'fetchDatasetList',
+      messageId: this._newMessageId(),
+    }
+    this.socketUt.send(JSON.stringify(command));
   }
 
   /**
