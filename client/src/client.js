@@ -35,12 +35,20 @@ class Client {
     this.dispatchEvent = target.dispatchEvent.bind(target);
   }
 
+  /**
+   * Constructs and dispatches an event with the eventName provided.
+   * @param {string} eventName
+   */
   _dispatch(eventName) {
     let event = document.createEvent('Event');
     event.initEvent(eventName, true, true);
     this.dispatchEvent(event);
   }
 
+  /**
+   * Connects all sockets to the desired host server.
+   * @param {string} url
+   */
   connect(url) {
     const protocolPrefix = 'ws://';
 
@@ -58,10 +66,16 @@ class Client {
     this.socketUt.onerror   = this._onSocketUtError.bind(this);
   }
 
+  /**
+   * Disconnect all websockets from the host server.
+   */
   disconnect() {
     // TODO: Implement this method.
   }
 
+  /**
+   * Callback to handle potential state changes based on socket events.
+   */
   _maybeUpdateState() {
     if (this.socketBd.readyState === WebSocket.OPEN &&
         this.socketUt.readyState === WebSocket.OPEN) {
@@ -71,10 +85,16 @@ class Client {
     }
   }
 
+  /**
+   * Logging wrapper.
+   */
   _log(message) {
     console.log('wst: ' + message);
   }
 
+  /**
+   *
+   */
   _sendData(data) {
 
   }
@@ -103,7 +123,10 @@ class Client {
 
   }
 
-
+  /**
+   * Text Socket onOpen event callback.
+   * @param {Event} event.
+   */
   _onSocketUtOpen(event) {
     this._log(' UI-text WebSocket Connected!');
     // if (wst.txtInit != undefined) {
@@ -112,34 +135,62 @@ class Client {
     this._maybeUpdateState();
   }
 
+  /**
+   * Text Socket onClose event callback.
+   * @param {Event} event.
+   */
   _onSocketUtClose(event) {
     this._log(' UI-text WebSocket Disconnected!');
     // wstServerDown();
   }
 
+  /**
+   * Text Socket onMessage event callback.
+   * @param {Event} event.
+   */
   _onSocketUtMessage(event) {
     //  wst.log(" UI-text WebSocket getMessage: " + evt.data);
     // wstServerTextMessage(evt.data);
   }
 
+  /**
+   * Text Socket onError event callback.
+   * @param {Event} event.
+   */
   _onSocketUtError(event) {
     this._log(' UI-text WebSocket Error: ' + event.data);
     this._dispatch('error');
   }
 
+  /**
+   * Binary Socket onOpen event callback.
+   * @param {Event} event.
+   */
   _onSocketBdOpen(event) {
     this._log(' Data-binary WebSocket Connected!');
     this._maybeUpdateState();
   }
 
+  /**
+   * Binary Socket onClose event callback.
+   * @param {Event} event.
+   */
   _onSocketBdClose(event) {
     this._log(' Data-binary WebSocket Disconnected!');
   }
 
+  /**
+   * Binary Socket onMessage event callback.
+   * @param {Event} event.
+   */
   _onSocketBdMessage(event) {
 
   }
 
+  /**
+   * Binary Socket onError event callback.
+   * @param {Event} event.
+   */
   _onSocketBdError(event) {
     // alert(' Not connected to Server: Try reloading the page!');
     this._log(' Data-binary WebSocket Error: ' + event.data);
