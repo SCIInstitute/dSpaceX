@@ -1,11 +1,7 @@
 /*
- *	The Web Viewer
+ *	The Web Socket Transport
  *
- *		WV simple server code
- *
- *      Copyright 2011-2018, Massachusetts Institute of Technology
- *      Licensed under The GNU Lesser General Public License, version 2.1
- *      See http://www.opensource.org/licenses/lgpl-2.1.php
+ *		simple server code
  *
  */
 
@@ -18,44 +14,41 @@
 #endif
 
 #include "libwebsockets.h"
+
 #include "wstypes.h"
 
-#include "wsss.h"
-
-#ifdef STANDALONE
-#include "wsserver.h"
-#endif
 
   /* prototypes used & not in the above */
-  extern /*@null@*/ /*@out@*/ /*@only@*/ void *wv_alloc(int nbytes);
+  extern /*@null@*/ /*@out@*/ /*@only@*/ void *wst_alloc(int nbytes);
   extern /*@null@*/ /*@only@*/ 
-         void *wv_realloc(/*@null@*/ /*@only@*/ /*@returned@*/ void *ptr, 
+         void *wst_realloc(/*@null@*/ /*@only@*/ /*@returned@*/ void *ptr, 
                           int nbytes);
-  extern void  wv_free(/*@null@*/ /*@only@*/ void *ptr);
-  
-  extern int   wv_sendGPrim(void *wsi, wvContext *cntxt, unsigned char *buf, 
-                            int flag);
-  extern void  wv_freeGPrim(wvGPrim gprim);
-  extern void  wv_destroyContext(wvContext **context);
-  extern void  wv_prepareForSends(wvContext *context);
-  extern void  wv_finishSends(wvContext *context);
+  extern void  wst_free(/*@null@*/ /*@only@*/ void *ptr);
+  extern void  wst_destroyContext(wstContext **context);
 
-  /* UI test message call-back */
-  extern void  browserMessage(struct libwebsocket *wsi, char *buf, int len);
+#ifdef STANDALONE
+  extern /*@null@*/ wstContext *wst_createContext( );
+  extern void wst_freeData( wstData *data );
+  extern /*@null@*/ wstData *wst_createData( const char *name,
+                                             enum TypedArray type, int hlen,
+                                             const int *header, int len,
+                                             void *array );
+#endif
 
   /* message call-backs */
   extern void  browserText( struct libwebsocket *wsi, char *buf, int len );
   extern void  browserData( struct libwebsocket *wsi, wstData *data );
 
+
 enum wst_protocols {
-  /* always first */
-  PROTOCOL_HTTP = 0,
+	/* always first */
+	PROTOCOL_HTTP = 0,
 
-  PROTOCOL_DATA_BINARY,
-  PROTOCOL_UI_TEXT,
+	PROTOCOL_DATA_BINARY,
+	PROTOCOL_UI_TEXT,
 
-  /* always last */
-  WV_PROTOCOL_COUNT
+	/* always last */
+	WV_PROTOCOL_COUNT
 };
 
 
@@ -95,21 +88,9 @@ typedef struct {
         wstContext                  *WSTcontext;   /* WebSocket Transport context */
 } wstServer;
 
-typedef struct {
-        int                         nClient;       /* # active clients */
-        struct libwebsocket         **wsi;         /* the text wsi per client */
-        int                         loop;          /* 1 for continue;
-                                                      0 for done */
-        int                         index;         /* server index */
-        struct libwebsocket_context *WScontext;    /* WebSocket context */
-        wvContext                   *WVcontext;    /* WebViewer context */
-        unsigned char               xbuf[LWS_SEND_BUFFER_PRE_PADDING + BUFLEN +
-                                         LWS_SEND_BUFFER_POST_PADDING];
-} wvServer;
 
-
-static int      nServers = 0;
-static wvServer *servers = NULL;
+static int       nServers = 0;
+static wstServer *servers = NULL;
 
 
 /* this protocol server (always the first one) just knows how to do HTTP */
@@ -212,101 +193,6 @@ dump_handshake_info(struct lws_tokens *lwst)
 }
 
 
-/* gPrim binary protocol */
-
-/*
- * one of these is auto-created for each connection and a pointer to the
- * appropriate instance is passed to the callback in the user parameter
- *
- */
-
-struct per_session_data__gprim_binary {
-	int status;
-};
-
-static int
-callback_gprim_binary(struct libwebsocket_context *context,
-                      struct libwebsocket *wsi,
-                      enum libwebsocket_callback_reasons reason,
-                      void *user, /*@unused@*/ void *in, size_t len)
-{
-	int slot;
-	struct per_session_data__gprim_binary *pss = user;
-
-        for (slot = 0; slot < nServers; slot++)
-                if (servers[slot].WScontext == context) break;
-        if (slot == nServers) {
-                fprintf(stderr, "ERROR no Slot!");
-                exit(1);          
-        }
-
-	switch (reason) {
-
-        /*
-         * invoked when initial connection is made
-         */
-         
-	case LWS_CALLBACK_ESTABLISHED:
-		fprintf(stderr, "callback_gprim_binary: LWS_CALLBACK_ESTABLISHED\n");
-		pss->status = 0;
-		break;
-
-	/*
-	 * in this protocol, we just use the broadcast action as the chance to
-	 * send our own connection-specific data and ignore the broadcast info
-	 * that is available in the 'in' parameter
-	 */
-
-	case LWS_CALLBACK_BROADCAST:
-                if (pss->status == 0) {
-                  if (servers[slot].WVcontext == NULL) return 0;
-                  /* send the init packet */
-                  wv_sendGPrim(wsi, servers[slot].WVcontext, 
-                               &servers[slot].xbuf[LWS_SEND_BUFFER_PRE_PADDING],
-                                1);
-                  pss->status++;
-                } else if (pss->status == 1) {
-                  /* send the first suite of gPrims */
-                  wv_sendGPrim(wsi, servers[slot].WVcontext,
-                               &servers[slot].xbuf[LWS_SEND_BUFFER_PRE_PADDING],
-                               -1);
-                  pss->status++;
-                } else {
-                  /* send the updated suite of gPrims */
-                  wv_sendGPrim(wsi, servers[slot].WVcontext, 
-                               &servers[slot].xbuf[LWS_SEND_BUFFER_PRE_PADDING],
-                                0);
-                }
-		break;
-
-	case LWS_CALLBACK_RECEIVE:
-		fprintf(stderr, "gprim-binary: rx %d\n", (int) len);
-                /* we should not get here! */
-		break;
-                
-        case LWS_CALLBACK_CLOSED:
-                fprintf(stderr, "callback_gprim_binary: LWS_CALLBACK_CLOSED\n");
-                break;
-        
-	/*
-	 * this just demonstrates how to use the protocol filter. If you won't
-	 * study and reject connections based on header content, you don't need
-	 * to handle this callback
-	 */
-
-	case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-		dump_handshake_info((struct lws_tokens *) user);
-		/* you could return non-zero here and kill the connection */
-		break;
-
-	default:
-		break;
-	}
-
-	return 0;
-}
-
-
 /* binary protocol */
 
 /*
@@ -325,11 +211,11 @@ callback_data_binary(struct libwebsocket_context *context,
                      enum libwebsocket_callback_reasons reason,
                      void *user, void *in, size_t len)
 {
-  int     i, slot, ioff, *ibuf;
+	int     i, slot, ioff, *ibuf;
         char    *cbuf;
         size_t  dlen;
         wstData *wstdata;
-  struct per_session_data__data_binary *pss = user;
+	struct per_session_data__data_binary *pss = user;
 
         for (slot = 0; slot < nServers; slot++)
                 if (servers[slot].WScontext == context) break;
@@ -338,23 +224,23 @@ callback_data_binary(struct libwebsocket_context *context,
                 exit(1);          
         }
 
-  switch (reason) {
+	switch (reason) {
 
         /*
          * invoked when initial connection is made
          */
          
-  case LWS_CALLBACK_ESTABLISHED:
-    fprintf(stderr, "callback_data_binary: LWS_CALLBACK_ESTABLISHED\n");
+	case LWS_CALLBACK_ESTABLISHED:
+		fprintf(stderr, "callback_data_binary: LWS_CALLBACK_ESTABLISHED\n");
                 pss->wsi = wsi;
-    break;
+		break;
 
-  case LWS_CALLBACK_BROADCAST:
+	case LWS_CALLBACK_BROADCAST:
                 i = libwebsocket_write(wsi, in, len, LWS_WRITE_BINARY);
                 if (i < 0) fprintf(stderr, "binary data write failed\n");
-    break;
+		break;
 
-  case LWS_CALLBACK_RECEIVE:
+	case LWS_CALLBACK_RECEIVE:
                 /* convert the incoming stream to wstData */
                 wstdata = (wstData *) wst_alloc(sizeof(wstData));
                 if (wstdata == NULL) {
@@ -398,29 +284,30 @@ callback_data_binary(struct libwebsocket_context *context,
                       }
                     }
                 }
-    break;
+		break;
                 
         case LWS_CALLBACK_CLOSED:
                 fprintf(stderr, "callback_data_binary: LWS_CALLBACK_CLOSED\n");
                 break;
         
-  /*
-   * this just demonstrates how to use the protocol filter. If you won't
-   * study and reject connections based on header content, you don't need
-   * to handle this callback
-   */
+	/*
+	 * this just demonstrates how to use the protocol filter. If you won't
+	 * study and reject connections based on header content, you don't need
+	 * to handle this callback
+	 */
 
-  case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-    dump_handshake_info((struct lws_tokens *) user);
-    /* you could return non-zero here and kill the connection */
-    break;
+	case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+		dump_handshake_info((struct lws_tokens *) user);
+		/* you could return non-zero here and kill the connection */
+		break;
 
-  default:
-    break;
-  }
+	default:
+		break;
+	}
 
-  return 0;
+	return 0;
 }
+
 
 /* ui_text protocol */
 
@@ -453,11 +340,11 @@ callback_ui_text(struct libwebsocket_context *context,
                 n        = servers[slot].nClient + 1;
                 if (servers[slot].wsi == NULL) {
                   tmp = (struct libwebsocket **)
-                        wv_alloc(n*sizeof(struct libwebsocket *));
+                        wst_alloc(n*sizeof(struct libwebsocket *));
                 } else {
                   tmp = (struct libwebsocket **)
-                        wv_realloc(servers[slot].wsi,
-                                   n*sizeof(struct libwebsocket *));
+                        wst_realloc(servers[slot].wsi,
+                                    n*sizeof(struct libwebsocket *));
                 }
                 if (tmp == NULL) {
                     fprintf(stderr, "callback_ui_text: Malloc Problem!\n");
@@ -474,11 +361,7 @@ callback_ui_text(struct libwebsocket_context *context,
 		break;
 
 	case LWS_CALLBACK_RECEIVE:
-                if (servers[slot].WVcontext->callback == NULL) {
-                    browserMessage(wsi, in, len);
-                } else {
-                    servers[slot].WVcontext->callback(wsi, in, len);
-                }
+                browserText(wsi, in, len);
 		break;
             
         case LWS_CALLBACK_CLOSED:
@@ -492,7 +375,7 @@ callback_ui_text(struct libwebsocket_context *context,
               if (n != servers[slot].nClient)
                   fprintf(stderr, "callback_ui_text: Client Problem!\n");
               if (servers[slot].nClient <= 0) {
-                  wv_free(servers[slot].wsi);
+                  wst_free(servers[slot].wsi);
                   servers[slot].wsi  = NULL;
                   servers[slot].loop = 0;
               }
@@ -519,7 +402,7 @@ callback_ui_text(struct libwebsocket_context *context,
 
 /* list of supported protocols and callbacks */
 
-  static struct libwebsocket_protocols wv_protocols[] = {
+  static struct libwebsocket_protocols wst_protocols[] = {
 	/* first protocol must always be HTTP handler */
 
 	{
@@ -527,11 +410,11 @@ callback_ui_text(struct libwebsocket_context *context,
 		callback_http,		/* callback */
 		0			/* per_session_data_size */
 	},
-  {
-    "data-binary-protocol",
-    callback_data_binary,
-    sizeof(struct per_session_data__data_binary),
-  },
+	{
+		"data-binary-protocol",
+		callback_data_binary,
+		sizeof(struct per_session_data__data_binary),
+	},
 	{
 		"ui-text-protocol",
 		callback_ui_text,
@@ -564,77 +447,78 @@ static void serverThread(wstServer *server)
 }
 
 
-int wv_startServer(int port, char *interface, char *cert_path, char *key_path,
-                   int opts, /*@only@*/ wvContext *WVcontext)
+int wst_startServer(int port, /*@null@*/ char *interface,
+                   /*@null@*/ char *cert_path, /*@null@*/ char *key_path,
+                   int opts, /*@only@*/ wstContext *WSTcontext)
 {
-        int      slot;
-        wvServer *tserver;
-        struct libwebsocket_context *context;
-
-	fprintf(stderr, "\nwv libwebsockets server thread start\n\n");
-
-	context = libwebsocket_create_context(port, interface, wv_protocols,
-				              libwebsocket_internal_extensions,
-				              cert_path, key_path, -1, -1, opts);
-	if (context == NULL) {
-		fprintf(stderr, "libwebsocket init failed!\n");
-		return -1;
-	}
-
-        for (slot = 0; slot < nServers; slot++)
-                if (servers[slot].loop == -1) break;
-          
-        if (slot == nServers) {
-                if (nServers == 0) {
-                        tserver = (wvServer *) wv_alloc(sizeof(wvServer));
-                } else {
-                        tserver = (wvServer *) wv_realloc(servers, 
-                                           (nServers+1)*sizeof(wvServer));
-                }
-                if (tserver == NULL) {
-                        libwebsocket_context_destroy(context);
-                        fprintf(stderr, "Server malloc failed!\n");
-                        return -1;
-                }
-                servers = tserver;
-                nServers++;
-        }
-        servers[slot].loop      = 1;
-        servers[slot].nClient   = 0;
-        servers[slot].index     = slot;
-        servers[slot].wsi       = NULL;
-        servers[slot].WScontext =   context;
-        servers[slot].WVcontext = WVcontext;
-
-        /* spawn off the server thread */
-        if (ThreadCreate(serverThread, &servers[slot]) == -1) {
-                libwebsocket_context_destroy(context);
-                wv_destroyContext(&WVcontext);
-                servers[slot].loop = -1;
-                fprintf(stderr, "thread init failed!\n");
-                return -1;
-        }
-
-	return slot;
+  int       slot;
+  wstServer *tserver;
+  struct libwebsocket_context *context;
+  
+  fprintf(stderr, "\nwst libwebsockets server thread start\n\n");
+  
+  context = libwebsocket_create_context(port, interface, wst_protocols,
+                                        libwebsocket_internal_extensions,
+                                        cert_path, key_path, -1, -1, opts);
+  if (context == NULL) {
+    fprintf(stderr, "libwebsocket init failed!\n");
+    return -1;
+  }
+  
+  for (slot = 0; slot < nServers; slot++)
+    if (servers[slot].loop == -1) break;
+  
+  if (slot == nServers) {
+    if (nServers == 0) {
+      tserver = (wstServer *) wst_alloc(sizeof(wstServer));
+    } else {
+      tserver = (wstServer *) wst_realloc(servers,
+                                          (nServers+1)*sizeof(wstServer));
+    }
+    if (tserver == NULL) {
+      libwebsocket_context_destroy(context);
+      fprintf(stderr, "Server malloc failed!\n");
+      return -1;
+    }
+    servers = tserver;
+    nServers++;
+  }
+  servers[slot].loop       = 1;
+  servers[slot].nClient    = 0;
+  servers[slot].index      = slot;
+  servers[slot].wsi        = NULL;
+  servers[slot].WScontext  =   context;
+  servers[slot].WSTcontext = WSTcontext;
+  
+  /* spawn off the server thread */
+  if (ThreadCreate(serverThread, &servers[slot]) == -1) {
+    libwebsocket_context_destroy(context);
+    wst_destroyContext(&WSTcontext);
+    servers[slot].loop = -1;
+    fprintf(stderr, "thread init failed!\n");
+    return -1;
+  }
+  
+  return slot;
 }
 
 
-void wv_cleanupServers()
+void wst_cleanupServers()
 {
   int i;
   
   for (i = 0; i < nServers; i++) {
     if (servers[i].loop == -1) continue;
-    wv_destroyContext(&servers[i].WVcontext);
+    wst_destroyContext(&servers[i].WSTcontext);
     libwebsocket_context_destroy(servers[i].WScontext);
   }
-  wv_free(servers);
+  wst_free(servers);
    servers = NULL;
   nServers = 0;
 }
 
 
-int wv_statusServer(int index)
+int wst_statusServer(int index)
 {
   int loop;
 
@@ -645,14 +529,14 @@ int wv_statusServer(int index)
 }
 
 
-int wv_nClientServer(int index)
+int wst_nClientServer(int index)
 {
   if ((index < 0) || (index >= nServers)) return -2;
   return servers[index].nClient;
 }
 
 
-int wv_activeInterfaces(int index, int *Nwsi, void ***wsi)
+int wst_activeTextInterfaces(int index, int *Nwsi, void ***wsi)
 {
   *Nwsi = 0;
   *wsi  = NULL;
@@ -664,7 +548,7 @@ int wv_activeInterfaces(int index, int *Nwsi, void ***wsi)
 }
 
 
-void wv_killInterface(int index, void *wsix)
+void wst_killInterface(int index, void *wsix)
 {
   struct libwebsocket *wsi;
   
@@ -676,7 +560,7 @@ void wv_killInterface(int index, void *wsix)
 }
 
 
-void wv_sendText(struct libwebsocket *wsi, char *text)
+void wst_sendText(struct libwebsocket *wsi, char *text)
 {
   int  n;
   unsigned char *message;
@@ -685,9 +569,10 @@ void wv_sendText(struct libwebsocket *wsi, char *text)
     fprintf(stderr, "ERROR: sendText called with NULL text!");
     return;
   }
-  n = strlen(text) + 1;
-  message = (unsigned char *) wv_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
-                                        LWS_SEND_BUFFER_POST_PADDING)*sizeof(unsigned char));
+  n = strlen(text);
+  message = (unsigned char *) wst_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
+                                           LWS_SEND_BUFFER_POST_PADDING)*
+                                        sizeof(unsigned char));
   if (message == NULL) {
     fprintf(stderr, "ERROR: sendText Malloc with length %d!", n);
     return;    
@@ -696,11 +581,11 @@ void wv_sendText(struct libwebsocket *wsi, char *text)
   n = libwebsocket_write(wsi, &message[LWS_SEND_BUFFER_PRE_PADDING], 
                          n, LWS_WRITE_TEXT);
   if (n < 0) fprintf(stderr, "sendText write failed\n");
-  wv_free(message);
+  wst_free(message);
 }
 
 
-void wv_broadcastText(char *text)
+void wst_broadcastText(char *text)
 {
   int  n;
   unsigned char *message;
@@ -709,35 +594,147 @@ void wv_broadcastText(char *text)
     fprintf(stderr, "ERROR: broadcastText called with NULL text!");
     return;
   }
-  n = strlen(text) + 1;
-  message = (unsigned char *) wv_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
-                                        LWS_SEND_BUFFER_POST_PADDING)*sizeof(unsigned char));
+  n = strlen(text);
+  message = (unsigned char *) wst_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
+                                           LWS_SEND_BUFFER_POST_PADDING)*
+                                        sizeof(unsigned char));
   if (message == NULL) {
     fprintf(stderr, "ERROR: broadcastText Malloc with length %d!", n);
     return;    
   }
   memcpy(&message[LWS_SEND_BUFFER_PRE_PADDING], text, n);
-  libwebsockets_broadcast(&wv_protocols[PROTOCOL_UI_TEXT],
+  libwebsockets_broadcast(&wst_protocols[PROTOCOL_UI_TEXT],
                           &message[LWS_SEND_BUFFER_PRE_PADDING], n);
-  wv_free(message);
+  wst_free(message);
 }
 
 
-int wv_sendBinaryData(struct libwebsocket *wsi, unsigned char *buf, int iBuf)
+void wst_sendData(struct libwebsocket *wsi, wstData *wstdata)
 {
-  return libwebsocket_write(wsi, buf, iBuf, LWS_WRITE_BINARY);
+  char          zero = 0;
+  int           i, j, k, odd = 0;
+  size_t        n, ioff;
+  unsigned char *message;
+  
+  if (wstdata == NULL) {
+    fprintf(stderr, "ERROR: sendData called with NULL!");
+    return;
+  }
+  n = strlen(wstdata->name);
+  i = n/4;
+  if (i*4 != n) i++;
+  k = i + 4 + wstdata->hlen;
+  n = k*sizeof(int);
+  if (wstdata->type == WST_Float64) {
+    odd = k % 2;
+    n += odd*sizeof(int);
+  }
+  n += wstdata->len*TypedArrayBytes[wstdata->type];
+  message = (unsigned char *) wst_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
+                                           LWS_SEND_BUFFER_POST_PADDING)*
+                                        sizeof(unsigned char));
+  if (message == NULL) {
+    i = n;
+    fprintf(stderr, "ERROR: sendData Malloc with length %d!", i);
+    return;
+  }
+  ioff  = LWS_SEND_BUFFER_PRE_PADDING;
+  i = j = strlen(wstdata->name);
+  memcpy(&message[ioff], &i, sizeof(int));
+  ioff += sizeof(int);
+  j = i/4;
+  if (j*4 != i) j++;
+  memcpy(&message[ioff], wstdata->name, i);
+  ioff += i;
+  for (k = i; k < 4*j; k++) memcpy(&message[ioff++], &zero, 1);
+  i = wstdata->type;
+  memcpy(&message[ioff], &i, sizeof(int));
+  ioff += sizeof(int);
+  memcpy(&message[ioff], &wstdata->hlen, sizeof(int));
+  ioff += sizeof(int);
+  memcpy(&message[ioff], wstdata->header, wstdata->hlen*sizeof(int));
+  ioff += sizeof(int)*wstdata->hlen;
+  memcpy(&message[ioff], &wstdata->len, sizeof(int));
+  ioff += sizeof(int);
+  if (odd == 1) {
+    i = 0;
+    memcpy(&message[ioff], &i, sizeof(int));
+    ioff += sizeof(int);
+  }
+  n = wstdata->len*TypedArrayBytes[wstdata->type];
+  memcpy(&message[ioff], wstdata->data, n);
+  n += ioff - LWS_SEND_BUFFER_PRE_PADDING;
+  
+  i  = libwebsocket_write(wsi, &message[LWS_SEND_BUFFER_PRE_PADDING],
+                          n, LWS_WRITE_BINARY);
+  if (i < 0) fprintf(stderr, "sendData write failed\n");
+  wst_free(message);
+}
+
+
+void wst_broadcastData(wstData *wstdata)
+{
+  char          zero = 0;
+  int           i, j, k, odd = 0;
+  size_t        n, ioff;
+  unsigned char *message;
+  
+  if (wstdata == NULL) {
+    fprintf(stderr, "ERROR: broadcastData called with NULL!");
+    return;
+  }
+  n = strlen(wstdata->name);
+  i = n/4;
+  if (i*4 != n) i++;
+  k = i + 4 + wstdata->hlen;
+  n = k*sizeof(int);
+  if (wstdata->type == WST_Float64) {
+    odd = k % 2;
+    n += odd*sizeof(int);
+  }
+  n += wstdata->len*TypedArrayBytes[wstdata->type];
+  message = (unsigned char *) wst_alloc((n+LWS_SEND_BUFFER_PRE_PADDING +
+                                         LWS_SEND_BUFFER_POST_PADDING)*
+                                        sizeof(unsigned char));
+  if (message == NULL) {
+    i = n;
+    fprintf(stderr, "ERROR: broadcastData Malloc with length %d!", i);
+    return;
+  }
+  ioff  = LWS_SEND_BUFFER_PRE_PADDING;
+  i = j = strlen(wstdata->name);
+  memcpy(&message[ioff], &i, sizeof(int));
+  ioff += sizeof(int);
+  j = i/4;
+  if (j*4 != i) j++;
+  memcpy(&message[ioff], wstdata->name, i);
+  ioff += i;
+  for (k = i; k < 4*j; k++) memcpy(&message[ioff++], &zero, 1);
+  i = wstdata->type;
+  memcpy(&message[ioff], &i, sizeof(int));
+  ioff += sizeof(int);
+  memcpy(&message[ioff], &wstdata->hlen, sizeof(int));
+  ioff += sizeof(int);
+  memcpy(&message[ioff], wstdata->header, wstdata->hlen*sizeof(int));
+  ioff += sizeof(int)*wstdata->hlen;
+  memcpy(&message[ioff], &wstdata->len, sizeof(int));
+  ioff += sizeof(int);
+  if (odd == 1) {
+    i = 0;
+    memcpy(&message[ioff], &i, sizeof(int));
+    ioff += sizeof(int);
+  }
+  n = wstdata->len*TypedArrayBytes[wstdata->type];
+  memcpy(&message[ioff], wstdata->data, n);
+  n += ioff - LWS_SEND_BUFFER_PRE_PADDING;
+  
+  libwebsockets_broadcast(&wst_protocols[PROTOCOL_DATA_BINARY],
+                          &message[LWS_SEND_BUFFER_PRE_PADDING], n);
+  wst_free(message);
 }
 
 
 #ifdef STANDALONE
-
-void browserMessage(/*@unused@*/ struct libwebsocket *wsi, char *text,
-                    /*@unused@*/ int len)
-{
-  printf(" RX: %s\n", text);
-}
-
-
 
 void browserText(struct libwebsocket *wsi, char *text, /*@unused@*/ int len)
 {
@@ -770,218 +767,44 @@ void browserData(struct libwebsocket *wsi, wstData *data)
 }
 
 
-static void createBox(wvContext *cntxt, char *name, int attr, float *offset)
-{
-    int    i, n, attrs;
-    wvData items[5];
-
-    // box
-    //    v6----- v5
-    //   /|      /|
-    //  v1------v0|
-    //  | |     | |
-    //  | |v7---|-|v4
-    //  |/      |/
-    //  v2------v3
-    //
-    // vertex coords array
-    float vertices[] = {
-           1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,    // v0-v1-v2-v3 front
-           1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,    // v0-v3-v4-v5 right
-           1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,    // v0-v5-v6-v1 top
-          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,    // v1-v6-v7-v2 left
-          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1,    // v7-v4-v3-v2 bottom
-           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1 };  // v4-v7-v6-v5 back
-
-    // normal array
-    float normals[] = {
-           0, 0, 1,   0, 0, 1,   0, 0, 1,   0, 0, 1,     // v0-v1-v2-v3 front
-           1, 0, 0,   1, 0, 0,   1, 0, 0,   1, 0, 0,     // v0-v3-v4-v5 right
-           0, 1, 0,   0, 1, 0,   0, 1, 0,   0, 1, 0,     // v0-v5-v6-v1 top
-          -1, 0, 0,  -1, 0, 0,  -1, 0, 0,  -1, 0, 0,     // v1-v6-v7-v2 left
-           0,-1, 0,   0,-1, 0,   0,-1, 0,   0,-1, 0,     // v7-v4-v3-v2 bottom
-           0, 0,-1,   0, 0,-1,   0, 0,-1,   0, 0,-1 };   // v4-v7-v6-v5 back
-
-    // color array
-    unsigned char colors[] = {
-           0, 0, 255,    0, 0, 255,    0, 0, 255,    0, 0, 255,    // v0-v1-v2-v3
-           255, 0, 0,    255, 0, 0,    255, 0, 0,    255, 0, 0,    // v0-v3-v4-v5
-           0, 255, 0,    0, 255, 0,    0, 255, 0,    0, 255, 0,    // v0-v5-v6-v1
-           255, 255, 0,  255, 255, 0,  255, 255, 0,  255, 255, 0,  // v1-v6-v7-v2
-           255, 0, 255,  255, 0, 255,  255, 0, 255,  255, 0, 255,  // v7-v4-v3-v2
-           0, 255, 255,  0, 255, 255,  0, 255, 255,  0, 255, 255}; // v4-v7-v6-v5
-
-    // index array
-    int indices[] = {
-           0, 1, 2,   0, 2, 3,    // front
-           4, 5, 6,   4, 6, 7,    // right
-           8, 9,10,   8,10,11,    // top
-          12,13,14,  12,14,15,    // left
-          16,17,18,  16,18,19,    // bottom
-          20,21,22,  20,22,23 };  // back
-          
-    // other index array
-    int oIndices[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,
-                       16,17,18,19,20,21,22,23 };
-      
-    for (i = 0; i < 72; i+=3) {
-      vertices[i  ] += offset[0];
-      vertices[i+1] += offset[1];
-      vertices[i+2] += offset[2];
-    }
-
-    if ((i=wv_setData(WV_REAL32, 24, vertices, WV_VERTICES, &items[0])) < 0)
-      printf(" wv_setData = %d for %s/item 0!\n", i, name);
-    if ((i=wv_setData(WV_INT32,  36, indices, WV_INDICES,   &items[1])) < 0)
-      printf(" wv_setData = %d for %s/item 1!\n", i, name);
-    if ((i=wv_setData(WV_UINT8,  24, colors, WV_COLORS,     &items[2])) < 0)
-      printf(" wv_setData = %d for %s/item 2!\n", i, name);
-    if ((i=wv_setData(WV_REAL32, 24, normals, WV_NORMALS,   &items[3])) < 0)
-      printf(" wv_setData = %d for %s/item 3!\n", i, name);
-    n     = 4;
-    attrs = attr;
-    if (strcmp(name,"Box#1") == 0) {
-      if ((i=wv_setData(WV_INT32, 24, oIndices, WV_PINDICES, &items[4])) < 0)
-        printf(" wv_setData = %d for %s/item 4!\n", i, name);
-      n++;
-      attrs |= WV_POINTS;
-    }
-    if (strcmp(name,"Box#2") == 0) {
-      if ((i=wv_setData(WV_INT32, 24, oIndices, WV_LINDICES, &items[4])) < 0)
-        printf(" wv_setData = %d for %s/item 4!\n", i, name);
-      n++;
-      attrs |= WV_LINES;
-    }
-
-    if ((i=wv_addGPrim(cntxt, name, WV_TRIANGLE, attrs, n, items)) < 0)
-      printf(" wv_addGPrim = %d for %s!\n", i, name);
-}
-
-
-static void createLines(wvContext *cntxt, char *name, int attr)
-{
-    int    i;
-    wvData items[2];
-
-    // box
-    //    v6----- v5
-    //   /|      /|
-    //  v1------v0|
-    //  | |     | |
-    //  | |v7---|-|v4
-    //  |/      |/
-    //  v2------v3
-    //
-    // vertex coords array
-    float vertices[] = {
-           1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,    // v0-v1-v2-v3 front
-           1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,    // v0-v3-v4-v5 right
-           1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,    // v0-v5-v6-v1 top
-          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,    // v1-v6-v7-v2 left
-          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1,    // v7-v4-v3-v2 bottom
-           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1 };  // v4-v7-v6-v5 back
-
-    // index array
-    int indices[] = {
-           0, 1,  1, 2,  2, 3,  3, 0,   // front
-           4, 5,  5, 6,  6, 7,  7, 4,   // right
-           8, 9,  9,10, 10,11, 11, 8,   // top
-          12,13, 13,14, 14,15, 15,12,   // left
-          16,17, 17,18, 18,19, 19,16,   // bottom
-          20,21, 21,22, 22,23, 23,20 }; // back
-
-    if ((i=wv_setData(WV_REAL32, 24, vertices, WV_VERTICES, &items[0])) < 0)
-      printf(" wv_setData = %d for %s/item 0!\n", i, name);
-    if ((i=wv_setData(WV_INT32,  48, indices, WV_INDICES,   &items[1])) < 0)
-      printf(" wv_setData = %d for %s/item 1!\n", i, name);
-               
-    if ((i=wv_addGPrim(cntxt, name, WV_LINE, attr, 2, items)) < 0)
-      printf(" wv_addGPrim = %d for %s!\n", i, name);
-}
-
-static void createPoints(wvContext *cntxt, char *name, int attr, float *offset)
-{
-    int    i;
-    wvData items[2];
-    float  colors[3] = {0.6, 0.6, 0.6};
-
-    // box
-    //    v6----- v5
-    //   /|      /|
-    //  v1------v0|
-    //  | |     | |
-    //  | |v7---|-|v4
-    //  |/      |/
-    //  v2------v3
-    //
-    // vertex coords array
-    float vertices[] = {
-           1, 1, 1,  -1, 1, 1,  -1,-1, 1,   1,-1, 1,    // v0-v1-v2-v3 front
-           1, 1, 1,   1,-1, 1,   1,-1,-1,   1, 1,-1,    // v0-v3-v4-v5 right
-           1, 1, 1,   1, 1,-1,  -1, 1,-1,  -1, 1, 1,    // v0-v5-v6-v1 top
-          -1, 1, 1,  -1, 1,-1,  -1,-1,-1,  -1,-1, 1,    // v1-v6-v7-v2 left
-          -1,-1,-1,   1,-1,-1,   1,-1, 1,  -1,-1, 1,    // v7-v4-v3-v2 bottom
-           1,-1,-1,  -1,-1,-1,  -1, 1,-1,   1, 1,-1 };  // v4-v7-v6-v5 back
-      
-    for (i = 0; i < 72; i+=3) {
-      vertices[i  ] += offset[0];
-      vertices[i+1] += offset[1];
-      vertices[i+2] += offset[2];
-    }
-
-    if ((i=wv_setData(WV_REAL32, 24, vertices, WV_VERTICES, &items[0])) < 0)
-      printf(" wv_setData = %d for %s/item 0!\n", i, name);
-    /* set a uniform color (len == 1) */
-    if ((i= wv_setData(WV_REAL32, 1, colors, WV_COLORS, &items[1])) < 0)
-      printf(" wv_setData = %d for %s/item 1!\n", i, name);
-
-    if ((i=wv_addGPrim(cntxt, name, WV_POINT, attr, 2, items)) < 0)
-      printf(" wv_addGPrim = %d for %s!\n", i, name);
-
-}
-
-
-
 int main(/*@unused@*/ int argc, /*@unused@*/ char **argv)
 {
+  int        stat;
+  char       *startapp;
+  wstContext *cntxt;
+  
+  /* get our starting application line
+   *
+   * for example on a Mac:
+   * setenv DSX_START "open -a /Applications/Firefox.app ../client/wv.html"
+   */
+  startapp = getenv("DSX_START");
+  
+  // create the Web Socket Transport context  
+  cntxt = wst_createContext();
+  if (cntxt == NULL) {
+    printf(" failed to create wstContext!\n");
+    return -1;
+  }
+  
+  // start the server code  
+  stat = 0;
+  if (wst_startServer(7681, NULL, NULL, NULL, 0, cntxt) == 0) {
+    
+    /* we have a single valid server */
+    while (wst_statusServer(0)) {
+      usleep(500000);
+      if (stat == 0) {
+        if (startapp != NULL) system(startapp);
+        stat++;
+      }
+      if (wst_nClientServer(0) == 0) continue;
+//    wst_broadcastText("I'm here!");
+    }
+  }
 
-        wvContext *cntxt;
-        float     eye[3]    = {0.0, 0.0, 7.0};
-        float     center[3] = {0.0, 0.0, 0.0};
-        float     up[3]     = {0.0, 1.0, 0.0};
-        float     offset[3] = {0.0, 0.0, 0.0};
-        
-        // create the WebViewer context
-
-        cntxt = wv_createContext(0, 30.0, 1.0, 10.0, eye, center, up);
-        if (cntxt == NULL) {
-                printf(" failed to create wvContext!\n");
-                return -1;
-        }
-        
-        // make the scene
-
-        createBox(cntxt, "Box#1", WV_ON|WV_SHADING|WV_ORIENTATION, offset);
-
-        offset[0] = offset[1] = offset[2] =  0.1;
-        createBox(cntxt, "Box#2", WV_ON|WV_TRANSPARENT, offset);
-        
-        createLines(cntxt, "Lines", WV_ON);
-        
-        offset[0] = offset[1] = offset[2] = -0.1;
-        createPoints(cntxt, "Points", WV_ON, offset);
-
-        // start the server code
-
-        if (wv_startServer(7681, NULL, NULL, NULL, 0, cntxt) == 0) {
-
-                /* we have a single valid server -- do nothing */
-                while (wv_statusServer(0)) usleep(500000);
-
-        }
-        
-        wv_cleanupServers();
-        return 0;
+  wst_cleanupServers();
+  return 0;
 }
 
 #endif

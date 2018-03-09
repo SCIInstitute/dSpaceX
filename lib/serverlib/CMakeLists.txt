@@ -5,10 +5,8 @@ SET(SERVER_LIB_INCLUDE_FILES
   libwebsockets.h
   extension-x-google-mux.h 
   private-libwebsockets.h 
-  wstypes.h
-  wst.h
-  ../../include/wsserver.h 
-  ../../include/wsss.h)
+  ../../include/wstypes.h
+  ../../include/wst.h)
 
 SET(SERVER_LIB_SOURCE_FILES 
   base64-decode.c 
@@ -22,9 +20,7 @@ SET(SERVER_LIB_SOURCE_FILES
   extension.c
   sha-1.c 
   server.c 
-  wv.c 
-  wst.c
-  fwv.c)
+  wst.c)
 
 ADD_DEFINITIONS(-DLWS_NO_FORK)
 
