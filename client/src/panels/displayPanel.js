@@ -7,13 +7,14 @@ import Typography from 'material-ui/Typography';
 
 class DisplayPanel extends React.Component {
   constructor(props) {
-    super(props);    
-  }  
+    super(props);
+  }
 
   render() {
     const { classes } = this.props;
     return (
-      <ExpansionPanel style={{margin: '1px'}}>
+      // TODO: set disabled only when there's no case data.
+      <ExpansionPanel style={{margin: '1px'}} disabled={true}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Display</Typography>
         </ExpansionPanelSummary>
@@ -22,7 +23,7 @@ class DisplayPanel extends React.Component {
             ...
           </Typography>
         </ExpansionPanelDetails>
-      </ExpansionPanel>     
+      </ExpansionPanel>
     );
   }
 }
