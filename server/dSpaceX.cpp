@@ -112,12 +112,13 @@ extern "C" void browserData(void *wsi, void *data)
 
 extern "C" void browserText(void *wsi, char *text, int lena)
 {  
-  std::string message(text);
+  std::string request(text);
+  std::string response;
   Json::Reader reader; 
   Json::Value object;
 
   try {
-    reader.parse(message, object);
+    reader.parse(request, object);
 
     int messageId = object["id"].asInt();
     std::string commandName = object["name"].asString();
@@ -125,22 +126,26 @@ extern "C" void browserText(void *wsi, char *text, int lena)
     std::cout << "messageId:" << messageId << std::endl;
 
     
-    if(commandName == "fetchDatasetList") {
+    if (commandName == "fetchDatasetList") {
       std::cout << "Received request for avaliable datasets." << std::endl;
+      
+      // construct response json
+      Json::Value responseObject(Json::objectValue);
+      responseObject["id"] = messageId;
+
+      Json::StyledWriter writer;      
+      response = writer.write(responseObject);
+
+      // send response
+      wst_sendText(wsi, const_cast<char*>(response.c_str()));
+    } else if (commandName == "fetchDataset") {
+      int datasetId = object["datasetId"].asInt();
+      std::cout << "Received request for dataset: " << datasetId << std::endl;
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
-  } catch(const std::exception &e) {
+  } catch (const std::exception &e) {
     std::cerr << "Command Parsing Error." << e.what() << std::endl;     
     // TODO: Send back an error message.
   }
-
-  
-
-  // if (strcmp(word,"fetchDatasetList") == 0) {
-  //   std::cout << "Received request for avaliable datasets." << std::endl;
-  //   return;
-  // }
-
-  // printf(" Unknown Token: %s (%d)\n", text, lena);
 }

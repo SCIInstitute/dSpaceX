@@ -147,7 +147,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketUtOpen(event) {
-    this._log(' UI-text WebSocket Connected!');
+    this._log(' Text WebSocket Connected!');
     // if (wst.txtInit != undefined) {
     //   wst.socketUt.send(wst.txtInit);
     // }
@@ -159,7 +159,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketUtClose(event) {
-    this._log(' UI-text WebSocket Disconnected!');
+    this._log(' Text WebSocket Disconnected!');
     // wstServerDown();
   }
 
@@ -168,7 +168,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketUtMessage(event) {
-    //  wst.log(" UI-text WebSocket getMessage: " + evt.data);
+    this._log("Text WebSocket Message : " + event.data);
     // wstServerTextMessage(evt.data);
   }
 
@@ -177,7 +177,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketUtError(event) {
-    this._log(' UI-text WebSocket Error: ' + event.data);
+    this._log(' Text WebSocket Error: ' + event.data);
     this._dispatch('error');
   }
 
@@ -186,7 +186,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketBdOpen(event) {
-    this._log(' Data-binary WebSocket Connected!');
+    this._log(' Binary WebSocket Connected!');
     this._maybeUpdateState();
   }
 
@@ -195,7 +195,7 @@ class Client {
    * @param {Event} event.
    */
   _onSocketBdClose(event) {
-    this._log(' Data-binary WebSocket Disconnected!');
+    this._log(' Binary WebSocket Disconnected!');
   }
 
   /**
@@ -212,7 +212,7 @@ class Client {
    */
   _onSocketBdError(event) {
     // alert(' Not connected to Server: Try reloading the page!');
-    this._log(' Data-binary WebSocket Error: ' + event.data);
+    this._log(' Binary WebSocket Error: ' + event.data);
     this._dispatch('error');
   }
 }
