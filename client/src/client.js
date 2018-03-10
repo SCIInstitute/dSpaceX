@@ -19,6 +19,8 @@ class Client {
     this.messageIndex = 0;
 
     this._initializeEventHandling();
+
+    this.commandResponseMap = {};
   }
 
   /**
@@ -103,34 +105,59 @@ class Client {
   }
 
   /**
-   *
+   * Send the requested command.
+   * @param {object} command
+   * @param {function} callback
    */
-  _sendData(data) {
+  _sendCommand(command, callback) {
+    command.id = this._newMessageId();
+    this.commandResponseMap[command.id] = callback;
+    this.socketUt.send(JSON.stringify(command));
+  } 
 
+  /**
+   * Wrap the command request in a promise so that the client can
+   * be responsible for resolving or rejecting the response to the
+   * calling context.
+   * @param {object} command.
+   * @return {Promise}
+   */
+  _createCommandPromise(command) {
+    return new Promise(function(resolve, reject) {
+      this._sendCommand(command, function(response, error) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(response)
+        }
+      });
+    }.bind(this));
   }
 
   /**
    * Grab a list of the available datasets from the server.
+   * @return {Promise}
    */
   fetchDatasetList() {
     let command = {
-      name: 'fetchDatasetList',
-      id: this._newMessageId(),
-    }
-    this.socketUt.send(JSON.stringify(command));
+      name: 'fetchDatasetList',    
+    };
+
+    return this._createCommandPromise(command);
   }
 
   /**
-   * Grab data for the specified dataset
+   * Grab data for the specified dataset.
    * @param {string} datasetId
+   * @return {Promise}
    */
   fetchDataset(datasetId) {
     let command = {
-      name: 'fetchDataset',
-      id: this._newMessageId(),
+      name: 'fetchDataset',        
       datasetId: datasetId
-    }
-    this.socketUt.send(JSON.stringify(command));
+    };
+    
+    return this._createCommandPromise(command);
   }
 
   /**
@@ -168,8 +195,9 @@ class Client {
    * @param {Event} event.
    */
   _onSocketUtMessage(event) {
-    this._log("Text WebSocket Message : " + event.data);
-    // wstServerTextMessage(evt.data);
+    let response = JSON.parse(event.data);
+    this.commandResponseMap[response.id](response);
+    delete this.commandResponseMap[response.id];
   }
 
   /**

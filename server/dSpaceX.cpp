@@ -133,6 +133,18 @@ extern "C" void browserText(void *wsi, char *text, int lena)
       Json::Value responseObject(Json::objectValue);
       responseObject["id"] = messageId;
 
+      // fake the dataset list
+      responseObject["datasets"] = Json::Value(Json::arrayValue);
+      Json::Value colorado = Json::Value(Json::objectValue);
+      colorado["id"] = 1;
+      colorado["name"] = "Colorado";
+      responseObject["datasets"].append(colorado);
+
+      Json::Value sandia = Json::Value(Json::objectValue);
+      sandia["id"] = 2;
+      sandia["name"] = "Sandia";
+      responseObject["datasets"].append(sandia);
+
       Json::StyledWriter writer;      
       response = writer.write(responseObject);
 
