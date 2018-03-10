@@ -27,7 +27,8 @@ class Client {
    * unique ids.
    */
   _newMessageId() {
-    return ++this.messageIndex;
+    this.messageIndex += 1;
+    return this.messageIndex;
   }
 
   /**
@@ -114,7 +115,7 @@ class Client {
   fetchDatasetList() {
     let command = {
       name: 'fetchDatasetList',
-      messageId: this._newMessageId(),
+      id: this._newMessageId(),
     }
     this.socketUt.send(JSON.stringify(command));
   }
@@ -124,7 +125,12 @@ class Client {
    * @param {string} datasetId
    */
   fetchDataset(datasetId) {
-    // TODO: Implement
+    let command = {
+      name: 'fetchDataset',
+      id: this._newMessageId(),
+      datasetId: datasetId
+    }
+    this.socketUt.send(JSON.stringify(command));
   }
 
   /**

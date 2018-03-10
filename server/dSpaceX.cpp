@@ -119,7 +119,11 @@ extern "C" void browserText(void *wsi, char *text, int lena)
   try {
     reader.parse(message, object);
 
+    int messageId = object["id"].asInt();
     std::string commandName = object["name"].asString();
+
+    std::cout << "messageId:" << messageId << std::endl;
+
     
     if(commandName == "fetchDatasetList") {
       std::cout << "Received request for avaliable datasets." << std::endl;
