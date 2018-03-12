@@ -50,17 +50,26 @@ FortranLinalg::DenseVector<Precision> y;
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
 void fetchDataset(void *wsi, int messageId, const Json::Value &request);
 
+void loadAllDatasets();
+void loadConcreteDataset();
+void loadCrimesDataset();
+void loadGaussianDataset();
+void loadColoradoDataset();
+
+  // gaussian
+
+  // colorado (truss)
+
 int main(int argc, char *argv[])
 {
-  int   stat, port = 7681;
-  char  *startapp;  
+  int port = 7681;  
 
   /* get our starting application line
    *
    * for example on a Mac:
    * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
    */
-  startapp = getenv("DSX_START");
+  char  *startapp = getenv("DSX_START");
 
   if ((argc != 1) && (argc != 2)) {
     printf("\n Usage: dSpaceX [port]\n\n");
@@ -70,11 +79,18 @@ int main(int argc, char *argv[])
 
   /* initialize the back-end subsystem
      assume we have started where we can file the DLL/so */
-  stat = dsx_Load(&dsxcntxt, "dSpaceXbe");
+  int stat = dsx_Load(&dsxcntxt, "dSpaceXbe");
   if (stat < 0) {
     printf(" failed to Load Back-End %d!\n", stat);
     return 1;
   }
+
+  try {
+    loadAllDatasets();
+  } catch (const std::exception &e) {
+    std::cout << e.what() << std::endl;
+  }
+    
 
   /* create the Web Socket Transport context */
   cntxt = wst_createContext();
@@ -168,14 +184,70 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
  */
 void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  std::cout << "Received request for dataset: " << datasetId << std::endl;
-
-
+  
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
 
+  // response[""]
 
   Json::StyledWriter writer;  
   std::string text = writer.write(response);
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
+
+/**
+ *
+ */
+void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  int k = request["k"].asInt();
+
+  // processor.process(m_current_dataset, k);
+  // 
+}
+
+
+/**
+ * Load available datasets.
+ */
+void loadAllDatasets() {
+  loadConcreteDataset();
+  loadCrimesDataset();
+  loadGaussianDataset();
+  loadColoradoDataset();
+}
+
+
+void loadConcreteDataset() {
+  std::string datasetName = "Concrete";
+  std::string path = "../../examples/concrete/";
+  std::string geometryFile = "Geom.data.hdr";
+  std::string functionFile = "Function.data.hdr";
+  std::string namesFile = "names.txt";  
+}
+
+void loadCrimesDataset() {
+  std::string datasetName = "Crimes";
+  std::string path = "../../examples/crimes/";
+  std::string geometryFile = "Geom.data.hdr";
+  std::string functionFile = "Function.data.hdr";
+  std::string namesFile = "names.txt";  
+}
+
+void loadGaussianDataset() {
+  std::string datasetName = "Gaussian";
+  std::string path = "../../examples/gaussian2d/";
+  std::string geometryFile = "Geom.data.hdr";
+  std::string functionFile = "Function.data.hdr";
+  
+  auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
+  auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
+}
+
+void loadColoradoDataset() {
+  std::string datasetName = "Colorado";
+  std::string path = "../../examples/truss/";
+  std::string imageFolder = "images/";
+  std::string distancesFile = "distances.csv";
+  std::string maxStressFile = "max_stress.csv";
 }
