@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
 
   // start the server code  
   stat = 0;
-  if (wst_startServer(7681, NULL, NULL, NULL, 0, cntxt) == 0) {
+  if (wst_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {
     
     /* we have a single valid server */
     while (wst_statusServer(0)) {
@@ -170,7 +170,7 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   std::cout << "Received request for dataset: " << datasetId << std::endl;
 
-  
+
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
 
