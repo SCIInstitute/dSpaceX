@@ -224,6 +224,9 @@ void loadConcreteDataset() {
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
   std::string namesFile = "names.txt";  
+
+  auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
+  auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
 }
 
 void loadCrimesDataset() {
@@ -232,6 +235,9 @@ void loadCrimesDataset() {
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
   std::string namesFile = "names.txt";  
+
+  auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
+  auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
 }
 
 void loadGaussianDataset() {
@@ -250,4 +256,9 @@ void loadColoradoDataset() {
   std::string imageFolder = "images/";
   std::string distancesFile = "distances.csv";
   std::string maxStressFile = "max_stress.csv";
+  std::string tsneLayoutFile = "tsne-layout.csv";
+
+  auto distances = HDProcess::loadCSVMatrix(path + distancesFile);
+  auto y = HDProcess::loadCSVColumn(path + maxStressFile);
+  auto tSneLayout = HDProcess::loadCSVMatrix(path + tsneLayoutFile);
 }
