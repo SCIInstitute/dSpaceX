@@ -46,7 +46,9 @@ static dsxContext dsxcntxt;
 std::vector<DenseVectorSample*> samples;
 FortranLinalg::DenseVector<Precision> y;
 
-
+// Command Handlers
+void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
+void fetchDataset(void *wsi, int messageId, const Json::Value &request);
 
 int main(int argc, char *argv[])
 {
@@ -112,47 +114,22 @@ extern "C" void browserData(void *wsi, void *data)
 
 extern "C" void browserText(void *wsi, char *text, int lena)
 {  
-  std::string request(text);
-  std::string response;
   Json::Reader reader; 
-  Json::Value object;
+  Json::Value request;
 
   try {
-    reader.parse(request, object);
+    reader.parse(std::string(text), request);
 
-    int messageId = object["id"].asInt();
-    std::string commandName = object["name"].asString();
+    int messageId = request["id"].asInt();
+    std::string commandName = request["name"].asString();
 
     std::cout << "messageId:" << messageId << std::endl;
 
     
     if (commandName == "fetchDatasetList") {
-      std::cout << "Received request for avaliable datasets." << std::endl;
-      
-      // construct response json
-      Json::Value responseObject(Json::objectValue);
-      responseObject["id"] = messageId;
-
-      // fake the dataset list
-      responseObject["datasets"] = Json::Value(Json::arrayValue);
-      Json::Value colorado = Json::Value(Json::objectValue);
-      colorado["id"] = 1;
-      colorado["name"] = "Colorado";
-      responseObject["datasets"].append(colorado);
-
-      Json::Value sandia = Json::Value(Json::objectValue);
-      sandia["id"] = 2;
-      sandia["name"] = "Sandia";
-      responseObject["datasets"].append(sandia);
-
-      Json::StyledWriter writer;      
-      response = writer.write(responseObject);
-
-      // send response
-      wst_sendText(wsi, const_cast<char*>(response.c_str()));
+      fetchDatasetList(wsi, messageId, request);      
     } else if (commandName == "fetchDataset") {
-      int datasetId = object["datasetId"].asInt();
-      std::cout << "Received request for dataset: " << datasetId << std::endl;
+      fetchDataset(wsi, messageId, request);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
@@ -160,4 +137,45 @@ extern "C" void browserText(void *wsi, char *text, int lena)
     std::cerr << "Command Parsing Error." << e.what() << std::endl;     
     // TODO: Send back an error message.
   }
+}
+
+/**
+ * Handle the command to fetch list of available datasets.
+ */
+void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {      
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+
+  // fake the dataset list
+  response["datasets"] = Json::Value(Json::arrayValue);
+  Json::Value colorado = Json::Value(Json::objectValue);
+  colorado["id"] = 1;
+  colorado["name"] = "Colorado";
+  response["datasets"].append(colorado);
+
+  Json::Value sandia = Json::Value(Json::objectValue);
+  sandia["id"] = 2;
+  sandia["name"] = "Sandia";
+  response["datasets"].append(sandia);
+
+  Json::StyledWriter writer;  
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
+
+/**
+ * Handle the command to load and fetch details of a dataset.
+ */
+void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  std::cout << "Received request for dataset: " << datasetId << std::endl;
+
+  
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+
+
+  Json::StyledWriter writer;  
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }

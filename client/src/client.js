@@ -166,7 +166,13 @@ class Client {
    * @param {number} k number of neighbors.
    */
   fetchMorseSmaleDecomposition(datasetId, k) {
+    let command = {
+      name: 'fetchMorseSmaleDecomposition',
+      dataSetId: datasetId,
+      k: k
+    };
 
+    return this._createCommandPromise(command);
   }
 
   /**
