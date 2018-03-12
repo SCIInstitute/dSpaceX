@@ -56,9 +56,9 @@ void loadCrimesDataset();
 void loadGaussianDataset();
 void loadColoradoDataset();
 
-  // gaussian
-
-  // colorado (truss)
+FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
+    FortranLinalg::DenseMatrix<Precision> &x);
+  
 
 int main(int argc, char *argv[])
 {
@@ -217,6 +217,22 @@ void loadAllDatasets() {
   loadColoradoDataset();
 }
 
+FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
+    FortranLinalg::DenseMatrix<Precision> &x) {
+  for (int j = 0; j < x.N(); j++) {
+    FortranLinalg::DenseVector<Precision> vector(x.M());
+    for (int i = 0; i < x.M(); i++) {
+      vector(i) = x(i, j);
+    }
+    DenseVectorSample *sample = new DenseVectorSample(vector);
+    samples.push_back(sample);
+  }
+
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  DenseVectorEuclideanMetric metric;
+  return genericProcessor.computeDistances(samples, metric);
+}
+    
 
 void loadConcreteDataset() {
   std::string datasetName = "Concrete";
@@ -227,6 +243,9 @@ void loadConcreteDataset() {
 
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
+  auto distances = computeDistanceMatrix(x);
+
+  std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
 void loadCrimesDataset() {
@@ -238,6 +257,9 @@ void loadCrimesDataset() {
 
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
+  auto distances = computeDistanceMatrix(x);
+
+  std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
 void loadGaussianDataset() {
@@ -248,6 +270,9 @@ void loadGaussianDataset() {
   
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
+  auto distances = computeDistanceMatrix(x);
+
+  std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
 void loadColoradoDataset() {
@@ -261,4 +286,6 @@ void loadColoradoDataset() {
   auto distances = HDProcess::loadCSVMatrix(path + distancesFile);
   auto y = HDProcess::loadCSVColumn(path + maxStressFile);
   auto tSneLayout = HDProcess::loadCSVMatrix(path + tsneLayoutFile);
+
+  std::cout << datasetName << " dataset loaded." << std::endl;
 }
