@@ -58,7 +58,8 @@ void loadColoradoDataset();
 
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x);
-  
+
+HDProcessResult *result = nullptr;
 
 int main(int argc, char *argv[])
 {
@@ -202,8 +203,17 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   int datasetId = request["datasetId"].asInt();
   int k = request["k"].asInt();
 
-  // processor.process(m_current_dataset, k);
-  // 
+  // HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+
+  // result = genericProcessor.processOnMetric(
+  //    currentDataset->getDistanceMatrix(),
+  //    currentDataset->getQoiVector(currentQoi),
+  //    k        /* knn */,
+  //    25        /* samples */,
+  //    20        /* persistence */,
+  //    true      /* random */,
+  //    0.25      /* sigma */,
+  //    0         /* smooth */);  
 }
 
 
