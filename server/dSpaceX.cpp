@@ -12,6 +12,7 @@
 #include "DenseVector.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
+#include "Dataset.h"
 
 #include <jsoncpp/json.h>
 
@@ -40,6 +41,8 @@
 static wstContext *cntxt;
 static dsxContext dsxcntxt;
 
+std::vector<Dataset*> datasets;
+int currentDataset = -1;
 
 /* NOTE: the data read must me moved to the back-end and then
          these globals cn be made local */
@@ -162,18 +165,14 @@ extern "C" void browserText(void *wsi, char *text, int lena)
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {      
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
-
-  // fake the dataset list
   response["datasets"] = Json::Value(Json::arrayValue);
-  Json::Value colorado = Json::Value(Json::objectValue);
-  colorado["id"] = 1;
-  colorado["name"] = "Colorado";
-  response["datasets"].append(colorado);
 
-  Json::Value sandia = Json::Value(Json::objectValue);
-  sandia["id"] = 2;
-  sandia["name"] = "Sandia";
-  response["datasets"].append(sandia);
+  for (size_t i=0; i < datasets.size(); i++) {
+    Json::Value object = Json::Value(Json::objectValue);
+    object["id"] = i;
+    object["name"] = datasets[i]->getName();
+    response["datasets"].append(object);
+  }
 
   Json::StyledWriter writer;  
   std::string text = writer.write(response);
@@ -239,11 +238,18 @@ void loadConcreteDataset() {
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
   auto distances = computeDistanceMatrix(x);
 
+  Dataset::Builder builder;
+  Dataset *dataset = builder.withDistanceMatrix(distances)
+                            .withQoi("function", y)
+                            .withName(datasetName)
+                            .build();
+  datasets.push_back(dataset);
+
   std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
 void loadCrimesDataset() {
-  std::string datasetName = "Crimes";
+  std::string datasetName = "Crime";
   std::string path = "../../examples/crimes/";
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
@@ -252,6 +258,13 @@ void loadCrimesDataset() {
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
   auto distances = computeDistanceMatrix(x);
+
+  Dataset::Builder builder;
+  Dataset *dataset = builder.withDistanceMatrix(distances)
+                            .withQoi("function", y)
+                            .withName(datasetName)
+                            .build();
+  datasets.push_back(dataset);
 
   std::cout << datasetName << " dataset loaded." << std::endl;
 }
@@ -266,6 +279,12 @@ void loadGaussianDataset() {
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
   auto distances = computeDistanceMatrix(x);
 
+  Dataset::Builder builder;
+  Dataset *dataset = builder.withDistanceMatrix(distances)
+                            .withQoi("function", y)
+                            .withName(datasetName)
+                            .build();
+  datasets.push_back(dataset);
   std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
@@ -281,6 +300,12 @@ void loadColoradoDataset() {
   auto y = HDProcess::loadCSVColumn(path + maxStressFile);
   auto tSneLayout = HDProcess::loadCSVMatrix(path + tsneLayoutFile);
 
+  Dataset::Builder builder;
+  Dataset *dataset = builder.withDistanceMatrix(distances)
+                            .withQoi("max-stress", y)
+                            .withName("Colorado")
+                            .build();
+  datasets.push_back(dataset);
   std::cout << datasetName << " dataset loaded." << std::endl;
 }
 
