@@ -43,8 +43,8 @@ class DatasetPanel extends React.Component {
                 <em>None</em>
               </MenuItem>
               {
-                datasetList.map(dataset => (
-                  <MenuItem value={dataset} key={dataset}>{dataset}</MenuItem>  
+                this.props.datasets.map(dataset => (
+                  <MenuItem value={dataset.name} key={dataset.id}>{dataset.name}</MenuItem>  
                 ))
               }
             </Select>            

@@ -142,7 +142,6 @@ class Client {
     let command = {
       name: 'fetchDatasetList',    
     };
-
     return this._createCommandPromise(command);
   }
 
@@ -155,8 +154,7 @@ class Client {
     let command = {
       name: 'fetchDataset',        
       datasetId: datasetId
-    };
-    
+    };    
     return this._createCommandPromise(command);
   }
 
@@ -171,7 +169,6 @@ class Client {
       dataSetId: datasetId,
       k: k
     };
-
     return this._createCommandPromise(command);
   }
 
@@ -181,9 +178,6 @@ class Client {
    */
   _onSocketUtOpen(event) {
     this._log(' Text WebSocket Connected!');
-    // if (wst.txtInit != undefined) {
-    //   wst.socketUt.send(wst.txtInit);
-    // }
     this._maybeUpdateState();
   }
 
@@ -193,7 +187,7 @@ class Client {
    */
   _onSocketUtClose(event) {
     this._log(' Text WebSocket Disconnected!');
-    // wstServerDown();
+    this._maybeUpdateState();
   }
 
   /**

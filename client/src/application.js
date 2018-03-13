@@ -58,8 +58,19 @@ class Application extends React.Component {
   constructor(props) {
     super(props);
 
-    this.client = new Client();
+    this.state = {
+      connected: false,
+      datasets: []
+    };
+   
+
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
+    this.onConnect = this.onConnect.bind(this);
+
+    this.client = new Client();
+    this.client.addEventListener('connected', this.onConnect);
+    // export client for debugging
+    window.client = this.client;
   }
 
   componentWillMount() {
@@ -75,17 +86,27 @@ class Application extends React.Component {
     this.refs.connectiondialog.open();
   }
 
+  onConnect() {
+    this.client.fetchDatasetList().then(function(response) {
+      this.setState({
+        datasets: response.datasets
+      });
+    }.bind(this));
+  }
+
   render() {
     const { classes } = this.props;
     return (
       <div className={classes.root}>
-        <Toolbar className={classes.appBar} onConnectClick={this.connectButtonClicked} />
+        <Toolbar className={classes.appBar} 
+                 connectedToServer={this.state.connected}
+                 onConnectClick={this.connectButtonClicked} />
         <ConnectionDialog ref='connectiondialog' client={this.client}/>
         <Drawer variant='permanent' 
                 classes={{ paper: classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
-          <DatasetPanel/>
+          <DatasetPanel datasets={this.state.datasets}/>
           <CasesPanel/>
           <DisplayPanel/>
         </Drawer>

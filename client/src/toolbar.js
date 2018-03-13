@@ -18,7 +18,8 @@ class Toolbar extends React.Component {
           </Typography>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'row-reverse' }}>
             <Button variant="raised" style={{ backgroundColor: 'white' }}
-                    onClick={this.props.onConnectClick} >
+                    onClick={this.props.onConnectClick}
+                    disabled={this.props.connectedToServer} >
               Connect
             </Button>            
           </div>
