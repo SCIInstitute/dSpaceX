@@ -66,7 +66,7 @@ HDProcessResult *result = nullptr;
 
 int main(int argc, char *argv[])
 {
-  int port = 7681;  
+  int port = 7681;
 
   /* get our starting application line
    *
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
   }
-    
+
 
   /* create the Web Socket Transport context */
   cntxt = wst_createContext();
@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  // start the server code  
+  // start the server code
   stat = 0;
   if (wst_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {
-    
+
     /* we have a single valid server */
     while (wst_statusServer(0)) {
       usleep(500000);
@@ -133,8 +133,8 @@ extern "C" void browserData(void *wsi, void *data)
 }
 
 extern "C" void browserText(void *wsi, char *text, int lena)
-{  
-  Json::Reader reader; 
+{
+  Json::Reader reader;
   Json::Value request;
 
   try {
@@ -145,16 +145,16 @@ extern "C" void browserText(void *wsi, char *text, int lena)
 
     std::cout << "messageId:" << messageId << std::endl;
 
-    
+
     if (commandName == "fetchDatasetList") {
-      fetchDatasetList(wsi, messageId, request);      
+      fetchDatasetList(wsi, messageId, request);
     } else if (commandName == "fetchDataset") {
       fetchDataset(wsi, messageId, request);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
   } catch (const std::exception &e) {
-    std::cerr << "Command Parsing Error." << e.what() << std::endl;     
+    std::cerr << "Command Parsing Error." << e.what() << std::endl;
     // TODO: Send back an error message.
   }
 }
@@ -162,19 +162,19 @@ extern "C" void browserText(void *wsi, char *text, int lena)
 /**
  * Handle the command to fetch list of available datasets.
  */
-void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {      
+void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
   response["datasets"] = Json::Value(Json::arrayValue);
 
   for (size_t i=0; i < datasets.size(); i++) {
     Json::Value object = Json::Value(Json::objectValue);
-    object["id"] = i;
+    object["id"] = static_cast<int>(i);
     object["name"] = datasets[i]->getName();
     response["datasets"].append(object);
   }
 
-  Json::StyledWriter writer;  
+  Json::StyledWriter writer;
   std::string text = writer.write(response);
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
@@ -184,13 +184,13 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
  */
 void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  
+
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
 
   // response[""]
 
-  Json::StyledWriter writer;  
+  Json::StyledWriter writer;
   std::string text = writer.write(response);
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
@@ -212,7 +212,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   //    20        /* persistence */,
   //    true      /* random */,
   //    0.25      /* sigma */,
-  //    0         /* smooth */);  
+  //    0         /* smooth */);
 }
 
 
@@ -232,7 +232,7 @@ void loadConcreteDataset() {
   std::string path = "../../examples/concrete/";
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
-  std::string namesFile = "names.txt";  
+  std::string namesFile = "names.txt";
 
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
@@ -253,7 +253,7 @@ void loadCrimesDataset() {
   std::string path = "../../examples/crimes/";
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
-  std::string namesFile = "names.txt";  
+  std::string namesFile = "names.txt";
 
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
@@ -274,7 +274,7 @@ void loadGaussianDataset() {
   std::string path = "../../examples/gaussian2d/";
   std::string geometryFile = "Geom.data.hdr";
   std::string functionFile = "Function.data.hdr";
-  
+
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
   auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
   auto distances = computeDistanceMatrix(x);
