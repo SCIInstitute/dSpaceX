@@ -112,11 +112,11 @@ class Application extends React.Component {
     return (
       <div className={classes.root}>
         <Toolbar className={classes.appBar}
-                 connectedToServer={this.state.connected}
-                 onConnectClick={this.connectButtonClicked} />
+          connectedToServer={this.state.connected}
+          onConnectClick={this.connectButtonClicked} />
         <ConnectionDialog ref='connectiondialog' client={this.client}/>
         <Drawer variant='permanent'
-                classes={{ paper:classes.drawerPaper }}>
+          classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
           <DatasetPanel datasets={this.state.datasets}/>
@@ -124,12 +124,12 @@ class Application extends React.Component {
           <DisplayPanel/>
         </Drawer>
         <Workspace className={classes.content}>
-            { /* Add div to account for menu bar */ }
-            <div className={classes.toolbar} />
-            <div className={classes.workspace}>
-              <WebGLWindow/>
-              <WebGLWindow/>
-            </div>
+          { /* Add div to account for menu bar */ }
+          <div className={classes.toolbar} />
+          <div className={classes.workspace}>
+            <WebGLWindow/>
+            <WebGLWindow/>
+          </div>
         </Workspace>
       </div>
     );

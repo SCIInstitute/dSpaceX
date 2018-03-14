@@ -34,8 +34,8 @@ class Toolbar extends React.Component {
             flexDirection: 'row-reverse',
           }}>
             <Button variant='raised' style={{ backgroundColor:'white' }}
-                    onClick={this.props.onConnectClick}
-                    disabled={this.props.connectedToServer} >
+              onClick={this.props.onConnectClick}
+              disabled={this.props.connectedToServer} >
               Connect
             </Button>
           </div>

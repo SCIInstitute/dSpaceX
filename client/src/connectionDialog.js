@@ -108,14 +108,11 @@ class ConnectionDialog extends React.Component {
    */
   render() {
     return (
-      <Dialog
-          open={this.state.open}
-          onClose={this.close}
-          aria-labelledby="form-dialog-title"
-        >
-         {
-           this.state.isConnecting ?
-           <div style={{
+      <Dialog open={this.state.open} onClose={this.close}
+        aria-labelledby="form-dialog-title">
+        {
+          this.state.isConnecting ?
+            (<div style={{
               padding: 0,
               margin: 0,
               display: 'flex',
@@ -123,41 +120,41 @@ class ConnectionDialog extends React.Component {
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-            <DialogTitle id="form-dialog-title">Connecting...</DialogTitle>
-            <CircularProgress/>
-           </div> :
-           <DialogTitle id="form-dialog-title">Connect to Server</DialogTitle>
-         }
-          <DialogContent>
-            {
-              this.state.isConnecting ? '' :
-                <DialogContentText>
-                  Please enter the [host]:[port] of the server.
-                </DialogContentText>
-            }
+              <DialogTitle id="form-dialog-title">Connecting...</DialogTitle>
+              <CircularProgress/>
+            </div>) :
+            <DialogTitle id="form-dialog-title">Connect to Server</DialogTitle>
+        }
+        <DialogContent>
+          {
+            this.state.isConnecting ? '' :
+              <DialogContentText>
+                Please enter the [host]:[port] of the server.
+              </DialogContentText>
+          }
 
-            <TextField
-              autoFocus
-              margin="dense"
-              id="host"
-              label="Host"
-              type="host"
-              value={this.state.host}
-              onChange={this.handleHostChange}
-              fullWidth
-              disabled={this.state.isConnecting}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={this.cancel} color="primary">
-              Cancel
-            </Button>
-            <Button onClick={this.connect} color="primary"
-                    disabled={this.state.isConnecting}>
-              Connect
-            </Button>
-          </DialogActions>
-        </Dialog>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="host"
+            label="Host"
+            type="host"
+            value={this.state.host}
+            onChange={this.handleHostChange}
+            fullWidth
+            disabled={this.state.isConnecting}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={this.cancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={this.connect} color="primary"
+            disabled={this.state.isConnecting}>
+            Connect
+          </Button>
+        </DialogActions>
+      </Dialog>
     );
   }
 }
