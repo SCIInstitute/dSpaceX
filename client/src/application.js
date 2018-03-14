@@ -4,13 +4,8 @@ import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
 import DisplayPanel from './panels/displayPanel';
 import Drawer from 'material-ui/Drawer';
-import { FormControl, FormHelperText } from 'material-ui/Form';
-import Input, { InputLabel } from 'material-ui/Input';
-import { MenuItem } from 'material-ui/Menu';
 import React from 'react';
-import Paper from 'material-ui/Paper';
 import PropTypes from 'prop-types';
-import Select from 'material-ui/Select';
 import Toolbar from './toolbar';
 import WebGLWindow from './windows/webGLWindow';
 import Workspace from './workspace';
@@ -18,7 +13,7 @@ import { withStyles } from 'material-ui/styles';
 
 
 const drawerWidth = 260;
-const styles = theme => ({
+const styles = (theme) => ({
   root: {
     flexGrow: 1,
     zIndex: 1,
@@ -38,7 +33,7 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     minWidth: 0,
-    backgroundColor: '#eef',   
+    backgroundColor: '#eef',
   },
   workspace: {
     display: 'grid',
@@ -48,21 +43,24 @@ const styles = theme => ({
     gridGap: '0em',
   },
   toolbar: theme.mixins.toolbar,
-})
+});
 
 
 /**
  * The top level dSpaceX client component.
  */
 class Application extends React.Component {
+  /**
+   * Application constructor.
+   * @param {object} props
+   */
   constructor(props) {
     super(props);
 
     this.state = {
       connected: false,
-      datasets: []
+      datasets: [],
     };
-   
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
     this.onConnect = this.onConnect.bind(this);
@@ -73,37 +71,52 @@ class Application extends React.Component {
     window.client = this.client;
   }
 
+  /**
+   * Callback invoked before the component receives new props.
+   */
   componentWillMount() {
     console.log('Initializing Application...');
   }
 
+  /**
+   * Callback invoked immediately after the component is mounted.
+   */
   componentDidMount() {
     console.log('Application Ready.');
   }
 
-  // TODO: Move out of main application class.
+  /**
+   * Handles the connect button being clicked.
+   */
   connectButtonClicked() {
     this.refs.connectiondialog.open();
   }
 
+  /**
+   * Handles the application connecting to the remote server.
+   */
   onConnect() {
     this.client.fetchDatasetList().then(function(response) {
       this.setState({
-        datasets: response.datasets
+        datasets: response.datasets,
       });
     }.bind(this));
   }
 
+  /**
+   * Renders the component to HTML.
+   * @return {HTML}
+   */
   render() {
     const { classes } = this.props;
     return (
       <div className={classes.root}>
-        <Toolbar className={classes.appBar} 
+        <Toolbar className={classes.appBar}
                  connectedToServer={this.state.connected}
                  onConnectClick={this.connectButtonClicked} />
         <ConnectionDialog ref='connectiondialog' client={this.client}/>
-        <Drawer variant='permanent' 
-                classes={{ paper: classes.drawerPaper }}>
+        <Drawer variant='permanent'
+                classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
           <DatasetPanel datasets={this.state.datasets}/>
