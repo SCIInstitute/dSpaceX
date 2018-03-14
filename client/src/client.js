@@ -6,7 +6,6 @@
 class Client {
   /**
    * The Client Constructor
-   * @param {string} url The address:port of the server.
    */
   constructor() {
     // Binary Data Socket
