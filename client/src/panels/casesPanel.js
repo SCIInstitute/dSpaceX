@@ -5,17 +5,27 @@ import { ExpansionPanelDetails } from 'material-ui/ExpansionPanel';
 import React from 'react';
 import Typography from 'material-ui/Typography';
 
+/**
+ * Component for showing data set case details.
+ */
 class CasesPanel extends React.Component {
+  /**
+   * CasesPanel constructor.
+   * @param {object} props
+   */
   constructor(props) {
     super(props);
   }
 
+  /**
+   * Renders the component to HTML.
+   * @return {HTML}
+   */
   render() {
-    const { classes } = this.props;
     return (
       // TODO: set disabled only when there's no case data.
-      <ExpansionPanel style={{margin: '1px'}} disabled={true}>
-        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+      <ExpansionPanel style={{ margin:'1px' }} disabled={true}>
+        <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon /> }>
           <Typography>Cases</Typography>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails>
