@@ -25,8 +25,9 @@ class Client {
 
   /**
    * Increments the message index and returns the new value.
-   * This method is responsible for ensuring all messages have 
+   * This method is responsible for ensuring all messages have
    * unique ids.
+   * @return {number}
    */
   _newMessageId() {
     this.messageIndex += 1;
@@ -64,18 +65,18 @@ class Client {
   connect(url) {
     const protocolPrefix = 'ws://';
 
-    this.socketBd = new WebSocket(protocolPrefix + url, "data-binary-protocol");
+    this.socketBd = new WebSocket(protocolPrefix + url, 'data-binary-protocol');
     this.socketBd.binaryType = 'arraybuffer';
-    this.socketBd.onopen     = this._onSocketBdOpen.bind(this);
-    this.socketBd.onclose    = this._onSocketBdClose.bind(this);
-    this.socketBd.onmessage  = this._onSocketBdMessage.bind(this);
-    this.socketBd.onerror    = this._onSocketBdError.bind(this);
+    this.socketBd.onopen = this._onSocketBdOpen.bind(this);
+    this.socketBd.onclose = this._onSocketBdClose.bind(this);
+    this.socketBd.onmessage = this._onSocketBdMessage.bind(this);
+    this.socketBd.onerror = this._onSocketBdError.bind(this);
 
-    this.socketUt = new WebSocket(protocolPrefix + url, "ui-text-protocol");
-    this.socketUt.onopen    = this._onSocketUtOpen.bind(this);
-    this.socketUt.onclose   = this._onSocketUtClose.bind(this);
+    this.socketUt = new WebSocket(protocolPrefix + url, 'ui-text-protocol');
+    this.socketUt.onopen = this._onSocketUtOpen.bind(this);
+    this.socketUt.onclose = this._onSocketUtClose.bind(this);
     this.socketUt.onmessage = this._onSocketUtMessage.bind(this);
-    this.socketUt.onerror   = this._onSocketUtError.bind(this);
+    this.socketUt.onerror= this._onSocketUtError.bind(this);
   }
 
   /**
@@ -99,6 +100,7 @@ class Client {
 
   /**
    * Logging wrapper.
+   * @param {string} message
    */
   _log(message) {
     console.log('wst: ' + message);
@@ -113,13 +115,13 @@ class Client {
     command.id = this._newMessageId();
     this.commandResponseMap[command.id] = callback;
     this.socketUt.send(JSON.stringify(command));
-  } 
+  }
 
   /**
    * Wrap the command request in a promise so that the client can
    * be responsible for resolving or rejecting the response to the
    * calling context.
-   * @param {object} command.
+   * @param {object} command
    * @return {Promise}
    */
   _createCommandPromise(command) {
@@ -128,7 +130,7 @@ class Client {
         if (error) {
           reject(error);
         } else {
-          resolve(response)
+          resolve(response);
         }
       });
     }.bind(this));
@@ -140,7 +142,7 @@ class Client {
    */
   fetchDatasetList() {
     let command = {
-      name: 'fetchDatasetList',    
+      name: 'fetchDatasetList',
     };
     return this._createCommandPromise(command);
   }
@@ -152,9 +154,9 @@ class Client {
    */
   fetchDataset(datasetId) {
     let command = {
-      name: 'fetchDataset',        
-      datasetId: datasetId
-    };    
+      name: 'fetchDataset',
+      datasetId: datasetId,
+    };
     return this._createCommandPromise(command);
   }
 
@@ -162,19 +164,20 @@ class Client {
    * Compute Morse-Smale Decomposition
    * @param {string} datasetId
    * @param {number} k number of neighbors.
+   * @return {Promise}
    */
   fetchMorseSmaleDecomposition(datasetId, k) {
     let command = {
       name: 'fetchMorseSmaleDecomposition',
       dataSetId: datasetId,
-      k: k
+      k: k,
     };
     return this._createCommandPromise(command);
   }
 
   /**
    * Text Socket onOpen event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketUtOpen(event) {
     this._log(' Text WebSocket Connected!');
@@ -183,7 +186,7 @@ class Client {
 
   /**
    * Text Socket onClose event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketUtClose(event) {
     this._log(' Text WebSocket Disconnected!');
@@ -192,7 +195,7 @@ class Client {
 
   /**
    * Text Socket onMessage event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketUtMessage(event) {
     let response = JSON.parse(event.data);
@@ -202,7 +205,7 @@ class Client {
 
   /**
    * Text Socket onError event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketUtError(event) {
     this._log(' Text WebSocket Error: ' + event.data);
@@ -211,7 +214,7 @@ class Client {
 
   /**
    * Binary Socket onOpen event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketBdOpen(event) {
     this._log(' Binary WebSocket Connected!');
@@ -220,7 +223,7 @@ class Client {
 
   /**
    * Binary Socket onClose event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketBdClose(event) {
     this._log(' Binary WebSocket Disconnected!');
@@ -228,7 +231,7 @@ class Client {
 
   /**
    * Binary Socket onMessage event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketBdMessage(event) {
 
@@ -236,7 +239,7 @@ class Client {
 
   /**
    * Binary Socket onError event callback.
-   * @param {Event} event.
+   * @param {Event} event
    */
   _onSocketBdError(event) {
     // alert(' Not connected to Server: Try reloading the page!');
