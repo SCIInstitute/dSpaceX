@@ -98,6 +98,7 @@ class Application extends React.Component {
   onConnect() {
     this.client.fetchDatasetList().then(function(response) {
       this.setState({
+        connected: true,
         datasets: response.datasets,
       });
     }.bind(this));
