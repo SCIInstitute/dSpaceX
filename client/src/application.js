@@ -119,7 +119,7 @@ class Application extends React.Component {
           classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
-          <DatasetPanel datasets={this.state.datasets}/>
+          <DatasetPanel datasets={this.state.datasets} client={this.client}/>
           <CasesPanel/>
           <DisplayPanel/>
         </Drawer>

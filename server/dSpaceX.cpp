@@ -42,7 +42,7 @@ static wstContext *cntxt;
 static dsxContext dsxcntxt;
 
 std::vector<Dataset*> datasets;
-int currentDataset = -1;
+Dataset *currentDataset = nullptr;
 
 /* NOTE: the data read must me moved to the back-end and then
          these globals cn be made local */
@@ -184,11 +184,28 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
  */
 void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
+  currentDataset = datasets[datasetId];
+
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["name"] = currentDataset->getName();
+  response["numberOfSamples"] = currentDataset->numberOfSamples();
+  response["qoiNames"] = Json::Value(Json::arrayValue);
+  
+  for (std::string qoiName : currentDataset->getQoiNames()) {
+    response["qoiNames"].append(qoiName);
+  }  
+  
+  response["attributeNames"] = Json::Value(Json::arrayValue);
+  for (std::string attributeName : currentDataset->getAttributeNames()) {
+    response["attributeNames"].append(attributeName);
+  }  
 
-  // response[""]
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);

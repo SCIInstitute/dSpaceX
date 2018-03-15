@@ -25,6 +25,14 @@ class Dataset {
     return m_qoiNames;
   }
 
+  FortranLinalg::DenseVector<Precision>& getAttributeVector(int i) {
+    return m_attributes[i];
+  }
+
+  std::vector<std::string> getAttributeNames() {
+    return m_attributeNames;
+  }
+
   std::string getName() {
     return m_name;
   }
