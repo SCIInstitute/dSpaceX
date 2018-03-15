@@ -9,6 +9,8 @@ import PropTypes from 'prop-types';
 import Select from 'material-ui/Select';
 import { withStyles } from 'material-ui/styles';
 
+const disabledLabelColor = '#888';
+const enabledLabelColor = '#000';
 
 /**
  * The DatasetPanel component allows the user to control
@@ -81,6 +83,8 @@ class DatasetPanel extends React.Component {
    */
   render() {
     const { classes } = this.props;
+    let textColor = 
+        this.state.dataset ? enabledLabelColor : disabledLabelColor;
     return (
       <Paper style={{ padding:'15px', paddingBottom:'20px' }}>
         <div style={{ display:'flex', flexDirection:'column' }}>
@@ -110,10 +114,10 @@ class DatasetPanel extends React.Component {
                 width: '100%',
                 display: 'flex',
                 justifyContent: 'space-between' }}>
-                <span style={{ color:'#888' }}>
+                <span style={{ color:textColor }}>
                   {' # Samples: '}
                 </span>
-                <span style={{ color:'#888' }}>
+                <span style={{ color:textColor }}>
                   { this.state.dataset ?
                     this.state.dataset.numberOfSamples :
                     '--' }
@@ -127,10 +131,10 @@ class DatasetPanel extends React.Component {
                 display: 'flex',
                 justifyContent: 'space-between',
               }}>
-                <span style={{ color:'#888' }}>
+                <span style={{ color:textColor }}>
                   {'# QoIs: '}
                 </span>
-                <span style={{ color:'#888' }}>
+                <span style={{ color:textColor }}>
                   { this.state.dataset ?
                     this.state.dataset.qoiNames.length :
                     '--' }
