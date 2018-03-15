@@ -86,7 +86,7 @@ class DatasetPanel extends React.Component {
     let textColor = 
         this.state.dataset ? enabledLabelColor : disabledLabelColor;
     return (
-      <Paper style={{ padding:'15px', paddingBottom:'20px' }}>
+      <Paper style={{ padding:'15px', paddingBottom:'5px' }}>
         <div style={{ display:'flex', flexDirection:'column' }}>
           <FormControl className={classes.formControl}>
             <InputLabel htmlFor='dataset-field'>Dataset</InputLabel>
