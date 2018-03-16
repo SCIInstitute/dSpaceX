@@ -6,11 +6,12 @@ import React from 'react';
 import Typography from 'material-ui/Typography';
 
 /**
- * Component for showing data set case details.
+ * The Decomposition Panel component provides a display of the
+ * Morse-Smale/ShapeOdds decomposition of the dataset.
  */
-class CasesPanel extends React.Component {
+class DecompositionPanel extends React.Component {
   /**
-   * CasesPanel constructor.
+   * DecompositionPanel constructor.
    * @param {object} props
    */
   constructor(props) {
@@ -25,8 +26,8 @@ class CasesPanel extends React.Component {
     return (
       // TODO: set disabled only when there's no case data.
       <ExpansionPanel style={{ margin:'1px' }} disabled={!this.props.dataset}>
-        <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon /> }>
-          <Typography>Cases</Typography>
+        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>Decomposition</Typography>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails>
           <Typography>
@@ -38,4 +39,4 @@ class CasesPanel extends React.Component {
   }
 }
 
-export default CasesPanel;
+export default DecompositionPanel;

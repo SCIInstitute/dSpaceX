@@ -3,6 +3,7 @@ import Client from './client';
 import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
 import DisplayPanel from './panels/displayPanel';
+import DecompositionPanel from './panels/decompositionPanel';
 import Drawer from 'material-ui/Drawer';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -59,11 +60,13 @@ class Application extends React.Component {
 
     this.state = {
       connected: false,
+      currentDataset: null,
       datasets: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
     this.onConnect = this.onConnect.bind(this);
+    this.onDatasetChange = this.onDatasetChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -105,6 +108,16 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles updating dataflow to components when dataset changes.
+   * @param {object} dataset
+   */
+  onDatasetChange(dataset) {
+    this.setState({
+      currentDataset: dataset,
+    });
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -120,16 +133,19 @@ class Application extends React.Component {
           classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
-          <DatasetPanel datasets={this.state.datasets} client={this.client}/>
-          <CasesPanel/>
-          <DisplayPanel/>
+          <DatasetPanel datasets={this.state.datasets}
+            onDatasetChange={this.onDatasetChange}
+            client={this.client}/>
+          <CasesPanel dataset={this.state.currentDataset}/>
+          <DecompositionPanel dataset={this.state.currentDataset}/>
+          <DisplayPanel dataset={this.state.currentDataset}/>
         </Drawer>
         <Workspace className={classes.content}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
           <div className={classes.workspace}>
-            <WebGLWindow/>
-            <WebGLWindow/>
+            <WebGLWindow dataset={this.state.currentDataset}/>
+            <WebGLWindow dataset={this.state.currentDataset}/>
           </div>
         </Workspace>
       </div>

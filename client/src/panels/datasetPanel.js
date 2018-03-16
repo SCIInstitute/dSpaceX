@@ -74,6 +74,7 @@ class DatasetPanel extends React.Component {
           attributeNames: dataset.attributeNames,
         },
       });
+      this.props.onDatasetChange(dataset);
     }.bind(this));
   };
 
