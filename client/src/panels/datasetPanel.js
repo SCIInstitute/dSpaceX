@@ -63,8 +63,16 @@ class DatasetPanel extends React.Component {
    */
   handleDatasetChange(event) {
     let datasetName = event.target.value;
-    this.setState({ datasetName:datasetName });
+    if (datasetName === '') {
+      this.setState({
+        datasetName: '',
+        dataset: null,
+      });
+      this.props.onDatasetChange(null);
+      return;
+    }
 
+    this.setState({ datasetName:datasetName });
     let datasetId = this.datasetMap.get(datasetName);
     this.client.fetchDataset(datasetId).then(function(dataset) {
       this.setState({

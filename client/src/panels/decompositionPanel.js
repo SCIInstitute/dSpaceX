@@ -51,20 +51,20 @@ class DecompositionPanel extends React.Component {
     return (
       // TODO: set disabled only when there's no case data.
       <ExpansionPanel disabled={!this.props.dataset}
-        style={{ paddingLeft: '0px', paddingRight: '5px',
-          margin: '1px', boxSizing: 'border-box' }}>
+        style={{ paddingLeft:'0px', margin:'1px' }}>
         <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
           <Typography>Decomposition</Typography>
         </ExpansionPanelSummary>
         <ExpansionPanelDetails style={{ paddingLeft: '15px',
-          paddingRight: '5px', margin: '1px', width: '100%',
+          paddingRight: '10px', margin: '1px', width: '100%',
           boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', flexDirection: 'column',
-            width: '100%', boxSizing: 'border-box', paddingRight: '5px' }}>
+            width: '100%', boxSizing: 'border-box', paddingRight: '10px' }}>
             <FormControl className={classes.formControl}
               style={{ width:'100%', boxSizing:'border-box' }}>
               <InputLabel htmlFor='mode-field'>Mode</InputLabel>
               <Select ref="decompositionCombo"
+                disabled={!this.props.dataset}
                 value={this.state.decompositionMode}
                 style={{ width:'100%' }}
                 onChange={this.handleDecompositionModeChange}
