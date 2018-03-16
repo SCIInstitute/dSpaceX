@@ -103,7 +103,8 @@ class DatasetPanel extends React.Component {
         backgroundColor: backgroundColor,
       }}>
         <div style={{ display:'flex', flexDirection:'column' }}>
-          <FormControl className={classes.formControl}>
+          <FormControl className={classes.formControl}
+            disabled={!enabled}>
             <InputLabel htmlFor='dataset-field'>Dataset</InputLabel>
             <Select ref="datasetCombo" value={this.state.datasetName}
               onChange={this.handleDatasetChange} inputProps={{
