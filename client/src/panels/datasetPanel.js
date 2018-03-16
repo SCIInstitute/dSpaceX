@@ -83,7 +83,7 @@ class DatasetPanel extends React.Component {
    */
   render() {
     const { classes } = this.props;
-    let textColor = 
+    let textColor =
         this.state.dataset ? enabledLabelColor : disabledLabelColor;
     return (
       <Paper style={{ padding:'15px', paddingBottom:'5px' }}>
