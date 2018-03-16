@@ -50,7 +50,7 @@ class DecompositionPanel extends React.Component {
     const { classes } = this.props;
     return (
       // TODO: set disabled only when there's no case data.
-      <ExpansionPanel disabled={false && !this.props.dataset}
+      <ExpansionPanel disabled={!this.props.dataset}
         style={{ paddingLeft: '0px', paddingRight: '5px',
           margin: '1px', boxSizing: 'border-box' }}>
         <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
