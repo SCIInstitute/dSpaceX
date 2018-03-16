@@ -133,7 +133,7 @@ class WebGLWindow extends React.Component {
       <canvas ref='canvas' className='glCanvas' style={{
         width: '100%',
         height: '100%',
-        border: '1px dashed gray',
+        borderLeft: '1px dashed gray',
       }}>
       </canvas>
     );
