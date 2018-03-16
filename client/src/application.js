@@ -129,7 +129,7 @@ class Application extends React.Component {
           connectedToServer={this.state.connected}
           onConnectClick={this.connectButtonClicked} />
         <ConnectionDialog ref='connectiondialog' client={this.client}/>
-        <Drawer variant='permanent'
+        <Drawer PaperProps={{ elevation:6 }} variant='permanent'
           classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
@@ -142,10 +142,14 @@ class Application extends React.Component {
         </Drawer>
         <Workspace className={classes.content}>
           { /* Add div to account for menu bar */ }
-          <div className={classes.toolbar} />
+          <div className={classes.toolbar}/>
           <div className={classes.workspace}>
-            <WebGLWindow dataset={this.state.currentDataset}/>
-            <WebGLWindow dataset={this.state.currentDataset}/>
+            {
+              !!this.state.currentDataset ? [
+                <WebGLWindow dataset={this.state.currentDataset}/>,
+                <WebGLWindow dataset={this.state.currentDataset}/>,
+              ] : []
+            }
           </div>
         </Workspace>
       </div>
