@@ -123,6 +123,7 @@ class Application extends React.Component {
    */
   render() {
     const { classes } = this.props;
+    let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
     return (
       <div className={classes.root}>
         <Toolbar className={classes.appBar}
@@ -139,6 +140,11 @@ class Application extends React.Component {
           <CasesPanel dataset={this.state.currentDataset}/>
           <DecompositionPanel dataset={this.state.currentDataset}/>
           <DisplayPanel dataset={this.state.currentDataset}/>
+          <div style={{
+            backgroundColor: drawerMarginColor,
+            height: '100%',
+            width: '100%',
+          }}></div>
         </Drawer>
         <Workspace className={classes.content}>
           { /* Add div to account for menu bar */ }
