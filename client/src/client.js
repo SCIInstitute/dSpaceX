@@ -190,6 +190,70 @@ class Client {
   }
 
   /**
+   * Compute Morse-Smale Decomposition, return
+   * only the persistence range (i.e. min and max).
+   * @param {string} datasetId
+   * @param {number} k number of neighbors.
+   * @return {Promise}
+   */
+  fetchMorseSmalePersistence(datasetId, k) {
+    let command = {
+      name: 'fetchMorseSmalePersistence',
+      datasetId: datasetId,
+      k: k,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Fetch the crystal indexes composing a single morse smale persistence level.
+   * @param {string} datasetId
+   * @param {number} k number of neighbors.
+   * @param {number} persistenceLevel
+   * @return {Promise}
+   */
+  fetchMorseSmalePersistenceLevel(datasetId, k, persistenceLevel) {
+    let command = {
+      name: 'fetchMorseSmalePersistenceLevel',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Fetch the details of a single crystal of a persistence level.
+   * @param {string} datasetId
+   * @param {number} k number of neighbors.
+   * @param {number} persistenceLevel
+   * @param {number} crystalId
+   * @return {Promise}
+   */
+  fetchMorseSmaleCrystal(datasetId, k, persistenceLevel, crystalId) {
+    let command = {
+      name: 'fetchMorseSmaleCrystal',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+      crystalId: crystalId,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Grab the 2d graph embedding of the specified crystals.
+   * @param {string} datasetId
+   * @param {number} k
+   * @param {number} persistenceLevel
+   * @param {Array} crystalIds
+   * @param {string} layoutStrategy
+   */
+  fetchGraphLayout(datasetId, k, persistenceLevel, crystalIds, layoutStrategy) {
+
+  }
+
+  /**
    * Text Socket onOpen event callback.
    * @param {Event} event
    */

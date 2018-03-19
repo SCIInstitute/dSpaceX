@@ -56,6 +56,9 @@ FortranLinalg::DenseVector<Precision> y;
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
 void fetchDataset(void *wsi, int messageId, const Json::Value &request);
 void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request);
+void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request);
+void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request);
+void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request);
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
 
 void loadAllDatasets();
@@ -155,6 +158,12 @@ extern "C" void browserText(void *wsi, char *text, int lena)
       fetchKNeighbors(wsi, messageId, request);
     } else if (commandName == "fetchMorseSmaleDecomposition") {
       fetchMorseSmaleDecomposition(wsi, messageId, request);
+    } else if (commandName == "fetchMorseSmalePersistence") {
+      fetchMorseSmalePersistence(wsi, messageId, request);
+    } else if (commandName == "fetchMorseSmalePersistenceLevel") {
+      fetchMorseSmalePersistenceLevel(wsi, messageId, request);
+    } else if (commandName == "fetchMorseSmaleCrystal") {
+      fetchMorseSmaleCrystal(wsi, messageId, request);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
@@ -230,6 +239,7 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
     // TODO: Send back an error message. 
   }
 
+  // TODO: Don't reprocess data if previous commands already did so.
   int n = currentDataset->getDistanceMatrix().N();  
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
@@ -256,7 +266,198 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
 }
 
 /**
- * Handle the command to fetch the morse smale decomposition of a dataset.
+ * Handle the command to fetch the morse smale persistence levels of a dataset.
+ */
+void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message. 
+  }
+
+  // TODO: Don't reprocess data if previous commands already did so.
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+
+  // TODO: Provide mechanism to select QoI used.
+  try {  
+    result = genericProcessor.processOnMetric(
+        currentDataset->getDistanceMatrix(),
+        currentDataset->getQoiVector(0),
+        k        /* knn */,
+        25        /* samples */,
+        20        /* persistence */,
+        true      /* random */,
+        0.25      /* sigma */,
+        0         /* smooth */);
+    data = new SimpleHDVizDataImpl(result);
+    topoData = new LegacyTopologyDataImpl(data);
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+    // TODO: Return Error Message.
+  }
+
+  unsigned int minLevel = topoData->getMinPersistenceLevel();
+  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["decompositionMode"] = "Morse-Smale";
+  response["minPersistenceLevel"] = minLevel;
+  response["maxPersistenceLevel"] = maxLevel;
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+}
+
+/**
+ * Handle the command to fetch the crystal complex composing a morse smale persistence level.
+ */
+void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message. 
+  }  
+
+  // TODO: Don't reprocess data if previous commands already did so.
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+
+  // TODO: Provide mechanism to select QoI used.
+  try {  
+    result = genericProcessor.processOnMetric(
+        currentDataset->getDistanceMatrix(),
+        currentDataset->getQoiVector(0),
+        k        /* knn */,
+        25        /* samples */,
+        20        /* persistence */,
+        true      /* random */,
+        0.25      /* sigma */,
+        0         /* smooth */);
+    data = new SimpleHDVizDataImpl(result);
+    topoData = new LegacyTopologyDataImpl(data);
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+    // TODO: Return Error Message.
+  }
+
+  unsigned int minLevel = topoData->getMinPersistenceLevel();
+  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  MorseSmaleComplex *complex = topoData->getComplex(persistenceLevel);
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["decompositionMode"] = "Morse-Smale";
+  response["persistenceLevel"] = persistenceLevel;
+  response["complex"] = Json::Value(Json::objectValue);
+  response["complex"]["crystals"] = Json::Value(Json::arrayValue); 
+
+  for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {      
+    Crystal *crystal = complex->getCrystals()[c];
+    Json::Value crystalObject(Json::objectValue);
+    crystalObject["minIndex"] = crystal->getMinSample();
+    crystalObject["maxIndex"] = crystal->getMaxSample();
+    crystalObject["numberOfSamples"] = crystal->getAllSamples().size();      
+    response["complex"]["crystals"].append(crystalObject);
+  }
+
+  // TODO: Add crystal adjacency information
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+}
+
+/**
+ * Handle the command to fetch the details of a single crystal in a persistence level.
+ */
+void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message. 
+  }
+
+  // TODO: Don't reprocess data if previous commands already did so.
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+
+  // TODO: Provide mechanism to select QoI used.
+  try {  
+    result = genericProcessor.processOnMetric(
+        currentDataset->getDistanceMatrix(),
+        currentDataset->getQoiVector(0),
+        k        /* knn */,
+        25        /* samples */,
+        20        /* persistence */,
+        true      /* random */,
+        0.25      /* sigma */,
+        0         /* smooth */);
+    data = new SimpleHDVizDataImpl(result);
+    topoData = new LegacyTopologyDataImpl(data);
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+    // TODO: Return Error Message.
+  }
+
+  unsigned int minLevel = topoData->getMinPersistenceLevel();
+  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  MorseSmaleComplex *complex = topoData->getComplex(persistenceLevel);
+
+
+  int crystalId = request["crystalId"].asInt();
+  if (crystalId < 0 || crystalId >= complex->getCrystals().size()) {
+    // TODO: Send back an error message. Invalid CrystalId.
+  }
+
+  Crystal *crystal = complex->getCrystals()[crystalId];
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["decompositionMode"] = "Morse-Smale";
+  response["persistenceLevel"] = persistenceLevel;
+  response["crystalId"] = crystalId;
+  response["crystal"] = Json::Value(Json::objectValue); 
+  response["crystal"]["minIndex"] = crystal->getMinSample();
+  response["crystal"]["maxIndex"] = crystal->getMaxSample();
+  response["crystal"]["sampleIndexes"] = Json::Value(Json::arrayValue);  
+  for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
+    unsigned int index = crystal->getAllSamples()[i];
+    response["crystal"]["sampleIndexes"].append(index);
+  }
+
+  // TODO: Add crystal adjacency information
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+}
+
+/**
+ * Handle the command to fetch the full morse smale decomposition of a dataset.
  */
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
@@ -272,6 +473,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   // TODO: Verify that currentData == datasetId.
   //       Reload/set currentData if different.
 
+  // TODO: Don't reprocess data if previous commands already did so.
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
 
   // TODO: Provide mechanism to select QoI used.
