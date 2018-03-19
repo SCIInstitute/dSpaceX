@@ -168,7 +168,7 @@ class Client {
   fetchMorseSmaleDecomposition(datasetId, k) {
     let command = {
       name: 'fetchMorseSmaleDecomposition',
-      dataSetId: datasetId,
+      datasetId: datasetId,
       k: k,
     };
     return this._createCommandPromise(command);

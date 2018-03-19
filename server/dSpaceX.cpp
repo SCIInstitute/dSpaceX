@@ -43,6 +43,9 @@ static dsxContext dsxcntxt;
 
 std::vector<Dataset*> datasets;
 Dataset *currentDataset = nullptr;
+HDProcessResult *result = nullptr;
+HDVizData *data = nullptr;
+TopologyData *topoData = nullptr;
 
 /* NOTE: the data read must me moved to the back-end and then
          these globals cn be made local */
@@ -52,6 +55,7 @@ FortranLinalg::DenseVector<Precision> y;
 // Command Handlers
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
 void fetchDataset(void *wsi, int messageId, const Json::Value &request);
+void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
 
 void loadAllDatasets();
 void loadConcreteDataset();
@@ -62,7 +66,6 @@ void loadColoradoDataset();
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x);
 
-HDProcessResult *result = nullptr;
 
 int main(int argc, char *argv[])
 {
@@ -139,17 +142,16 @@ extern "C" void browserText(void *wsi, char *text, int lena)
 
   try {
     reader.parse(std::string(text), request);
-
     int messageId = request["id"].asInt();
     std::string commandName = request["name"].asString();
-
     std::cout << "messageId:" << messageId << std::endl;
-
 
     if (commandName == "fetchDatasetList") {
       fetchDatasetList(wsi, messageId, request);
     } else if (commandName == "fetchDataset") {
       fetchDataset(wsi, messageId, request);
+    } else if (commandName == "fetchMorseSmaleDecomposition") {
+      fetchMorseSmaleDecomposition(wsi, messageId, request);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
@@ -213,23 +215,75 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
 }
 
 /**
- *
+ * Handle the command to fetch the morse smale decomposition of a dataset.
  */
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
   int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message. 
+  }
 
-  // HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  std::cout << "datasetId = " << datasetId << std::endl;
+  // TODO: Verify that currentData == datasetId.
+  //       Reload/set currentData if different.
 
-  // result = genericProcessor.processOnMetric(
-  //    currentDataset->getDistanceMatrix(),
-  //    currentDataset->getQoiVector(currentQoi),
-  //    k        /* knn */,
-  //    25        /* samples */,
-  //    20        /* persistence */,
-  //    true      /* random */,
-  //    0.25      /* sigma */,
-  //    0         /* smooth */);
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+
+  // TODO: Provide mechanism to select QoI used.
+  try {  
+    result = genericProcessor.processOnMetric(
+        currentDataset->getDistanceMatrix(),
+        currentDataset->getQoiVector(0),
+        k        /* knn */,
+        25        /* samples */,
+        20        /* persistence */,
+        true      /* random */,
+        0.25      /* sigma */,
+        0         /* smooth */);
+    data = new SimpleHDVizDataImpl(result);
+    topoData = new LegacyTopologyDataImpl(data);
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+    // TODO: Return Error Message.
+  }
+
+  unsigned int minLevel = topoData->getMinPersistenceLevel();
+  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["decompositionMode"] = "Morse-Smale";
+  response["minPersistenceLevel"] = minLevel;
+  response["maxPersistenceLevel"] = maxLevel;
+  response["complexes"] = Json::Value(Json::arrayValue);  
+  for (unsigned int level = minLevel; level <= maxLevel; level++) {
+    MorseSmaleComplex *complex = topoData->getComplex(level);
+    Json::Value complexObject(Json::objectValue);
+    complexObject["crystals"] = Json::Value(Json::arrayValue);
+    for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {
+      Crystal *crystal = complex->getCrystals()[c];
+      Json::Value crystalObject(Json::objectValue);
+      crystalObject["minIndex"] = crystal->getMinSample();
+      crystalObject["maxIndex"] = crystal->getMaxSample();
+      crystalObject["sampleIndexes"] = Json::Value(Json::arrayValue);  
+      for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
+        unsigned int index = crystal->getAllSamples()[i];
+        crystalObject["sampleIndexes"].append(index);
+      }
+      complexObject["crystals"].append(crystalObject);
+    }
+    // TODO: Add adjacency to the complex json object.
+    response["complexes"].append(complexObject);  
+  }
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 
