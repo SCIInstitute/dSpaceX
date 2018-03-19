@@ -152,8 +152,8 @@ class Application extends React.Component {
           <div className={classes.workspace}>
             {
               !!this.state.currentDataset ? [
-                <WebGLWindow dataset={this.state.currentDataset}/>,
-                <WebGLWindow dataset={this.state.currentDataset}/>,
+                <WebGLWindow key="1" dataset={this.state.currentDataset}/>,
+                <WebGLWindow key="2" dataset={this.state.currentDataset}/>,
               ] : []
             }
           </div>
