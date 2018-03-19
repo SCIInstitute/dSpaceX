@@ -160,6 +160,21 @@ class Client {
   }
 
   /**
+   * Grab the k-nearest neighbor adjacency for datasetId.
+   * @param {string} datasetId
+   * @param {number} k
+   * @return {Promise}
+   */
+  fetchKNeighbors(datasetId, k) {
+    let command = {
+      name: 'fetchKNeighbors',
+      datasetId: datasetId,
+      k: k,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Compute Morse-Smale Decomposition
    * @param {string} datasetId
    * @param {number} k number of neighbors.

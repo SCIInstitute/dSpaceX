@@ -55,6 +55,7 @@ FortranLinalg::DenseVector<Precision> y;
 // Command Handlers
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
 void fetchDataset(void *wsi, int messageId, const Json::Value &request);
+void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request);
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
 
 void loadAllDatasets();
@@ -150,6 +151,8 @@ extern "C" void browserText(void *wsi, char *text, int lena)
       fetchDatasetList(wsi, messageId, request);
     } else if (commandName == "fetchDataset") {
       fetchDataset(wsi, messageId, request);
+    } else if (commandName == "fetchKNeighbors") {
+      fetchKNeighbors(wsi, messageId, request);
     } else if (commandName == "fetchMorseSmaleDecomposition") {
       fetchMorseSmaleDecomposition(wsi, messageId, request);
     } else {
@@ -208,6 +211,44 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
     response["attributeNames"].append(attributeName);
   }  
 
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
+
+/**
+ * Handle the command to fetch the k-nearest-neighbor graph of a dataset.
+ */
+void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= datasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message. 
+  }
+
+  int n = currentDataset->getDistanceMatrix().N();  
+  auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
+  auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
+  Distance<Precision>::findKNN(
+      currentDataset->getDistanceMatrix(), KNN, KNND);
+
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["datasetId"] = datasetId;
+  response["k"] = k;
+  response["graph"] = Json::Value(Json::arrayValue); 
+  for (unsigned i = 0; i < KNN.M(); i++) {
+    Json::Value row = Json::Value(Json::arrayValue); 
+    response["graph"].append(row);
+    for (unsigned int j = 0; j < KNN.N(); j++) {      
+      response["graph"][i].append(KNN(i,j));
+    }    
+  }
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
