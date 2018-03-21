@@ -148,37 +148,41 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
             <div style={{ height:'15px' }}></div>
-            <FormControl className={classes.formControl}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                paddingRight: '10px',
-              }}>
-              <InputLabel htmlFor='persistence-field'>
-                Persistence Level
-              </InputLabel>
-              <Select ref="persistenceCombo"
-                style={{ width:'100%' }}
-                value={this.state.persistenceLevel}
-                onChange={this.handlePersistenceLevelChange}
-                inputProps={{
-                  name: 'persistence',
-                  id: 'persistence-field',
-                }}>
-                <MenuItem value=''>
-                  <em>None</em>
-                </MenuItem>
-                {
-                  persistenceLevels.map((level) => (
-                    <MenuItem value={'' + level}
-                      key={level}
-                      style={{ height:'20px' }}>
-                      <em>{level}</em>
+            {
+              persistenceLevels.length > 0 ?
+                <FormControl className={classes.formControl}
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    paddingRight: '10px',
+                  }}>
+                  <InputLabel htmlFor='persistence-field'>
+                    Persistence Level
+                  </InputLabel>
+                  <Select ref="persistenceCombo"
+                    style={{ width:'100%' }}
+                    value={this.state.persistenceLevel}
+                    onChange={this.handlePersistenceLevelChange}
+                    inputProps={{
+                      name: 'persistence',
+                      id: 'persistence-field',
+                    }}>
+                    <MenuItem value=''>
+                      <em>None</em>
                     </MenuItem>
-                  ))
-                }
-              </Select>
-            </FormControl>
+                    {
+                      persistenceLevels.map((level) => (
+                        <MenuItem value={'' + level}
+                          key={level}
+                          style={{ height:'20px' }}>
+                          <em>{level}</em>
+                        </MenuItem>
+                      ))
+                    }
+                  </Select>
+                </FormControl> :
+                []
+            }
             <div style={{ height:'5px' }}></div>
 
             <List style={{ maxHeight:'200px', overflow:'auto' }}>
