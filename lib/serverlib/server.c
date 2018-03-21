@@ -377,7 +377,8 @@ callback_ui_text(struct libwebsocket_context *context,
               if (servers[slot].nClient <= 0) {
                   wst_free(servers[slot].wsi);
                   servers[slot].wsi  = NULL;
-                  servers[slot].loop = 0;
+ //               servers[slot].loop = 0;     /* terminate */
+                  fprintf(stderr, "Info: No more clients!\n");
               }
               break;
 
