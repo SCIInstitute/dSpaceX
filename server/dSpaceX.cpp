@@ -41,7 +41,7 @@
 static wstContext *cntxt;
 static dsxContext dsxcntxt;
 
-typedef Dataset* (*LoadFunction)(void);  
+typedef Dataset* (*LoadFunction)(void);
 std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
 std::vector<Dataset*> datasets;
 Dataset *currentDataset = nullptr;
@@ -217,15 +217,15 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   response["name"] = currentDataset->getName();
   response["numberOfSamples"] = currentDataset->numberOfSamples();
   response["qoiNames"] = Json::Value(Json::arrayValue);
-  
+
   for (std::string qoiName : currentDataset->getQoiNames()) {
     response["qoiNames"].append(qoiName);
-  }  
-  
+  }
+
   response["attributeNames"] = Json::Value(Json::arrayValue);
   for (std::string attributeName : currentDataset->getAttributeNames()) {
     response["attributeNames"].append(attributeName);
-  }  
+  }
 
 
   Json::StyledWriter writer;
@@ -243,11 +243,11 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
   }
   int k = request["k"].asInt();
   if (k < 0) {
-    // TODO: Send back an error message. 
+    // TODO: Send back an error message.
   }
 
   // TODO: Don't reprocess data if previous commands already did so.
-  int n = currentDataset->getDistanceMatrix().N();  
+  int n = currentDataset->getDistanceMatrix().N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
   Distance<Precision>::findKNN(
@@ -258,13 +258,13 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
   response["id"] = messageId;
   response["datasetId"] = datasetId;
   response["k"] = k;
-  response["graph"] = Json::Value(Json::arrayValue); 
+  response["graph"] = Json::Value(Json::arrayValue);
   for (unsigned i = 0; i < KNN.M(); i++) {
-    Json::Value row = Json::Value(Json::arrayValue); 
+    Json::Value row = Json::Value(Json::arrayValue);
     response["graph"].append(row);
-    for (unsigned int j = 0; j < KNN.N(); j++) {      
+    for (unsigned int j = 0; j < KNN.N(); j++) {
       response["graph"][i].append(KNN(i,j));
-    }    
+    }
   }
 
   Json::StyledWriter writer;
@@ -282,14 +282,14 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   }
   int k = request["k"].asInt();
   if (k < 0) {
-    // TODO: Send back an error message. 
+    // TODO: Send back an error message.
   }
 
   // TODO: Don't reprocess data if previous commands already did so.
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
 
   // TODO: Provide mechanism to select QoI used.
-  try {  
+  try {
     result = genericProcessor.processOnMetric(
         currentDataset->getDistanceMatrix(),
         currentDataset->getQoiVector(0),
@@ -318,7 +318,7 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
@@ -331,14 +331,14 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
   }
   int k = request["k"].asInt();
   if (k < 0) {
-    // TODO: Send back an error message. 
-  }  
+    // TODO: Send back an error message.
+  }
 
   // TODO: Don't reprocess data if previous commands already did so.
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
 
   // TODO: Provide mechanism to select QoI used.
-  try {  
+  try {
     result = genericProcessor.processOnMetric(
         currentDataset->getDistanceMatrix(),
         currentDataset->getQoiVector(0),
@@ -371,14 +371,14 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
   response["decompositionMode"] = "Morse-Smale";
   response["persistenceLevel"] = persistenceLevel;
   response["complex"] = Json::Value(Json::objectValue);
-  response["complex"]["crystals"] = Json::Value(Json::arrayValue); 
+  response["complex"]["crystals"] = Json::Value(Json::arrayValue);
 
-  for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {      
+  for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {
     Crystal *crystal = complex->getCrystals()[c];
     Json::Value crystalObject(Json::objectValue);
     crystalObject["minIndex"] = crystal->getMinSample();
     crystalObject["maxIndex"] = crystal->getMaxSample();
-    crystalObject["numberOfSamples"] = crystal->getAllSamples().size();      
+    crystalObject["numberOfSamples"] = (int)(crystal->getAllSamples().size());
     response["complex"]["crystals"].append(crystalObject);
   }
 
@@ -386,7 +386,7 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
@@ -399,14 +399,14 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
   }
   int k = request["k"].asInt();
   if (k < 0) {
-    // TODO: Send back an error message. 
+    // TODO: Send back an error message.
   }
 
   // TODO: Don't reprocess data if previous commands already did so.
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
 
   // TODO: Provide mechanism to select QoI used.
-  try {  
+  try {
     result = genericProcessor.processOnMetric(
         currentDataset->getDistanceMatrix(),
         currentDataset->getQoiVector(0),
@@ -447,10 +447,10 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
   response["decompositionMode"] = "Morse-Smale";
   response["persistenceLevel"] = persistenceLevel;
   response["crystalId"] = crystalId;
-  response["crystal"] = Json::Value(Json::objectValue); 
+  response["crystal"] = Json::Value(Json::objectValue);
   response["crystal"]["minIndex"] = crystal->getMinSample();
   response["crystal"]["maxIndex"] = crystal->getMaxSample();
-  response["crystal"]["sampleIndexes"] = Json::Value(Json::arrayValue);  
+  response["crystal"]["sampleIndexes"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
     unsigned int index = crystal->getAllSamples()[i];
     response["crystal"]["sampleIndexes"].append(index);
@@ -460,7 +460,7 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));  
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
@@ -473,7 +473,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   }
   int k = request["k"].asInt();
   if (k < 0) {
-    // TODO: Send back an error message. 
+    // TODO: Send back an error message.
   }
 
   std::cout << "datasetId = " << datasetId << std::endl;
@@ -484,7 +484,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
 
   // TODO: Provide mechanism to select QoI used.
-  try {  
+  try {
     result = genericProcessor.processOnMetric(
         currentDataset->getDistanceMatrix(),
         currentDataset->getQoiVector(0),
@@ -510,7 +510,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   response["decompositionMode"] = "Morse-Smale";
   response["minPersistenceLevel"] = minLevel;
   response["maxPersistenceLevel"] = maxLevel;
-  response["complexes"] = Json::Value(Json::arrayValue);  
+  response["complexes"] = Json::Value(Json::arrayValue);
   for (unsigned int level = minLevel; level <= maxLevel; level++) {
     MorseSmaleComplex *complex = topoData->getComplex(level);
     Json::Value complexObject(Json::objectValue);
@@ -520,7 +520,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
       Json::Value crystalObject(Json::objectValue);
       crystalObject["minIndex"] = crystal->getMinSample();
       crystalObject["maxIndex"] = crystal->getMaxSample();
-      crystalObject["sampleIndexes"] = Json::Value(Json::arrayValue);  
+      crystalObject["sampleIndexes"] = Json::Value(Json::arrayValue);
       for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
         unsigned int index = crystal->getAllSamples()[i];
         crystalObject["sampleIndexes"].append(index);
@@ -528,7 +528,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
       complexObject["crystals"].append(crystalObject);
     }
     // TODO: Add adjacency to the complex json object.
-    response["complexes"].append(complexObject);  
+    response["complexes"].append(complexObject);
   }
 
   Json::StyledWriter writer;
@@ -583,7 +583,7 @@ Dataset* loadCrimesDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("function", y)
                             .withName(datasetName)
-                            .build();  
+                            .build();
   std::cout << datasetName << " dataset loaded." << std::endl;
   return dataset;
 }
@@ -602,7 +602,7 @@ Dataset* loadGaussianDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("function", y)
                             .withName(datasetName)
-                            .build();  
+                            .build();
   std::cout << datasetName << " dataset loaded." << std::endl;
   return dataset;
 }
@@ -623,7 +623,7 @@ Dataset* loadColoradoDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("max-stress", y)
                             .withName("Colorado")
-                            .build();  
+                            .build();
   std::cout << datasetName << " dataset loaded." << std::endl;
   return dataset;
 }
