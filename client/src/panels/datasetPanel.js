@@ -77,6 +77,7 @@ class DatasetPanel extends React.Component {
     this.client.fetchDataset(datasetId).then(function(dataset) {
       this.setState({
         dataset: {
+          id: datasetId,
           numberOfSamples: dataset.numberOfSamples,
           qoiNames: dataset.qoiNames,
           attributeNames: dataset.attributeNames,

@@ -1,4 +1,3 @@
-import CasesPanel from './panels/casesPanel';
 import Client from './client';
 import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
@@ -137,8 +136,8 @@ class Application extends React.Component {
           <DatasetPanel datasets={this.state.datasets}
             onDatasetChange={this.onDatasetChange}
             client={this.client}/>
-          <CasesPanel dataset={this.state.currentDataset}/>
-          <DecompositionPanel dataset={this.state.currentDataset}/>
+          <DecompositionPanel dataset={this.state.currentDataset}
+            client={this.client}/>
           <DisplayPanel dataset={this.state.currentDataset}/>
           <div style={{
             backgroundColor: drawerMarginColor,
