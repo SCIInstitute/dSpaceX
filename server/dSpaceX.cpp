@@ -378,7 +378,7 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
     Json::Value crystalObject(Json::objectValue);
     crystalObject["minIndex"] = crystal->getMinSample();
     crystalObject["maxIndex"] = crystal->getMaxSample();
-    crystalObject["numberOfSamples"] = (int)(crystal->getAllSamples().size());
+    crystalObject["numberOfSamples"] = static_cast<int>(crystal->getAllSamples().size());
     response["complex"]["crystals"].append(crystalObject);
   }
 
