@@ -41,6 +41,8 @@
 static wstContext *cntxt;
 static dsxContext dsxcntxt;
 
+typedef Dataset* (*LoadFunction)(void);  
+std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
 std::vector<Dataset*> datasets;
 Dataset *currentDataset = nullptr;
 HDProcessResult *result = nullptr;
@@ -61,11 +63,11 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
 void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request);
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
 
-void loadAllDatasets();
-void loadConcreteDataset();
-void loadCrimesDataset();
-void loadGaussianDataset();
-void loadColoradoDataset();
+void configureAvailableDatasets();
+Dataset* loadConcreteDataset();
+Dataset* loadCrimesDataset();
+Dataset* loadGaussianDataset();
+Dataset* loadColoradoDataset();
 
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x);
@@ -97,7 +99,7 @@ int main(int argc, char *argv[])
   }
 
   try {
-    loadAllDatasets();
+    configureAvailableDatasets();
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
   }
@@ -181,10 +183,10 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
   response["id"] = messageId;
   response["datasets"] = Json::Value(Json::arrayValue);
 
-  for (size_t i=0; i < datasets.size(); i++) {
+  for (size_t i=0; i < availableDatasets.size(); i++) {
     Json::Value object = Json::Value(Json::objectValue);
     object["id"] = static_cast<int>(i);
-    object["name"] = datasets[i]->getName();
+    object["name"] = availableDatasets[i].first;
     response["datasets"].append(object);
   }
 
@@ -198,11 +200,16 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
  */
 void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= availableDatasets.size()) {
     // TODO: Send back an error message.
   }
-  currentDataset = datasets[datasetId];
 
+  if (currentDataset) {
+    delete currentDataset;
+    currentDataset = nullptr;
+  }
+  auto loadDataset = availableDatasets[datasetId].second;
+  currentDataset = loadDataset();
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -531,17 +538,17 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
 
 
 /**
- * Load available datasets.
+ * Construct list of available datasets.
  */
-void loadAllDatasets() {
-  loadConcreteDataset();
-  loadCrimesDataset();
-  loadGaussianDataset();
-  loadColoradoDataset();
+void configureAvailableDatasets() {
+  availableDatasets.push_back({"Concrete", loadConcreteDataset});
+  availableDatasets.push_back({ "Crimes",  loadCrimesDataset});
+  availableDatasets.push_back({"Gaussian", loadGaussianDataset});
+  availableDatasets.push_back({"Colorado", loadColoradoDataset});
 }
 
 
-void loadConcreteDataset() {
+Dataset* loadConcreteDataset() {
   std::string datasetName = "Concrete";
   std::string path = "../../examples/concrete/";
   std::string geometryFile = "Geom.data.hdr";
@@ -557,12 +564,11 @@ void loadConcreteDataset() {
                             .withQoi("function", y)
                             .withName(datasetName)
                             .build();
-  datasets.push_back(dataset);
-
   std::cout << datasetName << " dataset loaded." << std::endl;
+  return dataset;
 }
 
-void loadCrimesDataset() {
+Dataset* loadCrimesDataset() {
   std::string datasetName = "Crime";
   std::string path = "../../examples/crimes/";
   std::string geometryFile = "Geom.data.hdr";
@@ -577,13 +583,12 @@ void loadCrimesDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("function", y)
                             .withName(datasetName)
-                            .build();
-  datasets.push_back(dataset);
-
+                            .build();  
   std::cout << datasetName << " dataset loaded." << std::endl;
+  return dataset;
 }
 
-void loadGaussianDataset() {
+Dataset* loadGaussianDataset() {
   std::string datasetName = "Gaussian";
   std::string path = "../../examples/gaussian2d/";
   std::string geometryFile = "Geom.data.hdr";
@@ -597,12 +602,12 @@ void loadGaussianDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("function", y)
                             .withName(datasetName)
-                            .build();
-  datasets.push_back(dataset);
+                            .build();  
   std::cout << datasetName << " dataset loaded." << std::endl;
+  return dataset;
 }
 
-void loadColoradoDataset() {
+Dataset* loadColoradoDataset() {
   std::string datasetName = "Colorado";
   std::string path = "../../examples/truss/";
   std::string imageFolder = "images/";
@@ -618,9 +623,9 @@ void loadColoradoDataset() {
   Dataset *dataset = builder.withDistanceMatrix(distances)
                             .withQoi("max-stress", y)
                             .withName("Colorado")
-                            .build();
-  datasets.push_back(dataset);
+                            .build();  
   std::cout << datasetName << " dataset loaded." << std::endl;
+  return dataset;
 }
 
 
