@@ -59,16 +59,21 @@ class Application extends React.Component {
 
     this.state = {
       connected: false,
+      networkActive: false,
       currentDataset: null,
       datasets: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
     this.onConnect = this.onConnect.bind(this);
+    this.onNetworkActivityStart = this.onNetworkActivityStart.bind(this);
+    this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
+    this.client.addEventListener('networkActive', this.onNetworkActivityStart);
+    this.client.addEventListener('networkInactive', this.onNetworkActivityEnd);
     // export client for debugging
     window.client = this.client;
   }
@@ -107,6 +112,24 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles whent he applications starts communicating with the server.
+   */
+  onNetworkActivityStart() {
+    this.setState({
+      networkActive: true,
+    });
+  }
+
+  /**
+   * Handles when the applications stops communicating with the server.
+   */
+  onNetworkActivityEnd() {
+    this.setState({
+      networkActive: false,
+    });
+  }
+
+  /**
    * Handles updating dataflow to components when dataset changes.
    * @param {object} dataset
    */
@@ -127,7 +150,8 @@ class Application extends React.Component {
       <div className={classes.root}>
         <Toolbar className={classes.appBar}
           connectedToServer={this.state.connected}
-          onConnectClick={this.connectButtonClicked} />
+          onConnectClick={this.connectButtonClicked}
+          networkActive={this.state.networkActive} />
         <ConnectionDialog ref='connectiondialog' client={this.client}/>
         <Drawer PaperProps={{ elevation:6 }} variant='permanent'
           classes={{ paper:classes.drawerPaper }}>

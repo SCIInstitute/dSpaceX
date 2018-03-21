@@ -125,13 +125,15 @@ class Client {
    */
   _createCommandPromise(command) {
     return new Promise(function(resolve, reject) {
+      this._dispatch('networkActive');
       this._sendCommand(command, function(response, error) {
         if (error) {
           reject(error);
         } else {
           resolve(response);
         }
-      });
+        this._dispatch('networkInactive');
+      }.bind(this));
     }.bind(this));
   }
 

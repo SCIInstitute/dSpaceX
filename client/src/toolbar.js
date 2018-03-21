@@ -1,8 +1,10 @@
 import AppBar from 'material-ui/AppBar';
 import Button from 'material-ui/Button';
-import React from 'react';
+import { LinearProgress } from 'material-ui/Progress';
 import MaterialToolbar from 'material-ui/Toolbar';
+import React from 'react';
 import Typography from 'material-ui/Typography';
+
 
 /**
  * The Toolbar Component presents an application toolbar
@@ -40,6 +42,11 @@ class Toolbar extends React.Component {
             </Button>
           </div>
         </MaterialToolbar>
+        {
+          this.props.networkActive ?
+            <LinearProgress /> :
+            []
+        }
       </AppBar>
     );
   }
