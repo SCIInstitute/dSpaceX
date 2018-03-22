@@ -129,14 +129,14 @@ class WebGLWindow extends React.Component {
    * @return {HTML}
    */
   render() {
+    let style = {
+      width: '100%',
+      height: '100%',
+      borderRight: '1px dashed gray',
+      boxSizing: 'border-box',
+    };
     return (
-      <canvas ref='canvas' className='glCanvas' style={{
-        width: '100%',
-        height: '100%',
-        borderRight: '1px dashed gray',
-        boxSizing: 'border-box',
-      }}>
-      </canvas>
+      <canvas ref='canvas' className='glCanvas' style={style}/>
     );
   }
 }
