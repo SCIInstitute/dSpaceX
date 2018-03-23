@@ -315,6 +315,12 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   response["decompositionMode"] = "Morse-Smale";
   response["minPersistenceLevel"] = minLevel;
   response["maxPersistenceLevel"] = maxLevel;
+  response["complexSizes"] = Json::Value(Json::arrayValue);
+  for (int level = minLevel; level <= maxLevel; level++) {
+    MorseSmaleComplex *complex = topoData->getComplex(level);    
+    int size = complex->getCrystals().size();
+    response["complexSizes"].append(size);
+  }
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
