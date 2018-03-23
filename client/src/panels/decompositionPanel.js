@@ -3,6 +3,7 @@ import ExpansionPanel from 'material-ui/ExpansionPanel';
 import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
 import { ExpansionPanelDetails } from 'material-ui/ExpansionPanel';
 import { FormControl } from 'material-ui/Form';
+import Histogram from './histogram';
 import { InputLabel } from 'material-ui/Input';
 import List, { ListItem } from 'material-ui/List';
 import { MenuItem } from 'material-ui/Menu';
@@ -28,13 +29,19 @@ class DecompositionPanel extends React.Component {
         this.handleDecompositionModeChange.bind(this);
     this.handlePersistenceLevelChange =
         this.handlePersistenceLevelChange.bind(this);
+    this.handleSliderChange =
+        this.handleSliderChange.bind(this);
+    this.handleSliderRelease =
+        this.handleSliderRelease.bind(this);
 
     this.state = {
       decompositionMode: '',
       persistenceLevel: '',
       minPersistence: null,
       maxPersistence: null,
+      complexSizes: [],
       crystals: [],
+      sliderPersistence: null,
     };
 
     this.client = this.props.client;
@@ -58,7 +65,10 @@ class DecompositionPanel extends React.Component {
           this.setState({
             minPersistence: result.minPersistenceLevel,
             maxPersistence: result.maxPersistenceLevel,
+            complexSizes: result.complexSizes,
+            sliderPersistence: result.maxPersistenceLevel,
           });
+          this.updateDataModel('' + result.maxPersistenceLevel);
         }.bind(this));
     } else {
       this.setState({
@@ -69,15 +79,10 @@ class DecompositionPanel extends React.Component {
   }
 
   /**
-   * Handles when the persistence level combo is changed.
-   * @param {Event} event
+   * Updates state when active persistence level changes.
+   * @param {string} level
    */
-  handlePersistenceLevelChange(event) {
-    let level = event.target.value;
-    this.setState({
-      persistenceLevel: level,
-    });
-
+  updateDataModel(level) {
     if (level != '') {
       let k = 15;
       let datasetId = this.props.dataset.id;
@@ -94,6 +99,43 @@ class DecompositionPanel extends React.Component {
       this.setState({
         crystals: [],
       });
+    }
+  }
+
+  /**
+   * Handles when the persistence level combo is changed.
+   * @param {Event} event
+   */
+  handlePersistenceLevelChange(event) {
+    let level = event.target.value;
+    this.setState({
+      persistenceLevel: level,
+    });
+
+    this.updateDataModel(level);
+  }
+
+  /**
+   * Handles when the persistence slider is changed.
+   * @param {Event} event
+   */
+  handleSliderChange(event) {
+    let value = event.target.value;
+    this.setState({
+      sliderPersistence: value,
+    });
+  }
+
+  /**
+   * Handles when the user releases control of the persistence slider.
+   * @param {Event} event
+   */
+  handleSliderRelease(event) {
+    if (this.state.sliderPersistence != this.state.persistenceLevel) {
+      this.setState({
+        persistenceLevel: '' + this.state.sliderPersistence,
+      });
+      this.updateDataModel('' + this.state.sliderPersistence);
     }
   }
 
@@ -149,8 +191,21 @@ class DecompositionPanel extends React.Component {
             </FormControl>
             <div style={{ height:'15px' }}></div>
             {
-              persistenceLevels.length > 0 ?
-                <FormControl className={classes.formControl}
+              persistenceLevels.length > 0 ? [
+                <Histogram key="histogram" size={[220, 100]}
+                  data={this.state.complexSizes} />,
+                <input key="slider" type="range" step={1} id="myRange"
+                  min={this.state.minPersistence}
+                  max={this.state.maxPersistence}
+                  value={this.state.sliderPersistence}
+                  onChange={this.handleSliderChange}
+                  onMouseUp={this.handleSliderRelease}
+                  style={{ width: '220px', height: '15px', borderRadius: '5px',
+                    background: '#d3d3d3', outline: 'none', opacity: '0.7',
+                    transition: 'opacity .2s', paddingLeft: '0px',
+                    marginLeft: '0px' }} />,
+                <FormControl key="persistenceCombo"
+                  className={classes.formControl}
                   style={{
                     width: '100%',
                     boxSizing: 'border-box',
@@ -180,8 +235,8 @@ class DecompositionPanel extends React.Component {
                       ))
                     }
                   </Select>
-                </FormControl> :
-                []
+                </FormControl>,
+              ] : []
             }
             <div style={{ height:'5px' }}></div>
 
