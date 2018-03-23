@@ -67,6 +67,7 @@ class DecompositionPanel extends React.Component {
             maxPersistence: result.maxPersistenceLevel,
             complexSizes: result.complexSizes,
             sliderPersistence: result.maxPersistenceLevel,
+            persistenceLevel: ('' + result.maxPersistenceLevel),
           });
           this.updateDataModel('' + result.maxPersistenceLevel);
         }.bind(this));
