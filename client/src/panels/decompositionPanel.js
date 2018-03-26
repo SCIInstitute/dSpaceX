@@ -167,7 +167,8 @@ class DecompositionPanel extends React.Component {
   render() {
     const { classes } = this.props;
     let persistenceLevels = [];
-    if (this.state.minPersistence && this.state.maxPersistence) {
+    if (this.state.minPersistence != null
+        && this.state.maxPersistence != null) {
       for (let i=this.state.maxPersistence;
         i >= this.state.minPersistence; i--) {
         persistenceLevels.push(i);
