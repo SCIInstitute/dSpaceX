@@ -141,6 +141,26 @@ class DecompositionPanel extends React.Component {
   }
 
   /**
+   * Reacto to new props. Reset views if dataset changes.
+   * @param {object} nextProps
+   */
+  componentWillReceiveProps(nextProps) {
+    let shouldReset = !nextProps.dataset ||
+        nextProps.dataset != this.props.dataset;
+    if (shouldReset) {
+      this.setState({
+        decompositionMode: '',
+        persistenceLevel: '',
+        minPersistence: null,
+        maxPersistence: null,
+        complexSizes: [],
+        crystals: [],
+        sliderPersistence: null,
+      });
+    }
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
