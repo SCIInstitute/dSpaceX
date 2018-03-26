@@ -43,11 +43,20 @@ static dsxContext dsxcntxt;
 
 typedef Dataset* (*LoadFunction)(void);
 std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
+
+// TODO: Factor current state out into a separate component.
 std::vector<Dataset*> datasets;
 Dataset *currentDataset = nullptr;
-HDProcessResult *result = nullptr;
-HDVizData *data = nullptr;
-TopologyData *topoData = nullptr;
+
+int currentDatasetId = -1;
+int currentK = -1;
+HDProcessResult *currentProcessResult = nullptr;
+HDVizData *currentVizData = nullptr;
+TopologyData *currentTopoData = nullptr;
+
+void maybeLoadDataset(int datasetId);
+void maybeProcessData(int k);
+
 
 /* NOTE: the data read must me moved to the back-end and then
          these globals cn be made local */
@@ -150,7 +159,7 @@ extern "C" void browserText(void *wsi, char *text, int lena)
     reader.parse(std::string(text), request);
     int messageId = request["id"].asInt();
     std::string commandName = request["name"].asString();
-    std::cout << "messageId:" << messageId << std::endl;
+    std::cout << "[" << messageId << "] " << commandName << std::endl;
 
     if (commandName == "fetchDatasetList") {
       fetchDatasetList(wsi, messageId, request);
@@ -203,13 +212,7 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   if (datasetId < 0 || datasetId >= availableDatasets.size()) {
     // TODO: Send back an error message.
   }
-
-  if (currentDataset) {
-    delete currentDataset;
-    currentDataset = nullptr;
-  }
-  auto loadDataset = availableDatasets[datasetId].second;
-  currentDataset = loadDataset();
+  maybeLoadDataset(datasetId);
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -272,6 +275,7 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
+
 /**
  * Handle the command to fetch the morse smale persistence levels of a dataset.
  */
@@ -280,34 +284,17 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   if (datasetId < 0 || datasetId >= datasets.size()) {
     // TODO: Send back an error message.
   }
+
   int k = request["k"].asInt();
   if (k < 0) {
     // TODO: Send back an error message.
   }
 
-  // TODO: Don't reprocess data if previous commands already did so.
-  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
 
-  // TODO: Provide mechanism to select QoI used.
-  try {
-    result = genericProcessor.processOnMetric(
-        currentDataset->getDistanceMatrix(),
-        currentDataset->getQoiVector(0),
-        k        /* knn */,
-        25        /* samples */,
-        20        /* persistence */,
-        true      /* random */,
-        0.25      /* sigma */,
-        0         /* smooth */);
-    data = new SimpleHDVizDataImpl(result);
-    topoData = new LegacyTopologyDataImpl(data);
-  } catch (const char *err) {
-    std::cerr << err << std::endl;
-    // TODO: Return Error Message.
-  }
-
-  unsigned int minLevel = topoData->getMinPersistenceLevel();
-  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -317,7 +304,7 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   response["maxPersistenceLevel"] = maxLevel;
   response["complexSizes"] = Json::Value(Json::arrayValue);
   for (int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = topoData->getComplex(level);    
+    MorseSmaleComplex *complex = currentTopoData->getComplex(level);    
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
   }
@@ -340,36 +327,18 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
     // TODO: Send back an error message.
   }
 
-  // TODO: Don't reprocess data if previous commands already did so.
-  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
 
-  // TODO: Provide mechanism to select QoI used.
-  try {
-    result = genericProcessor.processOnMetric(
-        currentDataset->getDistanceMatrix(),
-        currentDataset->getQoiVector(0),
-        k        /* knn */,
-        25        /* samples */,
-        20        /* persistence */,
-        true      /* random */,
-        0.25      /* sigma */,
-        0         /* smooth */);
-    data = new SimpleHDVizDataImpl(result);
-    topoData = new LegacyTopologyDataImpl(data);
-  } catch (const char *err) {
-    std::cerr << err << std::endl;
-    // TODO: Return Error Message.
-  }
-
-  unsigned int minLevel = topoData->getMinPersistenceLevel();
-  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
 
   int persistenceLevel = request["persistenceLevel"].asInt();
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }
 
-  MorseSmaleComplex *complex = topoData->getComplex(persistenceLevel);
+  MorseSmaleComplex *complex = currentTopoData->getComplex(persistenceLevel);
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -408,36 +377,18 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
     // TODO: Send back an error message.
   }
 
-  // TODO: Don't reprocess data if previous commands already did so.
-  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
 
-  // TODO: Provide mechanism to select QoI used.
-  try {
-    result = genericProcessor.processOnMetric(
-        currentDataset->getDistanceMatrix(),
-        currentDataset->getQoiVector(0),
-        k        /* knn */,
-        25        /* samples */,
-        20        /* persistence */,
-        true      /* random */,
-        0.25      /* sigma */,
-        0         /* smooth */);
-    data = new SimpleHDVizDataImpl(result);
-    topoData = new LegacyTopologyDataImpl(data);
-  } catch (const char *err) {
-    std::cerr << err << std::endl;
-    // TODO: Return Error Message.
-  }
-
-  unsigned int minLevel = topoData->getMinPersistenceLevel();
-  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
 
   int persistenceLevel = request["persistenceLevel"].asInt();
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }
 
-  MorseSmaleComplex *complex = topoData->getComplex(persistenceLevel);
+  MorseSmaleComplex *complex = currentTopoData->getComplex(persistenceLevel);
 
 
   int crystalId = request["crystalId"].asInt();
@@ -482,33 +433,12 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
     // TODO: Send back an error message.
   }
 
-  std::cout << "datasetId = " << datasetId << std::endl;
-  // TODO: Verify that currentData == datasetId.
-  //       Reload/set currentData if different.
 
-  // TODO: Don't reprocess data if previous commands already did so.
-  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
 
-  // TODO: Provide mechanism to select QoI used.
-  try {
-    result = genericProcessor.processOnMetric(
-        currentDataset->getDistanceMatrix(),
-        currentDataset->getQoiVector(0),
-        k        /* knn */,
-        25        /* samples */,
-        20        /* persistence */,
-        true      /* random */,
-        0.25      /* sigma */,
-        0         /* smooth */);
-    data = new SimpleHDVizDataImpl(result);
-    topoData = new LegacyTopologyDataImpl(data);
-  } catch (const char *err) {
-    std::cerr << err << std::endl;
-    // TODO: Return Error Message.
-  }
-
-  unsigned int minLevel = topoData->getMinPersistenceLevel();
-  unsigned int maxLevel = topoData->getMaxPersistenceLevel();
+  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -518,7 +448,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   response["maxPersistenceLevel"] = maxLevel;
   response["complexes"] = Json::Value(Json::arrayValue);
   for (unsigned int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = topoData->getComplex(level);
+    MorseSmaleComplex *complex = currentTopoData->getComplex(level);
     Json::Value complexObject(Json::objectValue);
     complexObject["crystals"] = Json::Value(Json::arrayValue);
     for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {
@@ -542,6 +472,79 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
+/**
+ * Checks if the requested dataset is loaded.
+ * If not, loads the dataset and sets state.
+ */
+void maybeLoadDataset(int datasetId) {
+  if (datasetId == currentDatasetId) {
+    return;
+  }
+
+  if (currentDataset) {
+    delete currentDataset;
+    currentDataset = nullptr;
+  }
+  if (currentVizData) {
+    delete currentVizData;
+    currentVizData = nullptr;
+  }
+  if (currentTopoData) {
+    delete currentTopoData;
+    currentTopoData = nullptr;
+  }
+  currentK = -1;
+
+  auto loadDataset = availableDatasets[datasetId].second;
+  currentDataset = loadDataset();
+  currentDatasetId = datasetId;
+}
+
+/**
+ * Checks if the requested dataset has been processed
+ * with the chosen k value. If not, processes the data.
+ */
+void maybeProcessData(int k) { 
+  if (k == currentK) {
+    return;
+  }
+
+  if (currentProcessResult) {
+    delete currentProcessResult;
+    currentProcessResult = nullptr;
+  }
+  if (currentVizData) {
+    delete currentVizData;
+    currentVizData = nullptr;
+  }
+  if (currentTopoData) {
+    delete currentTopoData;
+    currentTopoData = nullptr;
+  }  
+  
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  currentK = k;
+
+  // TODO: Provide mechanism to select QoI used.
+  // TODO: Expose processing parameters to function interface.
+  try {
+    currentProcessResult = genericProcessor.processOnMetric(
+        currentDataset->getDistanceMatrix(),
+        currentDataset->getQoiVector(0),
+        currentK  /* knn */,
+        25        /* samples */,
+        20        /* persistence */,
+        true      /* random */,
+        0.25      /* sigma */,
+        0         /* smooth */);
+    currentVizData = new SimpleHDVizDataImpl(currentProcessResult);
+    currentTopoData = new LegacyTopologyDataImpl(currentVizData);
+  } catch (const char *err) {
+    std::cerr << err << std::endl;
+    // TODO: Return Error Message.
+  }
+}
+  
 
 /**
  * Construct list of available datasets.

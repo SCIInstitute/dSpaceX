@@ -59,7 +59,7 @@ class DecompositionPanel extends React.Component {
 
     if (mode == 'Morse-Smale') {
       let k = 15;
-      let datasetId = this.props.dataset.id;
+      let datasetId = this.props.dataset.datasetId;
       this.client.fetchMorseSmalePersistence(datasetId, k)
         .then(function(result) {
           this.setState({
@@ -86,7 +86,7 @@ class DecompositionPanel extends React.Component {
   updateDataModel(level) {
     if (level != '') {
       let k = 15;
-      let datasetId = this.props.dataset.id;
+      let datasetId = this.props.dataset.datasetId;
       let persistenceLevel = parseInt(level);
       this.client.fetch;
       this.client
