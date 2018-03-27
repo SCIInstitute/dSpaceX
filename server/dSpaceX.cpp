@@ -61,7 +61,6 @@ void maybeProcessData(int k);
 /* NOTE: the data read must me moved to the back-end and then
          these globals cn be made local */
 std::vector<DenseVectorSample*> samples;
-FortranLinalg::DenseVector<Precision> y;
 
 // Command Handlers
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
