@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
   }
 
   // Start listening for connections.  
-  if (wst_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {  
+  if (wst_startServer(port, nullptr, nullptr, nullptr, 0, cntxt) == 0) {  
     /** 
      * Get starting application line. For example on a Mac:
      * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
