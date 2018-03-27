@@ -13,15 +13,14 @@
 #include "util/csv/loaders.h"
 #include "wst.h"
 
+#include <algorithm>
 #include <chrono>
-#include <thread>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <string>
-#include <cstdlib>
-#include <algorithm>
-#include <cmath>
-#include <cstring>
-
+#include <thread>
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
