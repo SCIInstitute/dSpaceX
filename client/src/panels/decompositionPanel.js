@@ -111,6 +111,7 @@ class DecompositionPanel extends React.Component {
     let level = event.target.value;
     this.setState({
       persistenceLevel: level,
+      sliderPersistence: level,
     });
 
     this.updateDataModel(level);
