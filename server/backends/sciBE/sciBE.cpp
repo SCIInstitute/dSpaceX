@@ -25,8 +25,8 @@
 
 
 /* NOTE: This needs to be removed and the data read moved to Initialize */
-extern std::vector<DenseVectorSample*> samples;
-extern FortranLinalg::DenseVector<Precision> y;
+std::vector<DenseVectorSample*> samples;
+FortranLinalg::DenseVector<Precision> y;
 
 
 /* image file reader */

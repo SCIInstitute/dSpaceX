@@ -58,10 +58,6 @@ void maybeLoadDataset(int datasetId);
 void maybeProcessData(int k);
 
 
-/* NOTE: the data read must me moved to the back-end and then
-         these globals cn be made local */
-std::vector<DenseVectorSample*> samples;
-
 // Command Handlers
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
 void fetchDataset(void *wsi, int messageId, const Json::Value &request);
@@ -639,6 +635,7 @@ Dataset* loadColoradoDataset() {
 
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x) {
+  std::vector<DenseVectorSample*> samples;
   for (int j = 0; j < x.N(); j++) {
     FortranLinalg::DenseVector<Precision> vector(x.M());
     for (int i = 0; i < x.M(); i++) {
