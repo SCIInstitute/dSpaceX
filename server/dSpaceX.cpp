@@ -1,29 +1,27 @@
-/*
- *      dSpaceX server
- */
-#include "HDGenericProcessor.h"
-#include "SimpleHDVizDataImpl.h"
-#include "TopologyData.h"
-#include "LegacyTopologyDataImpl.h"
-#include "Precision.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
+#include "Dataset.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
+#include "HDGenericProcessor.h"
+#include <jsoncpp/json.h>
+#include "LegacyTopologyDataImpl.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
+#include "Precision.h"
+#include "SimpleHDVizDataImpl.h"
+#include "TopologyData.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
-#include "Dataset.h"
+#include "wst.h"
 
-#include <jsoncpp/json.h>
-
+#include <chrono>
+#include <thread>
 #include <exception>
 #include <string>
 #include <cstdlib>
 #include <algorithm>
-#include <stdio.h>
-#include <math.h>
-#include <string.h>
-#include <unistd.h>		// usleep
+#include <cmath>
+#include <cstring>
+
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -33,30 +31,15 @@
 #define strtok_r strtok_s
 #endif
 
-#include "wst.h"
 
-#include "dsxdyn.h"
-
-/* globals used in these functions */
-static wstContext *cntxt;
-static dsxContext dsxcntxt;
-
-typedef Dataset* (*LoadFunction)(void);
-std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
-
-// TODO: Factor current state out into a separate component.
-std::vector<Dataset*> datasets;
-Dataset *currentDataset = nullptr;
-
-int currentDatasetId = -1;
-int currentK = -1;
-HDProcessResult *currentProcessResult = nullptr;
-HDVizData *currentVizData = nullptr;
-TopologyData *currentTopoData = nullptr;
+void configureAvailableDatasets();
+Dataset* loadConcreteDataset();
+Dataset* loadCrimesDataset();
+Dataset* loadGaussianDataset();
+Dataset* loadColoradoDataset();
 
 void maybeLoadDataset(int datasetId);
 void maybeProcessData(int k);
-
 
 // Command Handlers
 void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
@@ -67,74 +50,70 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
 void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request);
 void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
 
-void configureAvailableDatasets();
-Dataset* loadConcreteDataset();
-Dataset* loadCrimesDataset();
-Dataset* loadGaussianDataset();
-Dataset* loadColoradoDataset();
-
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x);
 
+typedef Dataset* (*LoadFunction)(void);
+std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
+
+// TODO: Refactor current state out into a separate component.
+std::vector<Dataset*> datasets;
+Dataset *currentDataset = nullptr;
+int currentDatasetId = -1;
+int currentK = -1;
+HDProcessResult *currentProcessResult = nullptr;
+HDVizData *currentVizData = nullptr;
+TopologyData *currentTopoData = nullptr;
+
+
+
+const int kDefaultPort = 7681;
 
 int main(int argc, char *argv[])
 {
-  int port = 7681;
-
-  /* get our starting application line
-   *
-   * for example on a Mac:
-   * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
-   */
-  char  *startapp = getenv("DSX_START");
-
-  if ((argc != 1) && (argc != 2)) {
+  if (argc > 2) {
     printf("\n Usage: dSpaceX [port]\n\n");
     return 1;
   }
-  if (argc == 2) port = atoi(argv[1]);
-
-  /* initialize the back-end subsystem
-     assume we have started where we can file the DLL/so */
-  int stat = dsx_Load(&dsxcntxt, "dSpaceXbe");
-  if (stat < 0) {
-    printf(" failed to Load Back-End %d!\n", stat);
-    return 1;
+  
+  int port = kDefaultPort;
+  if (argc == 2) {
+    port = atoi(argv[1]);
   }
 
   try {
     configureAvailableDatasets();
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
+    return 1;
   }
 
-
-  /* create the Web Socket Transport context */
-  cntxt = wst_createContext();
-  if (cntxt == NULL) {
-    printf(" failed to create wstContext!\n");
+  // Create the Web Socket Transport context.
+  wstContext *cntxt = wst_createContext();
+  if (!cntxt) {
+    std::cout << "Failed to create wstContext!" << std::endl;
     return -1;
   }
 
-  // start the server code
-  stat = 0;
-  if (wst_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {
-
-    /* we have a single valid server */
+  // Start listening for connections.  
+  if (wst_startServer(port, NULL, NULL, NULL, 0, cntxt) == 0) {  
+    /** 
+     * Get starting application line. For example on a Mac:
+     * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
+     */
+    char *startapp = getenv("DSX_START");
+    int stat = 0;
     while (wst_statusServer(0)) {
-      usleep(500000);
+      std::this_thread::sleep_for(std::chrono::milliseconds(500));
       if (stat == 0) {
-        if (startapp != NULL) system(startapp);
+        if (startapp != NULL) {
+          system(startapp);
+        }
         stat++;
-      }
-      if (wst_nClientServer(0) == 0) {
-        continue;
-      }
-      // wst_broadcastText("I'm here!");
+      }      
     }
   }
 
-  /* finish up */
   wst_cleanupServers();
   return 0;
 }
@@ -632,7 +611,7 @@ Dataset* loadColoradoDataset() {
   return dataset;
 }
 
-
+// TODO: Move into a utility.
 FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x) {
   std::vector<DenseVectorSample*> samples;
