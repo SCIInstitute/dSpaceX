@@ -1,10 +1,11 @@
 #include "Precision.h"
 #include "Linalg.h"
 #include "LinalgIO.h"
+#include <vector>
 
 
 class Dataset {
- public:  
+ public:
   int numberOfSamples() {
     return m_distances.M();
   }
