@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <string>
 #include <thread>
 
@@ -30,6 +31,17 @@
 #define strtok_r strtok_s
 #endif
 
+using namespace std::placeholders;
+
+Controller::Controller() {
+  m_commandMap.insert({"fetchDatasetList", std::bind(&Controller::fetchDatasetList, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
+}
 
 void Controller::handleData(void *wsi, void *data) {
   // TODO:  Implement
@@ -45,23 +57,13 @@ void Controller::handleText(void *wsi, const std::string &text) {
     std::string commandName = request["name"].asString();
     std::cout << "[" << messageId << "] " << commandName << std::endl;
 
-    if (commandName == "fetchDatasetList") {
-      fetchDatasetList(wsi, messageId, request);
-    } else if (commandName == "fetchDataset") {
-      fetchDataset(wsi, messageId, request);
-    } else if (commandName == "fetchKNeighbors") {
-      fetchKNeighbors(wsi, messageId, request);
-    } else if (commandName == "fetchMorseSmaleDecomposition") {
-      fetchMorseSmaleDecomposition(wsi, messageId, request);
-    } else if (commandName == "fetchMorseSmalePersistence") {
-      fetchMorseSmalePersistence(wsi, messageId, request);
-    } else if (commandName == "fetchMorseSmalePersistenceLevel") {
-      fetchMorseSmalePersistenceLevel(wsi, messageId, request);
-    } else if (commandName == "fetchMorseSmaleCrystal") {
-      fetchMorseSmaleCrystal(wsi, messageId, request);
+    auto command = m_commandMap[commandName];
+    if (command) {
+      command(wsi, messageId, request);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
+
   } catch (const std::exception &e) {
     std::cerr << "Command Parsing Error." << e.what() << std::endl;
     // TODO: Send back an error message.
