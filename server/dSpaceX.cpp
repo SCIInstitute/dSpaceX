@@ -90,29 +90,30 @@ int main(int argc, char *argv[])
   // Create the Web Socket Transport context.
   wstContext *cntxt = wst_createContext();
   if (!cntxt) {
-    std::cout << "Failed to create wstContext!" << std::endl;
+    std::cout << "Failed to create wstContext." << std::endl;
     return -1;
   }
 
   // Start listening for connections.  
-  if (wst_startServer(port, nullptr, nullptr, nullptr, 0, cntxt) == 0) {  
-    /** 
-     * Get starting application line. For example on a Mac:
-     * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
-     */
-    char *startapp = getenv("DSX_START");
-    int stat = 0;
-    while (wst_statusServer(0)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      if (stat == 0) {
-        if (startapp != NULL) {
-          system(startapp);
-        }
-        stat++;
-      }      
-    }
+  int status = wst_startServer(port, nullptr, nullptr, nullptr, 0, cntxt);
+  if (status != 0) {
+    std::cout << "FATAL: wst_startServer returned failure." << std::endl;
+    return -1;
   }
 
+  /** 
+   * If browser command supplied, open the url. For example on a Mac:
+   * setenv DSX_START "open -a /Applications/Firefox.app ../client/dSpaceX.html"
+   */
+  char *startapp = getenv("DSX_START");
+  if (startapp) {
+    system(startapp);
+  }
+  
+  // Keep server alive.
+  while (wst_statusServer(0)) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));    
+  }
   wst_cleanupServers();
   return 0;
 }
