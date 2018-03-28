@@ -14,14 +14,12 @@
 #include "wst.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <functional>
 #include <string>
-#include <thread>
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
