@@ -30,34 +30,17 @@
 #define strtok_r strtok_s
 #endif
 
-FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
-    FortranLinalg::DenseMatrix<Precision> &x);
 
-typedef Dataset* (*LoadFunction)(void);
-std::vector<std::pair<std::string, LoadFunction>> availableDatasets;
-
-// TODO: Refactor current state out into a separate component.
-std::vector<Dataset*> datasets;
-Dataset *currentDataset = nullptr;
-int currentDatasetId = -1;
-int currentK = -1;
-HDProcessResult *currentProcessResult = nullptr;
-HDVizData *currentVizData = nullptr;
-TopologyData *currentTopoData = nullptr;
-
-
-extern "C" void browserData(void *wsi, void *data)
-{
+void Controller::handleData(void *wsi, void *data) {
   // TODO:  Implement
 }
 
-extern "C" void browserText(void *wsi, char *text, int lena)
-{
+void Controller::handleText(void *wsi, const std::string &text) {
   Json::Reader reader;
   Json::Value request;
 
   try {
-    reader.parse(std::string(text), request);
+    reader.parse(text, request);
     int messageId = request["id"].asInt();
     std::string commandName = request["name"].asString();
     std::cout << "[" << messageId << "] " << commandName << std::endl;
@@ -88,15 +71,15 @@ extern "C" void browserText(void *wsi, char *text, int lena)
 /**
  * Handle the command to fetch list of available datasets.
  */
-void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
   response["datasets"] = Json::Value(Json::arrayValue);
 
-  for (size_t i=0; i < availableDatasets.size(); i++) {
+  for (size_t i=0; i < m_availableDatasets.size(); i++) {
     Json::Value object = Json::Value(Json::objectValue);
     object["id"] = static_cast<int>(i);
-    object["name"] = availableDatasets[i].first;
+    object["name"] = m_availableDatasets[i].first;
     response["datasets"].append(object);
   }
 
@@ -108,9 +91,9 @@ void fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
 /**
  * Handle the command to load and fetch details of a dataset.
  */
-void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= availableDatasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   maybeLoadDataset(datasetId);
@@ -118,16 +101,16 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
   response["datasetId"] = datasetId;
-  response["name"] = currentDataset->getName();
-  response["numberOfSamples"] = currentDataset->numberOfSamples();
+  response["name"] = m_currentDataset->getName();
+  response["numberOfSamples"] = m_currentDataset->numberOfSamples();
   response["qoiNames"] = Json::Value(Json::arrayValue);
 
-  for (std::string qoiName : currentDataset->getQoiNames()) {
+  for (std::string qoiName : m_currentDataset->getQoiNames()) {
     response["qoiNames"].append(qoiName);
   }
 
   response["attributeNames"] = Json::Value(Json::arrayValue);
-  for (std::string attributeName : currentDataset->getAttributeNames()) {
+  for (std::string attributeName : m_currentDataset->getAttributeNames()) {
     response["attributeNames"].append(attributeName);
   }
 
@@ -140,9 +123,9 @@ void fetchDataset(void *wsi, int messageId, const Json::Value &request) {
 /**
  * Handle the command to fetch the k-nearest-neighbor graph of a dataset.
  */
-void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   int k = request["k"].asInt();
@@ -151,11 +134,11 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
   }
 
   // TODO: Don't reprocess data if previous commands already did so.
-  int n = currentDataset->getDistanceMatrix().N();
+  int n = m_currentDataset->getDistanceMatrix().N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
   Distance<Precision>::findKNN(
-      currentDataset->getDistanceMatrix(), KNN, KNND);
+      m_currentDataset->getDistanceMatrix(), KNN, KNND);
 
 
   Json::Value response(Json::objectValue);
@@ -180,9 +163,9 @@ void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
 /**
  * Handle the command to fetch the morse smale persistence levels of a dataset.
  */
-void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
 
@@ -194,8 +177,8 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   maybeLoadDataset(datasetId);
   maybeProcessData(k);
 
-  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -205,7 +188,7 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
   response["maxPersistenceLevel"] = maxLevel;
   response["complexSizes"] = Json::Value(Json::arrayValue);
   for (int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = currentTopoData->getComplex(level);    
+    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
   }
@@ -218,9 +201,9 @@ void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &req
 /**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
-void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   int k = request["k"].asInt();
@@ -231,15 +214,15 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
   maybeLoadDataset(datasetId);
   maybeProcessData(k);
 
-  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
   int persistenceLevel = request["persistenceLevel"].asInt();
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }
 
-  MorseSmaleComplex *complex = currentTopoData->getComplex(persistenceLevel);
+  MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -268,9 +251,9 @@ void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
-void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   int k = request["k"].asInt();
@@ -281,15 +264,15 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
   maybeLoadDataset(datasetId);
   maybeProcessData(k);
 
-  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
   int persistenceLevel = request["persistenceLevel"].asInt();
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }
 
-  MorseSmaleComplex *complex = currentTopoData->getComplex(persistenceLevel);
+  MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
 
 
   int crystalId = request["crystalId"].asInt();
@@ -324,9 +307,9 @@ void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request
 /**
  * Handle the command to fetch the full morse smale decomposition of a dataset.
  */
-void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= datasets.size()) {
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   int k = request["k"].asInt();
@@ -338,8 +321,8 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   maybeLoadDataset(datasetId);
   maybeProcessData(k);
 
-  unsigned int minLevel = currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = currentTopoData->getMaxPersistenceLevel();
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
@@ -349,7 +332,7 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
   response["maxPersistenceLevel"] = maxLevel;
   response["complexes"] = Json::Value(Json::arrayValue);
   for (unsigned int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = currentTopoData->getComplex(level);
+    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);
     Json::Value complexObject(Json::objectValue);
     complexObject["crystals"] = Json::Value(Json::arrayValue);
     for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {
@@ -377,88 +360,88 @@ void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &r
  * Checks if the requested dataset is loaded.
  * If not, loads the dataset and sets state.
  */
-void maybeLoadDataset(int datasetId) {
-  if (datasetId == currentDatasetId) {
+void Controller::maybeLoadDataset(int datasetId) {
+  if (datasetId == m_currentDatasetId) {
     return;
   }
 
-  if (currentDataset) {
-    delete currentDataset;
-    currentDataset = nullptr;
+  if (m_currentDataset) {
+    delete m_currentDataset;
+    m_currentDataset = nullptr;
   }
-  if (currentVizData) {
-    delete currentVizData;
-    currentVizData = nullptr;
+  if (m_currentVizData) {
+    delete m_currentVizData;
+    m_currentVizData = nullptr;
   }
-  if (currentTopoData) {
-    delete currentTopoData;
-    currentTopoData = nullptr;
+  if (m_currentTopoData) {
+    delete m_currentTopoData;
+    m_currentTopoData = nullptr;
   }
-  currentK = -1;
+  m_currentK = -1;
 
-  auto loadDataset = availableDatasets[datasetId].second;
-  currentDataset = loadDataset();
-  currentDatasetId = datasetId;
+  auto loadDataset = m_availableDatasets[datasetId].second;
+  m_currentDataset = loadDataset();
+  m_currentDatasetId = datasetId;
 }
 
 /**
  * Checks if the requested dataset has been processed
  * with the chosen k value. If not, processes the data.
  */
-void maybeProcessData(int k) { 
-  if (k == currentK) {
+void Controller::maybeProcessData(int k) {
+  if (k == m_currentK) {
     return;
   }
 
-  if (currentProcessResult) {
-    delete currentProcessResult;
-    currentProcessResult = nullptr;
+  if (m_currentProcessResult) {
+    delete m_currentProcessResult;
+    m_currentProcessResult = nullptr;
   }
-  if (currentVizData) {
-    delete currentVizData;
-    currentVizData = nullptr;
+  if (m_currentVizData) {
+    delete m_currentVizData;
+    m_currentVizData = nullptr;
   }
-  if (currentTopoData) {
-    delete currentTopoData;
-    currentTopoData = nullptr;
-  }  
-  
+  if (m_currentTopoData) {
+    delete m_currentTopoData;
+    m_currentTopoData = nullptr;
+  }
+
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-  currentK = k;
+  m_currentK = k;
 
   // TODO: Provide mechanism to select QoI used.
   // TODO: Expose processing parameters to function interface.
   try {
-    currentProcessResult = genericProcessor.processOnMetric(
-        currentDataset->getDistanceMatrix(),
-        currentDataset->getQoiVector(0),
-        currentK  /* knn */,
+    m_currentProcessResult = genericProcessor.processOnMetric(
+        m_currentDataset->getDistanceMatrix(),
+        m_currentDataset->getQoiVector(0),
+        m_currentK  /* knn */,
         25        /* samples */,
         20        /* persistence */,
         true      /* random */,
         0.25      /* sigma */,
         0         /* smooth */);
-    currentVizData = new SimpleHDVizDataImpl(currentProcessResult);
-    currentTopoData = new LegacyTopologyDataImpl(currentVizData);
+    m_currentVizData = new SimpleHDVizDataImpl(m_currentProcessResult);
+    m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {
     std::cerr << err << std::endl;
     // TODO: Return Error Message.
   }
 }
-  
+
 
 /**
  * Construct list of available datasets.
  */
-void configureAvailableDatasets() {
-  availableDatasets.push_back({"Concrete", loadConcreteDataset});
-  availableDatasets.push_back({ "Crimes",  loadCrimesDataset});
-  availableDatasets.push_back({"Gaussian", loadGaussianDataset});
-  availableDatasets.push_back({"Colorado", loadColoradoDataset});
+void Controller::configureAvailableDatasets() {
+  m_availableDatasets.push_back({"Concrete", std::bind(&Controller::loadConcreteDataset, this)});
+  m_availableDatasets.push_back({ "Crimes",  std::bind(&Controller::loadCrimesDataset,   this)});
+  m_availableDatasets.push_back({"Gaussian", std::bind(&Controller::loadGaussianDataset, this)});
+  m_availableDatasets.push_back({"Colorado", std::bind(&Controller::loadColoradoDataset, this)});
 }
 
 
-Dataset* loadConcreteDataset() {
+Dataset* Controller::loadConcreteDataset() {
   std::string datasetName = "Concrete";
   std::string path = "../../examples/concrete/";
   std::string geometryFile = "Geom.data.hdr";
@@ -478,7 +461,7 @@ Dataset* loadConcreteDataset() {
   return dataset;
 }
 
-Dataset* loadCrimesDataset() {
+Dataset* Controller::loadCrimesDataset() {
   std::string datasetName = "Crime";
   std::string path = "../../examples/crimes/";
   std::string geometryFile = "Geom.data.hdr";
@@ -498,7 +481,7 @@ Dataset* loadCrimesDataset() {
   return dataset;
 }
 
-Dataset* loadGaussianDataset() {
+Dataset* Controller::loadGaussianDataset() {
   std::string datasetName = "Gaussian";
   std::string path = "../../examples/gaussian2d/";
   std::string geometryFile = "Geom.data.hdr";
@@ -517,7 +500,7 @@ Dataset* loadGaussianDataset() {
   return dataset;
 }
 
-Dataset* loadColoradoDataset() {
+Dataset* Controller::loadColoradoDataset() {
   std::string datasetName = "Colorado";
   std::string path = "../../examples/truss/";
   std::string imageFolder = "images/";
@@ -539,7 +522,7 @@ Dataset* loadColoradoDataset() {
 }
 
 // TODO: Move into a utility.
-FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
+FortranLinalg::DenseMatrix<Precision> Controller::computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x) {
   std::vector<DenseVectorSample*> samples;
   for (int j = 0; j < x.N(); j++) {
