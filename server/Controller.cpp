@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "Controller.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "HDGenericProcessor.h"
