@@ -13,7 +13,7 @@ SET(SERVER_INCLUDE_FILES
   dsxdyn.h)
 
 SET(SERVER_SOURCE_FILES 
-  dSpaceX.cpp
+  main.cpp
   dsxdyn.c)
 
 # Add library includes
