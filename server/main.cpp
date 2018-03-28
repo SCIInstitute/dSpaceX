@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "Controller.h"
 #include "wst.h"
 
 #include <chrono>
