@@ -14,6 +14,7 @@ SET(SERVER_INCLUDE_FILES
 
 SET(SERVER_SOURCE_FILES 
   main.cpp
+  controller.cpp
   dsxdyn.c)
 
 # Add library includes

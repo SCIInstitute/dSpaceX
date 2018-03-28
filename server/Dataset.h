@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Precision.h"
 #include "Linalg.h"
 #include "LinalgIO.h"
