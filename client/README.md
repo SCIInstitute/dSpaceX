@@ -15,6 +15,6 @@ This will create a local directory called ./node_modules containing all the sour
 
 This will create a file called 'client.bundle.js' in the client/build folder.
 
-# Open the new dSpaceX2.html file
-file:///.../dSpaceX/client/dSpaceX2.html
+# Open dSpaceX.html in a browser.
+file:///.../dSpaceX/client/dSpaceX.html
 

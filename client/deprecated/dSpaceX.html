@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "~//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<!--
+/*
+ * dSpaceX use of WebViewer (wv)
+ */
+ -->
+
+<html id="mainBody">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>
+      dSpaceX
+    </title>
+
+    <script type="text/javascript" src="WebViewer/webgl-utils.js"> </script>
+    <script type="text/javascript" src="WebViewer/webgl-debug.js"> </script>
+    <script type="text/javascript" src="WebViewer/J3DIMath.js">    </script>
+
+    <script>
+        var   wv = {};              // place to store "globals"
+    </script>
+    <script type="text/javascript" src="WebViewer/wv-draw.js">     </script>
+    <script type="text/javascript" src="WebViewer/wv-render.js">   </script>
+    <script type="text/javascript" src="WebViewer/wv-gPrim.js">    </script>
+    <script type="text/javascript" src="WebViewer/wv-sGraph.js">   </script>
+    <script type="text/javascript" src="WebViewer/wv-socket.js">   </script>
+    <script type="text/javascript" src="WebViewer/wv-cbManage.js"> </script>
+
+    <script type="text/javascript" src="dSpaceX.js">               </script>
+    <script type="text/javascript" src="dSX-tree.js">              </script>
+    <script type="text/javascript" src="dSX-2D.js">                </script>
+
+    <script>
+      "use strict";
+
+      wv.zNear    =  1.0;           // have some values for Zscreen
+      wv.zFar     = 11.0;
+      wv.canvasID = "WebViewer";    // must match <canvas id=...> below!
+      wv.canvasKY = "WVkey";
+      wv.canvas2D = "TwoD";
+      wv.keyType  = 0;              // use alternative annotation
+      wv.caseNum  = 0;
+      wv.params   = new Array();
+      wv.qois     = new Array();
+
+      // initialize webSockets
+      var url = prompt("Enter hostname:port", "Localhost:7681");
+      wv.getSockets("ws://"+url);
+
+      // set our callback functions
+      wv.setCallback("InitUI",        wvInitUI);
+      wv.setCallback("UpdateUI",      wvUpdateUI);
+      wv.setCallback("ServerMessage", wvServerMessage);
+      wv.setCallback("InitCanvas2D",  InitCanvas2D);
+      wv.setCallback("DrawPicture2D", drawPicture2D);
+
+      var myTree = new Tree(document, "myTree");
+
+      window.onresize = resizeFrames;
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="dSpaceX.css" />
+  </head>
+
+  <body onload="wv.Start(); resizeFrames()">
+    <div id='leftframe' oncontextmenu="return false;">
+    </div>
+    <div id='midlframe'>
+      <canvas id="TwoD">
+      </canvas>
+    </div>
+    <div id='riteframe' align='center'>
+      <canvas id="WebViewer">
+        If you are seeing this, your web browser does not support the &lt;canvas&gt; element.
+      </canvas>
+      <input id="slider" type="range" value="100" onchange="updateSlider(this.value)">
+    </div>
+    <br />
+    <div id='keyframe'>
+      <canvas id="WVkey">
+      </canvas>
+    </div>
+    <div id='botmframe'>
+    </div>
+  </body>
+</html>
