@@ -5,8 +5,8 @@ SET(SERVER_LIB_INCLUDE_FILES
   libwebsockets.h
   extension-x-google-mux.h 
   private-libwebsockets.h 
-  ../../include/wstypes.h
-  ../../include/wst.h)
+  wstypes.h
+  wst.h)
 
 SET(SERVER_LIB_SOURCE_FILES 
   base64-decode.c 

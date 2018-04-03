@@ -1,5 +1,5 @@
 #include "Controller.h"
-#include "wst.h"
+#include "serverlib/wst.h"
 
 #include <chrono>
 #include <exception>

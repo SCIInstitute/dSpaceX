@@ -11,7 +11,7 @@
 #include "TopologyData.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
-#include "wst.h"
+#include "serverlib/wst.h"
 
 #include <algorithm>
 #include <cmath>
