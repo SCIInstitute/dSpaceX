@@ -14,12 +14,8 @@ LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 INCLUDE_DIRECTORIES( lib 
                      external/kernelstats/lib 
                      external/kernelstats/external/flinalg/lib
-                     external/kernelstats/external/metrics/lib
-                     external/utils/lib
-                     external/annmod/lib
-                     external/annmod/lib/ann
-                     ${ANN_INCLUDE_FILES} 
-                    )
+                     external/kernelstats/external/metrics/lib                     
+                     ${ANN_INCLUDE_FILES} )
 
 ADD_SUBDIRECTORY(commandline)
 
