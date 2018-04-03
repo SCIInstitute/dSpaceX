@@ -30,19 +30,19 @@ INCLUDE_DIRECTORIES(
   external/dimred/lib
   external/graph/lib
   external/imageutils/lib
-  external/morsesmale/lib
-  external/morsesmale/external/annmod/lib
-  external/morsesmale/external/annmod/lib/ann
-  external/morsesmale/external/utils/lib
-  external/morsesmale/external/kernelstats/lib
-  external/morsesmale/external/kernelstats/external/metrics/lib
-  external/morsesmale/external/kernelstats/external/flinalg/lib
-  external/morsesmale/external/kernelstats/external/flinalg/commandline/
+  lib/morsesmale/lib
+  lib/morsesmale/external/annmod/lib
+  lib/morsesmale/external/annmod/lib/ann
+  lib/morsesmale/external/utils/lib
+  lib/morsesmale/external/kernelstats/lib
+  lib/morsesmale/external/kernelstats/external/metrics/lib
+  lib/morsesmale/external/kernelstats/external/flinalg/lib
+  lib/morsesmale/external/kernelstats/external/flinalg/commandline/
   ${ANN_INCLUDE_FILES}
 )
 
 
-ADD_SUBDIRECTORY(external/morsesmale/external/annmod/)
+ADD_SUBDIRECTORY(lib/morsesmale/external/annmod/)
 # ADD_SUBDIRECTORY(lib/tSNE)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/hdprocess)
