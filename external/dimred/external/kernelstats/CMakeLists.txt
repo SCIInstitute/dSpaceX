@@ -5,7 +5,6 @@ ENDIF(COMMAND CMAKE_POLICY)
 
 PROJECT(KernelStats)
 
-
-INCLUDE_DIRECTORIES(lib external/metrics/lib external/flinalg/lib )
+INCLUDE_DIRECTORIES(lib external/flinalg/lib )
 ADD_SUBDIRECTORY(commandline)
 

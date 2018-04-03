@@ -11,7 +11,6 @@ FIND_PACKAGE(BLAS)
 INCLUDE_DIRECTORIES( lib 
                      external/kernelstats/lib 
                      external/kernelstats/external/flinalg/lib
-                     external/kernelstats/external/metrics/lib
                      external/utils/lib                   
                      ${ANN_INCLUDE_FILES} )
 

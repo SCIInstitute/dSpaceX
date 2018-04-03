@@ -32,9 +32,9 @@ INCLUDE_DIRECTORIES(
   lib/morsesmale/lib
   lib/annmod/lib
   lib/annmod/lib/ann
+  lib/metrics/lib
   lib/morsesmale/external/utils/lib
-  lib/morsesmale/external/kernelstats/lib
-  lib/morsesmale/external/kernelstats/external/metrics/lib
+  lib/morsesmale/external/kernelstats/lib  
   lib/morsesmale/external/kernelstats/external/flinalg/lib
   lib/morsesmale/external/kernelstats/external/flinalg/commandline/
   ${ANN_INCLUDE_FILES}

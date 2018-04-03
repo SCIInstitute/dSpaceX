@@ -22,7 +22,6 @@ class Distance{
     };
 
 
-
     static void computeDistances(FortranLinalg::Matrix<TPrecision> &data, 
                                  Metric<TPrecision> &metric, 
                                  FortranLinalg::Matrix<TPrecision> &distances){
@@ -37,8 +36,6 @@ class Distance{
     };
 
 
-
-
     static void computeDistances(FortranLinalg::Matrix<TPrecision> &data,
                                  int index,  
                                  Metric<TPrecision> &metric, 
@@ -50,6 +47,7 @@ class Distance{
         }
     };
 
+
     static void findKNN(FortranLinalg::Matrix<TPrecision> &d, FortranLinalg::Matrix<int> &knn,
         FortranLinalg::Matrix<TPrecision> &dists){
 
@@ -59,9 +57,7 @@ class Distance{
           // TODO: Replace with row extraction.
           for (unsigned int j = 0; j < d.N(); j++){
             distances[j] = d(j,i);
-            // std::cout << distances[j] << " " << std::flush;
           }
-          // exit(1);
         
           MinHeap<TPrecision> minHeap(distances, d.N());
           for (unsigned int j=0; j < knn.M(); j++){
@@ -73,19 +69,16 @@ class Distance{
     };
 
 
-
     static void computeKNN(FortranLinalg::Matrix<TPrecision> &data, FortranLinalg::Matrix<int> &knn,
         FortranLinalg::Matrix<TPrecision> &dists, Metric<TPrecision> &metric){
         
         TPrecision *distances = new TPrecision[data.N()];
 
         for(unsigned int i = 0; i < data.N(); i++){
-
+          // TODO: Replace with row extraction.
           for(unsigned int j=0; j<data.N(); j++){
-            distances[j] = metric.distance(data, j, data, i); 
-            // std::cout << distances[j] << " " << std::flush;
+            distances[j] = metric.distance(data, j, data, i);
           }
-          // exit(1);
         
           MinHeap<TPrecision> minHeap(distances, data.N());
           for(unsigned int j=0; j < knn.M(); j++){
@@ -110,7 +103,7 @@ class Distance{
           knn(i) = minHeap.getRootIndex();
           dists(i) = minHeap.extractRoot();
         }
-	delete[] distances;
+	      delete[] distances;
     };
    
 
