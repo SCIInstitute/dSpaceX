@@ -26,9 +26,9 @@ INCLUDE_DIRECTORIES(
   include/
   lib/
   lib/hdprocess
+  lib/graph
   external/  
-  external/dimred/lib
-  external/graph/lib
+  external/dimred/lib  
   external/imageutils/lib
   lib/morsesmale/lib
   lib/annmod/lib
