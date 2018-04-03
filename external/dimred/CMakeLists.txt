@@ -8,15 +8,11 @@ PROJECT(DimRed)
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
-ADD_SUBDIRECTORY(external/annmod/lib/ann)
-
 INCLUDE_DIRECTORIES( lib 
                      external/kernelstats/lib 
                      external/kernelstats/external/flinalg/lib
                      external/kernelstats/external/metrics/lib
-                     external/utils/lib 
-                     external/graph/lib                      
-                     ${ANN_INCLUDE_FILES} 
-                    )
+                     external/utils/lib                   
+                     ${ANN_INCLUDE_FILES} )
 
 ADD_SUBDIRECTORY(commandline)

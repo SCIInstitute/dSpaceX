@@ -2,7 +2,7 @@
 #define EPSILONNEIGHBORHOOD_H
 
 #include "Neighborhood.h"
-#include "Geometry.h"
+#include "Distance.h"
 
 #include "SparseMatrix.h"
 
@@ -15,11 +15,11 @@ class EpsilonNeighborhood : public Neighborhood<TPrecision>{
     EpsilonNeighborhood(Metric<TPrecision> &m, TPrecision epsilon, TPrecision value) 
                       : metric(m), eps(epsilon), val(value){};
 
-    SparseMatrix<TPrecision> generateNeighborhood(Matrix<TPrecision> &data){
-      
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+      using namespace FortranLinalg; 
       
       SparseMatrix<TPrecision> adj(data.N(), data.N(), val);
-      DenseMatrix<TPrecision> distances = Geometry<TPrecision>::computeDistances(data, metric);
+      DenseMatrix<TPrecision> distances = Distance<TPrecision>::computeDistances(data, metric);
 
       for(unsigned int i=0; i < adj.N(); i++){
         
