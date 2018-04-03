@@ -31,8 +31,8 @@ INCLUDE_DIRECTORIES(
   external/graph/lib
   external/imageutils/lib
   lib/morsesmale/lib
-  lib/morsesmale/external/annmod/lib
-  lib/morsesmale/external/annmod/lib/ann
+  lib/annmod/lib
+  lib/annmod/lib/ann
   lib/morsesmale/external/utils/lib
   lib/morsesmale/external/kernelstats/lib
   lib/morsesmale/external/kernelstats/external/metrics/lib
@@ -42,7 +42,7 @@ INCLUDE_DIRECTORIES(
 )
 
 
-ADD_SUBDIRECTORY(lib/morsesmale/external/annmod/)
+ADD_SUBDIRECTORY(lib/annmod/)
 # ADD_SUBDIRECTORY(lib/tSNE)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/hdprocess)

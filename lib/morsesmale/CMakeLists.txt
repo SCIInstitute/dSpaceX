@@ -22,5 +22,4 @@ INCLUDE_DIRECTORIES( lib
                     )
 
 ADD_SUBDIRECTORY(commandline)
-ADD_SUBDIRECTORY(Rpackage)
 
