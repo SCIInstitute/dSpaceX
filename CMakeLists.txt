@@ -29,7 +29,6 @@ INCLUDE_DIRECTORIES(
   lib/graph
   external/  
   external/dimred/lib  
-  external/imageutils/lib
   lib/morsesmale/lib
   lib/annmod/lib
   lib/annmod/lib/ann
