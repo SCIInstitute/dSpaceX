@@ -35,8 +35,8 @@ INCLUDE_DIRECTORIES(
   lib/metrics/lib
   lib/morsesmale/external/utils/lib
   lib/morsesmale/external/kernelstats/lib  
-  lib/morsesmale/external/kernelstats/external/flinalg/lib
-  lib/morsesmale/external/kernelstats/external/flinalg/commandline/
+  lib/flinalg/lib
+  lib/flinalg/commandline/
   ${ANN_INCLUDE_FILES}
 )
 

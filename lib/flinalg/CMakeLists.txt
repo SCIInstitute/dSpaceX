@@ -11,7 +11,6 @@ FIND_PACKAGE(BLAS)
 INCLUDE_DIRECTORIES(lib external/utils/lib)
 
 ADD_SUBDIRECTORY(commandline)
-ADD_SUBDIRECTORY(Rpackage)
 
 ADD_CUSTOM_TARGET(MATLAB_flinalgio 
     COMMAND mkdir -p ./matlab-flinalgio/ 
