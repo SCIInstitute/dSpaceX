@@ -1,9 +1,0 @@
-#MAC OS X 10.5 & up -- 64 bit (clang):
-#
-CXX    = clang++ -m64 -g
-CPPOPT = -O -fPIC -DNDEBUG -Wno-write-strings -Wunused -Wno-dangling-else -Wno-unused-result
-CC     = clang -m64 -g
-COPTS  = -O  -Wno-dangling-else -Wno-unused-result -Wno-null-dereference -Wno-logical-not-parentheses
-LOPTS  = rs
-RANLB  =
-SOFLGS = -bundle -undefined dynamic_lookup
