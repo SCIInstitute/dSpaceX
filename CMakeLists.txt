@@ -24,6 +24,7 @@ ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
   include/
+  lib/
   lib/hdprocess
   external/
   external/gle/lib

@@ -8,7 +8,7 @@ FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
 ADD_EXECUTABLE(HDVizProcessing HDVizProcess.cpp)
-TARGET_LINK_LIBRARIES (HDVizProcessing 
+TARGET_LINK_LIBRARIES (HDVizProcessing
     hdprocess
     blas
     lapack
