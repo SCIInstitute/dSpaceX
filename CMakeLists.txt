@@ -26,8 +26,7 @@ INCLUDE_DIRECTORIES(
   include/
   lib/
   lib/hdprocess
-  external/
-  external/gle/lib
+  external/  
   external/dimred/lib
   external/graph/lib
   external/imageutils/lib
@@ -56,7 +55,8 @@ if(BUILD_SERVER)
 endif(BUILD_SERVER)
 
 if(BUILD_HDVIZ)
-  ADD_SUBDIRECTORY(external/gle)
+  ADD_SUBDIRECTORY(lib/gle)
+  INCLUDE_DIRECTORIES(lib/gle/lib)
   ADD_SUBDIRECTORY(gui)
 endif(BUILD_HDVIZ)
 
