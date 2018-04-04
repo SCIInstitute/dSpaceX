@@ -28,7 +28,7 @@ INCLUDE_DIRECTORIES(
   lib/morsesmale/lib
   lib/annmod/lib
   lib/annmod/lib/ann
-  lib/metrics/lib
+  lib/metrics
   lib/utils/lib
   lib/kernelstats/lib
   lib/flinalg/lib
