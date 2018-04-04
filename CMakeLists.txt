@@ -29,7 +29,7 @@ INCLUDE_DIRECTORIES(
   lib/annmod/lib
   lib/annmod/lib/ann
   lib/metrics
-  lib/utils/lib
+  lib/utils
   lib/kernelstats/lib
   lib/flinalg/lib
   lib/flinalg/commandline/
