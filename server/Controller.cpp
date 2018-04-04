@@ -21,14 +21,6 @@
 #include <functional>
 #include <string>
 
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <winsock2.h>
-#define strtok_r strtok_s
-#endif
-
 using namespace std::placeholders;
 
 Controller::Controller() {

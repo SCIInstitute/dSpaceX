@@ -5,13 +5,6 @@
 #include <exception>
 #include <thread>
 
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <winsock2.h>
-#define strtok_r strtok_s
-#endif
 
 const int kDefaultPort = 7681;
 Controller *controller = nullptr;
