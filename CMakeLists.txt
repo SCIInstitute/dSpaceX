@@ -23,7 +23,6 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
 ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
-  include/
   lib/
   lib/hdprocess
   lib/graph
