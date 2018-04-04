@@ -1,15 +1,14 @@
 #ifndef GAUSSIANKERNEL_H
 #define GAUSSIANKERNEL_H
 
+#include "flinalg/Linalg.h"
 #include "Kernel.h"
-#include "Linalg.h"
 #include "metrics/EuclideanMetric.h"
 
 #include <cmath>
 
 template <typename TPrecision>
-class GaussianKernel : public Kernel<TPrecision, TPrecision>{
-
+class GaussianKernel : public Kernel<TPrecision, TPrecision> {
   private:
     EuclideanMetric<TPrecision> metric;
     TPrecision var;
@@ -20,8 +19,6 @@ class GaussianKernel : public Kernel<TPrecision, TPrecision>{
     FortranLinalg::DenseVector<TPrecision> diff;
 
   public:
-  
-
     GaussianKernel(unsigned int dim=1):diff(dim){
       d=dim;
     };

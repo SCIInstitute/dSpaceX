@@ -1,10 +1,11 @@
 #pragma once
 
-#include "LinalgIO.h"
-#include "DenseMatrix.h"
-#include "Linalg.h"
 #include "colormapper.h" 
+#include "flinalg/LinalgIO.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/Linalg.h"
 #include "Precision.h"
+
 #include <string>
 #include <vector>
 

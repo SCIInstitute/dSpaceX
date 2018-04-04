@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DenseVector.h"
+#include "flinalg/DenseVector.h"
 #include "metrics/EuclideanMetric.h"
 #include "Precision.h"
 

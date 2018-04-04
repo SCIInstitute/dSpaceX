@@ -3,11 +3,11 @@
 #include "HDVizData.h"
 #include "HDVizState.h"
 #include "Display.h"
-#include "DenseVector.h"
-#include "DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/DenseMatrix.h"
 #include "TopologyData.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 
 

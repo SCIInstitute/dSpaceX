@@ -1,24 +1,22 @@
 #ifndef KNNNEIGHBORHOOD_H
 #define KNNNEIGHBORHOOD_H
 
+#include "graph/Neighborhood.h"
+#include "flinalg/SparseMatrix.h"
 #include "metrics/Distance.h"
 #include "metrics/EuclideanMetric.h"
-#include "graph/Neighborhood.h"
-#include "SparseMatrix.h"
+
 
 template <typename TPrecision>
-class KNNNeighborhood : public Neighborhood<TPrecision>{
- 
-                                          
-  public:
-    
+class KNNNeighborhood : public Neighborhood<TPrecision> {
+  public:    
     KNNNeighborhood(unsigned int k, TPrecision value = std::numeric_limits<TPrecision>::max()) : 
                                knn(k), val(value){};
-
    
-
-    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(
+        FortranLinalg::Matrix<TPrecision> &data){
     
+      // TODO: Remove Using in header.
       using namespace FortranLinalg;
 
 
@@ -43,17 +41,12 @@ class KNNNeighborhood : public Neighborhood<TPrecision>{
       knns.deallocate();
       knnDists.deallocate();      
       return adj; 
-
     };
-
   
   private:
     unsigned int knn;
     TPrecision val;
-    EuclideanMetric<TPrecision> euclideanMetric;
-
-
-                                         
+    EuclideanMetric<TPrecision> euclideanMetric;                                         
 };
 
 #endif

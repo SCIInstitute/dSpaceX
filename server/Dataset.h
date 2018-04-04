@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Linalg.h"
-#include "LinalgIO.h"
+#include "flinalg/Linalg.h"
+#include "flinalg/LinalgIO.h"
 #include "Precision.h"
+
 #include <vector>
 
 

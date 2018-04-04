@@ -4,14 +4,13 @@
 #include "HDVizData.h"
 #include "HDVizState.h"
 #include "Display.h"
-#include "DenseVector.h"
-#include "DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/DenseMatrix.h"
+#include "FTGL/FTGLPixmapFont.h"
 #include "TopologyData.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
-
-#include "FTGL/FTGLPixmapFont.h"
 
 #define BUFSIZE 512
 #define RENDER_NOTHING         0

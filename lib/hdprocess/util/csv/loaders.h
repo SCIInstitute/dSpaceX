@@ -1,12 +1,13 @@
 #pragma once
 
+#include "flinalg/Linalg.h"
+#include "flinalg/LinalgIO.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "Precision.h"
+
 #include <string>
 
-#include "Precision.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
-#include "DenseMatrix.h"
-#include "DenseVector.h"
 
 namespace HDProcess {
 

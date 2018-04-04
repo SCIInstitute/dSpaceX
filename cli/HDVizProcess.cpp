@@ -1,11 +1,12 @@
+#include "flinalg/Linalg.h"
+#include "flinalg/LinalgIO.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
 #include "HDProcessor.h"
 #include "HDProcessResultSerializer.h"
-#include "tclap/CmdLine.h"
 #include "Precision.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
-#include "DenseMatrix.h"
-#include "DenseVector.h"
+#include "tclap/CmdLine.h"
+
 
 using namespace FortranLinalg;
 

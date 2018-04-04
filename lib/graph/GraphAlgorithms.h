@@ -1,8 +1,8 @@
 #ifndef GRAPHALGORITHMS_H
 #define GRAPHALGORITHMS_H
 
-#include "Matrix.h"
-#include "SparseMatrix.h"
+#include "flinalg/Matrix.h"
+#include "flinalg/SparseMatrix.h"
 #include "utils/MinHeap.h"
 
 #include <algorithm>
@@ -10,9 +10,8 @@
 
 
 template <typename TPrecision>
-class GraphAlgorithms{
+class GraphAlgorithms {
   public:
-
     struct Path{
       Path(int start, int N){
         d = new TPrecision[N];

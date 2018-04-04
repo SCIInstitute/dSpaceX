@@ -1,8 +1,8 @@
 #pragma once
 
+#include "flinalg/LinalgIO.h"
 #include "HDVizData.h"
 #include "Precision.h"
-#include "LinalgIO.h"
 
 class HDVizState {
  public:

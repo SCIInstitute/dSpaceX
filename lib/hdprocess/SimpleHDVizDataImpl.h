@@ -1,12 +1,13 @@
 #pragma once
 
+#include "colormapper.h" 
+#include "flinalg/LinalgIO.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/Linalg.h"
 #include "HDVizData.h"
 #include "HDProcessResult.h"
-#include "LinalgIO.h"
-#include "DenseMatrix.h"
-#include "Linalg.h"
-#include "colormapper.h" 
 #include "Precision.h"
+
 #include <string>
 
 class SimpleHDVizDataImpl : public HDVizData {

@@ -1,10 +1,10 @@
 #ifndef FIRSTORDERKERNELREGRESSION_H
 #define FIRSTORDERKERNELREGRESSION_H
 
-#include "DenseVector.h"
-#include "DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/Linalg.h"
 #include "GaussianKernel.h"
-#include "Linalg.h"
 #include "metrics/Distance.h"
 #include "metrics/SquaredEuclideanMetric.h"
 
@@ -12,8 +12,7 @@
 
 
 template<typename TPrecision>
-class FirstOrderKernelRegression{
-      
+class FirstOrderKernelRegression {      
   public:
     FirstOrderKernelRegression(FortranLinalg::DenseMatrix<TPrecision> &data, FortranLinalg::DenseMatrix<TPrecision>
         &labels, GaussianKernel<TPrecision> &k, int knn):Y(data), X(labels), kernel(k) {

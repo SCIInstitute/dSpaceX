@@ -1,16 +1,15 @@
 #ifndef KERNELINTERPOLATOR_H
 #define KERNELINTERPOLATOR_H
 
-#include "DenseVector.h"
-#include "DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/DenseMatrix.h"
 #include "metrics/SquaredEuclideanMetric.h"
 
-#include <math.h>
+#include <cmath>
 
 
 template<typename TPrecision>
-class KernelInterpolator{
-      
+class KernelInterpolator {      
   public:
     //x needs to be ordered
     KernelInterpolator(FortranLinalg::DenseVector<TPrecision> &xin, int dim):x(xin){
@@ -18,19 +17,14 @@ class KernelInterpolator{
         delta = FortranLinalg::DenseVector<TPrecision>(dim);
     };
 
-
     KernelInterpolator(FortranLinalg::DenseVector<TPrecision> &xin, FortranLinalg::DenseMatrix<TPrecision>
         &Yin):x(xin), Y(Yin){
         tmp = FortranLinalg::DenseVector<TPrecision>(Y.M());
         delta = FortranLinalg::DenseVector<TPrecision>(Y.M());
     };
 
-    
-
-
     void evaluate(TPrecision &xe, FortranLinalg::DenseVector<TPrecision> &out){
       FortranLinalg::Linalg<TPrecision>::Zero(out);
-
       
       TPrecision d1 = 0;
       TPrecision d2 = 0;

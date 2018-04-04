@@ -26,7 +26,6 @@ INCLUDE_DIRECTORIES(
   lib/dimred/lib
   lib/annmod/lib
   lib/annmod/lib/ann
-  lib/flinalg/lib
   lib/flinalg/commandline/
   ${ANN_INCLUDE_FILES})
 

@@ -1,9 +1,9 @@
 #ifndef DISTANCES_H
 #define DISTANCES_H
 
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
 #include "Metric.h"
-#include "DenseMatrix.h"
-#include "DenseVector.h"
 #include "utils/MinHeap.h"
 
 

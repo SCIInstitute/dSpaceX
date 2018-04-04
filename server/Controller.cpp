@@ -1,17 +1,17 @@
 #include "Controller.h"
-#include "DenseMatrix.h"
-#include "DenseVector.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/Linalg.h"
+#include "flinalg/LinalgIO.h"
 #include "HDGenericProcessor.h"
 #include <jsoncpp/json.h>
 #include "LegacyTopologyDataImpl.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
 #include "Precision.h"
+#include "serverlib/wst.h"
 #include "SimpleHDVizDataImpl.h"
 #include "TopologyData.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
-#include "serverlib/wst.h"
 
 #include <algorithm>
 #include <cmath>

@@ -19,19 +19,20 @@
 #include "LegacyTopologyDataImpl.h"
 #include <tclap/CmdLine.h>
 #include "Precision.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
-#include "DenseMatrix.h"
-#include "DenseVector.h"
+#include "flinalg/Linalg.h"
+#include "flinalg/LinalgIO.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
 
 #include <cassert>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include <math.h>
 #include <unistd.h>
-#include <stdlib.h>
+
 
 #define MAKE_STRING_(x) #x
 #define MAKE_STRING(x) MAKE_STRING_(x)

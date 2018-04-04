@@ -8,17 +8,20 @@ PROJECT(FLinalg)
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
-INCLUDE_DIRECTORIES(lib)
-ADD_SUBDIRECTORY(commandline)
+OPTION(BUILD_FLINALG_CLI "Build flinagl-cli" OFF)
+
+if(BUILD_FLINALG_CLI)
+  ADD_SUBDIRECTORY(commandline)
+endif()
 
 ADD_CUSTOM_TARGET(MATLAB_flinalgio 
     COMMAND mkdir -p ./matlab-flinalgio/ 
     COMMAND cp 
-lib/DenseMatrix.h
-lib/Matrix.h 
-lib/Vector.h 
-lib/DenseVector.h
-lib/LinalgIO.h
+DenseMatrix.h
+Matrix.h 
+Vector.h 
+DenseVector.h
+LinalgIO.h
 matlab/compile.m
 matlab/ReadLinalgMatrix.cpp
 matlab/ReadLinalgVector.cpp

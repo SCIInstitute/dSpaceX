@@ -8,9 +8,9 @@
 #ifndef NNMSCOMPLEX_H
 #define NNMSCOMPLEX_H
 
-#include "DenseMatrix.h"
-#include "DenseVector.h"
-#include "Linalg.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/Linalg.h"
 #include "metrics/Distance.h"
 #include "metrics/EuclideanMetric.h"
 #include "metrics/SquaredEuclideanMetric.h"
@@ -23,8 +23,7 @@
 
 
 template<typename TPrecision>
-class NNMSComplex{
-
+class NNMSComplex {
   private:
     typedef std::map< std::pair<int, int>, int> map_pi_i;
     typedef map_pi_i::iterator map_pi_i_it;

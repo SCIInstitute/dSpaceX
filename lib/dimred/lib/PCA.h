@@ -1,11 +1,11 @@
 #ifndef PCA_H
 #define PCA_H
 
+#include "flinalg/Linalg.h"
+#include "flinalg/SymmetricEigensystem.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/DenseMatrix.h"
 
-#include "SymmetricEigensystem.h"
-#include "DenseVector.h"
-#include "DenseMatrix.h"
-#include "Linalg.h"
 
 template <typename TPrecision>
 class PCA{

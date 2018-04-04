@@ -1,13 +1,11 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-#include "Vector.h"
-#include "Matrix.h"
-
+#include "flinalg/Vector.h"
+#include "flinalg/Matrix.h"
 
 template <typename TPrecision, typename TKernelParam>
-class Kernel{
-
+class Kernel {
   public:
     virtual ~Kernel(){};
 
@@ -26,7 +24,6 @@ class Kernel{
     virtual void setKernelParam(TKernelParam param) = 0;
 
     virtual TKernelParam getKernelParam() = 0;
-
 };
 
 #endif

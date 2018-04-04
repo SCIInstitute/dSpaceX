@@ -1,19 +1,17 @@
 #ifndef METRICMDS_H
 #define METRICMDS_H
 
-#include "DenseMatrix.h"
-#include "DenseVector.h"
-#include "Linalg.h"
+#include "flinalg/DenseMatrix.h"
+#include "flinalg/DenseVector.h"
+#include "flinalg/Linalg.h"
+#include "flinalg/SymmetricEigensystem.h"
 #include "metrics/Distance.h"
-#include "SymmetricEigensystem.h"
 
 #include <math.h>
 
 
 template <typename TPrecision>
-class MetricMDS{
-
-
+class MetricMDS {
   public:
     FortranLinalg::DenseMatrix<TPrecision> embed(
         FortranLinalg::Matrix<TPrecision> &data, Metric<TPrecision> &metric, unsigned int ndims){
@@ -70,7 +68,6 @@ class MetricMDS{
       return embed;
         
     };
-
 };
 
 #endif

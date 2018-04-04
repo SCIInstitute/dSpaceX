@@ -1,12 +1,11 @@
 #ifndef METRIC_H
 #define METRIC_H
 
-#include "Matrix.h"
-#include "Vector.h"
+#include "flinalg/Matrix.h"
+#include "flinalg/Vector.h"
 
 template<typename TPrecision>
-class Metric{
-    
+class Metric {    
   public:
     virtual ~Metric(){};
     virtual TPrecision distance(FortranLinalg::Vector<TPrecision> &x1,
@@ -16,6 +15,5 @@ class Metric{
     virtual TPrecision distance(FortranLinalg::Matrix<TPrecision> &X, int i1,
         FortranLinalg::Vector<TPrecision> &x2) = 0;
 };
-
 
 #endif
