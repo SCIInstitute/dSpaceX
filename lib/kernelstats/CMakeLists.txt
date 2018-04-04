@@ -7,4 +7,3 @@ PROJECT(KernelStats)
 
 INCLUDE_DIRECTORIES(lib)
 ADD_SUBDIRECTORY(commandline)
-
