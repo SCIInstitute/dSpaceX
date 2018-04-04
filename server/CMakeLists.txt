@@ -25,7 +25,3 @@ INCLUDE_DIRECTORIES(../lib/hdprocess)
 ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS}) 
 TARGET_LINK_LIBRARIES (dSpaceX 
   libwsserver hdprocess blas lapack pthread dl ${ZLIB_LIBRARIES} jsoncpp)
-
-
-ADD_SUBDIRECTORY(backends/sampleBE)
-ADD_SUBDIRECTORY(backends/sciBE)
