@@ -27,14 +27,13 @@ INCLUDE_DIRECTORIES(
   lib/
   lib/hdprocess
   lib/graph
-  external/  
-  external/dimred/lib  
+  lib/dimred/lib
   lib/morsesmale/lib
   lib/annmod/lib
   lib/annmod/lib/ann
   lib/metrics/lib
   lib/utils/lib
-  lib/kernelstats/lib  
+  lib/kernelstats/lib
   lib/flinalg/lib
   lib/flinalg/commandline/
   ${ANN_INCLUDE_FILES}
