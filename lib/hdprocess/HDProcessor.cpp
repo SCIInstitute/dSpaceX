@@ -1,6 +1,7 @@
 #include "HDProcessor.h"
 
-//#include "EnableFloatingPointExceptions.h"
+#include "Random.h"
+
 #include <list>
 #include <set>
 #include <iostream>
