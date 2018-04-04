@@ -2,8 +2,8 @@
 #define GAUSSIANKERNEL_H
 
 #include "Kernel.h"
-#include "EuclideanMetric.h"
 #include "Linalg.h"
+#include "metrics/EuclideanMetric.h"
 
 #include <cmath>
 

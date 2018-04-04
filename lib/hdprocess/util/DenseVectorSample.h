@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Precision.h"
 #include "DenseVector.h"
-#include "EuclideanMetric.h"
+#include "metrics/EuclideanMetric.h"
+#include "Precision.h"
 
 
 class DenseVectorSample {

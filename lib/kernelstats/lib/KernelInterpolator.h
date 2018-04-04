@@ -1,11 +1,11 @@
 #ifndef KERNELINTERPOLATOR_H
 #define KERNELINTERPOLATOR_H
 
-#include <math.h>
-
-#include "SquaredEuclideanMetric.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
+#include "metrics/SquaredEuclideanMetric.h"
+
+#include <math.h>
 
 
 template<typename TPrecision>

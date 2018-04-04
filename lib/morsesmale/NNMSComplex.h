@@ -8,19 +8,18 @@
 #ifndef NNMSCOMPLEX_H
 #define NNMSCOMPLEX_H
 
-#include "Distance.h"
-#include "EuclideanMetric.h"
-#include "SquaredEuclideanMetric.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "Linalg.h"
+#include "metrics/Distance.h"
+#include "metrics/EuclideanMetric.h"
+#include "metrics/SquaredEuclideanMetric.h"
 
-#include <map>
-#include <vector>
-#include <utility>
 #include <limits>
 #include <list>
-
+#include <map>
+#include <utility>
+#include <vector>
 
 
 template<typename TPrecision>

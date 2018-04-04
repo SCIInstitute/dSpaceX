@@ -1,15 +1,14 @@
 #ifndef METRICMDS_H
 #define METRICMDS_H
 
-#include <math.h>
-
-#include "Linalg.h"
-
-#include "Distance.h"
-
 #include "DenseMatrix.h"
 #include "DenseVector.h"
+#include "Linalg.h"
+#include "metrics/Distance.h"
 #include "SymmetricEigensystem.h"
+
+#include <math.h>
+
 
 template <typename TPrecision>
 class MetricMDS{

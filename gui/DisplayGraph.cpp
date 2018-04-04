@@ -1,13 +1,11 @@
 #include "DisplayGraph.h"
-#include "MetricMDS.h"
 
-#include "Precision.h"
 #include "LinalgIO.h"
-#include "EuclideanMetric.h"
-#include "util/csv/loaders.h"
-
+#include "MetricMDS.h"
+#include "Precision.h"
 #include <png.h>
-
+#include "metrics/EuclideanMetric.h"
+#include "util/csv/loaders.h"
 
 #include <iostream>
 #include <fstream>

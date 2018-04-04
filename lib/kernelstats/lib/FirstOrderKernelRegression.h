@@ -1,14 +1,15 @@
 #ifndef FIRSTORDERKERNELREGRESSION_H
 #define FIRSTORDERKERNELREGRESSION_H
 
-#include <math.h>
-
-#include "SquaredEuclideanMetric.h"
-#include "Distance.h"
-#include "GaussianKernel.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
+#include "GaussianKernel.h"
 #include "Linalg.h"
+#include "metrics/Distance.h"
+#include "metrics/SquaredEuclideanMetric.h"
+
+#include <math.h>
+
 
 template<typename TPrecision>
 class FirstOrderKernelRegression{

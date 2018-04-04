@@ -26,7 +26,6 @@ INCLUDE_DIRECTORIES(
   lib/dimred/lib
   lib/annmod/lib
   lib/annmod/lib/ann
-  lib/metrics
   lib/kernelstats/lib
   lib/flinalg/lib
   lib/flinalg/commandline/

@@ -1,9 +1,9 @@
 #ifndef KNNNEIGHBORHOOD_H
 #define KNNNEIGHBORHOOD_H
 
-#include "Distance.h"
-#include "EuclideanMetric.h"
-#include "Neighborhood.h"
+#include "metrics/Distance.h"
+#include "metrics/EuclideanMetric.h"
+#include "graph/Neighborhood.h"
 #include "SparseMatrix.h"
 
 template <typename TPrecision>
