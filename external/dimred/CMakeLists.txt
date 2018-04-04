@@ -8,8 +8,6 @@ PROJECT(DimRed)
 FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
-INCLUDE_DIRECTORIES( lib 
-                     external/kernelstats/lib    
-                     ${ANN_INCLUDE_FILES} )
+INCLUDE_DIRECTORIES( lib ${ANN_INCLUDE_FILES} )
 
 ADD_SUBDIRECTORY(commandline)
