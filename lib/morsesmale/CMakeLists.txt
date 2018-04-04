@@ -11,11 +11,7 @@ FIND_PACKAGE(BLAS)
 ADD_SUBDIRECTORY(external/annmod/lib/ann)
 LINK_DIRECTORIES( ${ANN_LINK_DIR} )
 
-INCLUDE_DIRECTORIES( lib 
-                     external/kernelstats/lib 
-                     external/kernelstats/external/flinalg/lib
-                     external/kernelstats/external/metrics/lib                     
-                     ${ANN_INCLUDE_FILES} )
+INCLUDE_DIRECTORIES( lib ${ANN_INCLUDE_FILES} )
 
 ADD_SUBDIRECTORY(commandline)
 
