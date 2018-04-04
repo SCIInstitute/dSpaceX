@@ -9,7 +9,7 @@
 #include "DenseVector.h"
 #include "graph/KNNNeighborhood.h"
 #include "Isomap.h"
-#include "FirstOrderKernelRegression.h"
+#include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
 
 #include <map>

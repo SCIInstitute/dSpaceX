@@ -1,19 +1,19 @@
 #ifndef DISPLAYMOLECULE_H
 #define DISPLAYMOLECULE_H
 
-#include "HDVizData.h"
-#include "Display.h"
 #include "DenseVector.h"
 #include "DenseMatrix.h"
-#include "KernelInterpolator.h"
+#include "Display.h"
+#include "FTGL/FTGLPixmapFont.h"
+#include "HDVizData.h"
+#include "kernelstats/KernelInterpolator.h"
 
 #include <stdlib.h>
 #include <string>
 
-#include "FTGL/FTGLPixmapFont.h"
 
 template<typename TPrecision>
-class DisplayMolecule : public Display{
+class DisplayMolecule : public Display {
 
   private:
 #define BUFSIZE 512

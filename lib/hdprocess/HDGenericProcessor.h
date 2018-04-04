@@ -1,17 +1,17 @@
 #pragma once
 
-#include "HDProcessor.h"
-#include "HDProcessResult.h"
-#include "Precision.h"
-#include "PCA.h"
-#include "Linalg.h"
-#include "LinalgIO.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
 #include "graph/KNNNeighborhood.h"
+#include "HDProcessor.h"
+#include "HDProcessResult.h"
 #include "Isomap.h"
-#include "FirstOrderKernelRegression.h"
+#include "kernelstats/FirstOrderKernelRegression.h"
+#include "Linalg.h"
+#include "LinalgIO.h"
 #include "morsesmale/NNMSComplex.h"
+#include "Precision.h"
+#include "PCA.h"
 #include "utils/Random.h"
 
 #include <map>
