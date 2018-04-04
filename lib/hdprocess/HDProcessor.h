@@ -10,7 +10,7 @@
 #include "KNNNeighborhood.h"
 #include "Isomap.h"
 #include "FirstOrderKernelRegression.h"
-#include "NNMSComplex.h"
+#include "morsesmale/NNMSComplex.h"
 #include "Random.h"
 
 #include <map>
