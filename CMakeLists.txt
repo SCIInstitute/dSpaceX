@@ -25,11 +25,9 @@ INCLUDE_DIRECTORIES(
   lib/hdprocess
   lib/graph
   lib/dimred/lib
-  lib/morsesmale
   lib/annmod/lib
   lib/annmod/lib/ann
   lib/metrics
-  lib/utils
   lib/kernelstats/lib
   lib/flinalg/lib
   lib/flinalg/commandline/

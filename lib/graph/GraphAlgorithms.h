@@ -1,14 +1,13 @@
 #ifndef GRAPHALGORITHMS_H
 #define GRAPHALGORITHMS_H
 
-#include <algorithm>
-
 #include "Matrix.h"
 #include "SparseMatrix.h"
+#include "utils/MinHeap.h"
 
+#include <algorithm>
 #include <limits>
 
-#include "MinHeap.h"
 
 template <typename TPrecision>
 class GraphAlgorithms{

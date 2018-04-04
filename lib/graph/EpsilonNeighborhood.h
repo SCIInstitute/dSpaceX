@@ -1,10 +1,10 @@
 #ifndef EPSILONNEIGHBORHOOD_H
 #define EPSILONNEIGHBORHOOD_H
 
-#include "Neighborhood.h"
 #include "Distance.h"
-
+#include "Neighborhood.h"
 #include "SparseMatrix.h"
+
 
 template <typename TPrecision>
 class EpsilonNeighborhood : public Neighborhood<TPrecision>{

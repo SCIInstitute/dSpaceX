@@ -11,8 +11,8 @@
 #include "KNNNeighborhood.h"
 #include "Isomap.h"
 #include "FirstOrderKernelRegression.h"
-#include "NNMSComplex.h"
-#include "Random.h"
+#include "morsesmale/NNMSComplex.h"
+#include "utils/Random.h"
 
 #include <map>
 #include <string>

@@ -2,9 +2,9 @@
 #define DISTANCES_H
 
 #include "Metric.h"
-#include "MinHeap.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
+#include "utils/MinHeap.h"
 
 
 template <typename TPrecision>
