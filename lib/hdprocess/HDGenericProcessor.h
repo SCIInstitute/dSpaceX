@@ -8,7 +8,7 @@
 #include "LinalgIO.h"
 #include "DenseMatrix.h"
 #include "DenseVector.h"
-#include "KNNNeighborhood.h"
+#include "graph/KNNNeighborhood.h"
 #include "Isomap.h"
 #include "FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"

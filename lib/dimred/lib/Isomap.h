@@ -1,9 +1,9 @@
 #ifndef ISOMAP_H
 #define ISOMAP_H
 
-#include "GraphAlgorithms.h"
 #include "MetricMDS.h"
-#include "Neighborhood.h"
+#include "graph/GraphAlgorithms.h"
+#include "graph/Neighborhood.h"
 
 #include <math.h>
 

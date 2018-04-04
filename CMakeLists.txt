@@ -23,7 +23,6 @@ ADD_DEFINITIONS ("-w")
 INCLUDE_DIRECTORIES(
   lib/
   lib/hdprocess
-  lib/graph
   lib/dimred/lib
   lib/annmod/lib
   lib/annmod/lib/ann
