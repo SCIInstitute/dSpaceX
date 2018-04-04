@@ -9,9 +9,7 @@ FIND_PACKAGE(LAPACK)
 FIND_PACKAGE(BLAS)
 
 INCLUDE_DIRECTORIES( lib 
-                     external/kernelstats/lib 
-                     external/kernelstats/external/flinalg/lib
-                     external/utils/lib                   
+                     external/kernelstats/lib    
                      ${ANN_INCLUDE_FILES} )
 
 ADD_SUBDIRECTORY(commandline)
