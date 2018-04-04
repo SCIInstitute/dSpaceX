@@ -29,7 +29,7 @@ class SparseMatrix : public Matrix<TPrecision>{
 
     };
 
-    void set(unsigned int i, unsigned int j, Precision value){
+    void set(unsigned int i, unsigned int j, TPrecision value){
       SparseEntry *entry = data[i]; 
       entry->operator[](j) = value;
 

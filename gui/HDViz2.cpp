@@ -1,5 +1,3 @@
-#include "Precision.h"
-
 #include "Display.h"
 #include "DisplayTubes.h"
 #ifdef DIMENSION
@@ -9,22 +7,21 @@
 #include "DisplayRange.h"
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
-
-#include "HDProcessor.h"
-#include "HDProcessResult.h"
-#include "HDProcessResultSerializer.h"
-#include "HDGenericProcessor.h"
-#include "SimpleHDVizDataImpl.h"
-#include "TopologyData.h"
-#include "LegacyTopologyDataImpl.h"
-#include <tclap/CmdLine.h>
-#include "Precision.h"
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
-#include "util/DenseVectorSample.h"
-#include "util/csv/loaders.h"
+#include "hdprocess/HDProcessor.h"
+#include "hdprocess/HDProcessResult.h"
+#include "hdprocess/HDProcessResultSerializer.h"
+#include "hdprocess/HDGenericProcessor.h"
+#include "hdprocess/SimpleHDVizDataImpl.h"
+#include "hdprocess/TopologyData.h"
+#include "hdprocess/LegacyTopologyDataImpl.h"
+#include "hdprocess/util/DenseVectorSample.h"
+#include "hdprocess/util/csv/loaders.h"
+#include "precision/Precision.h"
+#include <tclap/CmdLine.h>
 
 #include <cassert>
 #include <cmath>

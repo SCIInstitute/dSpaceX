@@ -22,11 +22,9 @@ ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
   lib/
-  lib/hdprocess
   lib/dimred/lib
   lib/annmod/lib
   lib/annmod/lib/ann
-  lib/flinalg/commandline/
   ${ANN_INCLUDE_FILES})
 
 ADD_SUBDIRECTORY(lib/annmod/)

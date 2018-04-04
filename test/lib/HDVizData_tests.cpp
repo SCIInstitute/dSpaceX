@@ -1,8 +1,8 @@
 #include "gtest/gtest.h"
-#include "FileCachedHDVizDataImpl.h"
-#include "SimpleHDVizDataImpl.h"
-#include "HDProcessResult.h"
-#include "HDProcessResultSerializer.h"
+#include "hdprocess/FileCachedHDVizDataImpl.h"
+#include "hdprocess/SimpleHDVizDataImpl.h"
+#include "hdprocess/HDProcessResult.h"
+#include "hdprocess/HDProcessResultSerializer.h"
 
 #include <iostream>
 #include <exception>

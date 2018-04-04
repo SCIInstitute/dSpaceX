@@ -1,13 +1,13 @@
 #ifndef DISPLAYTUBES_H
 #define DISPLAYTUBES_H
 
-#include "HDVizData.h"
-#include "HDVizState.h"
 #include "Display.h"
+#include "hdprocess/HDVizData.h"
+#include "hdprocess/TopologyData.h"
+#include "HDVizState.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/DenseMatrix.h"
 #include "FTGL/FTGLPixmapFont.h"
-#include "TopologyData.h"
 
 #include <cstdlib>
 #include <string>

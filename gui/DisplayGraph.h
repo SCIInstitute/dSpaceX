@@ -1,11 +1,11 @@
 #pragma once
 
-#include "HDVizData.h"
-#include "HDVizState.h"
 #include "Display.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/DenseMatrix.h"
-#include "TopologyData.h"
+#include "hdprocess/HDVizData.h"
+#include "hdprocess/TopologyData.h"
+#include "HDVizState.h"
 
 #include <cstdlib>
 #include <string>

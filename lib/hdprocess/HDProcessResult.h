@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Precision.h"
 #include "flinalg/Linalg.h"
+#include "precision/Precision.h"
 #include <vector>
 
 

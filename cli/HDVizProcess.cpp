@@ -2,9 +2,9 @@
 #include "flinalg/LinalgIO.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
-#include "HDProcessor.h"
-#include "HDProcessResultSerializer.h"
-#include "Precision.h"
+#include "hdprocess/HDProcessor.h"
+#include "hdprocess/HDProcessResultSerializer.h"
+#include "precision/Precision.h"
 #include "tclap/CmdLine.h"
 
 

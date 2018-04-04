@@ -5,7 +5,7 @@
 #include "flinalg/DenseVector.h"
 #include "flinalg/DenseMatrix.h"
 #include "FTGL/FTGLPixmapFont.h"
-#include "HDVizData.h"
+#include "hdprocess/HDVizData.h"
 #include "kernelstats/KernelInterpolator.h"
 
 #include <cstdlib>

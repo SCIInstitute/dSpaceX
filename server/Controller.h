@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Dataset.h"
-#include "HDProcessResult.h"
-#include "HDVizData.h"
-#include "TopologyData.h"
+#include "hdprocess/HDProcessResult.h"
+#include "hdprocess/HDVizData.h"
+#include "hdprocess/TopologyData.h"
 #include <jsoncpp/json.h>
+
 #include <map>
 
 

@@ -1,5 +1,3 @@
-#include "Precision.h"
-
 #include "Display.h"
 #include "DisplayTubes.h"
 #ifdef DIMENSION
@@ -8,18 +6,20 @@
 #include "DisplayRange.h"
 #include "DisplayCurves.h"
 #include "DisplayMolecule.h"
-
-#include "HDProcessResult.h"
-#include "HDProcessResultSerializer.h"
-#include "SimpleHDVizDataImpl.h"
-#include "TopologyData.h"
-#include "LegacyTopologyDataImpl.h"
+#include "hdprocess/HDProcessResult.h"
+#include "hdprocess/HDProcessResultSerializer.h"
+#include "hdprocess/SimpleHDVizDataImpl.h"
+#include "hdprocess/TopologyData.h"
+#include "hdprocess/LegacyTopologyDataImpl.h"
+#include "precision/Precision.h"
 #include <tclap/CmdLine.h>
+
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include <math.h>
 #include <unistd.h>
-#include <stdlib.h>
+
 
 #define MAKE_STRING_(x) #x
 #define MAKE_STRING(x) MAKE_STRING_(x)

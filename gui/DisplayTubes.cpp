@@ -1,5 +1,6 @@
 #include "DisplayTubes.h"
-#include "Precision.h"
+#include "precision/Precision.h"
+
 #include <string>
 
 template<typename TPrecision> DisplayTubes<TPrecision>::DisplayTubes(

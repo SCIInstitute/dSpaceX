@@ -3,13 +3,13 @@
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
-#include "HDGenericProcessor.h"
+#include "hdprocess/HDGenericProcessor.h"
+#include "hdprocess/LegacyTopologyDataImpl.h"
+#include "hdprocess/SimpleHDVizDataImpl.h"
+#include "hdprocess/TopologyData.h"
 #include <jsoncpp/json.h>
-#include "LegacyTopologyDataImpl.h"
-#include "Precision.h"
+#include "precision/Precision.h"
 #include "serverlib/wst.h"
-#include "SimpleHDVizDataImpl.h"
-#include "TopologyData.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
 

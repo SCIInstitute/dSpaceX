@@ -10,7 +10,7 @@
 #include "Isomap.h"
 #include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
-#include "Precision.h"
+#include "precision/Precision.h"
 #include "PCA.h"
 #include "utils/Random.h"
 
