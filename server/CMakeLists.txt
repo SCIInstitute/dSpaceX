@@ -22,5 +22,4 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 INCLUDE_DIRECTORIES(../lib/hdprocess)
 
 ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS}) 
-TARGET_LINK_LIBRARIES (dSpaceX 
-  libwsserver hdprocess blas lapack pthread dl ${ZLIB_LIBRARIES} jsoncpp)
+TARGET_LINK_LIBRARIES (dSpaceX libwsserver hdprocess blas lapack pthread dl ${ZLIB_LIBRARIES} jsoncpp)

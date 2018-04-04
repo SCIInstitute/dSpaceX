@@ -33,8 +33,7 @@ INCLUDE_DIRECTORIES(
   lib/kernelstats/lib
   lib/flinalg/lib
   lib/flinalg/commandline/
-  ${ANN_INCLUDE_FILES}
-)
+  ${ANN_INCLUDE_FILES})
 
 ADD_SUBDIRECTORY(lib/annmod/)
 ADD_SUBDIRECTORY(lib/jsoncpp)
