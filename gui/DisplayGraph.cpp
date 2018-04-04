@@ -1,9 +1,9 @@
 #include "DisplayGraph.h"
 
+#include "dimred/MetricMDS.h"
 #include "flinalg/LinalgIO.h"
 #include "hdprocess/util/csv/loaders.h"
 #include "metrics/EuclideanMetric.h"
-#include "MetricMDS.h"
 #include "precision/Precision.h"
 #include <png.h>
 

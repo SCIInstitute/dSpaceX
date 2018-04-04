@@ -22,7 +22,6 @@ ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(
   lib/
-  lib/dimred/lib
   lib/annmod/lib
   lib/annmod/lib/ann
   ${ANN_INCLUDE_FILES})

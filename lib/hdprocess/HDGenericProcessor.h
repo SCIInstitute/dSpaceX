@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dimred/Isomap.h"
+#include "dimred/PCA.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
@@ -7,11 +9,9 @@
 #include "graph/KNNNeighborhood.h"
 #include "HDProcessor.h"
 #include "HDProcessResult.h"
-#include "Isomap.h"
 #include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
 #include "precision/Precision.h"
-#include "PCA.h"
 #include "utils/Random.h"
 
 #include <map>
