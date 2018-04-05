@@ -1,11 +1,7 @@
-#include "Precision.h"
-
-#include <tclap/CmdLine.h>
-
+#include "flinalg/LinalgIO.h"
 #include "NNMSComplex.h"
-
-
-#include "LinalgIO.h"
+#include "precision/Precision.h"
+#include <tclap/CmdLine.h>
 
 
 int main(int argc, char **argv){

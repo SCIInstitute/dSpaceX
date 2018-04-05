@@ -1,4 +1,7 @@
 
+FIND_PACKAGE(LAPACK)
+FIND_PACKAGE(BLAS)
+
 ADD_EXECUTABLE(MSRegression MSRegression.cxx)
 TARGET_LINK_LIBRARIES( MSRegression gfortran lapack blas )
 
