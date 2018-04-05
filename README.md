@@ -1,6 +1,11 @@
-This project uses the CMake build system.
+# dSpaceX - Design Space Exploration Tool
 
-# Steps for build.
+This project uses the CMake build system. The main application is a server
+and client application. The Server is written in C++ and the client is
+a web application written in Javascript. It relies on HTML5 which is 
+supported by all modern browsers.
+
+# Building Native & Server Code.
 1. Create a build directory
 ```
     <../dSpaceX>$  mkdir build
@@ -38,3 +43,10 @@ The HDViz GUI has the following additional dependencies:
 
 The HDVizImage binary has the following additional dependencies:
 - ITK
+
+The beSpace server backend has the following dependencies:
+- libJpeg
+- libPng
+
+# Building the Client Code
+See /client/README.md
