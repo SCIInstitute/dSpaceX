@@ -62,8 +62,6 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   // Store Nearest Neighbors
   m_result->knn = msComplex.getNearestNeighbors();
-
-  // Embed Distances into 3D for regression.
   
   
   // Save QoI function values  
