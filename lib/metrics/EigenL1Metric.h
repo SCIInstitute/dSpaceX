@@ -2,7 +2,6 @@
 #define EIGENL1METRIC_H
 
 #include "EigenMetric.h"
-#include <math.h>
 
 
 template<typename TPrecision>
