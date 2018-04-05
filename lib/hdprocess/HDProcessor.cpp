@@ -31,8 +31,7 @@ HDProcessor::HDProcessor() {}
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
 HDProcessResult* HDProcessor::processOnMetric(
-    FortranLinalg::DenseMatrix<Precision> d,
-    FortranLinalg::DenseVector<Precision> qoi,
+    DenseMatrix<Precision> d, DenseVector<Precision> qoi,
     int knn, int nSamples, int persistenceArg, bool random,
     Precision sigmaArg, Precision sigmaSmooth) {
   // TODO: Assert(qoi.N() == d.M() && d.M() == d.N())
@@ -155,8 +154,7 @@ HDProcessResult* HDProcessor::processOnMetric(
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
 HDProcessResult* HDProcessor::process(  
-  FortranLinalg::DenseMatrix<Precision> x,
-  FortranLinalg::DenseVector<Precision> y,  
+  DenseMatrix<Precision> x, DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
   bool randArg, Precision sigma, Precision sigmaSmooth) {
 
@@ -504,11 +502,9 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
  */
 void HDProcessor::computeRegressionForCrystal(
     unsigned int crystalIndex, unsigned int persistenceLevel, Precision sigma, int nSamples, 
-    std::vector<std::vector<unsigned int>> &Xi,
-    std::vector<std::vector<Precision>> &yci,
-    std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs,
-    FortranLinalg::DenseMatrix<Precision> &S,
-    FortranLinalg::DenseVector<Precision> &eWidths) {
+    std::vector<std::vector<unsigned int>> &Xi, std::vector<std::vector<Precision>> &yci,
+    std::vector<DenseMatrix<Precision>> &ScrystalIDs, DenseMatrix<Precision> &S,
+    DenseVector<Precision> &eWidths) {
   // Extract samples and function values from crystalIDs
   DenseMatrix<Precision> X(Xall.M(), Xi[crystalIndex].size());
   DenseMatrix<Precision> y(1, X.N());
@@ -630,7 +626,7 @@ void HDProcessor::computeRegressionForCrystal(
 /**
  * Add small pertubations to data achieve general position / avoid pathological cases.
  */
-void HDProcessor::addNoise(FortranLinalg::DenseVector<Precision> &v) {
+void HDProcessor::addNoise(DenseVector<Precision> &v) {
   Random<Precision> rand;
   double a = 0.00000001 *( Linalg<Precision>::Max(v) - Linalg<Precision>::Min(v));
   for (unsigned int i=0; i < v.N(); i++) {
@@ -642,8 +638,7 @@ void HDProcessor::addNoise(FortranLinalg::DenseVector<Precision> &v) {
  * Linearly transform E to fit align with Efit
  * Used to align extrema of subsequent persistence levels
  */
-void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit){
-  using namespace FortranLinalg;
+void HDProcessor::fit(DenseMatrix<Precision> &E, DenseMatrix<Precision> &Efit) {
   DenseMatrix<Precision> Eorig(exts.size(), 2);
   DenseMatrix<Precision> Enew(exts.size(), 2);
 
@@ -680,9 +675,8 @@ void HDProcessor::fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::D
  *        - Extrema Layout Matrix
  *        - Extrema Values Matrix
  */
-void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S, 
+void HDProcessor::computePCALayout(DenseMatrix<Precision> &S, 
   int nExt, int nSamples, unsigned int persistenceLevel) {
-  using namespace FortranLinalg;
   unsigned int dim = 2; 
   PCA<Precision> pca(S, dim);        
   DenseMatrix<Precision> fL = pca.project(S);
@@ -769,10 +763,9 @@ void HDProcessor::computePCALayout(FortranLinalg::DenseMatrix<Precision> &S,
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
-void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> &S, 
-  std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  int nExt, int nSamples, unsigned int persistenceLevel) {
-  using namespace FortranLinalg;
+void HDProcessor::computePCAExtremaLayout(DenseMatrix<Precision> &S, 
+    std::vector<DenseMatrix<Precision>> &ScrystalIDs, 
+    int nExt, int nSamples, unsigned int persistenceLevel) {
   unsigned int dim = 2; 
   DenseMatrix<Precision> Xext(Xall.M(), nExt);
   for (int i=0; i < nExt; i++) {
@@ -857,12 +850,10 @@ void HDProcessor::computePCAExtremaLayout(FortranLinalg::DenseMatrix<Precision> 
  *        - Extrema Values Matrix
  * Then Move disk-writing methods outside of compute method.
  */
-void HDProcessor::computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
-  std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-  int nExt, int nSamples, unsigned int persistenceLevel) {
+void HDProcessor::computeIsomapLayout(DenseMatrix<Precision> &S, 
+    std::vector<DenseMatrix<Precision>> &ScrystalIDs, 
+    int nExt, int nSamples, unsigned int persistenceLevel) {
   // Do an isomap layout.
-  using namespace FortranLinalg;
-
   EuclideanMetric<Precision> metric;
   unsigned int dim = 2; 
   SparseMatrix<Precision> adj(nExt, nExt, std::numeric_limits<Precision>::max());
