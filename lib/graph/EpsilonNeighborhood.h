@@ -1,21 +1,20 @@
 #ifndef EPSILONNEIGHBORHOOD_H
 #define EPSILONNEIGHBORHOOD_H
 
-#include "Distance.h"
+#include "flinalg/SparseMatrix.h"
+#include "metrics/Distance.h"
 #include "Neighborhood.h"
-#include "SparseMatrix.h"
 
 
 template <typename TPrecision>
-class EpsilonNeighborhood : public Neighborhood<TPrecision>{
- 
-                                          
-  public:
-    
+class EpsilonNeighborhood : public Neighborhood<TPrecision> { 
+  public:    
     EpsilonNeighborhood(Metric<TPrecision> &m, TPrecision epsilon, TPrecision value) 
                       : metric(m), eps(epsilon), val(value){};
 
-    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(FortranLinalg::Matrix<TPrecision> &data){
+    FortranLinalg::SparseMatrix<TPrecision> generateNeighborhood(
+        FortranLinalg::Matrix<TPrecision> &data) {
+      // TODO: Remove namespace use from header.
       using namespace FortranLinalg; 
       
       SparseMatrix<TPrecision> adj(data.N(), data.N(), val);
@@ -33,17 +32,12 @@ class EpsilonNeighborhood : public Neighborhood<TPrecision>{
 
       distances.deallocate();
       return adj; 
-
     };
-
   
   private:
-
     Metric<TPrecision> &metric;
     TPrecision eps;
-    TPrecision val;
-
-                                         
+    TPrecision val;                                         
 };
 
 #endif
