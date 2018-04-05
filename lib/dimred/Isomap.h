@@ -5,36 +5,27 @@
 #include "graph/GraphAlgorithms.h"
 #include "graph/Neighborhood.h"
 
-#include <math.h>
+#include <cmath>
 
 template <typename TPrecision>
-class Isomap{
+class Isomap {
   public:
-    
-    
-    Isomap(Neighborhood<TPrecision> *n, int nd) : nb(n), ndims(nd){
-    };
+    Isomap(Neighborhood<TPrecision> *n, int nd) : nb(n), ndims(nd) {};
 
-
-
-
-    FortranLinalg::DenseMatrix<TPrecision> embed(FortranLinalg::Matrix<TPrecision> &data ){
+    FortranLinalg::DenseMatrix<TPrecision> embed(FortranLinalg::Matrix<TPrecision> &data) {
       FortranLinalg::SparseMatrix<TPrecision> adj = nb->generateNeighborhood(data);
       FortranLinalg::DenseMatrix<TPrecision> result =  embedAdj(adj);
       adj.deallocate();
       return result;
     };
 
-
-
-
-    FortranLinalg::DenseMatrix<TPrecision> embedAdj(FortranLinalg::SparseMatrix<TPrecision> &adj ){
+    FortranLinalg::DenseMatrix<TPrecision> embedAdj(FortranLinalg::SparseMatrix<TPrecision> &adj) {
       FortranLinalg::DenseMatrix<TPrecision> dists(adj.N(), adj.N());
       GraphAlgorithms<TPrecision>::all_pairs_dijkstra(adj, dists);
 
-      for(unsigned int i=0; i<dists.N(); i++){
+      for (unsigned int i = 0; i < dists.N(); i++) {
         dists(i, i) = 0;
-        for(unsigned int j=i+1; j<dists.N(); j++){
+        for (unsigned int j = i+1; j < dists.N(); j++) {
             TPrecision m = std::min(dists(i, j), dists(j, i));
             dists(i, j) = m;
             dists(j, i) = m;
@@ -46,16 +37,10 @@ class Isomap{
       return em;
     };
 
-
-    
-  
   private:
     Neighborhood<TPrecision> *nb;
-    MetricMDS<TPrecision> mds; 
+    MetricMDS<TPrecision> mds;
     int ndims;
-
 };
-
-
 
 #endif
