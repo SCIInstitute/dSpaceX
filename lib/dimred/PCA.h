@@ -8,136 +8,106 @@
 
 
 template <typename TPrecision>
-class PCA{
-
-
+class PCA {
   public:
-    
     //Constructs PCA to project and unproject vectors, covariance is not known.
     PCA(FortranLinalg::DenseMatrix<TPrecision> &evecs, FortranLinalg::DenseVector<TPrecision> &evals,
         FortranLinalg::DenseVector<TPrecision> &m):data(PCA<TPrecision>::dataDummy)
-    { 
-      using namespace FortranLinalg;
+    {
       ev = evecs;
       ew = evals;
       mean = m;
 
       nProjectionDimensions = ev.N();
-      
-      buffer = DenseVector<TPrecision>(nProjectionDimensions);
 
+      buffer = FortranLinalg::DenseVector<TPrecision>(nProjectionDimensions);
     }
 
-    
-    PCA(FortranLinalg::DenseMatrix<TPrecision> &samples, unsigned int ndims, bool subtractMean = true) : data(samples){
-      
-      using namespace FortranLinalg;
+
+    PCA(FortranLinalg::DenseMatrix<TPrecision> &samples, unsigned int ndims,
+        bool subtractMean = true) : data(samples) {
       rowCov = data.M() > data.N();
 
-      if(subtractMean){ 
-        computeMean(data); 
-        Linalg<TPrecision>::SubtractColumnwise(data, mean, data);
+      if (subtractMean) {
+        computeMean(data);
+        FortranLinalg::Linalg<TPrecision>::SubtractColumnwise(data, mean, data);
       }
 
-      //build covariance
+      // Build covariance.
       computeCovariance(samples);
-     
-      if(ndims == 0 || ndims > covariance.N()){
+
+      if (ndims == 0 || ndims > covariance.N()) {
         nProjectionDimensions = covariance.N();
-      } 
-      else{
+      } else {
         nProjectionDimensions = ndims;
       }
-      buffer = DenseVector<TPrecision>(nProjectionDimensions);
+      buffer = FortranLinalg::DenseVector<TPrecision>(nProjectionDimensions);
 
       computePC();
     };
 
-
-
-    FortranLinalg::DenseMatrix<TPrecision> &getCovariance(){
+    FortranLinalg::DenseMatrix<TPrecision> &getCovariance() {
       return covariance;
     };
 
-    FortranLinalg::DenseMatrix<TPrecision> &getEigenVectors(){
+    FortranLinalg::DenseMatrix<TPrecision> &getEigenVectors() {
       return ev;
     };
 
-    FortranLinalg::DenseVector<TPrecision> &getEigenValues(){
+    FortranLinalg::DenseVector<TPrecision> &getEigenValues() {
       return ew;
     };
 
-    FortranLinalg::DenseVector<TPrecision> &getMean(){
+    FortranLinalg::DenseVector<TPrecision> &getMean() {
       return mean;
     };
-  
 
 
-
-
-    //Projection methods 
-
-
-    //Project column from a data matrix
+    // Project column from a data matrix.
     void projectColumn(FortranLinalg::DenseMatrix<TPrecision> &matrix, int index,
-        FortranLinalg::DenseVector<TPrecision> &projected, bool subtractMean = false){
-      using namespace FortranLinalg;
-      
-      if(subtractMean){
-        Linalg<TPrecision>::SubtractColumn(matrix, index, mean, matrix);
+        FortranLinalg::DenseVector<TPrecision> &projected, bool subtractMean = false) {
+      if (subtractMean) {
+        FortranLinalg::Linalg<TPrecision>::SubtractColumn(matrix, index, mean, matrix);
       }
-
-      Linalg<TPrecision>::MultiplyColumn(ev, matrix, index, projected, true);
-
+      FortranLinalg::Linalg<TPrecision>::MultiplyColumn(ev, matrix, index, projected, true);
     }
 
 
+    FortranLinalg::DenseVector<TPrecision> projectColumn(
+        FortranLinalg::DenseMatrix<TPrecision> &matrix, int index, bool subtractMean = false) {
 
-    FortranLinalg::DenseVector<TPrecision> projectColumn(FortranLinalg::DenseMatrix<TPrecision> &matrix, int
-        index, bool subtractMean = false){
-      using namespace FortranLinalg;
-
-      DenseVector<TPrecision> projected(ev.N());
+      FortranLinalg::DenseVector<TPrecision> projected(ev.N());
       projectColumn(matrix, index, projected, subtractMean);
       return projected;
     };
 
 
-    //Project single vector
-    void project(FortranLinalg::DenseVector<TPrecision> &v, FortranLinalg::DenseVector<TPrecision> &projected,
-        bool subtractMean = false){
-      using namespace FortranLinalg;
-
-      if(subtractMean){
-        Linalg<TPrecision>::Subtract(v, mean, v);
+    // Project single vector.
+    void project(FortranLinalg::DenseVector<TPrecision> &v,
+        FortranLinalg::DenseVector<TPrecision> &projected, bool subtractMean = false) {
+      if (subtractMean) {
+        FortranLinalg::Linalg<TPrecision>::Subtract(v, mean, v);
       }
-
-      Linalg<TPrecision>::Multiply(ev, v, projected, true);
+      FortranLinalg::Linalg<TPrecision>::Multiply(ev, v, projected, true);
     };
 
 
-    FortranLinalg::DenseVector<TPrecision> project(FortranLinalg::DenseVector<TPrecision> &v, bool
-        subtractMean = false){ 
-      using namespace FortranLinalg;
-
-      DenseVector<TPrecision> projected(ev.N());
+    FortranLinalg::DenseVector<TPrecision> project(
+        FortranLinalg::DenseVector<TPrecision> &v, bool subtractMean = false){
+      FortranLinalg::DenseVector<TPrecision> projected(ev.N());
       project(v, projected, subtractMean);
-      return projected;  
-
+      return projected;
     };
-   
 
-    //Project complete data matrix
-    FortranLinalg::DenseMatrix<TPrecision> project(FortranLinalg::DenseMatrix<TPrecision> &matrix, bool
-        subtractMean = false){ 
-      using namespace FortranLinalg;
 
+    // Project complete data matrix.
+    FortranLinalg::DenseMatrix<TPrecision> project(
+        FortranLinalg::DenseMatrix<TPrecision> &matrix, bool subtractMean = false) {
       if(subtractMean){
-        Linalg<TPrecision>::SubtractColumnwise(matrix, mean, matrix);
+        FortranLinalg::Linalg<TPrecision>::SubtractColumnwise(matrix, mean, matrix);
       }
-      DenseMatrix<TPrecision> projected 
-        = Linalg<TPrecision>::Multiply(ev, matrix, true, false);
-      
+      FortranLinalg::DenseMatrix<TPrecision> projected =
+          FortranLinalg::Linalg<TPrecision>::Multiply(ev, matrix, true, false);
       return projected;
     };
 
@@ -149,27 +119,27 @@ class PCA{
     //unproject v -  size of v dimensions are used
     //to do the unprojection
     FortranLinalg::DenseVector<TPrecision> unproject(FortranLinalg::Vector<TPrecision> &v, bool addMean = true){
-      return unproject(v, v.N(), addMean);  
+      return unproject(v, v.N(), addMean);
     };
     //same with preallocated out of size nRows
-    void unproject(FortranLinalg::Vector<TPrecision> &v, FortranLinalg::DenseVector<TPrecision> &out, 
+    void unproject(FortranLinalg::Vector<TPrecision> &v, FortranLinalg::DenseVector<TPrecision> &out,
                    bool addMean = true){
       unproject(v, v.N(), out, addMean);
     };
 
-    //Unproject v, the first leading nDimensions principal components 
+    //Unproject v, the first leading nDimensions principal components
     //are used for the unprojection
-    FortranLinalg::DenseVector<TPrecision> unproject(FortranLinalg::Vector<TPrecision> &v, int nDimensions, 
+    FortranLinalg::DenseVector<TPrecision> unproject(FortranLinalg::Vector<TPrecision> &v, int nDimensions,
                                       bool addMean = true){
       using namespace FortranLinalg;
 
       DenseVector<TPrecision> tmp(ev.M());
       unproject(v, nDimensions, tmp, addMean);
-      return tmp;    
+      return tmp;
     };
 
     //same with preallocated out of size nRows
-    void unproject(FortranLinalg::Vector<TPrecision> &v, unsigned int nDimensions, FortranLinalg::DenseVector<TPrecision> &out, 
+    void unproject(FortranLinalg::Vector<TPrecision> &v, unsigned int nDimensions, FortranLinalg::DenseVector<TPrecision> &out,
                    bool addMean = true){
       using namespace FortranLinalg;
 
@@ -187,7 +157,7 @@ class PCA{
       }
 
       Linalg<TPrecision>::Multiply(ev, buffer, out);
-        
+
       if(addMean){
         Linalg<TPrecision>::Add(out, mean, out);
       }
@@ -198,7 +168,7 @@ class PCA{
 
     //Unproject column from a matrix
     //Unproject column index from matrix data, data is assumed to be of siez
-    // nEv x >index. 
+    // nEv x >index.
     //The first leading nDimension principal components are used for projection
     // the projection is stored in out
     void unproject(FortranLinalg::Matrix<TPrecision> &matrix, int index, int
@@ -218,20 +188,20 @@ class PCA{
         }
 
         Linalg<TPrecision>::Multiply(ev, buffer, out);
-        
+
       if(addMean){
         Linalg<TPrecision>::Add(out, mean, out);
       }
 
     };
 
-    
-    
+
+
     FortranLinalg::DenseMatrix<TPrecision> unproject(FortranLinalg::DenseMatrix<TPrecision> &matrix, bool addMean = true){
       using namespace FortranLinalg;
 
 
-      DenseMatrix<TPrecision> out; 
+      DenseMatrix<TPrecision> out;
       if(matrix.M() < ev.N()){
         DenseMatrix<TPrecision> tmp(ev.M(), matrix.M());
         for(unsigned int i=0; i<matrix.M(); i++){
@@ -250,15 +220,15 @@ class PCA{
 
       return out;
     };
-    
+
     void cleanup(){
       covariance.deallocate();
       mean.deallocate();
       ev.deallocate();
       ew.deallocate();
       buffer.deallocate();
-    };   
-  
+    };
+
 
 
 
@@ -274,7 +244,7 @@ class PCA{
   private:
     static FortranLinalg::DenseMatrix<TPrecision> dataDummy;
     FortranLinalg::DenseVector<TPrecision> buffer;
-    bool rowCov;  
+    bool rowCov;
     int nProjectionDimensions;
 
 
@@ -289,12 +259,12 @@ class PCA{
 
       //row covariance pca
       if(rowCov){
-        ev = Linalg<TPrecision>::Multiply(data, eigs.ev); 
+        ev = Linalg<TPrecision>::Multiply(data, eigs.ev);
         ew = DenseVector<TPrecision>(eigs.ew.N());
 
         //Convert to col eigs
         for(unsigned int i=0; i<ew.N(); i++){
-          ew(i) = eigs.ew(i) / (TPrecision)(data.N()-1.0); 
+          ew(i) = eigs.ew(i) / (TPrecision)(data.N()-1.0);
         }
 
         //normalize
@@ -339,7 +309,7 @@ class PCA{
           }
         }
       }
-      else{ 
+      else{
         covariance = DenseMatrix<TPrecision>(data.M(), data.M());
         for(int i=0; i<data.M(); i++){
           for(int j=i; j<data.M(); j++){
@@ -365,7 +335,7 @@ class PCA{
       if(rowCov){
         covariance = Linalg<TPrecision>::Multiply(data, data, true, false);
       }
-      else{ 
+      else{
         covariance = Linalg<TPrecision>::Multiply(data, data, false, true);
         TPrecision *dptr = covariance.data();
         for(unsigned int i=0; i<data.M()*data.M(); i++){
