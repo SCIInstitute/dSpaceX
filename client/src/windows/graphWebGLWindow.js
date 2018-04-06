@@ -2,12 +2,15 @@ import React from 'react';
 
 
 /**
- * //Quad will need to be pulled into a seperate utils.js or better shapes.js and inherit from a base 'Shape'
+ * Quad will need to be pulled into a seperate utils.js or better shapes.js
+ * and inherit from a base 'Shape'
  * @param {any} centerPositionInPixels
  * @param {any} widthInPixels
  * @param {any} heightInPixels
  */
-var Quad = function (centerPositionInPixels, widthInPixels, heightInPixels) {
+// TODO: Reenable linting once Quad is being used.
+/* eslint-disable no-unused-vars */
+let Quad = function(centerPositionInPixels, widthInPixels, heightInPixels) {
   this.position = centerPositionInPixels;
   this.width = widthInPixels;
   this.height = heightInPixels;
@@ -16,19 +19,20 @@ var Quad = function (centerPositionInPixels, widthInPixels, heightInPixels) {
   this.numIndices = 6;
 
   let canvas = this.refs.canvas;
-  var quadWidth = this.width / canvas.clientWidth;
-  var quadHeight = this.height / canvas.clientHeight;
-  var minX = -(quadWidth / 2.0);
-  var maxX = (quadWidth / 2.0);
-  var minY = -(quadHeight / 2.0);
-  var maxY = (quadHeight / 2.0);
+  let quadWidth = this.width / canvas.clientWidth;
+  let quadHeight = this.height / canvas.clientHeight;
+  let minX = -(quadWidth / 2.0);
+  let maxX = (quadWidth / 2.0);
+  let minY = -(quadHeight / 2.0);
+  let maxY = (quadHeight / 2.0);
 
   this.vertices = [
     minX, maxY,
     maxX, maxY,
     minX, minY,
     maxX, minY];
-}
+};
+/* eslint-enable no-unused-vars */
 
 
 /**
@@ -65,9 +69,9 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-     * Compiles vertex and fragment shader programs.
-     * @param {object} gl The OpenGL context.
-     */
+   * Compiles vertex and fragment shader programs.
+   * @param {object} gl The OpenGL context.
+   */
   createShaders(gl) {
     const vertexShaderSource =
             'attribute vec2 coordinates;                 ' +
@@ -96,23 +100,22 @@ class GraphWebGLWindow extends React.Component {
   }
 
 
-  
   /**
-     * Creates vertex buffers for dummy data.
-     * @param {object} gl The OpenGL context.
-     */
+   * Creates vertex buffers for dummy data.
+   * @param {object} gl The OpenGL context.
+   */
   createBuffers(gl) {
     let canvas = this.refs.canvas;
-    var quadWidth = 500 / canvas.clientWidth;
-    var quadHeight = 500 / canvas.clientHeight;
-    var minX = -(quadWidth / 2.0);
-    var maxX = (quadWidth / 2.0);
-    var minY = -(quadHeight / 2.0);
-    var maxY = (quadHeight / 2.0);
+    let quadWidth = 500 / canvas.clientWidth;
+    let quadHeight = 500 / canvas.clientHeight;
+    let minX = -(quadWidth / 2.0);
+    let maxX = (quadWidth / 2.0);
+    let minY = -(quadHeight / 2.0);
+    let maxY = (quadHeight / 2.0);
 
     this.vertices =
       [minX, maxY,
-      maxX, maxY,
+        maxX, maxY,
         minX, minY,
         maxX, minY];
     this.vertex_buffer = gl.createBuffer();
@@ -123,27 +126,27 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-     * Resize the canvas renderer to match the dom size.
-     * @param {object} gl The OpenGL context.
-     */
+   * Resize the canvas renderer to match the dom size.
+   * @param {object} gl The OpenGL context.
+   */
   resizeCanvas() {
     let canvas = this.refs.canvas;
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    
-    //this.createBuffers(gl);
+
+    // this.createBuffers(gl);
   }
 
   /**
-     * Callback invoked before the component receives new props.
-     */
+   * Callback invoked before the component receives new props.
+   */
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas.bind(this));
   }
 
   /**
-     * Callback invoked immediately after the component is mounted.
-     */
+   * Callback invoked immediately after the component is mounted.
+   */
   componentDidMount() {
     this.initGL();
     this.resizeCanvas();
@@ -152,18 +155,18 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-     * Renders the OpenGL Content to the canvas.
-     */
+   * Renders the OpenGL Content to the canvas.
+   */
   drawScene() {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    ////pull out into method
-    var indices = [0, 1, 2, 2, 1, 3];
-    var index_buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-    ////
+    // TODO: pull out into method
+    let indices = [0, 1, 2, 2, 1, 3];
+    let indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices),
+      gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
 
@@ -176,17 +179,14 @@ class GraphWebGLWindow extends React.Component {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
-    //gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, index_buffer);
+    // gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, indexBuffer);
   }
 
   /**
-    * function to 
-
-  /**
-     * Renders the component to HTML.
-     * @return {HTML}
-     */
+   * Renders the component to HTML.
+   * @return {HTML}
+   */
   render() {
     let style = {
       width: '100%',
