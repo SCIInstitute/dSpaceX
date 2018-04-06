@@ -8,7 +8,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from './toolbar';
 import WebGLWindow from './windows/webGLWindow';
-import GraphWindowWebGL from './windows/graphWindowWebGL';
+import GraphWebGLWindow from './windows/graphWebGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
 
@@ -176,7 +176,7 @@ class Application extends React.Component {
           <div className={classes.workspace}>
             {
               !!this.state.currentDataset ? [
-                <GraphWindowWebGL key='1' dataset={this.state.currentDataset}/>,
+                <GraphWebGLWindow key='1' dataset={this.state.currentDataset}/>,
                 <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
               ] : []
             }

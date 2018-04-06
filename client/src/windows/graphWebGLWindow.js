@@ -34,9 +34,9 @@ var Quad = function (centerPositionInPixels, widthInPixels, heightInPixels) {
 /**
  * A base WebGL Window Component.
  */
-class GraphWindowWebGL extends React.Component {
+class GraphWebGLWindow extends React.Component {
   /**
-     * GraphWindowWebGL constructor.
+     * GraphWebGLWindow constructor.
      * @param {object} props
      */
   constructor(props) {
@@ -200,4 +200,4 @@ class GraphWindowWebGL extends React.Component {
   }
 }
 
-export default GraphWindowWebGL;
+export default GraphWebGLWindow;
