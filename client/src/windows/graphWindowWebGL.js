@@ -1,5 +1,36 @@
 import React from 'react';
 
+
+/**
+ * //Quad will need to be pulled into a seperate utils.js or better shapes.js and inherit from a base 'Shape'
+ * @param {any} centerPositionInPixels
+ * @param {any} widthInPixels
+ * @param {any} heightInPixels
+ */
+var Quad = function (centerPositionInPixels, widthInPixels, heightInPixels) {
+  this.position = centerPositionInPixels;
+  this.width = widthInPixels;
+  this.height = heightInPixels;
+
+  this.numVerts = 4;
+  this.numIndices = 6;
+
+  let canvas = this.refs.canvas;
+  var quadWidth = this.width / canvas.clientWidth;
+  var quadHeight = this.height / canvas.clientHeight;
+  var minX = -(quadWidth / 2.0);
+  var maxX = (quadWidth / 2.0);
+  var minY = -(quadHeight / 2.0);
+  var maxY = (quadHeight / 2.0);
+
+  this.vertices = [
+    minX, maxY,
+    maxX, maxY,
+    minX, minY,
+    maxX, minY];
+}
+
+
 /**
  * A base WebGL Window Component.
  */
@@ -64,16 +95,26 @@ class GraphWindowWebGL extends React.Component {
     this.shaderProgram = shaderProgram;
   }
 
+
+  
   /**
      * Creates vertex buffers for dummy data.
      * @param {object} gl The OpenGL context.
      */
   createBuffers(gl) {
+    let canvas = this.refs.canvas;
+    var quadWidth = 500 / canvas.clientWidth;
+    var quadHeight = 500 / canvas.clientHeight;
+    var minX = -(quadWidth / 2.0);
+    var maxX = (quadWidth / 2.0);
+    var minY = -(quadHeight / 2.0);
+    var maxY = (quadHeight / 2.0);
+
     this.vertices =
-      [-0.5, 0.5,
-        0.5, 0.5,
-        -0.5, -0.5,
-        0.5, -0.5];
+      [minX, maxY,
+      maxX, maxY,
+        minX, minY,
+        maxX, minY];
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -89,6 +130,8 @@ class GraphWindowWebGL extends React.Component {
     let canvas = this.refs.canvas;
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
+    
+    //this.createBuffers(gl);
   }
 
   /**
