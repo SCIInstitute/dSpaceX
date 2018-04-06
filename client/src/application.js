@@ -8,6 +8,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Toolbar from './toolbar';
 import WebGLWindow from './windows/webGLWindow';
+import GraphWindowWebGL from './windows/graphWindowWebGL';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
 
@@ -173,11 +174,13 @@ class Application extends React.Component {
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar}/>
           <div className={classes.workspace}>
-            {
+            <WebGLWindow key="1" dataset={this.state.currentDataset} />
+            <GraphWindowWebGL key="2" dataset={this.state.currentDataset} />
+            {/**
               !!this.state.currentDataset ? [
                 <WebGLWindow key="1" dataset={this.state.currentDataset}/>,
                 <WebGLWindow key="2" dataset={this.state.currentDataset}/>,
-              ] : []
+              ] : []*/
             }
           </div>
         </Workspace>

@@ -3,9 +3,9 @@ import React from 'react';
 /**
  * A base WebGL Window Component.
  */
-class graphWindowWebGL extends React.Component {
+class GraphWindowWebGL extends React.Component {
   /**
-     * WebGLWindow constructor.
+     * GraphWindowWebGL constructor.
      * @param {object} props
      */
   constructor(props) {
@@ -49,7 +49,7 @@ class graphWindowWebGL extends React.Component {
 
     let fragmentShaderSource =
             'void main(void) {                           ' +
-            '  gl_FragColor = vec4(0.0, 0.5, 0.0, 1.0);  ' +
+            '  gl_FragColor = vec4(0.8, 0.2, 0.2, 1.0);  ' +
             '}                                           ';
     let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragmentShader, fragmentShaderSource);
@@ -69,7 +69,13 @@ class graphWindowWebGL extends React.Component {
      * @param {object} gl The OpenGL context.
      */
   createBuffers(gl) {
-    this.vertices = [0, 0.5, -0.5, -0.5, 0.5, -0.5];
+    this.vertices =
+      [-0.5, 0.5,
+        0.5, 0.5,
+        -0.5, -0.5,
+        -0.5, -0.5,
+        0.5, 0.5,
+      0.5,-0.5];
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -121,8 +127,11 @@ class graphWindowWebGL extends React.Component {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
+
+  /**
+    * function to 
 
   /**
      * Renders the component to HTML.
@@ -141,4 +150,4 @@ class graphWindowWebGL extends React.Component {
   }
 }
 
-export default graphWindowWebGL;
+export default GraphWindowWebGL;
