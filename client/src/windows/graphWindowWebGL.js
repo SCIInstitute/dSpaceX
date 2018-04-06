@@ -26,7 +26,7 @@ class GraphWindowWebGL extends React.Component {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(0.4, 0.4, 0.4, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     this.createShaders(gl);
@@ -73,9 +73,7 @@ class GraphWindowWebGL extends React.Component {
       [-0.5, 0.5,
         0.5, 0.5,
         -0.5, -0.5,
-        -0.5, -0.5,
-        0.5, 0.5,
-      0.5,-0.5];
+        0.5, -0.5];
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -117,6 +115,13 @@ class GraphWindowWebGL extends React.Component {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
+    ////pull out into method
+    var indices = [0, 1, 2, 2, 1, 3];
+    var index_buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, index_buffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    ////
+
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
 
     let coordinateAttrib =
@@ -127,7 +132,9 @@ class GraphWindowWebGL extends React.Component {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    //gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, index_buffer);
   }
 
   /**
