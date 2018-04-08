@@ -40,9 +40,9 @@ let Quad = function(centerPositionInPixels, widthInPixels, heightInPixels) {
  */
 class GraphWebGLWindow extends React.Component {
   /**
-     * GraphWebGLWindow constructor.
-     * @param {object} props
-     */
+   * GraphWebGLWindow constructor.
+   * @param {object} props
+   */
   constructor(props) {
     super(props);
 
@@ -113,11 +113,11 @@ class GraphWebGLWindow extends React.Component {
     let minY = -(quadHeight / 2.0);
     let maxY = (quadHeight / 2.0);
 
-    this.vertices =
-      [minX, maxY,
-        maxX, maxY,
-        minX, minY,
-        maxX, minY];
+    this.vertices = [
+      minX, maxY,
+      maxX, maxY,
+      minX, minY,
+      maxX, minY];
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
