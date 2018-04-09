@@ -25,6 +25,7 @@ ADD_SUBDIRECTORY(lib/annmod/)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/hdprocess)
 ADD_SUBDIRECTORY(lib/tinyply)
+ADD_SUBDIRECTORY(lib/yaml-cpp)
 
 if(BUILD_SERVER_LIB)
   ADD_SUBDIRECTORY(lib/serverlib)
