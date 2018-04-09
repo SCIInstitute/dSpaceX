@@ -24,6 +24,7 @@ INCLUDE_DIRECTORIES(lib)
 ADD_SUBDIRECTORY(lib/annmod/)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/hdprocess)
+ADD_SUBDIRECTORY(lib/tinyply)
 
 if(BUILD_SERVER_LIB)
   ADD_SUBDIRECTORY(lib/serverlib)
