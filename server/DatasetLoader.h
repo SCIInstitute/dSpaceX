@@ -8,7 +8,6 @@
 
 class DatasetLoader {
 public:
-  DatasetLoader();    
   static Dataset* loadDataset(const std::string &filePath);
 private:
   static std::string parseName(const YAML::Node &config);
