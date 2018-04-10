@@ -2,11 +2,6 @@
 #include "yaml-cpp/yaml.h"
 
 
-std::vector<std::string> DatasetLoader::collectAvailableDatasets() {
-
-}
-
-
 Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
   YAML::Node config = YAML::LoadFile(filePath);
   Dataset::Builder builder;
@@ -17,7 +12,6 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
   std::cout << "name: " << name << std::endl;    
   builder.withName(name);
   
-
   int sampleCount = DatasetLoader::parseSampleCount(config);
   std::cout << "samples: " << sampleCount << std::endl;
   builder.withSampleCount(sampleCount);

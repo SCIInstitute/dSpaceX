@@ -8,9 +8,7 @@
 
 class DatasetLoader {
 public:
-  DatasetLoader();
-  
-  std::vector<std::string> collectAvailableDatasets();
+  DatasetLoader();    
   static Dataset* loadDataset(const std::string &filePath);
 private:
   static std::string parseName(const YAML::Node &config);
