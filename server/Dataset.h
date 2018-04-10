@@ -46,6 +46,10 @@ class Dataset {
     Builder() {
       m_dataset = new Dataset();
     }
+    Builder& withSampleCount(int count) {
+      m_dataset->m_sampleCount = count;
+      return (*this);
+    }
     Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix);
     Builder& withDistanceMatrix(FortranLinalg::DenseMatrix<Precision> &distanceMatrix) {
       m_dataset->m_distances = distanceMatrix;
@@ -67,12 +71,15 @@ class Dataset {
     }
     // Builder& addThumbnails(std::vector<> thumbnails);
     Dataset* build() {
+      // TODO:  Add validation that sample counts match array sizes.
+      //        Throw an exception if something doesn't match. 
       return m_dataset;
     }
    private:
     Dataset *m_dataset;
   };
  private:
+  int m_sampleCount;
   FortranLinalg::DenseMatrix<Precision> m_distances;
   std::vector<FortranLinalg::DenseVector<Precision>> m_qois;
   std::vector<FortranLinalg::DenseVector<Precision>> m_attributes;
