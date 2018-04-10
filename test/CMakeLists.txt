@@ -26,8 +26,6 @@ ExternalProject_Add_Step(
    COMMAND ${CMAKE_COMMAND} -E copy_directory ${source_dir}/googlemock/include ${GTEST_INSTALL_DIR}/include
    DEPENDEES install
 )
-INCLUDE_DIRECTORIES("${GTEST_INSTALL_DIR}/include")
-
 include_directories("${GTEST_INSTALL_DIR}/include")
 
 # Set up librarie paths
@@ -62,9 +60,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/bin)
 function(NEWTEST name)
   ADD_EXECUTABLE(${name} ${name}.cpp ${ARGN})
   IF(NOT WIN32)
-    TARGET_LINK_LIBRARIES(${name} ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${GMOCK_LIBRARY} ${GMOCK_MAIN_LIBRARY} hdprocess -lpthread)
+    TARGET_LINK_LIBRARIES(${name} ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${GMOCK_LIBRARY} ${GMOCK_MAIN_LIBRARY} hdprocess yaml-cpp -lpthread)
   ELSE ()
-    TARGET_LINK_LIBRARIES(${name} ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${GMOCK_LIBRARY} ${GMOCK_MAIN_LIBRARY} hdprocess)
+    TARGET_LINK_LIBRARIES(${name} ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY} ${GMOCK_LIBRARY} ${GMOCK_MAIN_LIBRARY} hdprocess yaml-cpp)
   ENDIF()
   ADD_TEST(${name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name})
   ADD_DEPENDENCIES(${name} gtest gtest_main)
