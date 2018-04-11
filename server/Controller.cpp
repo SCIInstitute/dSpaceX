@@ -372,8 +372,8 @@ void Controller::maybeLoadDataset(int datasetId) {
   }
   m_currentK = -1;
 
-  auto loadDataset = m_availableDatasets[datasetId].second;
-  m_currentDataset = loadDataset();
+  std::string configPath = m_availableDatasets[datasetId].second;
+  m_currentDataset = loadDataset(configPath);
   m_currentDatasetId = datasetId;
 }
 
@@ -443,16 +443,10 @@ void Controller::configureAvailableDatasets() {
   std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
   std::string coloradoConfigPath = "../../examples/truss/config.yaml";
 
-  // TODO: Once all loaders using DataLoader. Available Datasets should simply
-  //       store a std::pair<> of Dataset Name and ConfigFile Path.
-  m_availableDatasets.push_back({"Concrete", 
-      std::bind(&Controller::loadDataset, this, concreteConfigPath)});
-  m_availableDatasets.push_back({"Crimes", 
-      std::bind(&Controller::loadDataset, this, crimesConfigPath)});
-  m_availableDatasets.push_back({"Gaussian", 
-      std::bind(&Controller::loadDataset, this, gaussianConfigPath)});
-  m_availableDatasets.push_back({"Colorado", 
-      std::bind(&Controller::loadDataset, this, coloradoConfigPath)});
+  m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
+  m_availableDatasets.push_back({"Crimes", crimesConfigPath});
+  m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
+  m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
 }
 
 

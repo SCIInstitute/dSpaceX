@@ -36,7 +36,7 @@ class Controller {
   FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
     FortranLinalg::DenseMatrix<Precision> &x);
 
-  std::vector<std::pair<std::string, std::function<Dataset*()>>> m_availableDatasets;
+  std::vector<std::pair<std::string, std::string>> m_availableDatasets;
   Dataset *m_currentDataset = nullptr;
   int m_currentDatasetId = -1;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;
