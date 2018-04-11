@@ -10,7 +10,7 @@ const std::string kExampleDirPath = std::string(EXAMPLE_DATA_DIR);
 
 TEST(DatasetLoader, loadDataset) {  
 
-  std::string filePath = kExampleDirPath + "gaussian2d/gaussian.yaml";
+  std::string filePath = kExampleDirPath + "gaussian2d/config.yaml";
   Dataset *dataset = DatasetLoader::loadDataset(filePath);
 }
 

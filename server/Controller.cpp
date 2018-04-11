@@ -438,34 +438,15 @@ void Controller::maybeProcessData(int k) {
  * Construct list of available datasets.
  */
 void Controller::configureAvailableDatasets() {
-  std::string gaussianConfigPath = "../../examples/gaussian2d/gaussian.yaml";
+  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";
+  std::string concreteConfigPath = "../../examples/concrete/config.yaml";
 
-  m_availableDatasets.push_back({"Concrete", std::bind(&Controller::loadConcreteDataset, this)});
+  m_availableDatasets.push_back({"Concrete", 
+      std::bind(&Controller::loadDataset, this, concreteConfigPath)});
   m_availableDatasets.push_back({ "Crimes",  std::bind(&Controller::loadCrimesDataset,   this)});
   m_availableDatasets.push_back({"Gaussian", 
-    std::bind(&Controller::loadDataset, this, gaussianConfigPath)});
+      std::bind(&Controller::loadDataset, this, gaussianConfigPath)});
   m_availableDatasets.push_back({"Colorado", std::bind(&Controller::loadColoradoDataset, this)});
-}
-
-
-Dataset* Controller::loadConcreteDataset() {
-  std::string datasetName = "Concrete";
-  std::string path = "../../examples/concrete/";
-  std::string geometryFile = "Geom.data.hdr";
-  std::string functionFile = "Function.data.hdr";
-  std::string namesFile = "names.txt";
-
-  auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
-  auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
-  auto distances = computeDistanceMatrix(x);
-
-  Dataset::Builder builder;
-  Dataset *dataset = builder.withDistanceMatrix(distances)
-                            .withQoi("function", y)
-                            .withName(datasetName)
-                            .build();
-  std::cout << datasetName << " dataset loaded." << std::endl;
-  return dataset;
 }
 
 Dataset* Controller::loadCrimesDataset() {
