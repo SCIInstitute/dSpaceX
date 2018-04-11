@@ -11,12 +11,7 @@ const std::string kExampleDirPath = std::string(EXAMPLE_DATA_DIR);
 TEST(DatasetLoader, loadDataset) {  
 
   std::string filePath = kExampleDirPath + "gaussian2d/gaussian.yaml";
-  Dataset *dataset = nullptr;
-  try {
-    dataset = DatasetLoader::loadDataset(filePath);
-  } catch(std::exception &e) {
-    std::cout << e.what() << std::endl;
-  }
+  Dataset *dataset = DatasetLoader::loadDataset(filePath);
 }
 
 const std::vector<std::pair<std::string, std::string>> datasetPaths = { 
