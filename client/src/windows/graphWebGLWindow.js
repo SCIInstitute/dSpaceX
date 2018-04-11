@@ -155,6 +155,14 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * React to new props. Reset views if dataset changes.
+   * @param {object} nextProps
+   */
+  componentWillReceiveProps(nextProps) {
+    // TODO:  Add logic to recompute vertexbuffers etc as required.
+  }
+
+  /**
    * Renders the OpenGL Content to the canvas.
    */
   drawScene() {

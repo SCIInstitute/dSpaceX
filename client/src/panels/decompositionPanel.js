@@ -142,7 +142,7 @@ class DecompositionPanel extends React.Component {
   }
 
   /**
-   * Reacto to new props. Reset views if dataset changes.
+   * React to new props. Reset views if dataset changes.
    * @param {object} nextProps
    */
   componentWillReceiveProps(nextProps) {
