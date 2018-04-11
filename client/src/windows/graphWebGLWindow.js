@@ -2,7 +2,7 @@ import React from 'react';
 
 
 /**
- * A base WebGL Window Component.
+ * A WebGL Window Component for rendering Graphs.
  */
 class GraphWebGLWindow extends React.Component {
   /**
