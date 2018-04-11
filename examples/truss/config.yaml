@@ -1,0 +1,24 @@
+name: Colorado
+
+samples:
+  count: 1000
+
+qois:
+  - name: max stress
+    format: csv
+    file: max_stress.csv
+
+thumbnails:
+   format: png
+   files: images/?.png
+   padZeroes: false
+
+distances:
+     format: csv
+     file: distances.csv
+     metric: euclidean
+
+embeddings:
+  - name: tsne
+    format: csv
+    file: tsne-layout.csv
