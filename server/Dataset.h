@@ -10,15 +10,27 @@
 class Dataset {
  public:
   int numberOfSamples() {
-    return m_distances.M();
+    return m_sampleCount;
   }
 
   int numberOfQois() {
     return m_qois.size();
   }
 
+  bool hasSamplesMatrix() {
+    return m_hasSamplesMatrix;
+  }
+
+  FortranLinalg::DenseMatrix<Precision>& getSamplesMatrix() {
+    return m_samplesMatrix;
+  }
+
+  bool hasDistanceMatrix() {
+    return m_hasDistanceMatrix;
+  }
+
   FortranLinalg::DenseMatrix<Precision>& getDistanceMatrix() {
-    return m_distances;
+    return m_distanceMatrix;
   }
 
   FortranLinalg::DenseVector<Precision>& getQoiVector(int i) {
@@ -53,9 +65,12 @@ class Dataset {
     // TODO:  change to withGeometry of templatized form.
     Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix) {
       m_dataset->m_samplesMatrix = samplesMatrix;
+      m_dataset->m_hasSamplesMatrix = true;
+      return (*this);
     }
     Builder& withDistanceMatrix(FortranLinalg::DenseMatrix<Precision> &distanceMatrix) {
-      m_dataset->m_distances = distanceMatrix;
+      m_dataset->m_distanceMatrix = distanceMatrix;
+      m_dataset->m_hasDistanceMatrix = true;
       return (*this);
     }
     Builder& withAttribute(std::string name, FortranLinalg::DenseVector<Precision> &vector) {
@@ -76,6 +91,12 @@ class Dataset {
     Dataset* build() {
       // TODO:  Add validation that sample counts match array sizes.
       //        Throw an exception if something doesn't match. 
+      if (m_dataset->m_hasSamplesMatrix) {
+        m_dataset->m_sampleCount = m_dataset->m_samplesMatrix.N();
+      } else if (m_dataset->m_hasDistanceMatrix) {
+        m_dataset->m_sampleCount = m_dataset->m_distanceMatrix.N();
+      }
+
       return m_dataset;
     }
    private:
@@ -84,10 +105,13 @@ class Dataset {
  private:
   int m_sampleCount;
   FortranLinalg::DenseMatrix<Precision> m_samplesMatrix;
-  FortranLinalg::DenseMatrix<Precision> m_distances;
+  FortranLinalg::DenseMatrix<Precision> m_distanceMatrix;
   std::vector<FortranLinalg::DenseVector<Precision>> m_qois;
   std::vector<FortranLinalg::DenseVector<Precision>> m_attributes;
   std::vector<std::string> m_qoiNames;
   std::vector<std::string> m_attributeNames;
   std::string m_name;
+
+  bool m_hasDistanceMatrix = false;
+  bool m_hasSamplesMatrix = false;
 };
