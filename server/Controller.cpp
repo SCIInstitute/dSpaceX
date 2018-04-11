@@ -1,4 +1,5 @@
 #include "Controller.h"
+#include "DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
@@ -397,6 +398,17 @@ void Controller::maybeProcessData(int k) {
     delete m_currentTopoData;
     m_currentTopoData = nullptr;
   }
+  
+  if (m_currentDataset->hasDistanceMatrix()) {
+    m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix();
+  } else if (m_currentDataset->hasSamplesMatrix()) {
+    auto samplesMatrix = m_currentDataset->getSamplesMatrix();
+    m_currentDistanceMatrix = computeDistanceMatrix(samplesMatrix);
+  } else {
+    std::runtime_error("No distance matrix or samplesMatrix available.");
+  }
+  
+  
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   m_currentK = k;
@@ -404,8 +416,8 @@ void Controller::maybeProcessData(int k) {
   // TODO: Provide mechanism to select QoI used.
   // TODO: Expose processing parameters to function interface.
   try {
-    m_currentProcessResult = genericProcessor.processOnMetric(
-        m_currentDataset->getDistanceMatrix(),
+    m_currentProcessResult = genericProcessor.processOnMetric(        
+        m_currentDistanceMatrix,
         m_currentDataset->getQoiVector(0),
         m_currentK  /* knn */,
         25        /* samples */,
@@ -426,9 +438,12 @@ void Controller::maybeProcessData(int k) {
  * Construct list of available datasets.
  */
 void Controller::configureAvailableDatasets() {
+  std::string gaussianConfigPath = "../../examples/gaussian2d/gaussian.yaml";
+
   m_availableDatasets.push_back({"Concrete", std::bind(&Controller::loadConcreteDataset, this)});
   m_availableDatasets.push_back({ "Crimes",  std::bind(&Controller::loadCrimesDataset,   this)});
-  m_availableDatasets.push_back({"Gaussian", std::bind(&Controller::loadGaussianDataset, this)});
+  m_availableDatasets.push_back({"Gaussian", 
+    std::bind(&Controller::loadDataset, this, gaussianConfigPath)});
   m_availableDatasets.push_back({"Colorado", std::bind(&Controller::loadColoradoDataset, this)});
 }
 
@@ -473,22 +488,10 @@ Dataset* Controller::loadCrimesDataset() {
   return dataset;
 }
 
-Dataset* Controller::loadGaussianDataset() {
-  std::string datasetName = "Gaussian";
-  std::string path = "../../examples/gaussian2d/";
-  std::string geometryFile = "Geom.data.hdr";
-  std::string functionFile = "Function.data.hdr";
-
-  auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + geometryFile);
-  auto y = FortranLinalg::LinalgIO<Precision>::readVector(path + functionFile);
-  auto distances = computeDistanceMatrix(x);
-
-  Dataset::Builder builder;
-  Dataset *dataset = builder.withDistanceMatrix(distances)
-                            .withQoi("function", y)
-                            .withName(datasetName)
-                            .build();
-  std::cout << datasetName << " dataset loaded." << std::endl;
+Dataset* Controller::loadDataset(const std::string &configPath) {
+  DatasetLoader loader;
+  Dataset *dataset = loader.loadDataset(configPath);
+  std::cout << dataset->getName() << " dataset loaded." << std::endl;
   return dataset;
 }
 

@@ -20,9 +20,9 @@ class Controller {
   void maybeLoadDataset(int datasetId);
   void maybeProcessData(int k);
 
+  Dataset* loadDataset(const std::string &configPath);
   Dataset* loadConcreteDataset();
   Dataset* loadCrimesDataset();
-  Dataset* loadGaussianDataset();
   Dataset* loadColoradoDataset();
 
   // Command Handlers
@@ -42,6 +42,7 @@ class Controller {
   std::vector<std::pair<std::string, std::function<Dataset*()>>> m_availableDatasets;
   Dataset *m_currentDataset = nullptr;
   int m_currentDatasetId = -1;
+  FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;
   int m_currentK = -1;
   HDProcessResult *m_currentProcessResult = nullptr;
   HDVizData *m_currentVizData = nullptr;
