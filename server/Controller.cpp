@@ -371,9 +371,12 @@ void Controller::maybeLoadDataset(int datasetId) {
     m_currentTopoData = nullptr;
   }
   m_currentK = -1;
-
+  
+  DatasetLoader loader; 
   std::string configPath = m_availableDatasets[datasetId].second;
-  m_currentDataset = loadDataset(configPath);
+  m_currentDataset = loader.loadDataset(configPath);
+  std::cout << m_currentDataset->getName() << " dataset loaded." << std::endl;
+
   m_currentDatasetId = datasetId;
 }
 
@@ -447,14 +450,6 @@ void Controller::configureAvailableDatasets() {
   m_availableDatasets.push_back({"Crimes", crimesConfigPath});
   m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
   m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
-}
-
-
-Dataset* Controller::loadDataset(const std::string &configPath) {
-  DatasetLoader loader;
-  Dataset *dataset = loader.loadDataset(configPath);
-  std::cout << dataset->getName() << " dataset loaded." << std::endl;
-  return dataset;
 }
 
 // TODO: Move into a utility.

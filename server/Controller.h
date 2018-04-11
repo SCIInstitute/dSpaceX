@@ -20,8 +20,6 @@ class Controller {
   void maybeLoadDataset(int datasetId);
   void maybeProcessData(int k);
 
-  Dataset* loadDataset(const std::string &configPath);
-
   // Command Handlers
   void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
   void fetchDataset(void *wsi, int messageId, const Json::Value &request);
