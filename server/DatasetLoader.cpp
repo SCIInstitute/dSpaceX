@@ -129,7 +129,7 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseGeometry(
     throw std::runtime_error("Dataset config missing 'geometry.format' field.");
   }
   std::string format = geometryNode["format"].as<std::string>();
-  if (format != "Linalg.DenseMetrix") {
+  if (format != "Linalg.DenseMatrix") {
     throw std::runtime_error(
           "Dataset config specifies unsupported geometry format: " + format);
   }
