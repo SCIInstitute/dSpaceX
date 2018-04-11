@@ -25,6 +25,14 @@
 using namespace std::placeholders;
 
 Controller::Controller() {
+  configureCommandHandlers();
+  configureAvailableDatasets();
+}
+
+/**
+ * Construct map of command names to command handlers.
+ */
+void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchDatasetList", std::bind(&Controller::fetchDatasetList, this, _1, _2, _3)});
   m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2, _3)});
   m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2, _3)});
@@ -32,6 +40,22 @@ Controller::Controller() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
+}
+
+
+/**
+ * Construct list of available datasets.
+ */
+void Controller::configureAvailableDatasets() {
+  std::string concreteConfigPath = "../../examples/concrete/config.yaml";
+  std::string crimesConfigPath = "../../examples/crimes/config.yaml";
+  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
+  std::string coloradoConfigPath = "../../examples/truss/config.yaml";
+
+  m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
+  m_availableDatasets.push_back({"Crimes", crimesConfigPath});
+  m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
+  m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
 }
 
 void Controller::handleData(void *wsi, void *data) {
@@ -434,22 +458,6 @@ void Controller::maybeProcessData(int k) {
     std::cerr << err << std::endl;
     // TODO: Return Error Message.
   }
-}
-
-
-/**
- * Construct list of available datasets.
- */
-void Controller::configureAvailableDatasets() {
-  std::string concreteConfigPath = "../../examples/concrete/config.yaml";
-  std::string crimesConfigPath = "../../examples/crimes/config.yaml";
-  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
-  std::string coloradoConfigPath = "../../examples/truss/config.yaml";
-
-  m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
-  m_availableDatasets.push_back({"Crimes", crimesConfigPath});
-  m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
-  m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
 }
 
 // TODO: Move into a utility.

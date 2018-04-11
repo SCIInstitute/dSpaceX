@@ -11,12 +11,14 @@
 
 class Controller {
  public:
-  Controller();
-  void configureAvailableDatasets();
+  Controller();  
   void handleData(void *wsi, void *data);
   void handleText(void *wsi, const std::string &text);
 
  private:
+  void configureCommandHandlers();
+  void configureAvailableDatasets();
+  
   void maybeLoadDataset(int datasetId);
   void maybeProcessData(int k);
 

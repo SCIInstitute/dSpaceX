@@ -30,8 +30,7 @@ int main(int argc, char *argv[])
   }
 
   try {
-    controller = new Controller();
-    controller->configureAvailableDatasets();
+    controller = new Controller();    
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
     return 1;
