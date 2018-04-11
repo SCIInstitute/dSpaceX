@@ -1,0 +1,13 @@
+name: Crimes
+
+samples:
+  count: 1993
+
+geometry:
+  format: Linalg.DenseMatrix
+  file: Geom.data.hdr
+
+qois:
+  - name: function
+    format: Linalg.DenseVector
+    file: Function.data.hdr

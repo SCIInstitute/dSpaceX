@@ -21,7 +21,6 @@ class Controller {
   void maybeProcessData(int k);
 
   Dataset* loadDataset(const std::string &configPath);
-  Dataset* loadCrimesDataset();
   Dataset* loadColoradoDataset();
 
   // Command Handlers
