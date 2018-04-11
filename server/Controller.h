@@ -33,9 +33,6 @@ class Controller {
 
   std::map<std::string, std::function<void(void*, int, const Json::Value&)>> m_commandMap;
 
-  FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
-    FortranLinalg::DenseMatrix<Precision> &x);
-
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
   Dataset *m_currentDataset = nullptr;
   int m_currentDatasetId = -1;

@@ -13,6 +13,7 @@
 #include "serverlib/wst.h"
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
+#include "util/utils.h"
 
 #include <algorithm>
 #include <cmath>
@@ -430,7 +431,7 @@ void Controller::maybeProcessData(int k) {
     m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix();
   } else if (m_currentDataset->hasSamplesMatrix()) {
     auto samplesMatrix = m_currentDataset->getSamplesMatrix();
-    m_currentDistanceMatrix = computeDistanceMatrix(samplesMatrix);
+    m_currentDistanceMatrix = HDProcess::computeDistanceMatrix(samplesMatrix);
   } else {
     std::runtime_error("No distance matrix or samplesMatrix available.");
   }
@@ -458,22 +459,4 @@ void Controller::maybeProcessData(int k) {
     std::cerr << err << std::endl;
     // TODO: Return Error Message.
   }
-}
-
-// TODO: Move into a utility.
-FortranLinalg::DenseMatrix<Precision> Controller::computeDistanceMatrix(
-    FortranLinalg::DenseMatrix<Precision> &x) {
-  std::vector<DenseVectorSample*> samples;
-  for (int j = 0; j < x.N(); j++) {
-    FortranLinalg::DenseVector<Precision> vector(x.M());
-    for (int i = 0; i < x.M(); i++) {
-      vector(i) = x(i, j);
-    }
-    DenseVectorSample *sample = new DenseVectorSample(vector);
-    samples.push_back(sample);
-  }
-
-  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-  DenseVectorEuclideanMetric metric;
-  return genericProcessor.computeDistances(samples, metric);
 }

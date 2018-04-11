@@ -2,6 +2,8 @@
 #include "csv.h"
 
 #include <cassert>
+#include <fstream>
+#include <sstream>
 
 namespace HDProcess {
 

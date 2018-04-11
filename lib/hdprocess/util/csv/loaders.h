@@ -1,7 +1,6 @@
 #pragma once
 
 #include "flinalg/Linalg.h"
-#include "flinalg/LinalgIO.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "precision/Precision.h"
