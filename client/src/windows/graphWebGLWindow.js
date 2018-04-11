@@ -2,40 +2,6 @@ import React from 'react';
 
 
 /**
- * Quad will need to be pulled into a seperate utils.js or better shapes.js
- * and inherit from a base 'Shape'
- * @param {any} centerPositionInPixels
- * @param {any} widthInPixels
- * @param {any} heightInPixels
- */
-// TODO: Reenable linting once Quad is being used.
-/* eslint-disable no-unused-vars */
-let Quad = function(centerPositionInPixels, widthInPixels, heightInPixels) {
-  this.position = centerPositionInPixels;
-  this.width = widthInPixels;
-  this.height = heightInPixels;
-
-  this.numVerts = 4;
-  this.numIndices = 6;
-
-  let canvas = this.refs.canvas;
-  let quadWidth = this.width / canvas.clientWidth;
-  let quadHeight = this.height / canvas.clientHeight;
-  let minX = -(quadWidth / 2.0);
-  let maxX = (quadWidth / 2.0);
-  let minY = -(quadHeight / 2.0);
-  let maxY = (quadHeight / 2.0);
-
-  this.vertices = [
-    minX, maxY,
-    maxX, maxY,
-    minX, minY,
-    maxX, minY];
-};
-/* eslint-enable no-unused-vars */
-
-
-/**
  * A base WebGL Window Component.
  */
 class GraphWebGLWindow extends React.Component {
@@ -48,10 +14,11 @@ class GraphWebGLWindow extends React.Component {
 
     this.gl = null;
     this.canvas = null;
-    this.vertices = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
     this.shaderProgram = null;
+    this.vertices = null;
+    this.indices = null;
   }
 
   /**
@@ -64,9 +31,57 @@ class GraphWebGLWindow extends React.Component {
     gl.clearColor(0.4, 0.4, 0.4, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    this.createGeometry();
+
     this.createShaders(gl);
     this.createBuffers(gl);
   }
+
+  /**
+   * Creates the geometry to be rendered.
+   */
+  createGeometry() {
+    let width = .1;
+    let height = .1;
+    let posXY = [-0.5, 0.5];
+
+    let minX = -(width / 2.0) + posXY[0];
+    let maxX = minX + (width / 2.0);
+    let minY = -(height / 2.0) + posXY[1];
+    let maxY = minY + (height / 2.0);
+
+    this.vertices = [
+      minX, maxY,
+      maxX, maxY,
+      minX, minY,
+      maxX, minY];
+
+    this.indices = [
+      0, 1, 2,
+      2, 1, 3];
+
+    for (let i = 1; i < 4; i++) {
+      minX = maxX + width;
+      maxX = minX + width + 0.02 * i;
+      maxY += height + 0.01 * i;
+
+      let additionalVerts = [
+        minX, maxY,
+        maxX, maxY,
+        minX, minY,
+        maxX, minY];
+
+      this.vertices = this.vertices.concat(additionalVerts);
+
+      let prevFirstIndex = this.indices[this.indices.length - 6];
+      let additionalIndices = [
+        prevFirstIndex + 4, prevFirstIndex + 5, prevFirstIndex + 6,
+        prevFirstIndex + 6, prevFirstIndex + 5, prevFirstIndex + 7];
+
+      this.indices = this.indices.concat(additionalIndices);
+    }
+  }
+
 
   /**
    * Compiles vertex and fragment shader programs.
@@ -105,19 +120,6 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl The OpenGL context.
    */
   createBuffers(gl) {
-    let canvas = this.refs.canvas;
-    let quadWidth = 500 / canvas.clientWidth;
-    let quadHeight = 500 / canvas.clientHeight;
-    let minX = -(quadWidth / 2.0);
-    let maxX = (quadWidth / 2.0);
-    let minY = -(quadHeight / 2.0);
-    let maxY = (quadHeight / 2.0);
-
-    this.vertices = [
-      minX, maxY,
-      maxX, maxY,
-      minX, minY,
-      maxX, minY];
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -133,8 +135,6 @@ class GraphWebGLWindow extends React.Component {
     let canvas = this.refs.canvas;
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-
-    // this.createBuffers(gl);
   }
 
   /**
@@ -162,10 +162,9 @@ class GraphWebGLWindow extends React.Component {
     let gl = canvas.getContext('webgl');
 
     // TODO: pull out into method
-    let indices = [0, 1, 2, 2, 1, 3];
     let indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices),
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices),
       gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -180,7 +179,8 @@ class GraphWebGLWindow extends React.Component {
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     // gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, indexBuffer);
+    gl.drawElements(gl.TRIANGLES, this.indices.length,
+      gl.UNSIGNED_SHORT, indexBuffer);
   }
 
   /**
