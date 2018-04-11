@@ -50,7 +50,10 @@ class Dataset {
       m_dataset->m_sampleCount = count;
       return (*this);
     }
-    Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix);
+    // TODO:  change to withGeometry of templatized form.
+    Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix) {
+      m_dataset->m_samplesMatrix = samplesMatrix;
+    }
     Builder& withDistanceMatrix(FortranLinalg::DenseMatrix<Precision> &distanceMatrix) {
       m_dataset->m_distances = distanceMatrix;
       return (*this);
@@ -80,6 +83,7 @@ class Dataset {
   };
  private:
   int m_sampleCount;
+  FortranLinalg::DenseMatrix<Precision> m_samplesMatrix;
   FortranLinalg::DenseMatrix<Precision> m_distances;
   std::vector<FortranLinalg::DenseVector<Precision>> m_qois;
   std::vector<FortranLinalg::DenseVector<Precision>> m_attributes;

@@ -7,17 +7,7 @@ geometry:
   format: Linalg.DenseMatrix
   file: Geom.data.hdr
 
-params:
-
 qois:
   - name: function
     format: Linalg.DenseVector
     file: Function.data.hdr
-
-thumbnails:
-
-
-distances:
-
-
-embeddings:
