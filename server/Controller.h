@@ -21,7 +21,6 @@ class Controller {
   void maybeProcessData(int k);
 
   Dataset* loadDataset(const std::string &configPath);
-  Dataset* loadColoradoDataset();
 
   // Command Handlers
   void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);

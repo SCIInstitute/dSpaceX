@@ -1,4 +1,5 @@
 #include "DatasetLoader.h"
+#include "hdprocess/util/csv/loaders.h"
 #include "yaml-cpp/yaml.h"
 
 #include <memory>
@@ -35,8 +36,15 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
     builder.withQoi(qoi.first, qoi.second);
   }
 
-  auto geometry = DatasetLoader::parseGeometry(config, filePath);
-  builder.withSamplesMatrix(geometry);
+  if (config["geometry"]) {
+    auto geometry = DatasetLoader::parseGeometry(config, filePath);
+    builder.withSamplesMatrix(geometry);
+  }
+
+  if (config["distances"]) {
+    auto distances = DatasetLoader::parseDistances(config, filePath);
+    builder.withDistanceMatrix(distances);
+  }
 
   return builder.build();
 }
@@ -98,8 +106,10 @@ QoiNameValuePair DatasetLoader::parseQoi(
      throw std::runtime_error("Qoi missing 'format' field."); 
   }
   std::string format = qoiNode["format"].as<std::string>();
+  // TODO: Move Format Strings to typed enums or constants.
   std::cout << "qoi format: " << format << std::endl;
-  if (format != "Linalg.DenseVector") {
+  if (format != "Linalg.DenseVector" &&
+      format != "csv") {
     throw std::runtime_error(
         "Dataset config specifies unsupported qoi format: " + format);
   }
@@ -111,8 +121,15 @@ QoiNameValuePair DatasetLoader::parseQoi(
   std::cout << "qoi filename: " << filename << std::endl;
   std::string path = basePathOf(filePath);
 
-  std::cout << "Loading Linalg.DenseVector from " << path + filename << std::endl;
-  auto qoi = FortranLinalg::LinalgIO<Precision>::readVector(path + filename);
+  // TODO: Factor out some file format reading handler. 
+  //       Fileformat could be a key for map to loading function.  
+  std::cout << "Loading " << format << " from " << path + filename << std::endl;
+  FortranLinalg::DenseVector<Precision> qoi;
+  if (format == "Linalg.DenseVector") {    
+    qoi = FortranLinalg::LinalgIO<Precision>::readVector(path + filename);
+  } else if (format == "csv") {
+    qoi = HDProcess::loadCSVColumn(path + filename);
+  }
 
   return QoiNameValuePair(name, qoi);
 }
@@ -140,13 +157,45 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseGeometry(
   std::string filename = geometryNode["file"].as<std::string>();
   std::string path = basePathOf(filePath);
 
-
   auto x = FortranLinalg::LinalgIO<Precision>::readMatrix(path + filename);
   return x;
 }
 
 
 FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
-    const YAML::Node &config) {
+    const YAML::Node &config, const std::string &filePath) {
+  if(!config["distances"]) {
+    throw std::runtime_error("Dataset config missing 'distances' field.");
+  }
+  const YAML::Node &distancesNode = config["distances"];
 
+  if (!distancesNode["format"]) {
+    throw std::runtime_error("Dataset config missing 'distances.format' field.");
+  }
+  std::string format = distancesNode["format"].as<std::string>();
+  if (format != "Linalg.DenseMatrix" &&
+      format != "csv") {
+    throw std::runtime_error(
+        "Dataset config specifies unsupported distances format: " + format);
+  }
+
+  if (!distancesNode["file"]) {
+    throw std::runtime_error("Dataset config missing 'distances.file' field.");
+  }
+  std::string filename = distancesNode["file"].as<std::string>();
+  std::string path = basePathOf(filePath);
+
+  // TODO: Factor out some file format reading handler. 
+  //       Fileformat could be a key for map to loading function.  
+  std::cout << "Loading " << format << " from " << path + filename << std::endl;
+  if (format == "Linalg.DenseVector") {    
+    auto distances = FortranLinalg::LinalgIO<Precision>::readMatrix(path + filename);
+		return distances;
+  } else if (format == "csv") {
+    auto distances = HDProcess::loadCSVMatrix(path + filename);
+		return distances;
+  } else {
+		throw std::runtime_error(
+		  	"No loader configured to read " + format + " qoi file.");
+	}
 }

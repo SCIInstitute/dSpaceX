@@ -441,6 +441,7 @@ void Controller::configureAvailableDatasets() {
   std::string concreteConfigPath = "../../examples/concrete/config.yaml";
   std::string crimesConfigPath = "../../examples/crimes/config.yaml";
   std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
+  std::string coloradoConfigPath = "../../examples/truss/config.yaml";
 
   // TODO: Once all loaders using DataLoader. Available Datasets should simply
   //       store a std::pair<> of Dataset Name and ConfigFile Path.
@@ -450,7 +451,8 @@ void Controller::configureAvailableDatasets() {
       std::bind(&Controller::loadDataset, this, crimesConfigPath)});
   m_availableDatasets.push_back({"Gaussian", 
       std::bind(&Controller::loadDataset, this, gaussianConfigPath)});
-  m_availableDatasets.push_back({"Colorado", std::bind(&Controller::loadColoradoDataset, this)});
+  m_availableDatasets.push_back({"Colorado", 
+      std::bind(&Controller::loadDataset, this, coloradoConfigPath)});
 }
 
 
@@ -458,27 +460,6 @@ Dataset* Controller::loadDataset(const std::string &configPath) {
   DatasetLoader loader;
   Dataset *dataset = loader.loadDataset(configPath);
   std::cout << dataset->getName() << " dataset loaded." << std::endl;
-  return dataset;
-}
-
-Dataset* Controller::loadColoradoDataset() {
-  std::string datasetName = "Colorado";
-  std::string path = "../../examples/truss/";
-  std::string imageFolder = "images/";
-  std::string distancesFile = "distances.csv";
-  std::string maxStressFile = "max_stress.csv";
-  std::string tsneLayoutFile = "tsne-layout.csv";
-
-  auto distances = HDProcess::loadCSVMatrix(path + distancesFile);
-  auto y = HDProcess::loadCSVColumn(path + maxStressFile);
-  auto tSneLayout = HDProcess::loadCSVMatrix(path + tsneLayoutFile);
-
-  Dataset::Builder builder;
-  Dataset *dataset = builder.withDistanceMatrix(distances)
-                            .withQoi("max-stress", y)
-                            .withName("Colorado")
-                            .build();
-  std::cout << datasetName << " dataset loaded." << std::endl;
   return dataset;
 }
 

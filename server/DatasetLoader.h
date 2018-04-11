@@ -23,7 +23,7 @@ private:
   static std::vector<QoiNameValuePair> parseQois(
       const YAML::Node &config, const std::string &filePath);
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
-      const YAML::Node &config);
+      const YAML::Node &config, const std::string &filePath);
   static QoiNameValuePair parseQoi(
       const YAML::Node &qoiNode,const std::string &filePath);
 };
