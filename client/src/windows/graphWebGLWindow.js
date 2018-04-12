@@ -22,8 +22,8 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-     * Initial setup for the webgl canvas.
-     */
+   * Initial setup for the webgl canvas.
+   */
   initGL() {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
