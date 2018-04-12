@@ -1,5 +1,41 @@
 import React from 'react';
 
+/**
+   * Creates a basic quad with 4 vertices and 6 indices.
+   */
+class Quad {
+  /**
+   * Quad constructor.
+   * @param {object} centerX
+   * @param {object} centerY
+   * @param {object} width
+   * @param {object} height
+   * @param {object} firstIndex
+   */
+  constructor(centerX, centerY, width, height, firstIndex) {
+    this.X = centerX; // center of quad
+    this.Y = centerY;
+    this.width = width;
+    this.height = height;
+
+    let minX = -(width / 2.0) + centerX;
+    let maxX = minX + (width / 2.0);
+    let minY = -(height / 2.0) + centerY;
+    let maxY = minY + (height / 2.0);
+
+    this.vertices = [
+      minX, maxY,
+      maxX, maxY,
+      minX, minY,
+      maxX, minY];
+
+    let n = firstIndex;
+    this.indices = [
+      n, n + 1, n + 2,
+      n + 2, n + 1, n + 3];
+  }
+}
+
 
 /**
  * A WebGL Window Component for rendering Graphs.
@@ -43,45 +79,26 @@ class GraphWebGLWindow extends React.Component {
   createGeometry() {
     let width = .1;
     let height = .1;
-    let posXY = [-0.5, 0.5];
 
-    let minX = -(width / 2.0) + posXY[0];
-    let maxX = minX + (width / 2.0);
-    let minY = -(height / 2.0) + posXY[1];
-    let maxY = minY + (height / 2.0);
+    this.vertices = [];
+    this.indices = [];
 
-    this.vertices = [
-      minX, maxY,
-      maxX, maxY,
-      minX, minY,
-      maxX, minY];
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        let pX = -.75 + (x * (width*2));
+        let pY = .75 - (y * (height * 2));
+        let firstIndex = 0;
+        if (this.indices.length >= 6) {
+          firstIndex = (this.indices[this.indices.length - 1]) + 1;
+        }
 
-    this.indices = [
-      0, 1, 2,
-      2, 1, 3];
+        let quad = new Quad(pX, pY, width, height, firstIndex);
 
-    for (let i = 1; i < 4; i++) {
-      minX = maxX + width;
-      maxX = minX + width + 0.02 * i;
-      maxY += height + 0.01 * i;
-
-      let additionalVerts = [
-        minX, maxY,
-        maxX, maxY,
-        minX, minY,
-        maxX, minY];
-
-      this.vertices = this.vertices.concat(additionalVerts);
-
-      let prevFirstIndex = this.indices[this.indices.length - 6];
-      let additionalIndices = [
-        prevFirstIndex + 4, prevFirstIndex + 5, prevFirstIndex + 6,
-        prevFirstIndex + 6, prevFirstIndex + 5, prevFirstIndex + 7];
-
-      this.indices = this.indices.concat(additionalIndices);
+        this.vertices = this.vertices.concat(quad.vertices);
+        this.indices = this.indices.concat(quad.indices);
+      }
     }
   }
-
 
   /**
    * Compiles vertex and fragment shader programs.
