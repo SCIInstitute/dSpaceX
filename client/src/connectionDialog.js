@@ -5,8 +5,9 @@ import { DialogActions } from 'material-ui/Dialog';
 import { DialogContent } from 'material-ui/Dialog';
 import { DialogContentText } from 'material-ui/Dialog';
 import { DialogTitle } from 'material-ui/Dialog';
-import TextField from 'material-ui/TextField';
 import React from 'react';
+import TextField from 'material-ui/TextField';
+
 
 /**
  * The Dialog shown when a user attempts to connect to the server.

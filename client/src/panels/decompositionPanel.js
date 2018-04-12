@@ -1,11 +1,12 @@
 import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
 import ExpansionPanel from 'material-ui/ExpansionPanel';
-import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
 import { ExpansionPanelDetails } from 'material-ui/ExpansionPanel';
+import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
 import { FormControl } from 'material-ui/Form';
 import Histogram from './histogram';
 import { InputLabel } from 'material-ui/Input';
-import List, { ListItem } from 'material-ui/List';
+import List from 'material-ui/List';
+import { ListItem } from 'material-ui/List';
 import { MenuItem } from 'material-ui/Menu';
 import PropTypes from 'prop-types';
 import React from 'react';

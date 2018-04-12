@@ -1,7 +1,7 @@
 import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
 import ExpansionPanel from 'material-ui/ExpansionPanel';
-import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
 import { ExpansionPanelDetails } from 'material-ui/ExpansionPanel';
+import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
 import React from 'react';
 import Typography from 'material-ui/Typography';
 

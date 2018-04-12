@@ -28,7 +28,12 @@ module.exports = {
     "react/jsx-uses-vars": "error",
     "react/jsx-indent": [0 /* off */, 2],
     "brace-style": [ "error", "1tbs", { "allowSingleLine": true }],
-    "block-spacing": [ "error", "always"]
+    "block-spacing": [ "error", "always"],
+    "sort-imports": ["error", {
+        "ignoreCase": false,
+        "ignoreMemberSort": false,
+        "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
+    }]
   },
   "plugins": [
     "react",

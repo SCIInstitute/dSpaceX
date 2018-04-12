@@ -1,11 +1,12 @@
 import Divider from 'material-ui/Divider';
 import { FormControl } from 'material-ui/Form';
 import { InputLabel } from 'material-ui/Input';
-import List, { ListItem } from 'material-ui/List';
+import List from 'material-ui/List';
+import { ListItem } from 'material-ui/List';
 import { MenuItem } from 'material-ui/Menu';
-import React from 'react';
 import Paper from 'material-ui/Paper';
 import PropTypes from 'prop-types';
+import React from 'react';
 import Select from 'material-ui/Select';
 import { withStyles } from 'material-ui/styles';
 

@@ -1,17 +1,16 @@
 import Client from './client';
 import ConnectionDialog from './connectionDialog';
 import DatasetPanel from './panels/datasetPanel';
-import DisplayPanel from './panels/displayPanel';
 import DecompositionPanel from './panels/decompositionPanel';
+import DisplayPanel from './panels/displayPanel';
 import Drawer from 'material-ui/Drawer';
-import React from 'react';
+import GraphWebGLWindow from './windows/graphWebGLWindow';
 import PropTypes from 'prop-types';
+import React from 'react';
 import Toolbar from './toolbar';
 import WebGLWindow from './windows/webGLWindow';
-import GraphWebGLWindow from './windows/graphWebGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
-
 
 const drawerWidth = 260;
 const styles = (theme) => ({
