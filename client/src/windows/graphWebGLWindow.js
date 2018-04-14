@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { mat4 } from 'gl-matrix';
 
 /**
  * WebGL error check wrapper - logs to console
@@ -98,6 +98,11 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts = null;
     this.edgeVerts_array = null;
     this.edgeVerts_buffer = null;
+    this.projectionMatrix = mat4.create();
+
+    this.scale = 1;
+    this.xOffset = 0;
+    this.yOffset = 0;
   }
 
   /**
@@ -107,15 +112,39 @@ class GraphWebGLWindow extends React.Component {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    gl.clearColor(0.4, 0.4, 0.4, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     this.createGeometry();
-
     this.createShaders(gl);
     this.createBuffers(gl);
 
     webGLErrorCheck(gl);
+  }
+
+  /**
+   * Set up an orthographic projection.
+   * @param {number} width
+   * @param {number} height
+   */
+  setupOrtho(width, height) {
+    let sx = 1;
+    let sy = 1;
+
+    if (width > height) {
+      sx = width / height;
+    } else {
+      sy = height / width;
+    }
+
+    mat4.ortho(
+      this.projectionMatrix,
+      -1 * sx * this.scale + this.xOffset, // left
+      +1 * sx * this.scale + this.xOffset, // right
+      -1 * sy * this.scale + this.yOffset, // bottom
+      +1 + sy * this.scale + this.yOffset, // top
+      +1, // near
+      -1); // far
   }
 
   /**
@@ -167,9 +196,10 @@ class GraphWebGLWindow extends React.Component {
    */
   createShaders(gl) {
     const vertexShaderSource =
-      'attribute vec2 coordinates;                 ' +
-      'void main(void) {                           ' +
-      '  gl_Position = vec4(coordinates, 0.0, 1.0);' +
+      'attribute vec2 coordinates;                                    ' +
+      'uniform mat4 uProjectionMatrix;                                 ' +
+      'void main(void) {                                              ' +
+      '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);' +
       '}                                           ';
     let vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
@@ -231,6 +261,9 @@ class GraphWebGLWindow extends React.Component {
     let canvas = this.refs.canvas;
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
+
+    this.setupOrtho(canvas.width, canvas.height);
+    requestAnimationFrame(this.drawScene.bind(this));
   }
 
   /**
@@ -266,6 +299,11 @@ class GraphWebGLWindow extends React.Component {
     let gl = canvas.getContext('webgl');
 
     webGLErrorCheck(gl);
+
+    let projectionMatrixLocation =
+        gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
+    gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
+
 
     // TODO: pull out into method
     let indexBuffer = gl.createBuffer();
