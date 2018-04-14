@@ -3,7 +3,7 @@ import React from 'react';
 
 /**
  * WebGL error check wrapper - logs to console
- * @param {any} gl
+ * @param {object} gl
  */
 let webGLErrorCheck = function(gl) {
   let error = gl.getError();
@@ -20,16 +20,16 @@ let webGLErrorCheck = function(gl) {
 
 
 /**
-   * Creates a basic quad with 4 vertices and 6 indices.
-   */
+ * Creates a basic quad with 4 vertices and 6 indices.
+ */
 class Quad {
   /**
    * Quad constructor.
-   * @param {object} centerX
-   * @param {object} centerY
-   * @param {object} width
-   * @param {object} height
-   * @param {object} firstIndex
+   * @param {number} centerX
+   * @param {number} centerY
+   * @param {number} width
+   * @param {number} height
+   * @param {number} firstIndex
    */
   constructor(centerX, centerY, width, height, firstIndex) {
     this.X = centerX; // center of quad
@@ -56,15 +56,15 @@ class Quad {
 }
 
 /**
-   * Creates a basic edge from 2 points
-   */
+ * Creates a basic edge from 2 points
+ */
 class Edge {
   /**
    * Edge constructor
-   * @param {object} x1
-   * @param {object} y1
-   * @param {object} x2
-   * @param {object} y2
+   * @param {number} x1
+   * @param {number} y1
+   * @param {number} x2
+   * @param {number} y2
    */
   constructor(x1, y1, x2, y2) {
     this.x1 = x1;
