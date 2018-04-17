@@ -60,10 +60,16 @@ class GraphWebGLWindow extends React.Component {
    * @param {Event} evt
    */
   handleScrollEvent(evt) {
-    console.log('scale = ', this.scale);
     if (evt.deltaY < 0 && this.scale > 0) {
       this.scale -= 0.01;
+      console.log('wheel event down');
     }
+    if (evt.deltaY > 0 && this.scale < 10) {
+      this.scale += 0.01;
+      console.log('wheel event up');
+    }
+
+    this.resizeCanvas();
   }
 
   /**
