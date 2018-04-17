@@ -44,12 +44,31 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_buffer = null;
     this.projectionMatrix = mat4.create();
 
+    this.ticking = false;
+    this.lastKnownScrollPosition = 0;
+
     this.scale = 1;
     this.xOffset = 0;
     this.yOffset = 0;
 
     this.fakeNodesPositions = null;
     this.fakeEdgesIndices = null;
+  }
+
+  /**
+   * Event Handling for scroll wheel
+   */
+  handleScrollEvent() {
+    this.lastKnownScrollPosition = window.scrollY;
+
+    if (!this.ticking) {
+      window.requestAnimationFrame(function() {
+        console.log(ticking);
+        ticking = false;
+      });
+
+      this.ticking = true;
+    }
   }
 
   /**
@@ -161,9 +180,9 @@ class GraphWebGLWindow extends React.Component {
     }
 
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let i = 0; i < arrayBeginEndIndicesForEdges; i += 2) {
-      let edge = new Edge(this.nodes[i].X, this.nodes[i].Y,
-        this.nodes[i+1].X, this.nodes[i+1].Y);
+    for (let j = 0; j < arrayBeginEndIndicesForEdges.length-1; j++) {
+      let edge = new Edge(this.nodes[j].X, this.nodes[j].Y,
+        this.nodes[j+1].X, this.nodes[j+1].Y);
 
       this.edges.push(edge);
       this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
@@ -260,6 +279,7 @@ class GraphWebGLWindow extends React.Component {
     this.initGL();
     this.resizeCanvas();
     window.addEventListener('resize', this.resizeCanvas.bind(this));
+    window.addEventListener('scroll', this.handleScrollEvent.bind(this));
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
