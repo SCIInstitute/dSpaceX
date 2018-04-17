@@ -44,30 +44,25 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_buffer = null;
     this.projectionMatrix = mat4.create();
 
-    this.ticking = false;
-    this.lastKnownScrollPosition = 0;
-
     this.scale = 1;
     this.xOffset = 0;
     this.yOffset = 0;
 
     this.fakeNodesPositions = null;
     this.fakeEdgesIndices = null;
+
+    this.handleScrollEvent = this.handleScrollEvent.bind(this);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
   }
 
   /**
    * Event Handling for scroll wheel
+   * @param {Event} evt
    */
-  handleScrollEvent() {
-    this.lastKnownScrollPosition = window.scrollY;
-
-    if (!this.ticking) {
-      window.requestAnimationFrame(function() {
-        console.log(ticking);
-        ticking = false;
-      });
-
-      this.ticking = true;
+  handleScrollEvent(evt) {
+    console.log('scale = ', this.scale);
+    if (evt.deltaY < 0 && this.scale > 0) {
+      this.scale -= 0.01;
     }
   }
 
@@ -269,7 +264,8 @@ class GraphWebGLWindow extends React.Component {
    * Callback invoked before the component receives new props.
    */
   componentWillUnmount() {
-    window.removeEventListener('resize', this.resizeCanvas.bind(this));
+    window.removeEventListener('resize', this.resizeCanvas);
+    this.refs.canvas.removeEventListener('wheel', this.handleScrollEvent);
   }
 
   /**
@@ -278,8 +274,8 @@ class GraphWebGLWindow extends React.Component {
   componentDidMount() {
     this.initGL();
     this.resizeCanvas();
-    window.addEventListener('resize', this.resizeCanvas.bind(this));
-    window.addEventListener('scroll', this.handleScrollEvent.bind(this));
+    window.addEventListener('resize', this.resizeCanvas);
+    this.refs.canvas.addEventListener('wheel', this.handleScrollEvent);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
