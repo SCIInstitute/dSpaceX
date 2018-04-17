@@ -47,6 +47,9 @@ class GraphWebGLWindow extends React.Component {
     this.scale = 1;
     this.xOffset = 0;
     this.yOffset = 0;
+
+    this.fakeNodesPositions = null;
+    this.fakeEdgesIndices = null;
   }
 
   /**
@@ -59,7 +62,9 @@ class GraphWebGLWindow extends React.Component {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    this.createGeometry();
+    this.createFakeNodePositions();
+    this.createFakeEdges();
+    this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
     this.createShaders(gl);
     this.createBuffers(gl);
 
@@ -92,42 +97,73 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-   * Creates the geometry to be rendered.
+   * Creates the a fake set of nodes for proof of concept
    */
-  createGeometry() {
+  createFakeNodePositions() {
     let width = .2;
     let height = .2;
 
+    this.fakeNodesPositions = [];
+
+    let i = 0;
+    for (let y = 0; y < 5; y++) {
+      for (let x = 0; x < 5; x++) {
+        let pX = -.75 + (x * (width * 2));
+        let pY = .75 - (y * (height * 2));
+
+        this.fakeNodesPositions[i] = [];
+        this.fakeNodesPositions[i][0] = pX;
+        this.fakeNodesPositions[i][1] = pY;
+        i++;
+      }
+    }
+  }
+
+  /**
+   * Creates the a fake set of edges for proof of concept
+   */
+  createFakeEdges() {
+    this.fakeEdgesIndices = [];
+    // build the edges
+    for (let i = 0; i < this.fakeNodesPositions.length-1; i++) {
+      this.fakeEdgesIndices[i] = i;
+      this.fakeEdgesIndices[i + 1] = i + 1;
+    }
+  }
+
+  /**
+   * Creates the geometry to be rendered.
+   * @param {array} array2DVertsForNodes
+   * @param {array} arrayBeginEndIndicesForEdges
+   * @param {number} quadHeight
+   * @param {number} quadWidth
+   */
+  createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
+    quadHeight = 0.1, quadWidth = 0.1) {
     this.vertices = [];
     this.indices = [];
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
 
-    for (let y = 0; y < 5; y++) {
-      for (let x = 0; x < 5; x++) {
-        let pX = -.75 + (x * (width * 2));
-        let pY = .75 - (y * (height * 2));
-        let firstIndex = 0;
-        if (this.indices.length >= 6) {
-          firstIndex = (this.indices[this.indices.length - 1]) + 1;
-        }
-
-        let quad = new Quad(pX, pY, width, height, firstIndex);
-
-        this.vertices = this.vertices.concat(quad.vertices);
-        this.indices = this.indices.concat(quad.indices);
-
-        this.nodes.push(quad);
+    // create a quad for each position in array2DVertsForNodes
+    for (let i = 0; i < array2DVertsForNodes.length; i++) {
+      let firstIndex = 0;
+      if (this.indices.length >= 6) {
+        firstIndex = (this.indices[this.indices.length - 1]) + 1;
       }
+      let quad = new Quad(array2DVertsForNodes[i][0],
+        array2DVertsForNodes[i][1],
+        quadWidth, quadHeight, firstIndex);
+      this.vertices = this.vertices.concat(quad.vertices);
+      this.indices = this.indices.concat(quad.indices);
+      this.nodes.push(quad);
     }
 
-    // build the edges
-    let i = 0;
-    let j = 1;
-    for (; j < this.nodes.length; i++, j++) {
+    // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
+    for (let i = 0; i < arrayBeginEndIndicesForEdges; i += 2) {
       let edge = new Edge(this.nodes[i].X, this.nodes[i].Y,
-        this.nodes[j].X, this.nodes[j].Y);
+        this.nodes[i+1].X, this.nodes[i+1].Y);
 
       this.edges.push(edge);
       this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
