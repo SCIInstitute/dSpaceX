@@ -38,7 +38,7 @@ const styles = (theme) => ({
   workspace: {
     display: 'grid',
     height: 'calc(100vh - 64px)',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
   },
@@ -61,6 +61,7 @@ class Application extends React.Component {
       connected: false,
       networkActive: false,
       currentDataset: null,
+      currentDecomposition: null,
       datasets: [],
     };
 
@@ -69,6 +70,7 @@ class Application extends React.Component {
     this.onNetworkActivityStart = this.onNetworkActivityStart.bind(this);
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
+    this.onDecompositionChange = this.onDecompositionChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -140,6 +142,16 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles updating dataflow to components when decomposition changes.
+   * @param {object} decomposition
+   */
+  onDecompositionChange(decomposition) {
+    this.setState({
+      currentDecomposition: decomposition,
+    });
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -161,6 +173,7 @@ class Application extends React.Component {
             onDatasetChange={this.onDatasetChange}
             client={this.client}/>
           <DecompositionPanel dataset={this.state.currentDataset}
+            onDecompositionChange={this.onDecompositionChange}
             client={this.client}/>
           <DisplayPanel dataset={this.state.currentDataset}/>
           <div style={{
@@ -174,9 +187,10 @@ class Application extends React.Component {
           <div className={classes.toolbar}/>
           <div className={classes.workspace}>
             {
-              !!this.state.currentDataset ? [
-                <GraphWebGLWindow key='1' dataset={this.state.currentDataset}/>,
-                <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
+              !!this.state.currentDecomposition ? [
+                <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
+                  decomposition={this.state.currentDecomposition} />,
+                // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
               ] : []
             }
           </div>

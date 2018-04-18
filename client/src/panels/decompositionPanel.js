@@ -89,13 +89,13 @@ class DecompositionPanel extends React.Component {
       let k = 15;
       let datasetId = this.props.dataset.datasetId;
       let persistenceLevel = parseInt(level);
-      this.client.fetch;
       this.client
         .fetchMorseSmalePersistenceLevel(datasetId, k, persistenceLevel)
         .then(function(result) {
           this.setState({
             crystals: result.complex.crystals,
           });
+          this.props.onDecompositionChange(result);
         }.bind(this));
     } else {
       this.setState({
