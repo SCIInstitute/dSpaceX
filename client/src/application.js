@@ -188,7 +188,8 @@ class Application extends React.Component {
             {
               !!this.state.currentDecomposition ? [
                 <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
-                  decomposition={this.state.currentDecomposition} />,
+                  decomposition={this.state.currentDecomposition}
+                  client={this.client}/>,
                 // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
               ] : []
             }

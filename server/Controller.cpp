@@ -30,6 +30,10 @@ Controller::Controller() {
   configureAvailableDatasets();
 }
 
+// TODO: Extract a layer around handlers to deal with the websocket interface.
+//       The handlers should take only the json request and return a 
+//       json response. This layer should be resonsible for supplying messageIds.
+
 /**
  * Construct map of command names to command handlers.
  */
@@ -41,6 +45,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});
 }
 
 
@@ -89,7 +94,8 @@ void Controller::handleText(void *wsi, const std::string &text) {
 /**
  * Handle the command to fetch list of available datasets.
  */
-void Controller::fetchDatasetList(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchDatasetList(
+    void *wsi, int messageId, const Json::Value &request) {
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
   response["datasets"] = Json::Value(Json::arrayValue);
@@ -109,7 +115,8 @@ void Controller::fetchDatasetList(void *wsi, int messageId, const Json::Value &r
 /**
  * Handle the command to load and fetch details of a dataset.
  */
-void Controller::fetchDataset(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchDataset(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -141,7 +148,8 @@ void Controller::fetchDataset(void *wsi, int messageId, const Json::Value &reque
 /**
  * Handle the command to fetch the k-nearest-neighbor graph of a dataset.
  */
-void Controller::fetchKNeighbors(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchKNeighbors(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -181,7 +189,8 @@ void Controller::fetchKNeighbors(void *wsi, int messageId, const Json::Value &re
 /**
  * Handle the command to fetch the morse smale persistence levels of a dataset.
  */
-void Controller::fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmalePersistence(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -219,7 +228,8 @@ void Controller::fetchMorseSmalePersistence(void *wsi, int messageId, const Json
 /**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
-void Controller::fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmalePersistenceLevel(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -270,7 +280,8 @@ void Controller::fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
-void Controller::fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmaleCrystal(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -326,7 +337,8 @@ void Controller::fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Va
 /**
  * Handle the command to fetch the full morse smale decomposition of a dataset.
  */
-void Controller::fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchMorseSmaleDecomposition(
+    void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -369,6 +381,36 @@ void Controller::fetchMorseSmaleDecomposition(void *wsi, int messageId, const Js
     // TODO: Add adjacency to the complex json object.
     response["complexes"].append(complexObject);
   }
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
+
+void Controller::fetchLayoutForPersistenceLevel(
+    void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message.
+  }
+
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
+
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }  
+  
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);

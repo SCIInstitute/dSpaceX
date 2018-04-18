@@ -30,6 +30,7 @@ class Controller {
   void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request);
   void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request);
   void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
+  void fetchLayoutForPersistenceLevel(void *wsi, int messageId, const Json::Value &request);
 
   std::map<std::string, std::function<void(void*, int, const Json::Value&)>> m_commandMap;
 

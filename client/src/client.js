@@ -256,6 +256,23 @@ class Client {
   }
 
   /**
+   * Grab the 2d embedding for the specified persistence level.
+   * @param {string} datasetId
+   * @param {number} k
+   * @param {number} persistenceLevel
+   * @return {Promise}
+   */
+  fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel) {
+    let command = {
+      name: 'fetchLayoutForPersistenceLevel',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Text Socket onOpen event callback.
    * @param {Event} event
    */

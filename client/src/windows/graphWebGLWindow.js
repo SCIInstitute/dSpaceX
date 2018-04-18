@@ -35,6 +35,7 @@ class GraphWebGLWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.client = this.props.client;
     this.gl = null;
     this.canvas = null;
     this.vertex_array = null;
@@ -312,7 +313,22 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-   * Callback invoked before the component receives new props.
+   * Callback invoked before the React Component is rendered.
+   */
+  componentWillMount() {
+    let { datasetId, k, persistenceLevel } = this.props.decomposition;
+    console.log('dataset = ' + datasetId);
+    console.log('k = ' + k);
+    console.log('persistenceLevel = ' + persistenceLevel);
+    this.client
+      .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
+      .then(function(result) {
+        console.dir(result);
+      });
+  }
+
+  /**
+   * Callback invoked when the component is shutting down.
    */
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas);
