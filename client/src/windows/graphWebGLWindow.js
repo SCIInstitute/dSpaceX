@@ -166,21 +166,16 @@ class GraphWebGLWindow extends React.Component {
    * Creates the a fake set of nodes for proof of concept
    */
   createFakeNodePositions() {
-    let width = .2;
-    let height = .2;
+    let width = 0.2;
+    let height = 0.2;
 
     this.fakeNodesPositions = [];
-
-    let i = 0;
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
-        let pX = fakeQuadStartXY[0] + (x * (width * 2));
-        let pY = fakeQuadStartXY[1] - (y * (height * 2));
+        let pX = fakeQuadStartXY[0] + ((x - 2.5) * (width * 2));
+        let pY = fakeQuadStartXY[1] - ((y - 2.5) * (height * 2));
 
-        this.fakeNodesPositions[i] = [];
-        this.fakeNodesPositions[i][0] = pX;
-        this.fakeNodesPositions[i][1] = pY;
-        i++;
+        this.fakeNodesPositions.push([pX, pY]);
       }
     }
   }
@@ -347,10 +342,9 @@ class GraphWebGLWindow extends React.Component {
       .then(function(result) {
         console.dir(result);
         if (result.embedding && result.embedding.layout) {
-          let layout = [].concat(...result.embedding.layout);
-          console.dir(layout);
-          // this.createGeometry(layout, [0, 1]);
-          // this.updateBuffers();
+          // let layout = [].concat(...result.embedding.layout);
+          this.createGeometry(result.embedding.layout, [0, 1], 0.02, 0.02);
+          this.updateBuffers();
         }
       }.bind(this));
   }
@@ -429,7 +423,6 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
     coordinateAttrib = gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
