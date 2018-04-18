@@ -17,6 +17,10 @@ class Dataset {
     return m_qois.size();
   }
 
+  int numberOfEmbeddings() {
+    return m_embeddings.size();
+  }
+
   bool hasSamplesMatrix() {
     return m_hasSamplesMatrix;
   }
@@ -39,6 +43,14 @@ class Dataset {
 
   std::vector<std::string> getQoiNames() {
     return m_qoiNames;
+  }
+
+  FortranLinalg::DenseMatrix<Precision>& getEmbeddingMatrix(int i) {
+    return m_embeddings[i];
+  }
+
+  std::vector<std::string> getEmbeddingNames() {
+    return m_embeddingNames;
   }
 
   FortranLinalg::DenseVector<Precision>& getAttributeVector(int i) {

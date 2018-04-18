@@ -408,9 +408,30 @@ void Controller::fetchLayoutForPersistenceLevel(
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }  
-  
+
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
+
+  // TODO:  Modify logic to return layout based on chosen layout type.
+  //        For now, only send back embeddings provided with the dataset.
+  if (m_currentDataset->numberOfEmbeddings() > 0) {
+    auto embedding = m_currentDataset->getEmbeddingMatrix(0);
+    auto name = m_currentDataset->getEmbeddingNames()[0];
+    response["embedding"] = Json::Value(Json::objectValue);
+    response["embedding"]["name"] = name;
+    // TODO: Write utility for DenseMatrix to JSON nested array conversion.
+    auto layout = Json::Value(Json::arrayValue);
+    for (int i = 0; i < embedding.M(); i++) {
+      auto row = Json::Value(Json::arrayValue);
+      for (int j = 0; j < embedding.N(); j++) {
+        row.append(embedding(i, j));        
+      }
+      layout.append(row);
+    }
+
+    response["embedding"]["layout"] = layout;
+  }
+  
 
   Json::StyledWriter writer;
   std::string text = writer.write(response);
