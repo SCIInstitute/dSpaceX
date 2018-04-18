@@ -292,9 +292,9 @@ class GraphWebGLWindow extends React.Component {
 
     // Unknown Buffer (transferred from drawScene()))
     this.indexBuffer = gl.createBuffer();
+    this.indexArray = new Uint16Array(this.indices);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices),
-      gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexArray, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
@@ -317,6 +317,14 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
+
+    // Unknown Buffer (transferred from drawScene()))
+    this.indexArray = new Uint16Array(this.indices);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexArray, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
@@ -393,46 +401,55 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * Render Graph Nodes
+   * @param {object} gl
+   */
+  drawNodes(gl) {
+    let coordinateAttrib =
+      gl.getAttribLocation(this.shaderProgram, 'coordinates');
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(coordinateAttrib);
+    gl.drawElements(gl.TRIANGLES, this.indices.length,
+      gl.UNSIGNED_SHORT, this.indexBuffer);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+  }
+
+  /**
+   * Render Graph Edges
+   * @param {object} gl
+   */
+  drawEdges(gl) {
+    let coordinateAttrib =
+        gl.getAttribLocation(this.shaderProgram, 'coordinates');
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
+    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(coordinateAttrib);
+    gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 2);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+  }
+
+  /**
    * Renders the OpenGL Content to the canvas.
    */
   drawScene() {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    webGLErrorCheck(gl);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
-    // TODO: pull out into method
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-
-    let coordinateAttrib =
-      gl.getAttribLocation(this.shaderProgram, 'coordinates');
-    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(coordinateAttrib);
-
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-
-
-    gl.drawElements(gl.TRIANGLES, this.indices.length,
-      gl.UNSIGNED_SHORT, this.indexBuffer);
-
-    webGLErrorCheck(gl);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
-    coordinateAttrib = gl.getAttribLocation(this.shaderProgram, 'coordinates');
-    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(coordinateAttrib);
-    gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 2);
-
-    webGLErrorCheck(gl);
+    this.drawNodes(gl);
+    this.drawEdges(gl);
   }
 
   /**
