@@ -1,6 +1,11 @@
-import { Edge, Quad } from './primitives';
+﻿import { Edge, Quad } from './primitives';
 import React from 'react';
 import { mat4 } from 'gl-matrix';
+
+/**
+ * const variables to replace 'magic numbers'
+ */
+const fakeQuadStartXY = [.75, .75];
 
 /**
  * WebGL error check wrapper - logs to console
@@ -52,6 +57,8 @@ class GraphWebGLWindow extends React.Component {
     this.fakeEdgesIndices = null;
 
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.handleMouseRelease = this.handleMouseRelease.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
   }
 
@@ -75,7 +82,16 @@ class GraphWebGLWindow extends React.Component {
    * @param {Event} evt
    */
   handleMouseDown(evt) {
-    console.log('Mouse Down Event');
+    // Handle Right click
+    if (evt.button == 2) {
+      console.log('Right Mouse Down Event');
+      let XY = [evt.offsetX, evt.offsetY];
+      let orthoXY = this.convertToGLCoords(XY);
+      this.xOffset = -orthoXY[0];
+      this.yOffset = -orthoXY[1];
+
+      this.resizeCanvas();
+    }
   }
 
   /**
@@ -131,6 +147,21 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * Return x,y pixel coords in gl coords
+   * @param {array} XY
+   * @return {array}
+   */
+  convertToGLCoords(XY) {
+    let canvas = this.refs.canvas;
+    let resolution = [canvas.clientWidth, canvas.clientHeight];
+    let zeroToOne = [XY[0] / resolution[0], XY[1] / resolution[1]];
+    let zeroToTwo = [zeroToOne[0] * 2, zeroToOne[1] * 2];
+    let clipSpace = [zeroToTwo[0] - 1, zeroToTwo[1] - 1];
+    let returnXY = [clipSpace[0], -clipSpace[1]];
+    return returnXY;
+  }
+
+  /**
    * Creates the a fake set of nodes for proof of concept
    */
   createFakeNodePositions() {
@@ -142,8 +173,8 @@ class GraphWebGLWindow extends React.Component {
     let i = 0;
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
-        let pX = -.75 + (x * (width * 2));
-        let pY = .75 - (y * (height * 2));
+        let pX = fakeQuadStartXY[0] + (x * (width * 2));
+        let pY = fakeQuadStartXY[1] - (y * (height * 2));
 
         this.fakeNodesPositions[i] = [];
         this.fakeNodesPositions[i][0] = pX;
@@ -300,6 +331,9 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('wheel', this.handleScrollEvent);
     this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
+    this.refs.canvas.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    }, false);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
