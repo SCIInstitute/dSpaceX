@@ -183,9 +183,8 @@ class GraphWebGLWindow extends React.Component {
   createFakeEdges() {
     this.fakeEdgesIndices = [];
     // build the edges
-    for (let i = 0; i < this.fakeNodesPositions.length-1; i++) {
-      this.fakeEdgesIndices[i] = i;
-      this.fakeEdgesIndices[i + 1] = i + 1;
+    for (let i = 0; i < this.fakeNodesPositions.length - 1; i++) {
+      this.fakeEdgesIndices.push([i, i+1]);
     }
   }
 
@@ -219,9 +218,14 @@ class GraphWebGLWindow extends React.Component {
     }
 
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let j = 0; j < arrayBeginEndIndicesForEdges.length-1; j++) {
-      let edge = new Edge(this.nodes[j].X, this.nodes[j].Y,
-        this.nodes[j+1].X, this.nodes[j+1].Y);
+    for (let i = 0; i < arrayBeginEndIndicesForEdges.length - 1; i++) {
+      let index1 = arrayBeginEndIndicesForEdges[i][0];
+      let index2 = arrayBeginEndIndicesForEdges[i][1];
+
+      let node1 = this.nodes[index1];
+      let node2 = this.nodes[index2];
+
+      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y);
 
       this.edges.push(edge);
       this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
@@ -348,18 +352,14 @@ class GraphWebGLWindow extends React.Component {
    */
   componentWillMount() {
     let { datasetId, k, persistenceLevel } = this.props.decomposition;
-    console.log('dataset = ' + datasetId);
-    console.log('k = ' + k);
-    console.log('persistenceLevel = ' + persistenceLevel);
     this.client
       .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
       .then(function(result) {
-        console.dir(result);
         if (result.embedding && result.embedding.layout) {
           // let layout = [].concat(...result.embedding.layout);
           let layout = result.embedding.layout;
-          // let adjacency = result.embedding.adjacency;
-          this.createGeometry(layout, [0, 1], 0.01, 0.01);
+          let adjacency = result.embedding.adjacency;
+          this.createGeometry(layout, adjacency, 0.01, 0.01);
           this.updateBuffers();
           requestAnimationFrame(this.drawScene.bind(this));
         }
@@ -406,7 +406,7 @@ class GraphWebGLWindow extends React.Component {
    */
   drawNodes(gl) {
     let coordinateAttrib =
-      gl.getAttribLocation(this.shaderProgram, 'coordinates');
+        gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
     gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
