@@ -246,6 +246,7 @@ void Controller::fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const
   response["id"] = messageId;
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
+  response["k"] = k;
   response["persistenceLevel"] = persistenceLevel;
   response["complex"] = Json::Value(Json::objectValue);
   response["complex"]["crystals"] = Json::Value(Json::arrayValue);
