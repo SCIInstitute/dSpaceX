@@ -952,7 +952,7 @@ void DisplayGraph::setupOrtho(int w, int h) {
   glOrtho(-1 * sx * m_scale + m_xOffset, // left
            1 * sx * m_scale + m_xOffset, // right
           -1 * sy * m_scale + m_yOffset, // bottom
-           1 + sy * m_scale + m_yOffset, // top
+           1 * sy * m_scale + m_yOffset, // top
            1,    // near
            -1);  // far
 }
