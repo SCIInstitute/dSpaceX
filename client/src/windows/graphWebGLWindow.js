@@ -2,10 +2,6 @@
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
-/**
- * const variables to replace 'magic numbers'
- */
-const fakeQuadStartXY = [.75, .75];
 
 /**
  * WebGL error check wrapper - logs to console
@@ -139,10 +135,10 @@ class GraphWebGLWindow extends React.Component {
 
     mat4.ortho(
       this.projectionMatrix,
-      -1 * sx * this.scale + this.xOffset, // left
-      +1 * sx * this.scale + this.xOffset, // right
-      -1 * sy * this.scale + this.yOffset, // bottom
-      +1 + sy * this.scale + this.yOffset, // top
+      -1*this.scale*sx + this.xOffset, // left
+      +1*this.scale*sx + this.xOffset, // right
+      -1*this.scale*sy + this.yOffset, // bottom
+      +1*this.scale*sy + this.yOffset, // top
       +1, // near
       -1); // far
   }
@@ -172,8 +168,8 @@ class GraphWebGLWindow extends React.Component {
     this.fakeNodesPositions = [];
     for (let y = 0; y < 5; y++) {
       for (let x = 0; x < 5; x++) {
-        let pX = fakeQuadStartXY[0] + ((x - 2.5) * (width * 2));
-        let pY = fakeQuadStartXY[1] - ((y - 2.5) * (height * 2));
+        let pX = ((x - 2) * (width * 2));
+        let pY = ((y - 2) * (height * 2));
 
         this.fakeNodesPositions.push([pX, pY]);
       }
