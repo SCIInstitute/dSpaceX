@@ -36,6 +36,7 @@ class GraphWebGLWindow extends React.Component {
     this.canvas = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
+    this.indexBuffer = null;
     this.shaderProgram = null;
     this.vertices = null;
     this.indices = null;
@@ -288,6 +289,15 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
+
+    // Unknown Buffer (transferred from drawScene()))
+    this.indexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices),
+      gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
   }
 
   /**
@@ -395,14 +405,9 @@ class GraphWebGLWindow extends React.Component {
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
-
     // TODO: pull out into method
-    let indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices),
-      gl.STATIC_DRAW);
-
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
     let coordinateAttrib =
       gl.getAttribLocation(this.shaderProgram, 'coordinates');
@@ -414,7 +419,7 @@ class GraphWebGLWindow extends React.Component {
 
 
     gl.drawElements(gl.TRIANGLES, this.indices.length,
-      gl.UNSIGNED_SHORT, indexBuffer);
+      gl.UNSIGNED_SHORT, this.indexBuffer);
 
     webGLErrorCheck(gl);
 
