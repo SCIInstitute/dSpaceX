@@ -339,8 +339,11 @@ class GraphWebGLWindow extends React.Component {
         console.dir(result);
         if (result.embedding && result.embedding.layout) {
           // let layout = [].concat(...result.embedding.layout);
-          this.createGeometry(result.embedding.layout, [0, 1], 0.01, 0.01);
+          let layout = result.embedding.layout;
+          // let adjacency = result.embedding.adjacency;
+          this.createGeometry(layout, [0, 1], 0.01, 0.01);
           this.updateBuffers();
+          requestAnimationFrame(this.drawScene.bind(this));
         }
       }.bind(this));
   }
