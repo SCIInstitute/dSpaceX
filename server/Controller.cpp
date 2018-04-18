@@ -86,7 +86,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
     }
 
   } catch (const std::exception &e) {
-    std::cerr << "Command Parsing Error." << e.what() << std::endl;
+    std::cerr << "Command Execution Error: " << e.what() << std::endl;
     // TODO: Send back an error message.
   }
 }

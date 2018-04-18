@@ -73,14 +73,19 @@ class Dataset {
       m_dataset->m_hasDistanceMatrix = true;
       return (*this);
     }
-    Builder& withAttribute(std::string name, FortranLinalg::DenseVector<Precision> &vector) {
+    Builder& withAttribute(std::string name, FortranLinalg::DenseVector<Precision> &attribute) {
       m_dataset->m_attributeNames.push_back(name);
-      m_dataset->m_attributes.push_back(vector);
+      m_dataset->m_attributes.push_back(attribute);
       return (*this);
     }
-    Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &vector) {
+    Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi) {
       m_dataset->m_qoiNames.push_back(name);
-      m_dataset->m_qois.push_back(vector);
+      m_dataset->m_qois.push_back(qoi);
+      return (*this);
+    }
+    Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding) {
+      m_dataset->m_embeddingNames.push_back(name);
+      m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
     Builder& withName(std::string name) {
@@ -110,6 +115,8 @@ class Dataset {
   std::vector<FortranLinalg::DenseVector<Precision>> m_attributes;
   std::vector<std::string> m_qoiNames;
   std::vector<std::string> m_attributeNames;
+  std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
+  std::vector<std::string> m_embeddingNames;
   std::string m_name;
 
   bool m_hasDistanceMatrix = false;

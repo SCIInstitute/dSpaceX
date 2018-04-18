@@ -46,6 +46,13 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
     builder.withDistanceMatrix(distances);
   }
 
+  if (config["embeddings"]) {
+    auto embeddings = DatasetLoader::parseEmbeddings(config, filePath);
+    for (auto embedding : embeddings) {
+      builder.withEmbedding(embedding.first, embedding.second);
+    }
+  }
+
   return builder.build();
 }
 
@@ -79,7 +86,7 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
   
   if (qoisNode.IsSequence()) {
     // Parse QoIs one by one if in list form:
-    std::cout << "Reading sequence of " << qoisNode.size() << " qois" << std::endl;
+    std::cout << "Reading sequence of " << qoisNode.size() << " qois." << std::endl;
     for (std::size_t i = 0; i < qoisNode.size(); i++) {
       const YAML::Node &qoiNode = qoisNode[i];
       auto qoi = DatasetLoader::parseQoi(qoiNode, filePath);
@@ -94,8 +101,9 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
   return qois;
 }
 
+
 QoiNameValuePair DatasetLoader::parseQoi(
-  const YAML::Node &qoiNode, const std::string &filePath) {
+    const YAML::Node &qoiNode, const std::string &filePath) {
   if (!qoiNode["name"]) {
     throw std::runtime_error("Qoi missing 'name' field.");
   }
@@ -132,6 +140,72 @@ QoiNameValuePair DatasetLoader::parseQoi(
   }
 
   return QoiNameValuePair(name, qoi);
+}
+
+
+std::vector<EmbeddingPair> DatasetLoader::parseEmbeddings(
+    const YAML::Node &config, const std::string &filePath) {
+  std::vector<EmbeddingPair> embeddings;
+  if (!config["embeddings"]) {
+    throw std::runtime_error("Dataset config missing 'embeddings' field.");
+  }
+  const YAML::Node &embeddingsNode = config["embeddings"];
+
+  if (embeddingsNode.IsSequence()) {
+    // Parse Embeddings one by one if in list form:
+    std::cout << "Reading sequence of " << embeddingsNode.size() 
+              << " embeddings." << std::endl;
+    for (std::size_t i = 0; i < embeddingsNode.size(); i++) {
+      const YAML::Node &embeddingNode = embeddingsNode[i];
+      auto embedding = DatasetLoader::parseEmbedding(embeddingNode, filePath);
+      embeddings.push_back(embedding);
+    }
+  } else {
+    throw std::runtime_error("Config 'embeddings' field is not a list.");
+  }
+
+  return embeddings;
+}
+
+
+EmbeddingPair DatasetLoader::parseEmbedding(
+    const YAML::Node &embeddingNode, const std::string &filePath) {
+  if (!embeddingNode["name"]) {
+    throw std::runtime_error("Embedding missing 'name' field.");
+  }
+  std::string name = embeddingNode["name"].as<std::string>();
+  std::cout << "Embedding name: " << name << std::endl;
+
+  if (!embeddingNode["format"]) {
+     throw std::runtime_error("Embedding missing 'format' field."); 
+  }
+  std::string format = embeddingNode["format"].as<std::string>();
+  // TODO: Move Format Strings to typed enums or constants.
+  std::cout << "Embedding format: " << format << std::endl;
+  if (format != "Linalg.DenseMatrix" &&
+      format != "csv") {
+    throw std::runtime_error(
+        "Dataset config specifies unsupported embedding format: " + format);
+  }
+
+  if (!embeddingNode["file"]) {
+    throw std::runtime_error("Embedding missing 'file' field.");
+  }
+  std::string filename = embeddingNode["file"].as<std::string>();
+  std::cout << "Embedding filename: " << filename << std::endl;
+  std::string path = basePathOf(filePath);
+
+  // TODO: Factor out some file format reading handler. 
+  //       Fileformat could be a key for map to loading function.  
+  std::cout << "Loading " << format << " from " << path + filename << std::endl;
+  FortranLinalg::DenseMatrix<Precision> embedding;
+  if (format == "Linalg.DenseMatrix") {    
+    embedding = FortranLinalg::LinalgIO<Precision>::readMatrix(path + filename);
+  } else if (format == "csv") {
+    embedding = HDProcess::loadCSVMatrix(path + filename);
+  }
+
+  return EmbeddingPair(name, embedding);
 }
 
 
