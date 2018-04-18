@@ -62,14 +62,28 @@ class GraphWebGLWindow extends React.Component {
   handleScrollEvent(evt) {
     if (evt.deltaY < 0 && this.scale > 0) {
       this.scale -= 0.01;
-      console.log('wheel event down');
     }
     if (evt.deltaY > 0 && this.scale < 10) {
       this.scale += 0.01;
-      console.log('wheel event up');
     }
 
     this.resizeCanvas();
+  }
+
+  /**
+   * Event handling for mouse click down
+   * @param {Event} evt
+   */
+  handleMouseDown(evt) {
+    console.log('Mouse Down Event');
+  }
+
+  /**
+   * Event handling for mouse click up
+   * @param {Event} evt
+   */
+  handleMouseRelease(evt) {
+    console.log('Mouse Up Event');
   }
 
   /**
@@ -272,6 +286,8 @@ class GraphWebGLWindow extends React.Component {
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas);
     this.refs.canvas.removeEventListener('wheel', this.handleScrollEvent);
+    this.refs.canvas.removeEventListener('mousedown', this.handleMouseDown);
+    this.refs.canvas.removeEventListener('mouseup', this.handleMouseRelease);
   }
 
   /**
@@ -282,6 +298,8 @@ class GraphWebGLWindow extends React.Component {
     this.resizeCanvas();
     window.addEventListener('resize', this.resizeCanvas);
     this.refs.canvas.addEventListener('wheel', this.handleScrollEvent);
+    this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
+    this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
