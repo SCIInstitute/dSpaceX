@@ -423,14 +423,14 @@ void Controller::fetchLayoutForPersistenceLevel(
     float maxX = embedding(0,0);
     float minY = embedding(0,1);
     float maxY = embedding(0,1);
-    for (int i=0; i < embedding.N(); i++) {
+    for (int i=0; i < embedding.M(); i++) {
       minX = embedding(i, 0) < minX ? embedding(i, 0) : minX;
       maxX = embedding(i, 0) > maxX ? embedding(i, 0) : maxX;
       minY = embedding(i, 1) < minY ? embedding(i, 1) : minY;
       maxY = embedding(i, 1) > maxY ? embedding(i, 1) : maxY;
     }
-    for (int i=0; i < embedding.N(); i++) {
-      embedding(i, 1) = (embedding(i, 0) - minX) / (maxX - minX) - 0.5;
+    for (int i=0; i < embedding.M(); i++) {
+      embedding(i, 0) = (embedding(i, 0) - minX) / (maxX - minX) - 0.5;
       embedding(i, 1) = (embedding(i, 1) - minY) / (maxY - minY) - 0.5;
     }
 
