@@ -445,8 +445,23 @@ void Controller::fetchLayoutForPersistenceLevel(
       }
       layout.append(row);
     }
-
     response["embedding"]["layout"] = layout;
+
+    auto adjacency = Json::Value(Json::arrayValue);
+    auto neighbors = m_currentVizData->getNearestNeighbors();
+    for (int i = 0; i < neighbors.N(); i++) {      
+      for (int j = 0; j < neighbors.M(); j++) {
+        int neighbor = neighbors(j, i);
+        if (i == neighbor)
+          continue;
+        auto row = Json::Value(Json::arrayValue);
+        row.append(i);
+        row.append(neighbor);
+        adjacency.append(row);
+      }
+      
+    }
+    response["embedding"]["adjacency"] = adjacency; 
   }
   
 
