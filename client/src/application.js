@@ -8,7 +8,6 @@ import GraphWebGLWindow from './windows/graphWebGLWindow';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Toolbar from './toolbar';
-import WebGLWindow from './windows/webGLWindow';
 import Workspace from './workspace';
 import { withStyles } from 'material-ui/styles';
 
