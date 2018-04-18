@@ -300,6 +300,28 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * Updates vertex buffers with fresh data.
+   */
+  updateBuffers() {
+    const canvas = this.refs.canvas;
+    let gl = canvas.getContext('webgl');
+
+    this.vertex_array = new Float32Array(this.vertices);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
+
+    this.edgeVerts_array = new Float32Array(this.edgeVerts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
+  }
+
+  /**
    * Resize the canvas renderer to match the dom size.
    * @param {object} gl The OpenGL context.
    */
@@ -324,7 +346,13 @@ class GraphWebGLWindow extends React.Component {
       .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
       .then(function(result) {
         console.dir(result);
-      });
+        if (result.embedding && result.embedding.layout) {
+          let layout = [].concat(...result.embedding.layout);
+          console.dir(layout);
+          // this.createGeometry(layout, [0, 1]);
+          // this.updateBuffers();
+        }
+      }.bind(this));
   }
 
   /**

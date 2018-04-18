@@ -417,6 +417,23 @@ void Controller::fetchLayoutForPersistenceLevel(
   if (m_currentDataset->numberOfEmbeddings() > 0) {
     auto embedding = m_currentDataset->getEmbeddingMatrix(0);
     auto name = m_currentDataset->getEmbeddingNames()[0];
+
+    // TOD: Factor out a normalizing routine.
+    float minX = embedding(0,0);
+    float maxX = embedding(0,0);
+    float minY = embedding(0,1);
+    float maxY = embedding(0,1);
+    for (int i=0; i < embedding.N(); i++) {
+      minX = embedding(i, 0) < minX ? embedding(i, 0) : minX;
+      maxX = embedding(i, 0) > maxX ? embedding(i, 0) : maxX;
+      minY = embedding(i, 1) < minY ? embedding(i, 1) : minY;
+      maxY = embedding(i, 1) > maxY ? embedding(i, 1) : maxY;
+    }
+    for (int i=0; i < embedding.N(); i++) {
+      embedding(i, 1) = (embedding(i, 0) - minX) / (maxX - minX) - 0.5;
+      embedding(i, 1) = (embedding(i, 1) - minY) / (maxY - minY) - 0.5;
+    }
+
     response["embedding"] = Json::Value(Json::objectValue);
     response["embedding"]["name"] = name;
     // TODO: Write utility for DenseMatrix to JSON nested array conversion.
