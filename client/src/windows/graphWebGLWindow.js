@@ -110,9 +110,12 @@ class GraphWebGLWindow extends React.Component {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    this.createFakeNodePositions();
-    this.createFakeEdges();
-    this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+    // Create fake data if there's no decomposition information.
+    if (!this.props.decomposition) {
+      this.createFakeNodePositions();
+      this.createFakeEdges();
+      this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+    }
     this.createShaders(gl);
     this.createBuffers(gl);
 
@@ -360,9 +363,16 @@ class GraphWebGLWindow extends React.Component {
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
           this.createGeometry(layout, adjacency, 0.01, 0.01);
-          this.updateBuffers();
-          requestAnimationFrame(this.drawScene.bind(this));
+        } else {
+          // For now, if server fails. Render fake data.
+          if (this.props.decomposition) {
+            this.createFakeNodePositions();
+            this.createFakeEdges();
+            this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+          }
         }
+        this.updateBuffers();
+        requestAnimationFrame(this.drawScene.bind(this));
       }.bind(this));
   }
 
@@ -448,8 +458,11 @@ class GraphWebGLWindow extends React.Component {
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
-    this.drawNodes(gl);
-    this.drawEdges(gl);
+    // TODO: Replace with a safer check. Maybe add boolean to class.
+    if (this.props.decomposition && this.vertices) {
+      this.drawNodes(gl);
+      this.drawEdges(gl);
+    }
   }
 
   /**
