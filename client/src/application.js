@@ -137,6 +137,7 @@ class Application extends React.Component {
   onDatasetChange(dataset) {
     this.setState({
       currentDataset: dataset,
+      currentDecomposition: null,
     });
   }
 

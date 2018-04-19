@@ -76,7 +76,9 @@ class DecompositionPanel extends React.Component {
       this.setState({
         minPersistence: null,
         maxPersistence: null,
+        crystals: [],
       });
+      this.props.onDatasetChange(null);
     }
   }
 
