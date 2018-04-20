@@ -516,6 +516,8 @@ class GraphWebGLWindow extends React.Component {
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
           this.createGeometry(layout, adjacency, 0.02, 0.02);
+          this.createFakeNodeColors();
+          this.addVertexColors(this.fakeNodeColors);
         } else {
           // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
@@ -579,15 +581,13 @@ class GraphWebGLWindow extends React.Component {
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
-    if (this.vertColors != null) {
-      if (this.vertColors.length == this.vertices.length) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-        this.shaderProgram.vertexColorAttribute =
-          gl.getAttribLocation(this.shaderProgram, 'vertexColor');
-        gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
-          3, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
-      }
+    if (this.vertColors && this.vertColors.length == this.vertices.length) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+      this.shaderProgram.vertexColorAttribute =
+        gl.getAttribLocation(this.shaderProgram, 'vertexColor');
+      gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
+        3, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
     }
 
     let projectionMatrixLocation =
