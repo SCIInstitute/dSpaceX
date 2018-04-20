@@ -282,7 +282,7 @@ class Client {
     let command = {
       name: 'fetchQoi',
       datasetId: datasetId,
-      qoiName: qoiname,
+      qoiName: qoiName,
     };
     return this._createCommandPromise(command);
   }

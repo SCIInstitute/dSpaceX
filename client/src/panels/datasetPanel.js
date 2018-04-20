@@ -27,9 +27,11 @@ class DatasetPanel extends React.Component {
     this.state = {
       datasetName: '',
       dataset: null,
+      qoiName: '',
     };
 
     this.handleDatasetChange = this.handleDatasetChange.bind(this);
+    this.handleQoiChange = this.handleQoiChange.bind(this);
     this.client = this.props.client;
     this.datasetMap = null;
     this.initializeDatasetMap();
@@ -73,7 +75,7 @@ class DatasetPanel extends React.Component {
       return;
     }
 
-    this.setState({ datasetName:datasetName });
+    this.setState({ datasetName });
     let datasetId = this.datasetMap.get(datasetName);
     this.client.fetchDataset(datasetId).then(function(dataset) {
       this.setState({
@@ -87,6 +89,33 @@ class DatasetPanel extends React.Component {
       this.props.onDatasetChange(dataset);
     }.bind(this));
   };
+
+
+  /**
+   * Handles the user changing the current active qoi.
+   * @param {Event} event
+   */
+  handleQoiChange(event) {
+    let qoiName = event.target.value;
+    if (qoiName === '') {
+      this.setState({
+        qoiName: null,
+      });
+      if (this.props.onQoiChange) {
+        this.props.onQoiChange(null);
+      }
+      return;
+    }
+
+    this.setState({ qoiName });
+    let datasetId = this.state.dataset.id;
+    this.client.fetchQoi(datasetId, qoiName).then(function(qoiVector) {
+      console.dir(qoiVector);
+      if (this.props.onQoiChange) {
+        this.props.onQoiChange(qoiVector);
+      }
+    }.bind(this));
+  }
 
   /**
    * Renders the component to HTML.
@@ -142,7 +171,7 @@ class DatasetPanel extends React.Component {
                 </span>
               </div>
             </ListItem>
-            <Divider />
+            <Divider/>
             <ListItem style={{ paddingLeft:'0px', paddingRight:'5px' }}>
               <div style={{
                 width: '100%',
@@ -160,6 +189,29 @@ class DatasetPanel extends React.Component {
               </div>
             </ListItem>
           </List>
+          <FormControl className={classes.formControl}
+            disabled={!this.state.dataset}>
+            <InputLabel htmlFor='qoi-field'>QoI</InputLabel>
+            <Select ref="qoiCombo" value={this.state.qoiName}
+              onChange={this.handleQoiChange} inputProps={{
+                name: 'qoi',
+                id: 'qoi-field',
+              }}>
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {
+                (this.state.dataset && this.state.dataset.qoiNames) ?
+                  this.state.dataset.qoiNames.map((name) => (
+                    <MenuItem value={name} key={name}>
+                      {name}
+                    </MenuItem>
+                  ))
+                  : []
+              }
+            </Select>
+          </FormControl>
+          <div style={{ width:'100%', height:'5px' }}/>
         </div>
       </Paper>
     );
