@@ -44,6 +44,7 @@ class GraphWebGLWindow extends React.Component {
     this.vertices = null;
     this.nodes = null;
     this.edges = null;
+    this.nodeEdgeCount = null;
     this.edgeVerts = null;
     this.edgeVerts_array = null;
     this.edgeVerts_buffer = null;
@@ -213,17 +214,14 @@ class GraphWebGLWindow extends React.Component {
    * Creates the a fake set of nodes for proof of concept
    */
   createFakeNodePositions() {
-    let width = 0.2;
-    let height = 0.2;
-
     this.fakeNodesPositions = [];
-    for (let y = 0; y < 5; y++) {
-      for (let x = 0; x < 5; x++) {
-        let pX = ((x - 2) * (width * 2));
-        let pY = ((y - 2) * (height * 2));
-
-        this.fakeNodesPositions.push([pX, pY]);
-      }
+    let radius = 0.5;
+    let pointCount = 16;
+    let angle = Math.PI * 2 / pointCount;
+    for (let i = 0; i < pointCount; i++) {
+      let pX = radius * Math.cos(angle * i);
+      let pY = radius * Math.sin(angle * i);
+      this.fakeNodesPositions.push([pX, pY]);
     }
   }
 
@@ -232,8 +230,27 @@ class GraphWebGLWindow extends React.Component {
    */
   createFakeEdges() {
     this.fakeEdgesIndices = [];
-    for (let i = 0; i < this.fakeNodesPositions.length - 1; i++) {
-      this.fakeEdgesIndices.push([i, i+1]);
+
+    for (let i = 0; i < this.fakeNodesPositions.length; i++) {
+      let min = 0;
+      let max = this.fakeNodesPositions.length - 1;
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      let randomNodeIndex = Math.floor(Math.random() * (max - min)) + min;
+      this.fakeEdgesIndices.push([i, randomNodeIndex]);
+    }
+
+    for (let j = 0; j < 16; j++) {
+      let min = 0;
+      let max = this.fakeNodesPositions.length - 1;
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      let randomFirst = Math.floor(Math.random() * (max - min)) + min;
+      let randomSecond = Math.floor(Math.random() * (max - min)) + min;
+      while (randomSecond == randomFirst) {
+        randomSecond = Math.floor(Math.random() * (max - min)) + min;
+      }
+      this.fakeEdgesIndices.push([randomFirst, randomSecond]);
     }
   }
 
@@ -251,6 +268,7 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
+    this.nodeEdgeCount = [];
 
     // create a quad for each position in array2DVertsForNodes
     for (let i = 0; i < array2DVertsForNodes.length; i++) {
@@ -261,10 +279,17 @@ class GraphWebGLWindow extends React.Component {
       this.nodes.push(quad);
     }
 
+    for (let node = 0; node < this.nodes.length; node++) {
+      this.nodeEdgeCount.push(0);
+    }
+
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let i = 0; i < arrayBeginEndIndicesForEdges.length - 1; i++) {
+    for (let i = 0; i < arrayBeginEndIndicesForEdges.length; i++) {
       let index1 = arrayBeginEndIndicesForEdges[i][0];
       let index2 = arrayBeginEndIndicesForEdges[i][1];
+
+      this.nodeEdgeCount[index1]++;
+      this.nodeEdgeCount[index2]++;
 
       let node1 = this.nodes[index1];
       let node2 = this.nodes[index2];
@@ -523,6 +548,12 @@ class GraphWebGLWindow extends React.Component {
         gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    let colorAttrib =
+      gl.getAttribLocation(this.shaderProgram, 'vertexColor');
+    gl.vertexAttribPointer(colorAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(colorAttrib);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
