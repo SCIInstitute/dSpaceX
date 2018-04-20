@@ -462,7 +462,7 @@ class GraphWebGLWindow extends React.Component {
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
-    if (/*this.props.decomposition &&*/ this.vertices) {
+    if (this.vertices) {
       this.drawNodes(gl);
       this.drawEdges(gl);
     }
