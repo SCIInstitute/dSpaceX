@@ -45,7 +45,8 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2, _3)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});  
+  m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
 }
 
 
@@ -469,6 +470,39 @@ void Controller::fetchLayoutForPersistenceLevel(
   std::string text = writer.write(response);
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
+
+
+void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  maybeLoadDataset(datasetId);
+
+  std::string qoiName = request["qoiName"].asString();
+  auto qois = m_currentDataset->getQoiNames();
+  auto result = std::find(std::begin(qois), std::end(qois), qoiName);
+  if (result == std::end(qois)) {
+    // TODO: Send back an error message. Invalid Qoi Name.
+  }
+
+  int qoiIndex = result - std::begin(qois);
+  auto qoiVector = m_currentDataset->getQoiVector(qoiIndex);
+
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+
+  response["qoiName"] = qoiName;
+  response["qoi"] = Json::Value(Json::arrayValue);
+  for (int i = 0; i < qoiVector.N(); i++) {
+    response["qoi"].append(qoiVector(i));
+  }
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
+
 
 /**
  * Checks if the requested dataset is loaded.

@@ -61,6 +61,7 @@ class Application extends React.Component {
       networkActive: false,
       currentDataset: null,
       currentDecomposition: null,
+      currentQoi: null,
       datasets: [],
     };
 
@@ -70,6 +71,7 @@ class Application extends React.Component {
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
     this.onDecompositionChange = this.onDecompositionChange.bind(this);
+    this.onQoiChange = this.onQoiChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -152,6 +154,16 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles updating dataflow to changes when selected qoi changes.
+   * @param {Array} qoi
+   */
+  onQoiChange(qoi) {
+    this.setState({
+      currentQoi: qoi,
+    });
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -171,6 +183,7 @@ class Application extends React.Component {
           <div className={classes.toolbar} />
           <DatasetPanel datasets={this.state.datasets}
             onDatasetChange={this.onDatasetChange}
+            onQoiChange={this.onQoiChange}
             client={this.client}/>
           <DecompositionPanel dataset={this.state.currentDataset}
             onDecompositionChange={this.onDecompositionChange}
@@ -190,6 +203,7 @@ class Application extends React.Component {
               !!this.state.currentDecomposition ? [
                 <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
                   decomposition={this.state.currentDecomposition}
+                  qoi={this.state.currentQoi}
                   client={this.client}/>,
                 // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
               ] : []

@@ -273,6 +273,21 @@ class Client {
   }
 
   /**
+   * Grab the qoi values for the given qoi.
+   * @param {string} datasetId
+   * @param {string} qoiName
+   * @return {Promise}
+   */
+  fetchQoi(datasetId, qoiName) {
+    let command = {
+      name: 'fetchQoi',
+      datasetId: datasetId,
+      qoiName: qoiName,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Text Socket onOpen event callback.
    * @param {Event} event
    */
