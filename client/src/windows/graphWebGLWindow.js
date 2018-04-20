@@ -41,9 +41,12 @@ class GraphWebGLWindow extends React.Component {
     this.canvas = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
+    this.vertColor_array = null;
+    this.vertColor_buffer = null;
     this.shaderProgram = null;
     this.edgeShaderProgram = null;
     this.vertices = null;
+    this.vertColors = null;
     this.nodes = null;
     this.edges = null;
     this.nodeEdgeCount = null;
@@ -266,7 +269,7 @@ class GraphWebGLWindow extends React.Component {
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
     quadHeight = 0.1, quadWidth = 0.1) {
     this.vertices = [];
-    this.indices = [];
+    this.vertColors = [];
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
@@ -279,9 +282,6 @@ class GraphWebGLWindow extends React.Component {
         quadWidth, quadHeight);
       this.vertices = this.vertices.concat(quad.vertices);
       this.nodes.push(quad);
-    }
-
-    for (let node = 0; node < this.nodes.length; node++) {
       this.nodeEdgeCount.push(0);
     }
 
@@ -300,6 +300,15 @@ class GraphWebGLWindow extends React.Component {
 
       this.edges.push(edge);
       this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
+    }
+
+    for (let i = 0; i < this.nodeEdgeCount.length; i++) {
+      let r = 1.0 - (this.nodeEdgeCount[i] * 0.1);
+      let g = 0.8;
+      let b = 0.0 + (this.nodeEdgeCount[i] * 0.1);
+      for (let j = 0; j < 6; j++) {
+        this.vertColors.push(r, g, b);
+      }
     }
   }
 
@@ -325,7 +334,6 @@ class GraphWebGLWindow extends React.Component {
       '  else if(UVindex == 3)                                             ' +
       '    vertexUV = vec2(1,1);                                           ' +
       '  geomColor = vertexColor;                                          ' +
-      '  geomColor = vec3(0.9, 0.6, 0.1);                                  ' +
       '  gl_Position = uProjectionMatrix * vec4(coordinates.xy, 0.0, 1.0); ' +
       '}                                                                   ';
 
@@ -416,6 +424,15 @@ class GraphWebGLWindow extends React.Component {
 
     webGLErrorCheck(gl);
 
+    // vertex Color buffers
+    this.vertColor_buffer = gl.createBuffer();
+    this.vertColor_array = new Float32Array(this.vertColors);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
+
     // Edge buffers
     this.edgeVerts_buffer = gl.createBuffer();
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
@@ -436,6 +453,13 @@ class GraphWebGLWindow extends React.Component {
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    webGLErrorCheck(gl);
+
+    this.vertColor_array = new Float32Array(this.vertColors);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
@@ -538,11 +562,12 @@ class GraphWebGLWindow extends React.Component {
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-    let colorAttrib =
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+    this.shaderProgram.vertexColorAttribute =
       gl.getAttribLocation(this.shaderProgram, 'vertexColor');
-    gl.vertexAttribPointer(colorAttrib, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(colorAttrib);
+    gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
+      3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
