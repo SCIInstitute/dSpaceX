@@ -67,6 +67,7 @@ class GraphWebGLWindow extends React.Component {
 
     this.fakeNodesPositions = null;
     this.fakeEdgesIndices = null;
+    this.fakeNodeColors = null;
 
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -155,6 +156,8 @@ class GraphWebGLWindow extends React.Component {
       this.createFakeNodePositions();
       this.createFakeEdges();
       this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+      this.createFakeNodeColors();
+      this.addVertexColors(this.fakeNodeColors);
     }
     this.createShaders(gl);
     this.createBuffers(gl);
@@ -260,6 +263,21 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+  * Creates fakeNodeColors for proof of concept
+  */
+  createFakeNodeColors() {
+    this.fakeNodeColors = [];
+    for (let i = 0; i < this.nodes.length; i++) {
+      let r = 1.0 - (1.0 / this.nodes.length * i);
+      let g = 0.8;
+      let b = 0.0 + (1.0 / this.nodes.length * i);
+      for (let j = 0; j < 6; j++) {
+        this.fakeNodeColors.push(r, g, b);
+      }
+    }
+  }
+
+  /**
    * Creates the geometry to be rendered.
    * @param {array} array2DVertsForNodes
    * @param {array} arrayBeginEndIndicesForEdges
@@ -273,7 +291,6 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
-    this.nodeEdgeCount = [];
 
     // create a quad for each position in array2DVertsForNodes
     for (let i = 0; i < array2DVertsForNodes.length; i++) {
@@ -282,16 +299,12 @@ class GraphWebGLWindow extends React.Component {
         quadWidth, quadHeight);
       this.vertices = this.vertices.concat(quad.vertices);
       this.nodes.push(quad);
-      this.nodeEdgeCount.push(0);
     }
 
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
     for (let i = 0; i < arrayBeginEndIndicesForEdges.length; i++) {
       let index1 = arrayBeginEndIndicesForEdges[i][0];
       let index2 = arrayBeginEndIndicesForEdges[i][1];
-
-      this.nodeEdgeCount[index1]++;
-      this.nodeEdgeCount[index2]++;
 
       let node1 = this.nodes[index1];
       let node2 = this.nodes[index2];
@@ -301,14 +314,16 @@ class GraphWebGLWindow extends React.Component {
       this.edges.push(edge);
       this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
     }
+  }
 
-    for (let i = 0; i < this.nodeEdgeCount.length; i++) {
-      let r = 1.0 - (this.nodeEdgeCount[i] * 0.1);
-      let g = 0.8;
-      let b = 0.0 + (this.nodeEdgeCount[i] * 0.1);
-      for (let j = 0; j < 6; j++) {
-        this.vertColors.push(r, g, b);
-      }
+  /**
+  * Adds colors to go with the nodes
+  * @param {array} arrayRGBColors
+  */
+  addVertexColors(arrayRGBColors) {
+    this.vertColors = [];
+    for (let i = 0; i < arrayRGBColors.length; i++) {
+      this.vertColors.push(arrayRGBColors[i]);
     }
   }
 
@@ -506,7 +521,9 @@ class GraphWebGLWindow extends React.Component {
           if (this.props.decomposition) {
             this.createFakeNodePositions();
             this.createFakeEdges();
+            this.createFakeNodeColors();
             this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+            this.addVertexColors(this.fakeNodeColors);
           }
         }
         this.updateBuffers();
