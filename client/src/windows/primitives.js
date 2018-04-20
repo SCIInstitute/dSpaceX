@@ -58,12 +58,12 @@ export class Edge {
     // let mag = abs(sqrt((offsetVector[0] * offsetVector[0])
     //   + (offsetVector[1] * offsetVector[1])));
     // offsetVector = [offsetVector[0]/mag, offsetVector[1]/mag];
- 
+
     // let p1 = [x1 + offsetVector[0] * width, y1 + offsetVector[1] * width];
     // let p2 = [x1 - offsetVector[0] * width, y1 - offsetVector[1] * width];
     // let p3 = [x2 + offsetVector[0] * width, y2 + offsetVector[1] * width];
     // let p4 = [x2 - offsetVector[0] * width, y2 - offsetVector[1] * width];
- 
+
     // this.vertices = [
     // p1[0], p1[1],
     // p2[0], p2[1],
