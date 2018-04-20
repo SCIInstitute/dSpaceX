@@ -45,7 +45,7 @@ class GraphWebGLWindow extends React.Component {
     this.vertex_buffer = null;
     this.vertColor_array = null;
     this.vertColor_buffer = null;
-    this.shaderProgram = null;
+    this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.vertices = null;
     this.vertColors = null;
@@ -355,7 +355,7 @@ class GraphWebGLWindow extends React.Component {
     gl.linkProgram(shaderProgram);
     gl.useProgram(shaderProgram);
 
-    this.shaderProgram = shaderProgram;
+    this.nodeShaderProgram = shaderProgram;
 
     webGLErrorCheck(gl);
 
@@ -531,25 +531,25 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl
    */
   drawNodes(gl) {
-    gl.useProgram(this.shaderProgram);
+    gl.useProgram(this.nodeShaderProgram);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     let coordinateAttrib =
-        gl.getAttribLocation(this.shaderProgram, 'coordinates');
+        gl.getAttribLocation(this.nodeShaderProgram, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
     if (this.vertColors && this.vertColors.length == this.vertices.length) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      this.shaderProgram.vertexColorAttribute =
-        gl.getAttribLocation(this.shaderProgram, 'vertexColor');
-      gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
+      this.nodeShaderProgram.vertexColorAttribute =
+        gl.getAttribLocation(this.nodeShaderProgram, 'vertexColor');
+      gl.vertexAttribPointer(this.nodeShaderProgram.vertexColorAttribute,
         3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
+      gl.enableVertexAttribArray(this.nodeShaderProgram.vertexColorAttribute);
     }
 
     let projectionMatrixLocation =
-        gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
+        gl.getUniformLocation(this.nodeShaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
