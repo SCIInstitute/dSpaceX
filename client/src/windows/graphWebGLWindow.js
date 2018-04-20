@@ -304,6 +304,7 @@ class GraphWebGLWindow extends React.Component {
       '  else if(UVindex == 3)                                             ' +
       '    vertexUV = vec2(1,1);                                           ' +
       '  geomColor = vertexColor;                                          ' +
+      '  geomColor = vec3(0.9, 0.6, 0.1);                                  ' +
       '  gl_Position = uProjectionMatrix * vec4(coordinates.xy, 0.0, 1.0); ' +
       '}                                                                   ';
 
@@ -323,8 +324,8 @@ class GraphWebGLWindow extends React.Component {
       '  vec2 uv = vertexUV.xy;                                            ' +
       '  vec2 center = vec2(0.5);                                          ' +
       '  float radius = 0.425;                                             ' +
-      '  float thickness = nodeOutline;                                    ' +
-      '  float blur = nodeSmoothness;                                      ' +
+      '  float thickness = 0.025;                                          ' +
+      '  float blur = 0.05;                                                ' +
       '  float t = distance(uv, center) - radius;                          ' +
       '  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);                        ' +
       '  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);                            ' +
