@@ -522,18 +522,26 @@ class GraphWebGLWindow extends React.Component {
    */
   drawNodes(gl) {
     gl.useProgram(this.shaderProgram);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    let coordinateAttrib =
+        gl.getAttribLocation(this.shaderProgram, 'coordinates');
+    gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(coordinateAttrib);
+
+    // let colorAttrib = gl.getAttribLocation(this.shaderProgram,
+    //   'vertexColor');
+    // gl.vertexAttribPointer(colorAttrib, 3, gl.FLOAT, false, 0, 0);
+    // gl.enableVertexAttribArray(colorAttrib);
+
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
-    let coordinateAttrib =
-        gl.getAttribLocation(this.shaderProgram, 'coordinates');
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-    gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(coordinateAttrib);
-    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
 
+    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
     webGLErrorCheck(gl);
   }
 
