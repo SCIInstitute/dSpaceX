@@ -2,12 +2,8 @@
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
-/**
- * const variables to replace 'magic numbers'
- */
+
 const zoomRate = 0.1;
-const panRate = 0.75;
-const maxPanDist = 10;
 const maxScale = 10;
 
 /**
@@ -57,8 +53,8 @@ class GraphWebGLWindow extends React.Component {
     this.xOffset = 0;
     this.yOffset = 0;
 
-    this.prevX = 0;
-    this.prevY = 0;
+    this.previousX = 0;
+    this.previousY = 0;
     this.netPanX = 0;
     this.netPanY = 0;
     this.rightMouseDown = false;
@@ -96,8 +92,8 @@ class GraphWebGLWindow extends React.Component {
     // Handle Right click
     if (evt.button == 2) {
       this.rightMouseDown = true;
-      this.prevX = evt.offsetX;
-      this.prevY = evt.offsetY;
+      this.previousX = evt.offsetX;
+      this.previousY = evt.offsetY;
     }
   }
 
@@ -117,36 +113,17 @@ class GraphWebGLWindow extends React.Component {
    */
   handleMouseMove(evt) {
     if (this.rightMouseDown) {
-      // get the current mouse position
-      let X = evt.offsetX;
-      let Y = evt.offsetY;
-      // dx & dy are the distance the mouse has moved since
-      // the last mousemove event
-      let dx = (X - this.prevX);
-      let dy = (Y - this.prevY);
-      // reset the vars for next mousemove
-      this.prevX = X;
-      this.prevY = Y;
-      // accumulate the net panning done
-      this.netPanX += dx;
-      this.netPanY += dy;
+      let x = evt.offsetX;
+      let y = evt.offsetY;
 
-      let orthoXY = [this.netPanX, this.netPanY];
-      orthoXY = this.convertToGLCoords(orthoXY);
+      let dx = (x - this.previousX);
+      let dy = (y - this.previousY);
 
-      this.xOffset = panRate * (this.xOffset - orthoXY[0]);
-      this.yOffset = panRate * (this.yOffset - orthoXY[1]);
+      this.previousX = x;
+      this.previousY = y;
 
-      if (this.xOffset < -maxPanDist) {
-        this.xOffset = -maxPanDist;
-      } else if (this.xOffset > maxPanDist) {
-        this.xOffset = maxPanDist;
-      }
-      if (this.yOffset < -maxPanDist) {
-        this.yOffset = -maxPanDist;
-      } else if (this.yOffset > maxPanDist) {
-        this.yOffset = maxPanDist;
-      }
+      this.xOffset -= this.pixelToGeometryRatioX * dx;
+      this.yOffset += this.pixelToGeometryRatioY * dy;
 
       this.resizeCanvas();
     }
@@ -189,14 +166,26 @@ class GraphWebGLWindow extends React.Component {
       sy = height / width;
     }
 
+    let geomLeft = -1 * sx * this.scale + this.xOffset;
+    let geomRight = +1 * sx * this.scale + this.xOffset;
+    let geomBottom = -1 * sy * this.scale + this.yOffset;
+    let geomTop = +1 * sy * this.scale + this.yOffset;
+
+    let geomWidth = Math.abs(geomRight - geomLeft);
+    let geomHeight = Math.abs(geomTop - geomBottom);
+
+    let canvas = this.refs.canvas;
+    this.pixelToGeometryRatioX = geomWidth / canvas.clientWidth;
+    this.pixelToGeometryRatioY = geomHeight / canvas.clientHeight;
+
     mat4.ortho(
       this.projectionMatrix,
-      -1*this.scale*sx + this.xOffset, // left
-      +1*this.scale*sx + this.xOffset, // right
-      -1*this.scale*sy + this.yOffset, // bottom
-      +1*this.scale*sy + this.yOffset, // top
-      +1, // near
-      -1); // far
+      geomLeft,
+      geomRight,
+      geomBottom,
+      geomTop,
+      +1 /* near */,
+      -1 /* far */);
   }
 
   /**
@@ -213,6 +202,7 @@ class GraphWebGLWindow extends React.Component {
     let returnXY = [clipSpace[0], -clipSpace[1]];
     return returnXY;
   }
+
 
   /**
    * Creates the a fake set of nodes for proof of concept
@@ -237,7 +227,6 @@ class GraphWebGLWindow extends React.Component {
    */
   createFakeEdges() {
     this.fakeEdgesIndices = [];
-    // build the edges
     for (let i = 0; i < this.fakeNodesPositions.length - 1; i++) {
       this.fakeEdgesIndices.push([i, i+1]);
     }
@@ -529,11 +518,6 @@ class GraphWebGLWindow extends React.Component {
         gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
-
-    // let colorAttrib = gl.getAttribLocation(this.shaderProgram,
-    //   'vertexColor');
-    // gl.vertexAttribPointer(colorAttrib, 3, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(colorAttrib);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
