@@ -521,8 +521,8 @@ class GraphWebGLWindow extends React.Component {
           if (this.props.decomposition) {
             this.createFakeNodePositions();
             this.createFakeEdges();
-            this.createFakeNodeColors();
             this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
+            this.createFakeNodeColors();
             this.addVertexColors(this.fakeNodeColors);
           }
         }
@@ -579,12 +579,16 @@ class GraphWebGLWindow extends React.Component {
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-    this.shaderProgram.vertexColorAttribute =
-      gl.getAttribLocation(this.shaderProgram, 'vertexColor');
-    gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
-      3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
+    if (this.vertColors != null) {
+      if (this.vertColors.length == this.vertices.length) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+        this.shaderProgram.vertexColorAttribute =
+          gl.getAttribLocation(this.shaderProgram, 'vertexColor');
+        gl.vertexAttribPointer(this.shaderProgram.vertexColorAttribute,
+          3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(this.shaderProgram.vertexColorAttribute);
+      }
+    }
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
