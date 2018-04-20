@@ -65,10 +65,6 @@ class GraphWebGLWindow extends React.Component {
     this.netPanY = 0;
     this.rightMouseDown = false;
 
-    this.fakeNodesPositions = null;
-    this.fakeEdgesIndices = null;
-    this.fakeNodeColors = null;
-
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseRelease = this.handleMouseRelease.bind(this);
@@ -153,11 +149,11 @@ class GraphWebGLWindow extends React.Component {
 
     // Create fake data if there's no decomposition information.
     if (!this.props.decomposition) {
-      this.createFakeNodePositions();
-      this.createFakeEdges();
-      this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
-      this.createFakeNodeColors();
-      this.addVertexColors(this.fakeNodeColors);
+      let fakeNodePositions = this.createFakeNodePositions();
+      let fakeEdgesIndices = this.createFakeEdges(fakeNodePositions);
+      this.createGeometry(fakeNodePositions, fakeEdgesIndices);
+      let fakeNodeColors = this.createFakeNodeColors();
+      this.addVertexColors(fakeNodeColors);
     }
     this.createShaders(gl);
     this.createBuffers(gl);
@@ -219,38 +215,42 @@ class GraphWebGLWindow extends React.Component {
 
 
   /**
-   * Creates the a fake set of nodes for proof of concept
+   * Creates a fake set of node [x,y] positions for testing.
+   * @return {Array}
    */
   createFakeNodePositions() {
-    this.fakeNodesPositions = [];
+    let fakeNodesPositions = [];
     let radius = 0.5;
     let pointCount = 16;
     let angle = Math.PI * 2 / pointCount;
     for (let i = 0; i < pointCount; i++) {
       let pX = radius * Math.cos(angle * i);
       let pY = radius * Math.sin(angle * i);
-      this.fakeNodesPositions.push([pX, pY]);
+      fakeNodesPositions.push([pX, pY]);
     }
+    return fakeNodesPositions;
   }
 
   /**
-   * Creates the a fake set of edges for proof of concept
+   * Creates a fake set of edge indices for testing.
+   * @param {Array} nodePositions
+   * @return {Array}
    */
-  createFakeEdges() {
-    this.fakeEdgesIndices = [];
+  createFakeEdges(nodePositions) {
+    let fakeEdgesIndices = [];
 
-    for (let i = 0; i < this.fakeNodesPositions.length; i++) {
+    for (let i = 0; i < nodePositions.length; i++) {
       let min = 0;
-      let max = this.fakeNodesPositions.length - 1;
+      let max = nodePositions.length - 1;
       min = Math.ceil(min);
       max = Math.floor(max);
       let randomNodeIndex = Math.floor(Math.random() * (max - min)) + min;
-      this.fakeEdgesIndices.push([i, randomNodeIndex]);
+      fakeEdgesIndices.push([i, randomNodeIndex]);
     }
 
     for (let j = 0; j < 16; j++) {
       let min = 0;
-      let max = this.fakeNodesPositions.length - 1;
+      let max = nodePositions.length - 1;
       min = Math.ceil(min);
       max = Math.floor(max);
       let randomFirst = Math.floor(Math.random() * (max - min)) + min;
@@ -258,23 +258,26 @@ class GraphWebGLWindow extends React.Component {
       while (randomSecond == randomFirst) {
         randomSecond = Math.floor(Math.random() * (max - min)) + min;
       }
-      this.fakeEdgesIndices.push([randomFirst, randomSecond]);
+      fakeEdgesIndices.push([randomFirst, randomSecond]);
     }
+    return fakeEdgesIndices;
   }
 
   /**
-  * Creates fakeNodeColors for proof of concept
-  */
+   * Creates fakeNodeColors for proof of concept
+   * @return {Array}
+   */
   createFakeNodeColors() {
-    this.fakeNodeColors = [];
+    let fakeNodeColors = [];
     for (let i = 0; i < this.nodes.length; i++) {
       let r = 1.0 - (1.0 / this.nodes.length * i);
       let g = 0.8;
       let b = 0.0 + (1.0 / this.nodes.length * i);
       for (let j = 0; j < 6; j++) {
-        this.fakeNodeColors.push(r, g, b);
+        fakeNodeColors.push(r, g, b);
       }
     }
+    return fakeNodeColors;
   }
 
   /**
@@ -516,16 +519,16 @@ class GraphWebGLWindow extends React.Component {
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
           this.createGeometry(layout, adjacency, 0.02, 0.02);
-          this.createFakeNodeColors();
-          this.addVertexColors(this.fakeNodeColors);
+          let fakeNodeColors = this.createFakeNodeColors();
+          this.addVertexColors(fakeNodeColors);
         } else {
           // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
-            this.createFakeNodePositions();
-            this.createFakeEdges();
-            this.createGeometry(this.fakeNodesPositions, this.fakeEdgesIndices);
-            this.createFakeNodeColors();
-            this.addVertexColors(this.fakeNodeColors);
+            let fakeNodePositions = this.createFakeNodePositions();
+            let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
+            this.createGeometry(fakeNodePositions, fakeEdgeIndices);
+            let fakeNodeColors = this.createFakeNodeColors();
+            this.addVertexColors(fakeNodeColors);
           }
         }
         this.updateBuffers();
