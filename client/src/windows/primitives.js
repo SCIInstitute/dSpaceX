@@ -31,6 +31,12 @@ export class Quad {
     this.indices = [
       n, n + 1, n + 2,
       n + 2, n + 1, n + 3];
+
+    this.UVs = [
+      0, 0,
+      0, 1,
+      1, 0,
+      1, 1];
   }
 }
 
