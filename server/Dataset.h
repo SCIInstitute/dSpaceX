@@ -41,7 +41,7 @@ class Dataset {
     return m_qois[i];
   }
 
-  std::vector<std::string> getQoiNames() {
+  std::vector<std::string>& getQoiNames() {
     return m_qoiNames;
   }
 
@@ -49,7 +49,7 @@ class Dataset {
     return m_embeddings[i];
   }
 
-  std::vector<std::string> getEmbeddingNames() {
+  std::vector<std::string>& getEmbeddingNames() {
     return m_embeddingNames;
   }
 
