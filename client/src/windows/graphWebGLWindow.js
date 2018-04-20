@@ -497,9 +497,8 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
     this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
-    this.refs.canvas.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-    }, false);
+    this.refs.canvas.addEventListener(
+      'contextmenu', (e) => e.preventDefault(), false);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
