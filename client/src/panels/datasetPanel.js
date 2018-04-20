@@ -28,6 +28,7 @@ class DatasetPanel extends React.Component {
       datasetName: '',
       dataset: null,
       qoiName: '',
+      qoiVector: null,
     };
 
     this.handleDatasetChange = this.handleDatasetChange.bind(this);
@@ -99,7 +100,8 @@ class DatasetPanel extends React.Component {
     let qoiName = event.target.value;
     if (qoiName === '') {
       this.setState({
-        qoiName: null,
+        qoiName: '',
+        qoiVector: null,
       });
       if (this.props.onQoiChange) {
         this.props.onQoiChange(null);
@@ -109,8 +111,11 @@ class DatasetPanel extends React.Component {
 
     this.setState({ qoiName });
     let datasetId = this.state.dataset.id;
-    this.client.fetchQoi(datasetId, qoiName).then(function(qoiVector) {
-      console.dir(qoiVector);
+    this.client.fetchQoi(datasetId, qoiName).then(function(response) {
+      let qoiVector = response.qoi;
+      this.setState({
+        qoiVector: qoiVector,
+      });
       if (this.props.onQoiChange) {
         this.props.onQoiChange(qoiVector);
       }

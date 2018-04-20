@@ -492,9 +492,10 @@ void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) 
   Json::Value response(Json::objectValue);
   response["id"] = messageId;
 
-  response[qoiName] = Json::Value(Json::arrayValue);
+  response["qoiName"] = qoiName;
+  response["qoi"] = Json::Value(Json::arrayValue);
   for (int i = 0; i < qoiVector.N(); i++) {
-    response[qoiName].append(qoiVector(i));
+    response["qoi"].append(qoiVector(i));
   }
 
   Json::StyledWriter writer;
