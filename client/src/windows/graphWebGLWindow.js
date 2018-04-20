@@ -301,6 +301,7 @@ class GraphWebGLWindow extends React.Component {
       'varying vec2 vertexUV;                                              ' +
       'varying vec3 geomColor;                                             ' +
       'void main(void) {                                                   ' +
+      '  vertexUV = UVCoords;                                              ' +
       '  geomColor = vertexColor;                                          ' +
       '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);    ' +
       '}                                                                   ';
