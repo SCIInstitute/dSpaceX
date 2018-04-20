@@ -2,6 +2,13 @@
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
+/**
+ * const variables to replace 'magic numbers'
+ */
+const zoomRate = 0.1;
+const panRate = 0.75;
+const maxPanDist = 10;
+const maxScale = 10;
 
 /**
  * WebGL error check wrapper - logs to console
@@ -51,12 +58,19 @@ class GraphWebGLWindow extends React.Component {
     this.xOffset = 0;
     this.yOffset = 0;
 
+    this.prevX = 0;
+    this.prevY = 0;
+    this.netPanX = 0;
+    this.netPanY = 0;
+    this.rightMouseDown = false;
+
     this.fakeNodesPositions = null;
     this.fakeEdgesIndices = null;
 
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseRelease = this.handleMouseRelease.bind(this);
+    this.handleMouseMove = this.handleMouseMove.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
   }
 
@@ -66,10 +80,10 @@ class GraphWebGLWindow extends React.Component {
    */
   handleScrollEvent(evt) {
     if (evt.deltaY < 0 && this.scale > 0) {
-      this.scale -= 0.01;
+      this.scale -= zoomRate;
     }
-    if (evt.deltaY > 0 && this.scale < 10) {
-      this.scale += 0.01;
+    if (evt.deltaY > 0 && this.scale < maxScale) {
+      this.scale += zoomRate;
     }
 
     this.resizeCanvas();
@@ -82,13 +96,9 @@ class GraphWebGLWindow extends React.Component {
   handleMouseDown(evt) {
     // Handle Right click
     if (evt.button == 2) {
-      console.log('Right Mouse Down Event');
-      let XY = [evt.offsetX, evt.offsetY];
-      let orthoXY = this.convertToGLCoords(XY);
-      this.xOffset = -orthoXY[0];
-      this.yOffset = -orthoXY[1];
-
-      this.resizeCanvas();
+      this.rightMouseDown = true;
+      this.prevX = evt.offsetX;
+      this.prevY = evt.offsetY;
     }
   }
 
@@ -97,7 +107,50 @@ class GraphWebGLWindow extends React.Component {
    * @param {Event} evt
    */
   handleMouseRelease(evt) {
-    console.log('Mouse Up Event');
+    if (evt.button == 2) {
+      this.rightMouseDown = false;
+    }
+  }
+
+  /**
+   * Event handling for mouse movement
+   * @param {Event} evt
+   */
+  handleMouseMove(evt) {
+    if (this.rightMouseDown) {
+      // get the current mouse position
+      let X = evt.offsetX;
+      let Y = evt.offsetY;
+      // dx & dy are the distance the mouse has moved since
+      // the last mousemove event
+      let dx = (X - this.prevX);
+      let dy = (Y - this.prevY);
+      // reset the vars for next mousemove
+      this.prevX = X;
+      this.prevY = Y;
+      // accumulate the net panning done
+      this.netPanX += dx;
+      this.netPanY += dy;
+
+      let orthoXY = [this.netPanX, this.netPanY];
+      orthoXY = this.convertToGLCoords(orthoXY);
+
+      this.xOffset = panRate * (this.xOffset - orthoXY[0]);
+      this.yOffset = panRate * (this.yOffset - orthoXY[1]);
+
+      if (this.xOffset < -maxPanDist) {
+        this.xOffset = -maxPanDist;
+      } else if (this.xOffset > maxPanDist) {
+        this.xOffset = maxPanDist;
+      }
+      if (this.yOffset < -maxPanDist) {
+        this.yOffset = -maxPanDist;
+      } else if (this.yOffset > maxPanDist) {
+        this.yOffset = maxPanDist;
+      }
+
+      this.resizeCanvas();
+    }
   }
 
   /**
@@ -387,6 +440,7 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.removeEventListener('wheel', this.handleScrollEvent);
     this.refs.canvas.removeEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.removeEventListener('mouseup', this.handleMouseRelease);
+    this.refs.canvas.removeEventListener('mousemove', this.handleMouseMove);
   }
 
   /**
@@ -399,6 +453,7 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('wheel', this.handleScrollEvent);
     this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
+    this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.refs.canvas.addEventListener('contextmenu', function(e) {
       e.preventDefault();
     }, false);
