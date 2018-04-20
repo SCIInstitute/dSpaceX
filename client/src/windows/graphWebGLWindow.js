@@ -294,16 +294,23 @@ class GraphWebGLWindow extends React.Component {
    */
   createShaders(gl) {
     const vertexShaderSource =
-      'attribute vec2 coordinates;                                         ' +
+      'attribute vec3 coordinates;                                         ' +
       'attribute vec3 vertexColor;                                         ' +
-      'attribute vec2 UVCoords;                                            ' +
       'uniform mat4 uProjectionMatrix;                                     ' +
       'varying vec2 vertexUV;                                              ' +
       'varying vec3 geomColor;                                             ' +
       'void main(void) {                                                   ' +
-      '  vertexUV = UVCoords;                                              ' +
+      '  int UVindex = int(coordinates.z);                                 ' +
+      '  if(UVindex == 0)                                                  ' +
+      '    vertexUV = vec2(0,0);                                           ' +
+      '  else if(UVindex == 1)                                             ' +
+      '    vertexUV = vec2(1,0);                                           ' +
+      '  else if(UVindex == 2)                                             ' +
+      '    vertexUV = vec2(0,1);                                           ' +
+      '  else if(UVindex == 3)                                             ' +
+      '    vertexUV = vec2(1,1);                                           ' +
       '  geomColor = vertexColor;                                          ' +
-      '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);    ' +
+      '  gl_Position = uProjectionMatrix * vec4(coordinates.xy, 0.0, 1.0); ' +
       '}                                                                   ';
 
     let vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -506,11 +513,9 @@ class GraphWebGLWindow extends React.Component {
     let coordinateAttrib =
         gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
-    gl.drawElements(gl.TRIANGLES, this.indices.length,
-      gl.UNSIGNED_SHORT, this.indexBuffer);
+    gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);

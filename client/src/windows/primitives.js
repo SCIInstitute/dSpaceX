@@ -21,22 +21,19 @@ export class Quad {
     let minY = -(height / 2.0) + centerY;
     let maxY = minY + height;
 
+    // using vec3 as (x, y, UV)
     this.vertices = [
-      minX, maxY,
-      maxX, maxY,
-      minX, minY,
-      maxX, minY];
+      minX, maxY, 0,
+      maxX, maxY, 1,
+      minX, minY, 2,
+      minX, minY, 2,
+      maxX, maxY, 1,
+      maxX, minY, 3];
 
     let n = firstIndex;
     this.indices = [
       n, n + 1, n + 2,
       n + 2, n + 1, n + 3];
-
-    this.UVs = [
-      0, 0,
-      0, 1,
-      1, 0,
-      1, 1];
   }
 }
 
