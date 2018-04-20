@@ -1,4 +1,5 @@
-﻿import { Edge, Quad } from './primitives';
+﻿import * as d3 from 'd3';
+import { Edge, Quad } from './primitives';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
 import NodeFragmentShaderSource from '../shaders/node.frag';
@@ -474,8 +475,22 @@ class GraphWebGLWindow extends React.Component {
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
           this.createGeometry(layout, adjacency, 0.02, 0.02);
-          let fakeNodeColors = this.createFakeNodeColors();
-          this.addVertexColors(fakeNodeColors);
+
+          let min = Math.min(...this.props.qoi);
+          let max = Math.max(...this.props.qoi);
+          let color = d3.scaleLinear()
+            .domain([min, max])
+            .range(['blue', 'white', 'red']);
+          let colorsArray = [];
+          for (let i = 0; i < this.props.qoi.length; i++) {
+            let colorString = color(this.props.qoi[i]);
+            let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+            colorTriplet[0] /= 255;
+            colorTriplet[1] /= 255;
+            colorTriplet[2] /= 255;
+            colorsArray.push(...colorTriplet);
+          }
+          this.addVertexColors(colorsArray);
         } else {
           // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
