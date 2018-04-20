@@ -3,7 +3,7 @@ import React from 'react';
 import { mat4 } from 'gl-matrix';
 
 
-const zoomRate = 0.1;
+const zoomRate = 1.2;
 const maxScale = 10;
 
 /**
@@ -74,11 +74,11 @@ class GraphWebGLWindow extends React.Component {
    * @param {Event} evt
    */
   handleScrollEvent(evt) {
-    if (evt.deltaY < 0 && this.scale > 0) {
-      this.scale -= zoomRate;
+    if (evt.deltaY < 0 && this.scale > -maxScale) {
+      this.scale = this.scale / zoomRate;
     }
     if (evt.deltaY > 0 && this.scale < maxScale) {
-      this.scale += zoomRate;
+      this.scale = this.scale * zoomRate;
     }
 
     this.resizeCanvas();
