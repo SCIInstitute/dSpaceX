@@ -1,6 +1,8 @@
 ﻿import { Edge, Quad } from './primitives';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
+import NodeFragmentShaderSource from '../shaders/node.frag';
+import NodeVertexShaderSource from '../shaders/node.vert';
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
@@ -335,68 +337,21 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl The OpenGL context.
    */
   createShaders(gl) {
-    const vertexShaderSource =
-      'attribute vec3 coordinates;                                         ' +
-      'attribute vec3 vertexColor;                                         ' +
-      'uniform mat4 uProjectionMatrix;                                     ' +
-      'varying vec2 vertexUV;                                              ' +
-      'varying vec3 geomColor;                                             ' +
-      'void main(void) {                                                   ' +
-      '  int UVindex = int(coordinates.z);                                 ' +
-      '  if(UVindex == 0)                                                  ' +
-      '    vertexUV = vec2(0,0);                                           ' +
-      '  else if(UVindex == 1)                                             ' +
-      '    vertexUV = vec2(1,0);                                           ' +
-      '  else if(UVindex == 2)                                             ' +
-      '    vertexUV = vec2(0,1);                                           ' +
-      '  else if(UVindex == 3)                                             ' +
-      '    vertexUV = vec2(1,1);                                           ' +
-      '  geomColor = vertexColor;                                          ' +
-      '  gl_Position = uProjectionMatrix * vec4(coordinates.xy, 0.0, 1.0); ' +
-      '}                                                                   ';
-
-    let vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertexShader, vertexShaderSource);
-    gl.compileShader(vertexShader);
+    let nodeVertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(nodeVertexShader, NodeVertexShaderSource);
+    gl.compileShader(nodeVertexShader);
 
     webGLErrorCheck(gl);
 
-    let fragmentShaderSource =
-      'precision mediump float;                                            ' +
-      'uniform float nodeOutline;                                          ' +
-      'uniform float nodeSmoothness;                                       ' +
-      'varying vec2 vertexUV;                                              ' +
-      'varying vec3 geomColor;                                             ' +
-      'void main(void) {                                                   ' +
-      '  vec2 uv = vertexUV.xy;                                            ' +
-      '  vec2 center = vec2(0.5);                                          ' +
-      '  float radius = 0.425;                                             ' +
-      '  float thickness = 0.025;                                          ' +
-      '  float blur = 0.05;                                                ' +
-      '  float t = distance(uv, center) - radius;                          ' +
-      '  vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);                        ' +
-      '  vec4 black = vec4(0.0, 0.0, 0.0, 1.0);                            ' +
-      '  vec4 lineColor = vec4(mix(black.xyz, geomColor, 0.4), 1.0);       ' +
-      '  vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);                            ' +
-      '  vec4 fill = clear;                                                ' +
-      '  if (t < 0.0) {                                                    ' +
-      '    t = abs(t);                                                     ' +
-      '    fill = vec4(geomColor,1.0);                                     ' +
-      '  }                                                                 ' +
-      '  float step1 = thickness;                                          ' +
-      '  float step2 = thickness + blur;                                   ' +
-      '  gl_FragColor = mix(lineColor, fill, smoothstep(step1, step2, t)); ' +
-      '}                                                                   ';
-
-    let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragmentShader, fragmentShaderSource);
-    gl.compileShader(fragmentShader);
+    let nodeFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(nodeFragmentShader, NodeFragmentShaderSource);
+    gl.compileShader(nodeFragmentShader);
 
     webGLErrorCheck(gl);
 
     let shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
+    gl.attachShader(shaderProgram, nodeVertexShader);
+    gl.attachShader(shaderProgram, nodeFragmentShader);
     gl.linkProgram(shaderProgram);
     gl.useProgram(shaderProgram);
 
