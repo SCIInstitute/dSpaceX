@@ -461,7 +461,7 @@ class GraphWebGLWindow extends React.Component {
           // let layout = [].concat(...result.embedding.layout);
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
-          this.createGeometry(layout, adjacency, 0.01, 0.01);
+          this.createGeometry(layout, adjacency, 0.02, 0.02);
         } else {
           // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
