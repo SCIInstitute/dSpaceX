@@ -22,7 +22,7 @@ let config = {
         },
       },
       {
-        test: /\.glsl$/,
+        test: /\.(frag|vert)$/,
         use: 'raw-loader',
       },
     ],
