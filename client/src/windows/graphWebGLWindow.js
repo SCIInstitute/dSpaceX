@@ -529,8 +529,8 @@ class GraphWebGLWindow extends React.Component {
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
     if (this.vertices) {
-      this.drawNodes(gl);
       this.drawEdges(gl);
+      this.drawNodes(gl);
     }
   }
 
