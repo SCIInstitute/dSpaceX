@@ -42,12 +42,35 @@ export class Edge {
    * @param {number} y1
    * @param {number} x2
    * @param {number} y2
+   * @param {number} lineWidth
    */
-  constructor(x1, y1, x2, y2) {
+  constructor(x1, y1, x2, y2, lineWidth = 0.01) {
     this.x1 = x1;
     this.y1 = y1;
     this.x2 = x2;
     this.y2 = y2;
+
+    // let width = lineWidth / 2;
+    // let lineVector = [x2 - x1, y2 - y1];
+    // let offsetVector = [-lineVector[1], lineVector[0]];
+
+    // Normalize the offset vector
+    // let mag = abs(sqrt((offsetVector[0] * offsetVector[0])
+    //   + (offsetVector[1] * offsetVector[1])));
+    // offsetVector = [offsetVector[0]/mag, offsetVector[1]/mag];
+ 
+    // let p1 = [x1 + offsetVector[0] * width, y1 + offsetVector[1] * width];
+    // let p2 = [x1 - offsetVector[0] * width, y1 - offsetVector[1] * width];
+    // let p3 = [x2 + offsetVector[0] * width, y2 + offsetVector[1] * width];
+    // let p4 = [x2 - offsetVector[0] * width, y2 - offsetVector[1] * width];
+ 
+    // this.vertices = [
+    // p1[0], p1[1],
+    // p2[0], p2[1],
+    // p3[0], p3[1],
+    // p3[0], p3[1],
+    // p2[0], p2[1],
+    // p4[0], p4[1]];
   }
 }
 
