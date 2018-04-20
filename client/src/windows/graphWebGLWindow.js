@@ -1,4 +1,6 @@
 ﻿import { Edge, Quad } from './primitives';
+import EdgeFragmentShaderSource from '../shaders/edge.frag';
+import EdgeVertexShaderSource from '../shaders/edge.vert';
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
@@ -376,26 +378,14 @@ class GraphWebGLWindow extends React.Component {
 
     webGLErrorCheck(gl);
 
-    let edgeVertexShaderSource =
-      'attribute vec2 coordinates;                                         ' +
-      'uniform mat4 uProjectionMatrix;                                     ' +
-      'void main(void) {                                                   ' +
-      '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);    ' +
-      '}                                                                   ';
-
     let edgeVertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(edgeVertexShader, edgeVertexShaderSource);
+    gl.shaderSource(edgeVertexShader, EdgeVertexShaderSource);
     gl.compileShader(edgeVertexShader);
 
     webGLErrorCheck(gl);
 
-    let edgeFragmentShaderSource =
-      'void main(void) {                           ' +
-      '  gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);  ' +
-      '}                                           ';
-
     let edgeFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(edgeFragmentShader, edgeFragmentShaderSource);
+    gl.shaderSource(edgeFragmentShader, EdgeFragmentShaderSource);
     gl.compileShader(edgeFragmentShader);
 
     webGLErrorCheck(gl);
@@ -486,7 +476,7 @@ class GraphWebGLWindow extends React.Component {
           // let layout = [].concat(...result.embedding.layout);
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
-          this.createGeometry(layout, adjacency, 0.01, 0.01);
+          this.createGeometry(layout, adjacency, 0.02, 0.02);
         } else {
           // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
@@ -522,9 +512,8 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
     this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
-    this.refs.canvas.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-    }, false);
+    this.refs.canvas.addEventListener(
+      'contextmenu', (e) => e.preventDefault(), false);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
