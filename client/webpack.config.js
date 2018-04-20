@@ -1,4 +1,3 @@
-const webpack = require('webpack')
 const path = require('path');
 
 let config = {
@@ -7,8 +6,8 @@ let config = {
   devtool: 'source-map',
   entry: ['./src/main.js'],
   output: {
-    path: path.resolve(__dirname, "build"),
-    filename: "client.bundle.js"
+    path: path.resolve(__dirname, 'build'),
+    filename: 'client.bundle.js',
   },
   module: {
     rules: [
@@ -18,12 +17,16 @@ let config = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['babel-preset-env']
-          }
-        }
-      }
-    ]
-  }
+            presets: ['babel-preset-env'],
+          },
+        },
+      },
+      {
+        test: /\.glsl$/,
+        use: 'raw-loader',
+      },
+    ],
+  },
 };
 
 module.exports = config;
