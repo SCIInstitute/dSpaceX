@@ -241,9 +241,9 @@ class GraphWebGLWindow extends React.Component {
    */
   createShaders(gl) {
     const vertexShaderSource =
-      'attribute vec2 coordinates;                                    ' +
+      'attribute vec2 coordinates;                                     ' +
       'uniform mat4 uProjectionMatrix;                                 ' +
-      'void main(void) {                                              ' +
+      'void main(void) {                                               ' +
       '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);' +
       '}                                           ';
     let vertexShader = gl.createShader(gl.VERTEX_SHADER);
@@ -354,6 +354,9 @@ class GraphWebGLWindow extends React.Component {
    * Callback invoked before the React Component is rendered.
    */
   componentWillMount() {
+    if (!this.props.decomposition) {
+      return;
+    }
     let { datasetId, k, persistenceLevel } = this.props.decomposition;
     this.client
       .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
@@ -459,7 +462,7 @@ class GraphWebGLWindow extends React.Component {
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
-    if (this.props.decomposition && this.vertices) {
+    if (/*this.props.decomposition &&*/ this.vertices) {
       this.drawNodes(gl);
       this.drawEdges(gl);
     }
