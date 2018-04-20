@@ -44,6 +44,7 @@ class GraphWebGLWindow extends React.Component {
     this.vertex_array = null;
     this.vertex_buffer = null;
     this.shaderProgram = null;
+    this.edgeShaderProgram = null;
     this.vertices = null;
     this.nodes = null;
     this.edges = null;
@@ -354,6 +355,40 @@ class GraphWebGLWindow extends React.Component {
     this.shaderProgram = shaderProgram;
 
     webGLErrorCheck(gl);
+
+    let edgeVertexShaderSource =
+      'attribute vec2 coordinates;                                         ' +
+      'uniform mat4 uProjectionMatrix;                                     ' +
+      'void main(void) {                                                   ' +
+      '  gl_Position = uProjectionMatrix * vec4(coordinates, 0.0, 1.0);    ' +
+      '}                                                                   ';
+
+    let edgeVertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(edgeVertexShader, edgeVertexShaderSource);
+    gl.compileShader(edgeVertexShader);
+
+    webGLErrorCheck(gl);
+
+    let edgeFragmentShaderSource =
+      'void main(void) {                           ' +
+      '  gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);  ' +
+      '}                                           ';
+
+    let edgeFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(edgeFragmentShader, edgeFragmentShaderSource);
+    gl.compileShader(edgeFragmentShader);
+
+    webGLErrorCheck(gl);
+
+    let edgeShaderProgram = gl.createProgram();
+    gl.attachShader(edgeShaderProgram, edgeVertexShader);
+    gl.attachShader(edgeShaderProgram, edgeFragmentShader);
+    gl.linkProgram(edgeShaderProgram);
+    gl.useProgram(edgeShaderProgram);
+
+    webGLErrorCheck(gl);
+
+    this.edgeShaderProgram = edgeShaderProgram;
   }
 
 
@@ -486,6 +521,10 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl
    */
   drawNodes(gl) {
+    gl.useProgram(this.shaderProgram);
+    let projectionMatrixLocation =
+        gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
+    gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
     let coordinateAttrib =
         gl.getAttribLocation(this.shaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -503,8 +542,12 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl
    */
   drawEdges(gl) {
+    gl.useProgram(this.edgeShaderProgram);
+    let projectionMatrixLocation =
+        gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
+    gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
     let coordinateAttrib =
-        gl.getAttribLocation(this.shaderProgram, 'coordinates');
+        gl.getAttribLocation(this.edgeShaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
@@ -522,10 +565,6 @@ class GraphWebGLWindow extends React.Component {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
-
-    let projectionMatrixLocation =
-        gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix');
-    gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
     if (this.vertices) {
