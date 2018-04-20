@@ -10,7 +10,7 @@ export class Quad {
    * @param {number} height
    * @param {number} firstIndex
    */
-  constructor(centerX, centerY, width, height, firstIndex) {
+  constructor(centerX, centerY, width, height) {
     this.X = centerX; // center of quad
     this.Y = centerY;
     this.width = width;
@@ -29,11 +29,6 @@ export class Quad {
       minX, minY, 2,
       maxX, maxY, 1,
       maxX, minY, 3];
-
-    let n = firstIndex;
-    this.indices = [
-      n, n + 1, n + 2,
-      n + 2, n + 1, n + 3];
   }
 }
 

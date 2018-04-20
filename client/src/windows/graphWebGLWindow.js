@@ -43,10 +43,8 @@ class GraphWebGLWindow extends React.Component {
     this.canvas = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
-    this.indexBuffer = null;
     this.shaderProgram = null;
     this.vertices = null;
-    this.indices = null;
     this.nodes = null;
     this.edges = null;
     this.edgeVerts = null;
@@ -261,15 +259,10 @@ class GraphWebGLWindow extends React.Component {
 
     // create a quad for each position in array2DVertsForNodes
     for (let i = 0; i < array2DVertsForNodes.length; i++) {
-      let firstIndex = 0;
-      if (this.indices.length >= 6) {
-        firstIndex = (this.indices[this.indices.length - 1]) + 1;
-      }
       let quad = new Quad(array2DVertsForNodes[i][0],
         array2DVertsForNodes[i][1],
-        quadWidth, quadHeight, firstIndex);
+        quadWidth, quadHeight);
       this.vertices = this.vertices.concat(quad.vertices);
-      this.indices = this.indices.concat(quad.indices);
       this.nodes.push(quad);
     }
 
@@ -386,15 +379,6 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
-
-    // Unknown Buffer (transferred from drawScene()))
-    this.indexBuffer = gl.createBuffer();
-    this.indexArray = new Uint16Array(this.indices);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexArray, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    webGLErrorCheck(gl);
   }
 
   /**
@@ -414,14 +398,6 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    webGLErrorCheck(gl);
-
-    // Unknown Buffer (transferred from drawScene()))
-    this.indexArray = new Uint16Array(this.indices);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.indexArray, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
