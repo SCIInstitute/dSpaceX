@@ -276,9 +276,7 @@ class GraphWebGLWindow extends React.Component {
       let r = 1.0 - (1.0 / this.nodes.length * i);
       let g = 0.8;
       let b = 0.0 + (1.0 / this.nodes.length * i);
-      for (let j = 0; j < 6; j++) {
-        fakeNodeColors.push(r, g, b);
-      }
+      this.fakeNodeColors.push(r, g, b);
     }
     return fakeNodeColors;
   }
@@ -328,8 +326,11 @@ class GraphWebGLWindow extends React.Component {
   */
   addVertexColors(arrayRGBColors) {
     this.vertColors = [];
-    for (let i = 0; i < arrayRGBColors.length; i++) {
-      this.vertColors.push(arrayRGBColors[i]);
+    for (let i = 0; i < arrayRGBColors.length-2; i+=3) {
+      for (let j = 0; j < 6; j++) {
+        this.vertColors.push(arrayRGBColors[i], arrayRGBColors[i+1],
+          arrayRGBColors[i+2]);
+      }
     }
   }
 
