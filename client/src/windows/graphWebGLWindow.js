@@ -483,7 +483,7 @@ class GraphWebGLWindow extends React.Component {
             let color = d3.scaleLinear()
               .domain([min, 0.5*(min+max), max])
               .range(['blue', 'white', 'red']);
-            let colorsArray = [];         
+            let colorsArray = [];
             for (let i = 0; i < this.props.qoi.length; i++) {
               let colorString = color(this.props.qoi[i]);
               let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
