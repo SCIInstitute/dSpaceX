@@ -480,7 +480,7 @@ class GraphWebGLWindow extends React.Component {
           let min = Math.min(...this.props.qoi);
           let max = Math.max(...this.props.qoi);
           let color = d3.scaleLinear()
-            .domain([min, max])
+            .domain([min, 0.5*(min+max), max])
             .range(['blue', 'white', 'red']);
           let colorsArray = [];
           for (let i = 0; i < this.props.qoi.length; i++) {
