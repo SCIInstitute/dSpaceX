@@ -276,7 +276,7 @@ class GraphWebGLWindow extends React.Component {
       let r = 1.0 - (1.0 / this.nodes.length * i);
       let g = 0.8;
       let b = 0.0 + (1.0 / this.nodes.length * i);
-      this.fakeNodeColors.push(r, g, b);
+      fakeNodeColors.push(r, g, b);
     }
     return fakeNodeColors;
   }
