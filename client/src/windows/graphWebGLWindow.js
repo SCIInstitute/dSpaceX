@@ -547,7 +547,65 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} nextProps
    */
   componentWillReceiveProps(nextProps) {
-    // TODO:  Add logic to recompute vertexbuffers etc as required.
+    // TODO:  Simplify and remove code duplication.
+    if (!nextProps.decomposition) {
+      return;
+    }
+    let { datasetId, k, persistenceLevel } = nextProps.decomposition;
+    let { qoi } = nextProps;
+
+    if ( datasetId == this.props.decomposition.datasetId &&
+         k == this.props.decomposition.k &&
+         persistenceLevel == this.props.decomposition.persistenceLevel &&
+         qoi == this.props.qoi ) {
+      return;
+    }
+
+    this.client
+      .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
+      .then(function(result) {
+        if (result.embedding && result.embedding.layout) {
+          // let layout = [].concat(...result.embedding.layout);
+          let layout = result.embedding.layout;
+          let adjacency = result.embedding.adjacency;
+          this.createGeometry(layout, adjacency, 0.02, 0.02);
+
+          if (nextProps.qoi) {
+            let min = Math.min(...nextProps.qoi);
+            let max = Math.max(...nextProps.qoi);
+            let color = d3.scaleLinear()
+              .domain([min, 0.5*(min+max), max])
+              .range(['blue', 'white', 'red']);
+            let colorsArray = [];
+            for (let i = 0; i < nextProps.qoi.length; i++) {
+              let colorString = color(nextProps.qoi[i]);
+              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+              colorTriplet[0] /= 255;
+              colorTriplet[1] /= 255;
+              colorTriplet[2] /= 255;
+              colorsArray.push(...colorTriplet);
+            }
+            this.addVertexColors(colorsArray);
+          } else {
+            let colorsArray = [];
+            for (let i=0; i < layout.length; i++) {
+              colorsArray.push(1.0, 1.0, 1.0);
+            }
+            this.addVertexColors(colorsArray);
+          }
+        } else {
+          // For now, if server fails. Render fake data.
+          if (nextProps.decomposition) {
+            let fakeNodePositions = this.createFakeNodePositions();
+            let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
+            this.createGeometry(fakeNodePositions, fakeEdgeIndices);
+            let fakeNodeColors = this.createFakeNodeColors();
+            this.addVertexColors(fakeNodeColors);
+          }
+        }
+        this.updateBuffers();
+        requestAnimationFrame(this.drawScene.bind(this));
+      }.bind(this));
   }
 
   /**
