@@ -52,8 +52,10 @@ export class Edge {
 
     // Setup properties for drawing as quad
     let width = lineWidth / 2;
-    let lineVector = [x2 - x1, y2 - y1];
-    let offsetVector = [-lineVector[1], lineVector[0]];
+    let vectorX = x2 - x1;
+    let vectorY = y2 - y1;
+    let lineVector = [vectorX, vectorY];
+    let offsetVector = [lineVector[1], -lineVector[0]];
 
     // Normalize the offset vector
     let mag = Math.abs(Math.sqrt((offsetVector[0] * offsetVector[0])

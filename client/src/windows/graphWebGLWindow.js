@@ -57,6 +57,7 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_array = null;
     this.edgeVerts_buffer = null;
     this.projectionMatrix = mat4.create();
+    this.bDrawEdgesAsQuads = null;
 
     this.scale = 1;
     this.xOffset = 0;
@@ -287,14 +288,16 @@ class GraphWebGLWindow extends React.Component {
    * @param {array} arrayBeginEndIndicesForEdges
    * @param {number} quadHeight
    * @param {number} quadWidth
+   * @param {bool} drawEdgesAsQuads
    */
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
-    quadHeight = 0.1, quadWidth = 0.1) {
+    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
     this.vertices = [];
     this.vertColors = [];
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
+    this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
     // create a quad for each position in array2DVertsForNodes
     for (let i = 0; i < array2DVertsForNodes.length; i++) {
@@ -316,7 +319,11 @@ class GraphWebGLWindow extends React.Component {
       let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y);
 
       this.edges.push(edge);
-      this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
+      if (this.bDrawEdgesAsQuads) {
+        this.edgeVerts = this.edgeVerts.concat(edge.vertices);
+      } else {
+        this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
+      }
     }
   }
 
@@ -613,6 +620,9 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl
    */
   drawNodes(gl) {
+    gl.enable(gl.CULL_FACE);
+    gl.frontFace(gl.CW);
+    gl.cullFace(gl.BACK);
     gl.useProgram(this.nodeShaderProgram);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
@@ -646,6 +656,7 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl
    */
   drawEdges(gl) {
+    gl.disable(gl.CULL_FACE);
     gl.useProgram(this.edgeShaderProgram);
     let projectionMatrixLocation =
         gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
@@ -655,7 +666,11 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
-    gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 2);
+    if (this.bDrawEdgesAsQuads) {
+      gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 2);
+    } else {
+      gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 2);
+    }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
   }
