@@ -291,7 +291,7 @@ class GraphWebGLWindow extends React.Component {
    * @param {bool} drawEdgesAsQuads
    */
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
-    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
+    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = false) {
     this.vertices = [];
     this.vertColors = [];
     this.edgeVerts = [];
