@@ -10,8 +10,9 @@ void main(void) {
   float t = abs(vertexUV.y - 0.5);
   vec4 black = vec4(0.0, 0.0, 0.0, edgeOpacity);
   vec4 clear = vec4(1.0, 1.0, 1.0, 0.0);
+  vec4 color = vec4(geomColor, 1.0);
   float step1 = thickness;
   float step2 = thickness + blur;
-  gl_FragColor = vec4(0, 0, 0, 1); // mix(black, clear, smoothstep(step1, step2, t));
+  gl_FragColor = vec4(geomColor, 1.0); //mix(color, clear, smoothstep(step1, step2, t));
 }
 
