@@ -23,7 +23,7 @@ let webGLErrorCheck = function(gl) {
     const match = regex.exec(e.stack.split('\n')[2]);
 
     let str = 'GL Error @ line:' + match[2] +
-      'in file:' + match[1] + ' Error#: ' + error;
+      ' in file:' + match[1] + ' Error#: ' + error;
     console.log(str);
   }
 };
@@ -292,9 +292,22 @@ class GraphWebGLWindow extends React.Component {
    */
   createFakeEdgeColors() {
     let fakeEdgeColors = [];
-    for (let i = 0; i < this.edges.length; i++) {
-      fakeEdgeColors.push(0.95, 0.05, 0.05);
-      fakeEdgeColors.push(0.05, 0.05, 0.95);
+    let red = [0.95, 0.05, 0.05];
+    let blue = [0.05, 0.05, 0.95];
+    for (let i = 0; i < this.edgeVerts.length; i++) {
+      if (this.bDrawEdgesAsQuads) {
+        fakeEdgeColors = fakeEdgeColors.concat(red);
+        fakeEdgeColors = fakeEdgeColors.concat(red);
+        fakeEdgeColors = fakeEdgeColors.concat(blue);
+        fakeEdgeColors = fakeEdgeColors.concat(blue);
+        fakeEdgeColors = fakeEdgeColors.concat(red);
+        fakeEdgeColors = fakeEdgeColors.concat(blue);
+        i += 5;
+      } else {
+        fakeEdgeColors = fakeEdgeColors.concat(red);
+        fakeEdgeColors = fakeEdgeColors.concat(blue);
+        i++;
+      }
     }
     return fakeEdgeColors;
   }
