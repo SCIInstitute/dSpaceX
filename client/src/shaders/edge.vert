@@ -1,7 +1,7 @@
 attribute vec3 coordinates;
 attribute vec3 vertex_color;
 uniform mat4 uProjectionMatrix;
-verying vec2 vertexUV;
+varying vec2 vertexUV;
 varying vec3 geomColor;
 
 void main(void) {
