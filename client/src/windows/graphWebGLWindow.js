@@ -322,7 +322,8 @@ class GraphWebGLWindow extends React.Component {
       if (this.bDrawEdgesAsQuads) {
         this.edgeVerts = this.edgeVerts.concat(edge.vertices);
       } else {
-        this.edgeVerts.push(edge.x1, edge.y1, edge.x2, edge.y2);
+        // push back xy1, uv1, xy2, uv2
+        this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
       }
     }
   }
@@ -664,12 +665,12 @@ class GraphWebGLWindow extends React.Component {
     let coordinateAttrib =
         gl.getAttribLocation(this.edgeShaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
-    gl.vertexAttribPointer(coordinateAttrib, 2, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
     if (this.bDrawEdgesAsQuads) {
-      gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 2);
+      gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
     } else {
-      gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 2);
+      gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 3);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);

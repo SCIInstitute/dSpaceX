@@ -67,13 +67,14 @@ export class Edge {
     let p3 = [x2 + offsetVector[0] * width, y2 + offsetVector[1] * width];
     let p4 = [x2 - offsetVector[0] * width, y2 - offsetVector[1] * width];
 
+    // using vec3 as (x, y, UV)
     this.vertices = [
-      p1[0], p1[1],
-      p2[0], p2[1],
-      p3[0], p3[1],
-      p3[0], p3[1],
-      p2[0], p2[1],
-      p4[0], p4[1]];
+      p1[0], p1[1], 0,
+      p2[0], p2[1], 1,
+      p3[0], p3[1], 2,
+      p3[0], p3[1], 2,
+      p2[0], p2[1], 1,
+      p4[0], p4[1], 3];
   }
 }
 
