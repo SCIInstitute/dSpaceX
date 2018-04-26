@@ -7,6 +7,7 @@
 #include <jsoncpp/json.h>
 
 #include <map>
+#include <functional>
 
 
 class Controller {
