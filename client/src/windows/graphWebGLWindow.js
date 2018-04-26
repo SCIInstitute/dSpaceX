@@ -11,6 +11,10 @@ import { mat4 } from 'gl-matrix';
 const zoomRate = 1.2;
 const maxScale = 10;
 
+const edgeThickness = 0.075;
+const edgeSmoothness = 0.1;
+const edgeOpacity = 0.95;
+
 /**
  * WebGL error check wrapper - logs to console
  * @param {object} gl
@@ -56,9 +60,6 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts = null;
     this.edgeVerts_array = null;
     this.edgeVerts_buffer = null;
-    this.edgeColors = null;
-    this.edgeColor_array = null;
-    this.edgeColorBuffer = null;
 
     this.projectionMatrix = mat4.create();
     this.bDrawEdgesAsQuads = null;
@@ -287,32 +288,6 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-   * Creates fakeEdgeColors for proof of concept
-   * @return {Array}
-   */
-  createFakeEdgeColors() {
-    let fakeEdgeColors = [];
-    let red = [0.95, 0.05, 0.05];
-    let blue = [0.05, 0.05, 0.95];
-    for (let i = 0; i < this.edgeVerts.length; i++) {
-      if (this.bDrawEdgesAsQuads) {
-        fakeEdgeColors = fakeEdgeColors.concat(red);
-        fakeEdgeColors = fakeEdgeColors.concat(red);
-        fakeEdgeColors = fakeEdgeColors.concat(blue);
-        fakeEdgeColors = fakeEdgeColors.concat(blue);
-        fakeEdgeColors = fakeEdgeColors.concat(red);
-        fakeEdgeColors = fakeEdgeColors.concat(blue);
-        i += 5;
-      } else {
-        fakeEdgeColors = fakeEdgeColors.concat(red);
-        fakeEdgeColors = fakeEdgeColors.concat(blue);
-        i++;
-      }
-    }
-    return fakeEdgeColors;
-  }
-
-  /**
    * Creates the geometry to be rendered.
    * @param {array} array2DVertsForNodes
    * @param {array} arrayBeginEndIndicesForEdges
@@ -321,13 +296,12 @@ class GraphWebGLWindow extends React.Component {
    * @param {bool} drawEdgesAsQuads
    */
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
-    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = false) {
+    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
     this.vertices = [];
     this.vertColors = [];
     this.edgeVerts = [];
     this.edges = [];
     this.nodes = [];
-    this.edgeColors = [];
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
     // create a quad for each position in array2DVertsForNodes
@@ -356,10 +330,6 @@ class GraphWebGLWindow extends React.Component {
         // push back xy1, uv1, xy2, uv2
         this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
       }
-    }
-
-    if (this.edges.length > 0) {
-      this.edgeColors = this.createFakeEdgeColors();
     }
   }
 
@@ -459,15 +429,6 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
-
-    // edge color buffers
-    this.edgeColor_buffer = gl.createBuffer();
-    this.edgeColor_array = new Float32Array(this.edgeColors);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeColor_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.edgeColor_array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    webGLErrorCheck(gl);
   }
 
   /**
@@ -494,13 +455,6 @@ class GraphWebGLWindow extends React.Component {
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-    webGLErrorCheck(gl);
-
-    this.edgeColor_array = new Float32Array(this.edgeColors);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeColor_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.edgeColor_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
     webGLErrorCheck(gl);
@@ -713,18 +667,17 @@ class GraphWebGLWindow extends React.Component {
     let projectionMatrixLocation =
         gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
+
+    let edgeOpacityLocation =
+      gl.getUniformLocation(this.edgeShaderProgram, 'edgeOpacity');
+    gl.uniform3f(edgeOpacityLocation, edgeThickness,
+      edgeSmoothness, edgeOpacity);
+
     let coordinateAttrib =
         gl.getAttribLocation(this.edgeShaderProgram, 'coordinates');
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeColor_buffer);
-    this.edgeShaderProgram.vertexColorAttribute =
-      gl.getAttribLocation(this.edgeShaderProgram, 'vertexColor');
-    gl.vertexAttribPointer(this.edgeShaderProgram.vertexColorAttribute,
-      3, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(this.edgeShaderProgram.vertexColorAttribute);
 
     if (this.bDrawEdgesAsQuads) {
       gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
