@@ -13,7 +13,7 @@ const maxScale = 10;
 
 const edgeThickness = 0.075;
 const edgeSmoothness = 0.1;
-const edgeOpacity = 0.95;
+const edgeOpacity = 0.5;
 
 /**
  * WebGL error check wrapper - logs to console

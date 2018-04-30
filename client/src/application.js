@@ -199,14 +199,18 @@ class Application extends React.Component {
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar}/>
           <div className={classes.workspace}>
+            <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
+              decomposition={this.state.currentDecomposition}
+              qoi={this.state.currentQoi}
+              client={this.client} />
             {
-              !!this.state.currentDecomposition ? [
-                <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
-                  decomposition={this.state.currentDecomposition}
-                  qoi={this.state.currentQoi}
-                  client={this.client}/>,
-                // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
-              ] : []
+              // !!this.state.currentDecomposition ? [
+              //  <GraphWebGLWindow key='1' dataset={this.state.currentDataset}
+              //    decomposition={this.state.currentDecomposition}
+              //    qoi={this.state.currentQoi}
+              //    client={this.client}/>,
+              //  // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
+              // ] : []
             }
           </div>
         </Workspace>

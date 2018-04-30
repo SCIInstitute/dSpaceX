@@ -22,8 +22,19 @@ SET(SERVER_LIB_SOURCE_FILES
   server.c 
   wst.c)
 
+if(WIN32)
+  list(APPEND SERVER_LIB_INCLUDE_FILES ./win32helpers/websock-w32.h)
+  list(APPEND SERVER_LIB_SOURCE_FILES websock-w32.c)
+  list(APPEND SERVER_LIB_SOURCE_FILES gettimeofday.c)
+  INCLUDE_DIRECTORIES(win32helpers)
+  INCLUDE_DIRECTORIES(zlib)
+endif()
+
 ADD_DEFINITIONS(-DLWS_NO_FORK)
 
 
 # output library
 ADD_LIBRARY(libwsserver ${SERVER_LIB_INCLUDE_FILES} ${SERVER_LIB_SOURCE_FILES})
+if(WIN32)
+TARGET_LINK_LIBRARIES(libwsserver wsock32 ws2_32)
+endif()
