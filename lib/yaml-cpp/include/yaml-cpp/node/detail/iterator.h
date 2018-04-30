@@ -37,7 +37,7 @@ class iterator_base : public std::iterator<std::forward_iterator_tag, V,
   };
 
  public:
-  typedef typename value_type value_type;
+  typedef typename iterator_base::value_type value_type;
 
  public:
   iterator_base() : m_iterator(), m_pMemory() {}
