@@ -26,7 +26,8 @@ extern "C" {
                                                    int len, void *array );
   __ProtoExt__ void wst_freeData( wstData *data );
   
-  __ProtoExt__ int  wst_startServer( int port, /*@null@*/ char *interface,
+  __ProtoExt__ int  wst_startServer( int port, 
+                                    /*@null@*/ char *Interface,
                                     /*@null@*/ char *cert_path,
                                     /*@null@*/ char *key_path, int opts,
                                     /*@only@*/ wstContext *WSTcontext );
