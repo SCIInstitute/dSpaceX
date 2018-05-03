@@ -37,7 +37,11 @@ class iterator_base : public std::iterator<std::forward_iterator_tag, V,
   };
 
  public:
-  typedef typename iterator_base::value_type value_type;
+#ifdef WIN32
+  typedef typename value_type value_type;
+#elif
+   typedef typename iterator_base::value_type value_type;
+#endif
 
  public:
   iterator_base() : m_iterator(), m_pMemory() {}
