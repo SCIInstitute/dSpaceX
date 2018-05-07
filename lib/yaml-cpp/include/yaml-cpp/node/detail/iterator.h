@@ -39,7 +39,7 @@ class iterator_base : public std::iterator<std::forward_iterator_tag, V,
  public:
 #ifdef WIN32
   typedef typename value_type value_type;
-#elif
+#else
    typedef typename iterator_base::value_type value_type;
 #endif
 

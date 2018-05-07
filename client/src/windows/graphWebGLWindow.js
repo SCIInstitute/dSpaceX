@@ -11,9 +11,9 @@ import { mat4 } from 'gl-matrix';
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const edgeThickness = 0.05;
-const edgeSmoothness = 0.75;
-const edgeOpacity = 0.75;
+const edgeThickness = 0.0025;
+const edgeSmoothness = 0.9;
+const edgeOpacity = 0.95;
 
 /**
  * WebGL error check wrapper - logs to console
