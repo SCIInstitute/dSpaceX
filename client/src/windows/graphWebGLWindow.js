@@ -11,9 +11,9 @@ import { mat4 } from 'gl-matrix';
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const edgeThickness = 0.075;
-const edgeSmoothness = 0.1;
-const edgeOpacity = 0.5;
+const edgeThickness = 0.05;
+const edgeSmoothness = 0.75;
+const edgeOpacity = 0.75;
 
 /**
  * WebGL error check wrapper - logs to console
@@ -668,9 +668,9 @@ class GraphWebGLWindow extends React.Component {
         gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
-    let edgeOpacityLocation =
-      gl.getUniformLocation(this.edgeShaderProgram, 'edgeOpacity');
-    gl.uniform3f(edgeOpacityLocation, edgeThickness,
+    let edgeParamsLocation =
+      gl.getUniformLocation(this.edgeShaderProgram, 'edgeParams');
+    gl.uniform3f(edgeParamsLocation, edgeThickness,
       edgeSmoothness, edgeOpacity);
 
     let coordinateAttrib =
