@@ -11,9 +11,9 @@ import { mat4 } from 'gl-matrix';
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const edgeThickness = 0.0025;
-const edgeSmoothness = 0.9;
-const edgeOpacity = 0.95;
+const constEdgeThickness = 0.0025;
+const constEdgeSmoothness = 0.9;
+const constEdgeOpacity = 0.95;
 
 /**
  * WebGL error check wrapper - logs to console
@@ -79,6 +79,11 @@ class GraphWebGLWindow extends React.Component {
     this.handleMouseRelease = this.handleMouseRelease.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+
+    this.edgeThickness = 0.0;
+    this.edgeSmoothness = 0.0;
+    this.edgeOpacity = 0.0;
   }
 
   /**
@@ -142,6 +147,30 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * Event handling for keyboard input
+   * @param {Event} evt
+   */
+  handleKeyDown(evt) {
+    const keyName = evt.key;
+    switch (keyName) {
+    case 'ArrowUp':
+      console.log('Up arrow pressed');
+      break;
+    case 'ArrowDown':
+      console.log('Down arrow pressed');
+      break;
+    case 'ArrowLeft':
+      console.log('Left arrow presses');
+      break;
+    case 'ArrowRight':
+      console.log('Right arrow pressed');
+      break;
+    default:
+      console.log('*Input Key Value Not Handled!');
+    }
+  }
+
+  /**
    * Initial setup for the webgl canvas.
    */
   initGL() {
@@ -168,6 +197,10 @@ class GraphWebGLWindow extends React.Component {
     this.createBuffers(gl);
 
     webGLErrorCheck(gl);
+
+    this.edgeThickness = constEdgeThickness;
+    this.edgeSmoothness = constEdgeSmoothness;
+    this.edgeOpacity = constEdgeOpacity;
   }
 
   /**
@@ -537,6 +570,7 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.removeEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.removeEventListener('mouseup', this.handleMouseRelease);
     this.refs.canvas.removeEventListener('mousemove', this.handleMouseMove);
+    this.refs.canvas.removeEventListener('keypress', this.handleKeyDown);
   }
 
   /**
@@ -552,6 +586,7 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
+    this.refs.canvas.addEventListener('keypress', this.handleKeyDown);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
@@ -670,8 +705,8 @@ class GraphWebGLWindow extends React.Component {
 
     let edgeParamsLocation =
       gl.getUniformLocation(this.edgeShaderProgram, 'edgeParams');
-    gl.uniform3f(edgeParamsLocation, edgeThickness,
-      edgeSmoothness, edgeOpacity);
+    gl.uniform3f(edgeParamsLocation, this.edgeThickness,
+      this.edgeSmoothness, this.edgeOpacity);
 
     let coordinateAttrib =
         gl.getAttribLocation(this.edgeShaderProgram, 'coordinates');
