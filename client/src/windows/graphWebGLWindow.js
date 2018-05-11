@@ -73,6 +73,9 @@ class GraphWebGLWindow extends React.Component {
     this.netPanX = 0;
     this.netPanY = 0;
     this.rightMouseDown = false;
+    this.tDown = false;
+    this.sDown = false;
+    this.oDown = false;
 
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -80,6 +83,7 @@ class GraphWebGLWindow extends React.Component {
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
 
     this.edgeThickness = 0.0;
     this.edgeSmoothness = 0.0;
@@ -97,7 +101,6 @@ class GraphWebGLWindow extends React.Component {
     if (evt.deltaY > 0 && this.scale < maxScale) {
       this.scale = this.scale * zoomRate;
     }
-
     this.resizeCanvas();
   }
 
@@ -147,26 +150,85 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
-   * Event handling for keyboard input
+   * Event handling for keydown event
    * @param {Event} evt
    */
   handleKeyDown(evt) {
-    const keyName = evt.key;
+    let keyName = evt.key;
+    let consoleOutput = '';
     switch (keyName) {
+    case 't':
+      this.tDown = true;
+      break;
+    case 's':
+      this.sDown = true;
+      break;
+    case 'o':
+      this.oDown = true;
+      break;
     case 'ArrowUp':
-      console.log('Up arrow pressed');
+      if (this.tDown) {
+        this.edgeThickness *= 1.02;
+        consoleOutput += 'edgeThickness = ' + this.edgeThickness;
+        this.resizeCanvas();
+      } else if (this.sDown) {
+        this.edgeSmoothness *= 1.02;
+        consoleOutput += 'edgeSmoothness = ' + this.edgeSmoothness;
+        this.resizeCanvas();
+      } else if (this.oDown) {
+        this.edgeOpacity *= 1.02;
+        consoleOutput += 'edgeOpacity = ' + this.edgeOpacity;
+        this.resizeCanvas();
+      }
       break;
     case 'ArrowDown':
-      console.log('Down arrow pressed');
+      if (this.tDown) {
+        this.edgeThickness *= 0.98;
+        consoleOutput += 'edgeThickness = ' + this.edgeThickness;
+        this.resizeCanvas();
+      } else if (this.sDown) {
+        this.edgeSmoothness *= 0.98;
+        consoleOutput += 'edgeSmoothness = ' + this.edgeSmoothness;
+        this.resizeCanvas();
+      } else if (this.oDown) {
+        this.edgeOpacity *= 0.98;
+        consoleOutput += 'edgeOpacity = ' + this.edgeOpacity;
+        this.resizeCanvas();
+      }
       break;
     case 'ArrowLeft':
-      console.log('Left arrow presses');
-      break;
     case 'ArrowRight':
-      console.log('Right arrow pressed');
-      break;
     default:
-      console.log('*Input Key Value Not Handled!');
+      break;
+    }
+
+    if (consoleOutput.length > 0) {
+      console.log(consoleOutput);
+    }
+  }
+
+  /**
+   * Event handling for keyup event
+   * @param {Event} evt
+   */
+  handleKeyUp(evt) {
+    let keyName = evt.key;
+    switch (keyName) {
+    case 't':
+      this.tDown = false;
+      break;
+    case 's':
+      this.sDown = false;
+      break;
+    case 'o':
+      this.oDown = false;
+      break;
+    case 'ArrowUp':
+    case 'ArrowDown':
+    case 'ArrowLeft':
+    case 'ArrowRight':
+    default:
+      break;
     }
   }
 
@@ -570,7 +632,8 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.removeEventListener('mousedown', this.handleMouseDown);
     this.refs.canvas.removeEventListener('mouseup', this.handleMouseRelease);
     this.refs.canvas.removeEventListener('mousemove', this.handleMouseMove);
-    this.refs.canvas.removeEventListener('keypress', this.handleKeyDown);
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keyup', this.handleKeyUp);
   }
 
   /**
@@ -586,7 +649,8 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
-    this.refs.canvas.addEventListener('keypress', this.handleKeyDown);
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
