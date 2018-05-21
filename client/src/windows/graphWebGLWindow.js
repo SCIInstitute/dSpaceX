@@ -399,8 +399,9 @@ class GraphWebGLWindow extends React.Component {
     this.nodes = [];
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
+    let len = array2DVertsForNodes.length;
     // create a quad for each position in array2DVertsForNodes
-    for (let i = 0; i < array2DVertsForNodes.length; i++) {
+    for (let i = 0; i < len; i++) {
       let quad = new Quad(array2DVertsForNodes[i][0],
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
@@ -408,13 +409,18 @@ class GraphWebGLWindow extends React.Component {
       this.nodes.push(quad);
     }
 
+    len = arrayBeginEndIndicesForEdges.length;
+    let index1;
+    let index2;
+    let node1;
+    let node2;
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let i = 0; i < arrayBeginEndIndicesForEdges.length; i++) {
-      let index1 = arrayBeginEndIndicesForEdges[i][0];
-      let index2 = arrayBeginEndIndicesForEdges[i][1];
+    for (let i = 0; i < len; i++) {
+      index1 = arrayBeginEndIndicesForEdges[i][0];
+      index2 = arrayBeginEndIndicesForEdges[i][1];
 
-      let node1 = this.nodes[index1];
-      let node2 = this.nodes[index2];
+      node1 = this.nodes[index1];
+      node2 = this.nodes[index2];
 
       let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y);
 
