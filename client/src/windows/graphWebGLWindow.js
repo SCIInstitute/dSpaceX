@@ -465,10 +465,6 @@ class GraphWebGLWindow extends React.Component {
         // push back xy1, uv1, xy2, uv2
         this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
       }
-
-      if (i % 1000 == 0) {
-        console.log('createGeometry() created ' + i + 'edges.');
-      }
     }
   }
 
