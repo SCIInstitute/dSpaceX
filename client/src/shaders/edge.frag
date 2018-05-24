@@ -1,4 +1,4 @@
-precision mediump float;
+precision highp float;
 uniform vec3 edgeParams; // (thickness, smoothness, opacity) 
 varying vec2 vertexUV;
 

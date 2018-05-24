@@ -51,7 +51,7 @@ export class Edge {
     this.y2 = y2;
 
     // Setup properties for drawing as quad
-    let width = lineWidth / 2;
+    let width = lineWidth;
     let vectorX = x2 - x1;
     let vectorY = y2 - y1;
     let lineVector = [vectorX, vectorY];

@@ -14,9 +14,9 @@ const useNodes = true;
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const constEdgeThickness = 0.0025;
-const constEdgeSmoothness = 0.9;
-const constEdgeOpacity = 0.95;
+const constEdgeThickness = 0.025;
+const constEdgeSmoothness = 0.02;
+const constEdgeOpacity = 0.05;
 
 /**
  * WebGL error check wrapper - logs to console
@@ -283,7 +283,8 @@ class GraphWebGLWindow extends React.Component {
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(false);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     // Create fake data if there's no decomposition information.
     if (!this.props.decomposition) {
@@ -471,7 +472,8 @@ class GraphWebGLWindow extends React.Component {
         node1 = this.nodes[index1];
         node2 = this.nodes[index2];
 
-        let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y);
+        let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
+          constEdgeThickness);
 
         this.edges.push(edge);
         if (this.bDrawEdgesAsQuads) {
