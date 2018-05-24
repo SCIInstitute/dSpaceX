@@ -7,15 +7,11 @@ import NodeVertexShaderSource from '../shaders/node.vert';
 import React from 'react';
 import { mat4 } from 'gl-matrix';
 
-// debug flags
-const useEdges = true;
-const useNodes = true;
-
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const constEdgeThickness = 0.025;
-const constEdgeSmoothness = 0.02;
+const constEdgeThickness = 0.075 / 50;
+const constEdgeSmoothness = 0.2;
 const constEdgeOpacity = 0.05;
 
 /**
@@ -82,7 +78,6 @@ class GraphWebGLWindow extends React.Component {
     super(props);
 
     this.client = this.props.client;
-    // this.gl = null;
     this.canvas = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
@@ -94,7 +89,6 @@ class GraphWebGLWindow extends React.Component {
     this.vertColors = null;
     this.nodes = null;
     this.edges = null;
-    // this.nodeEdgeCount = null;
     this.edgeVerts = null;
     this.edgeVerts_array = null;
     this.edgeVerts_buffer = null;
@@ -288,14 +282,8 @@ class GraphWebGLWindow extends React.Component {
 
     // Create fake data if there's no decomposition information.
     if (!this.props.decomposition) {
-      let fakeNodePositions = [];
-      let fakeEdgesIndices = [];
-      if (useNodes) {
-        fakeNodePositions = this.createFakeNodePositions();
-      }
-      if (useEdges) {
-        fakeEdgesIndices = this.createFakeEdges(fakeNodePositions);
-      }
+      let fakeNodePositions = this.createFakeNodePositions();
+      let fakeEdgesIndices = this.createFakeEdges(fakeNodePositions);
       this.createGeometry(fakeNodePositions, fakeEdgesIndices);
       let fakeNodeColors = this.createFakeNodeColors();
       this.addVertexColors(fakeNodeColors);
@@ -305,11 +293,9 @@ class GraphWebGLWindow extends React.Component {
 
     webGLErrorCheck(gl);
 
-    if (useEdges) {
-      this.edgeThickness = constEdgeThickness;
-      this.edgeSmoothness = constEdgeSmoothness;
-      this.edgeOpacity = constEdgeOpacity;
-    }
+    this.edgeThickness = constEdgeThickness;
+    this.edgeSmoothness = constEdgeSmoothness;
+    this.edgeOpacity = constEdgeOpacity;
   }
 
   /**
@@ -447,45 +433,41 @@ class GraphWebGLWindow extends React.Component {
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
     let len = array2DVertsForNodes.length;
-    if (useNodes) {
-      // create a quad for each position in array2DVertsForNodes
-      for (let i = 0; i < len; i++) {
-        let quad = new Quad(array2DVertsForNodes[i][0],
-          array2DVertsForNodes[i][1],
-          quadWidth, quadHeight);
-        this.vertices = this.vertices.concat(quad.vertices);
-        this.nodes.push(quad);
-      }
+    // create a quad for each position in array2DVertsForNodes
+    for (let i = 0; i < len; i++) {
+      let quad = new Quad(array2DVertsForNodes[i][0],
+        array2DVertsForNodes[i][1],
+        quadWidth, quadHeight);
+      this.vertices = this.vertices.concat(quad.vertices);
+      this.nodes.push(quad);
     }
 
-    if (useEdges) {
-      len = arrayBeginEndIndicesForEdges.length;
-      let index1;
-      let index2;
-      let node1;
-      let node2;
-      // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-      for (let i = 0; i < len; i++) {
-        index1 = arrayBeginEndIndicesForEdges[i][0];
-        index2 = arrayBeginEndIndicesForEdges[i][1];
+    len = arrayBeginEndIndicesForEdges.length;
+    let index1;
+    let index2;
+    let node1;
+    let node2;
+    // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
+    for (let i = 0; i < len; i++) {
+      index1 = arrayBeginEndIndicesForEdges[i][0];
+      index2 = arrayBeginEndIndicesForEdges[i][1];
 
-        node1 = this.nodes[index1];
-        node2 = this.nodes[index2];
+      node1 = this.nodes[index1];
+      node2 = this.nodes[index2];
 
-        let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
-          constEdgeThickness);
+      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
+        constEdgeThickness);
 
-        this.edges.push(edge);
-        if (this.bDrawEdgesAsQuads) {
-          this.edgeVerts = this.edgeVerts.concat(edge.vertices);
-        } else {
-          // push back xy1, uv1, xy2, uv2
-          this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
-        }
+      this.edges.push(edge);
+      if (this.bDrawEdgesAsQuads) {
+        this.edgeVerts = this.edgeVerts.concat(edge.vertices);
+      } else {
+        // push back xy1, uv1, xy2, uv2
+        this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
+      }
 
-        if (i % 1000 == 0) {
-          console.log('createGeometry() created ' + i + 'edges.');
-        }
+      if (i % 1000 == 0) {
+        console.log('createGeometry() created ' + i + 'edges.');
       }
     }
   }
@@ -560,36 +542,32 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl The OpenGL context.
    */
   createBuffers(gl) {
-    if (useNodes) {
-      // Quad buffers
-      this.vertex_buffer = gl.createBuffer();
-      this.vertex_array = new Float32Array(this.vertices);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    // Quad buffers
+    this.vertex_buffer = gl.createBuffer();
+    this.vertex_array = new Float32Array(this.vertices);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
+    webGLErrorCheck(gl);
 
-      // vertex Color buffers
-      this.vertColor_buffer = gl.createBuffer();
-      this.vertColor_array = new Float32Array(this.vertColors);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    // vertex Color buffers
+    this.vertColor_buffer = gl.createBuffer();
+    this.vertColor_array = new Float32Array(this.vertColors);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
-    }
+    webGLErrorCheck(gl);
 
-    if (useEdges) {
-      // Edge buffers
-      this.edgeVerts_buffer = gl.createBuffer();
-      this.edgeVerts_array = new Float32Array(this.edgeVerts);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    // Edge buffers
+    this.edgeVerts_buffer = gl.createBuffer();
+    this.edgeVerts_array = new Float32Array(this.edgeVerts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
-    }
+    webGLErrorCheck(gl);
   }
 
   /**
@@ -599,30 +577,26 @@ class GraphWebGLWindow extends React.Component {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    if (useNodes) {
-      this.vertex_array = new Float32Array(this.vertices);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.vertex_array = new Float32Array(this.vertices);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
+    webGLErrorCheck(gl);
 
-      this.vertColor_array = new Float32Array(this.vertColors);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.vertColor_array = new Float32Array(this.vertColors);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
-    }
+    webGLErrorCheck(gl);
 
-    if (useEdges) {
-      this.edgeVerts_array = new Float32Array(this.edgeVerts);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
-      gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.edgeVerts_array = new Float32Array(this.edgeVerts);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-      webGLErrorCheck(gl);
-    }
+    webGLErrorCheck(gl);
   }
 
   /**
@@ -869,12 +843,8 @@ class GraphWebGLWindow extends React.Component {
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
     if (this.vertices) {
-      if (useEdges) {
-        this.drawEdges(gl);
-      }
-      if (useNodes) {
-        this.drawNodes(gl);
-      }
+      this.drawEdges(gl);
+      this.drawNodes(gl);
     }
   }
 
