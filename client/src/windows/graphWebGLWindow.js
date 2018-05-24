@@ -10,9 +10,9 @@ import { mat4 } from 'gl-matrix';
 const zoomRate = 1.2;
 const maxScale = 10;
 
-const constEdgeThickness = 0.075 / 50;
-const constEdgeSmoothness = 0.2;
-const constEdgeOpacity = 0.05;
+const defaultEdgeThickness = 0.075 / 50;
+const defaultEdgeSmoothness = 0.2;
+const defaultEdgeOpacity = 0.05;
 
 /**
  * WebGL error check wrapper - logs to console
@@ -115,7 +115,6 @@ class GraphWebGLWindow extends React.Component {
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
 
     this.edgeThickness = 0.0;
     this.edgeSmoothness = 0.0;
@@ -189,78 +188,65 @@ class GraphWebGLWindow extends React.Component {
     let keyName = evt.key;
     let consoleOutput = '';
     switch (keyName) {
+    // TODO: define remaining commented out key handles
+    //       to match desktop GUI input
+    case 'q':
+    case 'Q':
+      // exit(0);
+      break;
+    case 'd':
+      // m_useDebugLayout = !m_useDebugLayout;
+      // setCrystal(m_currentLevel, m_currentCrystal);
+      break;
+    case '/':
+      // m_nodeRadius = std::max(0.1, m_nodeRadius / 1.1);
+      break;
+    case '\'':
+      // m_nodeRadius *= 1.1;
+      break;
+    case '.':
+      // m_nodeOutline = std::max(0.001, m_nodeOutline / 1.1);
+      break;
+    case ';':
+      // m_nodeOutline *= 1.1;
+      break;
+    case ',':
+      // m_nodeSmoothness = std::max(0.01, m_nodeSmoothness / 1.1);
+      break;
+    case 'l':
+      // m_nodeSmoothness *= 1.1;
+      break;
+    case 'm':
+      this.edgeThickness = Math.max(0.005, this.edgeThickness / 1.1);
+      consoleOutput = 'edgeThickness = ' + this.edgeThickness;
+      break;
+    case 'k':
+      this.edgeThickness *= 1.1;
+      consoleOutput = 'edgeThickness = ' + this.edgeThickness;
+      break;
+    case 'n':
+      this.edgeOpacity = Math.max(0.01, this.edgeOpacity / 1.1);
+      consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
+      break;
+    case 'j':
+      this.edgeOpacity *= 1.1;
+      consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
+      break;
     case 't':
-      this.tDown = true;
+      // if (m_activeNodeShader == m_shaderProgram) {
+      //   m_activeNodeShader = m_thumbnailShaderProgram;
+      // } else {
+      //   m_activeNodeShader = m_shaderProgram;
+      // }
       break;
-    case 's':
-      this.sDown = true;
-      break;
-    case 'o':
-      this.oDown = true;
-      break;
-    case 'ArrowUp':
-      if (this.tDown) {
-        this.edgeThickness *= 1.02;
-        consoleOutput += 'edgeThickness = ' + this.edgeThickness;
-        this.resizeCanvas();
-      } else if (this.sDown) {
-        this.edgeSmoothness *= 1.02;
-        consoleOutput += 'edgeSmoothness = ' + this.edgeSmoothness;
-        this.resizeCanvas();
-      } else if (this.oDown) {
-        this.edgeOpacity *= 1.02;
-        consoleOutput += 'edgeOpacity = ' + this.edgeOpacity;
-        this.resizeCanvas();
-      }
-      break;
-    case 'ArrowDown':
-      if (this.tDown) {
-        this.edgeThickness *= 0.98;
-        consoleOutput += 'edgeThickness = ' + this.edgeThickness;
-        this.resizeCanvas();
-      } else if (this.sDown) {
-        this.edgeSmoothness *= 0.98;
-        consoleOutput += 'edgeSmoothness = ' + this.edgeSmoothness;
-        this.resizeCanvas();
-      } else if (this.oDown) {
-        this.edgeOpacity *= 0.98;
-        consoleOutput += 'edgeOpacity = ' + this.edgeOpacity;
-        this.resizeCanvas();
-      }
-      break;
-    case 'ArrowLeft':
-    case 'ArrowRight':
-    default:
+    case ' ': // spacebar
+      // resetView();
       break;
     }
+    this.resizeCanvas();
 
     if (consoleOutput.length > 0) {
       console.log(consoleOutput);
-    }
-  }
-
-  /**
-   * Event handling for keyup event
-   * @param {Event} evt
-   */
-  handleKeyUp(evt) {
-    let keyName = evt.key;
-    switch (keyName) {
-    case 't':
-      this.tDown = false;
-      break;
-    case 's':
-      this.sDown = false;
-      break;
-    case 'o':
-      this.oDown = false;
-      break;
-    case 'ArrowUp':
-    case 'ArrowDown':
-    case 'ArrowLeft':
-    case 'ArrowRight':
-    default:
-      break;
     }
   }
 
@@ -293,9 +279,9 @@ class GraphWebGLWindow extends React.Component {
 
     webGLErrorCheck(gl);
 
-    this.edgeThickness = constEdgeThickness;
-    this.edgeSmoothness = constEdgeSmoothness;
-    this.edgeOpacity = constEdgeOpacity;
+    this.edgeThickness = defaultEdgeThickness;
+    this.edgeSmoothness = defaultEdgeSmoothness;
+    this.edgeOpacity = defaultEdgeOpacity;
   }
 
   /**
@@ -349,7 +335,6 @@ class GraphWebGLWindow extends React.Component {
     let returnXY = [clipSpace[0], -clipSpace[1]];
     return returnXY;
   }
-
 
   /**
    * Creates a fake set of node [x,y] positions for testing.
@@ -456,7 +441,7 @@ class GraphWebGLWindow extends React.Component {
       node2 = this.nodes[index2];
 
       let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
-        constEdgeThickness);
+        defaultEdgeThickness);
 
       this.edges.push(edge);
       if (this.bDrawEdgesAsQuads) {
@@ -673,7 +658,6 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.removeEventListener('mouseup', this.handleMouseRelease);
     this.refs.canvas.removeEventListener('mousemove', this.handleMouseMove);
     window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
   }
 
   /**
@@ -690,7 +674,6 @@ class GraphWebGLWindow extends React.Component {
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
     window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
     requestAnimationFrame(this.drawScene.bind(this));
   }
 
