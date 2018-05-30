@@ -27,11 +27,14 @@ class DatasetPanel extends React.Component {
     this.state = {
       datasetName: '',
       dataset: null,
+      parameterName: '',
+      parameterVector: null,
       qoiName: '',
       qoiVector: null,
     };
 
     this.handleDatasetChange = this.handleDatasetChange.bind(this);
+    this.handleParameterChange = this.handleParameterChange.bind(this);
     this.handleQoiChange = this.handleQoiChange.bind(this);
     this.client = this.props.client;
     this.datasetMap = null;
@@ -91,6 +94,22 @@ class DatasetPanel extends React.Component {
     }.bind(this));
   };
 
+  /**
+   * Handles the user changing the current active parameter.
+   * @param {Event} event
+   */
+  handleParameterChange(event) {
+    let parameterName = event.target.value;
+    if (parameterName === '') {
+      this.setState({
+        parameterName: '',
+        parameterVector: null,
+      });
+      return;
+    }
+
+    this.setState({ parameterName });
+  }
 
   /**
    * Handles the user changing the current active qoi.
@@ -212,6 +231,28 @@ class DatasetPanel extends React.Component {
               </div>
             </ListItem>
           </List>
+          <FormControl className={classes.formControl}
+            disabled={!this.props.enabled || !this.state.dataset}>
+            <InputLabel htmlFor='parameter-field'>Parameter</InputLabel>
+            <Select ref="parameterCombo" value={this.state.parameterName}
+              onChange={this.handleParameterChange} inputProps={{
+                name: 'parameter',
+                id: 'parameter-field',
+              }}>
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              {
+                (this.state.dataset && this.state.dataset.parameterNames) ?
+                  this.state.dataset.parameterNames.map((name) => (
+                    <MenuItem value={name} key={name}>
+                      {name}
+                    </MenuItem>
+                  ))
+                  : []
+              }
+            </Select>
+          </FormControl>
           <FormControl className={classes.formControl}
             disabled={!this.props.enabled || !this.state.dataset}>
             <InputLabel htmlFor='qoi-field'>QoI</InputLabel>
