@@ -135,18 +135,15 @@ void Controller::fetchDataset(
   response["datasetId"] = datasetId;
   response["name"] = m_currentDataset->getName();
   response["numberOfSamples"] = m_currentDataset->numberOfSamples();
-  response["qoiNames"] = Json::Value(Json::arrayValue);
-
-  for (std::string qoiName : m_currentDataset->getQoiNames()) {
-    response["qoiNames"].append(qoiName);
-  }
-
   response["parameterNames"] = Json::Value(Json::arrayValue);
   for (std::string parameterName : m_currentDataset->getParameterNames()) {
     response["parameterNames"].append(parameterName);
   }
-
-
+  response["qoiNames"] = Json::Value(Json::arrayValue);
+  for (std::string qoiName : m_currentDataset->getQoiNames()) {
+    response["qoiNames"].append(qoiName);
+  }
+  
   Json::StyledWriter writer;
   std::string text = writer.write(response);
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
