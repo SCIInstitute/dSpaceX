@@ -1,0 +1,12 @@
+name: SuperShapes-Aluminum
+
+samples:
+  count: 106
+
+parameters:
+  format: csv
+  file: aluminum_params.csv
+
+qois:
+  format: csv
+  file: aluminum_qois.csv

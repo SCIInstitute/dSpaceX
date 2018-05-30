@@ -1,0 +1,12 @@
+name: SuperShapes-Silver
+
+samples:
+  count: 106
+
+parameters:
+  format: csv
+  file: silver_params.csv
+
+qois:
+  format: csv
+  file: silver_qois.csv
