@@ -31,6 +31,13 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
   std::cout << "samples: " << sampleCount << std::endl;
   builder.withSampleCount(sampleCount);
 
+  if (config["parameters"]) {
+    auto parameters = DatasetLoader::parseParameters(config, filePath);
+    for (auto parameter : parameters) {
+      builder.withParameter(parameter.first, parameter.second);
+    }
+  }
+
   auto qois = DatasetLoader::parseQois(config, filePath);
   for (auto qoi : qois) {
     builder.withQoi(qoi.first, qoi.second);
@@ -76,10 +83,97 @@ int DatasetLoader::parseSampleCount(const YAML::Node &config) {
 }
 
 
+std::vector<ParameterNameValuePair> DatasetLoader::parseParameters(
+    const YAML::Node &config, const std::string &filePath) {
+  std::vector<ParameterNameValuePair> parameters;
+  if (!config["parameters"]) {
+    throw std::runtime_error("Dataset config missing 'parameters' field.");    
+  }
+  const YAML::Node &parametersNode = config["parameters"];
+
+  if (parametersNode.IsSequence()) {
+    // Parse Parameters one by one if in list form:
+    std::cout << "Reading sequence of " << parametersNode.size() 
+              << " parameters." << std::endl;
+    for (std::size_t i = 0; i < parametersNode.size(); i++) {
+      const YAML::Node &parameterNode = parametersNode[i];
+      auto parameter = DatasetLoader::parseParameter(parameterNode, filePath);
+      parameters.push_back(parameter);
+    }
+  } else {
+    // Parse all Parameters from a file if not in list form.
+    std::string format = parametersNode["format"].as<std::string>();
+    if (format != "csv") {
+      throw std::runtime_error(
+        "Dataset config specifies unsupported multi-parameter format: " + format);
+    }
+    if (!parametersNode["file"]) {
+      throw std::runtime_error("Parameters missing 'file' field.");
+    }
+    std::string filename = parametersNode["file"].as<std::string>();
+    std::cout << "parameters filename: " << filename << std::endl;
+    std::string path = basePathOf(filePath);
+
+    // TODO: Factor out some file format reading handler. 
+    //       Fileformat could be a key for map to loading function.  
+    std::cout << "Loading " << format << " from " << path + filename << std::endl;
+    auto columnNames = HDProcess::loadCSVColumnNames(path + filename);
+
+    for (auto name : columnNames) {
+      std::cout << "Loading QOI: " << name << std::endl;
+      auto parameter = HDProcess::loadCSVColumn(path + filename, name);
+      parameters.push_back(ParameterNameValuePair(name, parameter));
+    }
+  }
+
+  return parameters;
+}
+
+
+ParameterNameValuePair DatasetLoader::parseParameter(
+    const YAML::Node &parameterNode, const std::string &filePath) {
+  if (!parameterNode["name"]) {
+    throw std::runtime_error("Parameter missing 'name' field.");
+  }
+  std::string name = parameterNode["name"].as<std::string>();
+  std::cout << "parameter name: " << name << std::endl;
+
+  if (!parameterNode["format"]) {
+     throw std::runtime_error("Parameter missing 'format' field."); 
+  }
+  std::string format = parameterNode["format"].as<std::string>();
+  // TODO: Move Format Strings to typed enums or constants.
+  std::cout << "parameter format: " << format << std::endl;
+  if (format != "Linalg.DenseVector" &&
+      format != "csv") {
+    throw std::runtime_error(
+        "Dataset config specifies unsupported parameter format: " + format);
+  }
+
+  if (!parameterNode["file"]) {
+    throw std::runtime_error("Parameter missing 'file' field.");
+  }
+  std::string filename = parameterNode["file"].as<std::string>();
+  std::cout << "parameter filename: " << filename << std::endl;
+  std::string path = basePathOf(filePath);
+
+  // TODO: Factor out some file format reading handler. 
+  //       Fileformat could be a key for map to loading function.  
+  std::cout << "Loading " << format << " from " << path + filename << std::endl;
+  FortranLinalg::DenseVector<Precision> parameter;
+  if (format == "Linalg.DenseVector") {    
+    parameter = FortranLinalg::LinalgIO<Precision>::readVector(path + filename);
+  } else if (format == "csv") {
+    parameter = HDProcess::loadCSVColumn(path + filename);
+  }
+
+  return ParameterNameValuePair(name, parameter);
+}
+
 std::vector<QoiNameValuePair> DatasetLoader::parseQois(
     const YAML::Node &config, const std::string &filePath) {
   std::vector<QoiNameValuePair> qois;
-  if(!config["qois"]) {
+  if (!config["qois"]) {
     throw std::runtime_error("Dataset config missing 'qois' field.");
   }
   const YAML::Node &qoisNode = config["qois"];
@@ -92,7 +186,6 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
       auto qoi = DatasetLoader::parseQoi(qoiNode, filePath);
       qois.push_back(qoi);
     }
-
   } else {
     // Parse all Qois from a file if not in list form.
     std::string format = qoisNode["format"].as<std::string>();
@@ -111,7 +204,7 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
     //       Fileformat could be a key for map to loading function.  
     std::cout << "Loading " << format << " from " << path + filename << std::endl;
     auto columnNames = HDProcess::loadCSVColumnNames(path + filename);
-    
+
     for (auto name : columnNames) {
       std::cout << "Loading QOI: " << name << std::endl;
       auto qoi = HDProcess::loadCSVColumn(path + filename, name);
@@ -121,8 +214,6 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
 
   return qois;
 }
-
-
 
 
 QoiNameValuePair DatasetLoader::parseQoi(

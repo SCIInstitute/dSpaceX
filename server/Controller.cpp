@@ -141,9 +141,9 @@ void Controller::fetchDataset(
     response["qoiNames"].append(qoiName);
   }
 
-  response["attributeNames"] = Json::Value(Json::arrayValue);
-  for (std::string attributeName : m_currentDataset->getAttributeNames()) {
-    response["attributeNames"].append(attributeName);
+  response["parameterNames"] = Json::Value(Json::arrayValue);
+  for (std::string parameterName : m_currentDataset->getParameterNames()) {
+    response["parameterNames"].append(parameterName);
   }
 
 

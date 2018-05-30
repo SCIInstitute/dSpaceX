@@ -10,6 +10,8 @@
 #include <vector>
 
 typedef 
+std::pair<std::string, FortranLinalg::DenseVector<Precision>> ParameterNameValuePair;
+typedef 
 std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
 typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
@@ -24,6 +26,12 @@ private:
 
   static FortranLinalg::DenseMatrix<Precision> parseGeometry(
       const YAML::Node &config, const std::string &filePath);
+
+  static std::vector<ParameterNameValuePair> parseParameters(
+      const YAML::Node &config, const std::string &filePath);
+
+  static ParameterNameValuePair parseParameter(
+      const YAML::Node &parameterNode, const std::string &filePath);
 
   static std::vector<QoiNameValuePair> parseQois(
       const YAML::Node &config, const std::string &filePath);  
