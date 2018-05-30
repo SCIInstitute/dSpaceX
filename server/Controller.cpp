@@ -62,7 +62,6 @@ void Controller::configureAvailableDatasets() {
   std::string aluminumConfigPath = "../../examples/supershapes/aluminum/config.yaml";
   std::string goldConfigPath = "../../examples/supershapes/gold/config.yaml";
 
-
   m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
   m_availableDatasets.push_back({"Crimes", crimesConfigPath});
   m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
