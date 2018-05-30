@@ -95,11 +95,34 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
 
   } else {
     // Parse all Qois from a file if not in list form.
-    // TODO: Implement
+    std::string format = qoisNode["format"].as<std::string>();
+    if (format != "csv") {
+      throw std::runtime_error(
+        "Dataset config specifies unsupported multi-qoi format: " + format);
+    }
+    if (!qoisNode["file"]) {
+      throw std::runtime_error("Qois missing 'file' field.");
+    }
+    std::string filename = qoisNode["file"].as<std::string>();
+    std::cout << "qois filename: " << filename << std::endl;
+    std::string path = basePathOf(filePath);
+
+    // TODO: Factor out some file format reading handler. 
+    //       Fileformat could be a key for map to loading function.  
+    std::cout << "Loading " << format << " from " << path + filename << std::endl;
+    auto columnNames = HDProcess::loadCSVColumnNames(path + filename);
+    
+    for (auto name : columnNames) {
+      std::cout << "Loading QOI: " << name << std::endl;
+      auto qoi = HDProcess::loadCSVColumn(path + filename, name);
+      qois.push_back(QoiNameValuePair(name, qoi));
+    }
   }
 
   return qois;
 }
+
+
 
 
 QoiNameValuePair DatasetLoader::parseQoi(
