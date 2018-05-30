@@ -184,6 +184,23 @@ class DatasetPanel extends React.Component {
                 justifyContent: 'space-between',
               }}>
                 <span style={{ color:textColor }}>
+                  {'# Parameters: '}
+                </span>
+                <span style={{ color:textColor }}>
+                  { this.state.dataset && this.state.dataset.parameterNames ?
+                    this.state.dataset.parameterNames.length :
+                    '--' }
+                </span>
+              </div>
+            </ListItem>
+            <Divider/>
+            <ListItem style={{ paddingLeft:'0px', paddingRight:'5px' }}>
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{ color:textColor }}>
                   {'# QoIs: '}
                 </span>
                 <span style={{ color:textColor }}>
