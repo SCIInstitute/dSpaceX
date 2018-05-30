@@ -130,7 +130,7 @@ class DatasetPanel extends React.Component {
     const { classes } = this.props;
     let enabled = this.props.enabled && this.props.datasets &&
         this.props.datasets.length > 0;
-    let textColor =
+    let textColor = enabled &&
         this.state.dataset ? enabledLabelColor : disabledLabelColor;
     let backgroundColor = enabled ? '#fff' : '#ddd';
     return (
