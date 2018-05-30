@@ -128,7 +128,8 @@ class DatasetPanel extends React.Component {
    */
   render() {
     const { classes } = this.props;
-    let enabled = this.props.datasets && this.props.datasets.length > 0;
+    let enabled = this.props.enabled && this.props.datasets &&
+        this.props.datasets.length > 0;
     let textColor =
         this.state.dataset ? enabledLabelColor : disabledLabelColor;
     let backgroundColor = enabled ? '#fff' : '#ddd';
@@ -212,7 +213,7 @@ class DatasetPanel extends React.Component {
             </ListItem>
           </List>
           <FormControl className={classes.formControl}
-            disabled={!this.state.dataset}>
+            disabled={!this.props.enabled || !this.state.dataset}>
             <InputLabel htmlFor='qoi-field'>QoI</InputLabel>
             <Select ref="qoiCombo" value={this.state.qoiName}
               onChange={this.handleQoiChange} inputProps={{

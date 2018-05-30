@@ -182,7 +182,7 @@ class DecompositionPanel extends React.Component {
     }
     return (
       // TODO: set disabled only when there's no case data.
-      <ExpansionPanel disabled={!this.props.dataset}
+      <ExpansionPanel disabled={!this.props.enabled || !this.props.dataset}
         style={{ paddingLeft:'0px', margin:'1px' }}>
         <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
           <Typography>Decomposition</Typography>
@@ -193,12 +193,13 @@ class DecompositionPanel extends React.Component {
           <div style={{ display: 'flex', flexDirection: 'column',
             width: '100%', boxSizing: 'border-box' }}>
             <FormControl className={classes.formControl}
+              disabled={!this.props.enabled}
               style={{ width: '100%',
                 boxSizing: 'border-box',
                 paddingRight: '10px' }}>
               <InputLabel htmlFor='mode-field'>Mode</InputLabel>
               <Select ref="decompositionCombo"
-                disabled={!this.props.dataset}
+                disabled={!this.props.enabled || !this.props.dataset}
                 value={this.state.decompositionMode}
                 style={{ width:'100%' }}
                 onChange={this.handleDecompositionModeChange}
@@ -233,6 +234,7 @@ class DecompositionPanel extends React.Component {
                     transition: 'opacity .2s', paddingLeft: '0px',
                     marginLeft: '0px' }} />,
                 <FormControl key="persistenceCombo"
+                  disabled={!this.props.enabled}
                   className={classes.formControl}
                   style={{
                     width: '100%',

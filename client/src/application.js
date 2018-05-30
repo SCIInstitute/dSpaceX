@@ -67,6 +67,7 @@ class Application extends React.Component {
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
     this.onConnect = this.onConnect.bind(this);
+    this.onDisconnect = this.onDisconnect.bind(this);
     this.onNetworkActivityStart = this.onNetworkActivityStart.bind(this);
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
@@ -75,6 +76,7 @@ class Application extends React.Component {
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
+    this.client.addEventListener('disconnected', this.onDisconnect);
     this.client.addEventListener('networkActive', this.onNetworkActivityStart);
     this.client.addEventListener('networkInactive', this.onNetworkActivityEnd);
     // export client for debugging
@@ -112,6 +114,15 @@ class Application extends React.Component {
         datasets: response.datasets,
       });
     }.bind(this));
+  }
+
+  /**
+   * Handles the application disconnecting from the remote server.
+   */
+  onDisconnect() {
+    this.setState({
+      connected: false,
+    });
   }
 
   /**
@@ -181,14 +192,20 @@ class Application extends React.Component {
           classes={{ paper:classes.drawerPaper }}>
           { /* Add div to account for menu bar */ }
           <div className={classes.toolbar} />
-          <DatasetPanel datasets={this.state.datasets}
+          <DatasetPanel
+            enabled={this.state.connected}
+            datasets={this.state.datasets}
             onDatasetChange={this.onDatasetChange}
             onQoiChange={this.onQoiChange}
             client={this.client}/>
-          <DecompositionPanel dataset={this.state.currentDataset}
+          <DecompositionPanel
+            enabled={this.state.connected}
+            dataset={this.state.currentDataset}
             onDecompositionChange={this.onDecompositionChange}
             client={this.client}/>
-          <DisplayPanel dataset={this.state.currentDataset}/>
+          <DisplayPanel
+            dataset={this.state.currentDataset}
+            enabled={this.state.connected} />
           <div style={{
             backgroundColor: drawerMarginColor,
             height: '100%',

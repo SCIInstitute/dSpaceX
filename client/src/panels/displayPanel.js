@@ -25,7 +25,8 @@ class DisplayPanel extends React.Component {
   render() {
     return (
       // TODO: set disabled only when there's no case data.
-      <ExpansionPanel style={{ margin:'1px' }} disabled={!this.props.dataset}>
+      <ExpansionPanel style={{ margin:'1px' }}
+        disabled={!this.props.enabled || !this.props.dataset}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>Display</Typography>
         </ExpansionPanelSummary>

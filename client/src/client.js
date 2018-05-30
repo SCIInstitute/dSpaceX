@@ -302,6 +302,7 @@ class Client {
    */
   _onSocketUtClose(event) {
     this._log(' Text WebSocket Disconnected!');
+    this._dispatch('disconnected');
     this._maybeUpdateState();
   }
 
