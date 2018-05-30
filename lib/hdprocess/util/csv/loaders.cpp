@@ -72,4 +72,19 @@ FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename, std::s
   return v;
 }
 
+// TODO: Trim Whitespace from scanned column names.
+std::vector<std::string> loadCSVColumnNames(std::string filename) {
+  io::LineReader in(filename.c_str());
+  char *line = in.next_line();
+    
+  std::stringstream ss(line);
+  std::string item;
+  std::vector<std::string> names;
+  while (std::getline(ss, item, ',')) {    
+    names.push_back(item);
+  }
+  return names;
+}
+
+
 } // namespace HDProcess
