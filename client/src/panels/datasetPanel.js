@@ -84,7 +84,7 @@ class DatasetPanel extends React.Component {
           id: datasetId,
           numberOfSamples: dataset.numberOfSamples,
           parameterNames: dataset.parameterNames,
-          qoiNames: dataset.qoiNames,          
+          qoiNames: dataset.qoiNames,
         },
       });
       this.props.onDatasetChange(dataset);
