@@ -69,6 +69,8 @@ class GraphWebGLWindow extends React.Component {
     this.edgeThickness = 0.0;
     this.edgeSmoothness = 0.0;
     this.edgeOpacity = 0.0;
+
+    this.nodeOutline = 0.025;
   }
 
   /**
@@ -158,8 +160,14 @@ class GraphWebGLWindow extends React.Component {
       }
       this.updateBuffers();
       break;
+    case '.':
+      this.nodeOutline = Math.max(0.00002, this.nodeOutline/1.1);
+      break;
+    case ';':
+      this.nodeOutline *= 1.1;
+      break;
     case 'm':
-      this.edgeThickness = Math.max(0.005, this.edgeThickness / 1.1);
+      this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
       consoleOutput = 'edgeThickness = ' + this.edgeThickness;
       break;
     case 'k':
@@ -167,7 +175,7 @@ class GraphWebGLWindow extends React.Component {
       consoleOutput = 'edgeThickness = ' + this.edgeThickness;
       break;
     case 'n':
-      this.edgeOpacity = Math.max(0.01, this.edgeOpacity / 1.1);
+      this.edgeOpacity = Math.max(0.0002, this.edgeOpacity / 1.1);
       consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
       break;
     case 'j':
@@ -699,6 +707,10 @@ class GraphWebGLWindow extends React.Component {
         3, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.nodeShaderProgram.vertexColorAttribute);
     }
+
+    let nodeOutlineLocation =
+        gl.getUniformLocation(this.nodeShaderProgram, 'nodeOutline');
+    gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.nodeShaderProgram, 'uProjectionMatrix');

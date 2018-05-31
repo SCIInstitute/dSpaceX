@@ -39,8 +39,8 @@ export class Quad {
    * @param {number} scaler
    */
   decreaseRadius(scaler) {
-    this.width = Math.max(0.001, this.width / scaler);
-    this.height = Math.max(0.001, this.height / scaler);
+    this.width = Math.max(0.002, this.width / scaler);
+    this.height = Math.max(0.002, this.height / scaler);
 
     this.updateVertices();
   }
