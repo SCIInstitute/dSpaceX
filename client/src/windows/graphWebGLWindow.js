@@ -139,10 +139,24 @@ class GraphWebGLWindow extends React.Component {
     let consoleOutput = '';
     switch (keyName) {
     case '/':
-      nodeRadius = Math.max(0.1, nodeRadius / 1.1);
+      for (let i = 0; i < this.nodes.length; i++) {
+        this.nodes[i].decreaseRadius(1.1);
+        let count = this.nodes[i].vertices.length;
+        for (let j = 0; j < count; j++) {
+          this.vertices[i*count+j] = this.nodes[i].vertices[j];
+        }
+      }
+      this.updateBuffers();
       break;
-    case '\'':
-      nodeRadius *= 1.1;
+    case '\\':
+      for (let i = 0; i < this.nodes.length; i++) {
+        this.nodes[i].increaseRadius(1.1);
+        let count = this.nodes[i].vertices.length;
+        for (let j = 0; j < count; j++) {
+          this.vertices[i*count+j] = this.nodes[i].vertices[j];
+        }
+      }
+      this.updateBuffers();
       break;
     case 'm':
       this.edgeThickness = Math.max(0.005, this.edgeThickness / 1.1);
