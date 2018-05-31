@@ -357,45 +357,52 @@ class GraphWebGLWindow extends React.Component {
    */
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
     quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
-    this.vertices = [];
     this.vertColors = [];
-    this.edgeVerts = [];
-    this.edges = [];
-    this.nodes = [];
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
-    let len = array2DVertsForNodes.length;
+    let arrSize = array2DVertsForNodes.length;
+    this.vertices = [arrSize * 18];
+    this.nodes = [arrSize];
     // create a quad for each position in array2DVertsForNodes
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < arrSize; i++) {
       let quad = new Quad(array2DVertsForNodes[i][0],
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
-      this.vertices = this.vertices.concat(quad.vertices);
-      this.nodes.push(quad);
+      let vertCount = quad.vertices.length;
+      for (let j = 0; j < vertCount; j++) {
+        this.vertices[i*vertCount+j] = quad.vertices[j];
+      }
+      this.nodes[i] = quad;
     }
 
-    len = arrayBeginEndIndicesForEdges.length;
-    let index1;
-    let index2;
-    let node1;
-    let node2;
-    // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let i = 0; i < len; i++) {
-      index1 = arrayBeginEndIndicesForEdges[i][0];
-      index2 = arrayBeginEndIndicesForEdges[i][1];
+    arrSize = arrayBeginEndIndicesForEdges.length;
+    this.edges = [arrSize];
+    this.edgeVerts = [arrSize * 18];
 
-      node1 = this.nodes[index1];
-      node2 = this.nodes[index2];
+    // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
+    for (let i = 0; i < arrSize; i++) {
+      let index1 = arrayBeginEndIndicesForEdges[i][0];
+      let index2 = arrayBeginEndIndicesForEdges[i][1];
+
+      let node1 = this.nodes[index1];
+      let node2 = this.nodes[index2];
 
       let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
         defaultEdgeThickness);
 
-      this.edges.push(edge);
+      this.edges[i] = edge;
       if (this.bDrawEdgesAsQuads) {
-        this.edgeVerts = this.edgeVerts.concat(edge.vertices);
+        for (let j = 0; j < 18; j++) {
+          this.edgeVerts[i*18+j] = edge.vertices[j];
+        }
       } else {
         // push back xy1, uv1, xy2, uv2
-        this.edgeVerts.push(edge.x1, edge.y1, 0.0, edge.x2, edge.y2, 1.0);
+        this.edgeVerts[i * 6] = edge.x1;
+        this.edgeVerts[i * 6 + 1] = edge.y1;
+        this.edgeVerts[i * 6 + 2] = 0.0;
+        this.edgeVerts[i * 6 + 3] = edge.x2;
+        this.edgeVerts[i * 6 + 4] = edge.y2;
+        this.edgeVerts[i * 6 + 5] = 1.0;
       }
     }
   }
