@@ -16,10 +16,43 @@ export class Quad {
     this.width = width;
     this.height = height;
 
-    let minX = -(width / 2.0) + centerX;
-    let maxX = minX + width;
-    let minY = -(height / 2.0) + centerY;
-    let maxY = minY + height;
+    this.updateVertices();
+  }
+
+  /**
+   * increase radius
+   * will increase the width and height by scaler value
+   * will update the vertice positions
+   * @param {number} scaler
+   */
+  increaseRadius(scaler) {
+    this.width *= scaler;
+    this.height *= scaler;
+
+    this.updateVertices();
+  }
+
+  /**
+   * decrease radius
+   * will decrease the width and height by scaler value
+   * will update the vertice positions
+   * @param {number} scaler
+   */
+  decreaseRadius(scaler) {
+    this.width = Math.max(0.001, this.width / scaler);
+    this.height = Math.max(0.001, this.height / scaler);
+
+    this.updateVertices();
+  }
+
+  /**
+   * update vertice values
+   */
+  updateVertices() {
+    let minX = -(this.width / 2.0) + this.X;
+    let maxX = minX + this.width;
+    let minY = -(this.height / 2.0) + this.Y;
+    let maxY = minY + this.height;
 
     // using vec3 as (x, y, UV)
     this.vertices = [
