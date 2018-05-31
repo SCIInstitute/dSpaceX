@@ -138,33 +138,11 @@ class GraphWebGLWindow extends React.Component {
     let keyName = evt.key;
     let consoleOutput = '';
     switch (keyName) {
-    // TODO: define remaining commented out key handles
-    //       to match desktop GUI input
-    case 'q':
-    case 'Q':
-      // exit(0);
-      break;
-    case 'd':
-      // m_useDebugLayout = !m_useDebugLayout;
-      // setCrystal(m_currentLevel, m_currentCrystal);
-      break;
     case '/':
-      // m_nodeRadius = std::max(0.1, m_nodeRadius / 1.1);
+      nodeRadius = Math.max(0.1, nodeRadius / 1.1);
       break;
     case '\'':
-      // m_nodeRadius *= 1.1;
-      break;
-    case '.':
-      // m_nodeOutline = std::max(0.001, m_nodeOutline / 1.1);
-      break;
-    case ';':
-      // m_nodeOutline *= 1.1;
-      break;
-    case ',':
-      // m_nodeSmoothness = std::max(0.01, m_nodeSmoothness / 1.1);
-      break;
-    case 'l':
-      // m_nodeSmoothness *= 1.1;
+      nodeRadius *= 1.1;
       break;
     case 'm':
       this.edgeThickness = Math.max(0.005, this.edgeThickness / 1.1);
@@ -181,16 +159,6 @@ class GraphWebGLWindow extends React.Component {
     case 'j':
       this.edgeOpacity *= 1.1;
       consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
-      break;
-    case 't':
-      // if (m_activeNodeShader == m_shaderProgram) {
-      //   m_activeNodeShader = m_thumbnailShaderProgram;
-      // } else {
-      //   m_activeNodeShader = m_shaderProgram;
-      // }
-      break;
-    case ' ': // spacebar
-      // resetView();
       break;
     }
     this.resizeCanvas();
