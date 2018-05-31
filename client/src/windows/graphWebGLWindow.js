@@ -71,6 +71,7 @@ class GraphWebGLWindow extends React.Component {
     this.edgeOpacity = 0.0;
 
     this.nodeOutline = 0.025;
+    this.nodeSmoothness = 0.05;
   }
 
   /**
@@ -165,6 +166,12 @@ class GraphWebGLWindow extends React.Component {
       break;
     case ';':
       this.nodeOutline *= 1.1;
+      break;
+    case ',':
+      this.nodeSmoothness = Math.max(0.0002, this.nodeSmoothness / 1.1);
+      break;
+    case 'l':
+      this.nodeSmoothness *= 1.1;
       break;
     case 'm':
       this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
@@ -711,6 +718,10 @@ class GraphWebGLWindow extends React.Component {
     let nodeOutlineLocation =
         gl.getUniformLocation(this.nodeShaderProgram, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
+
+    let nodeSmoothnessLocation =
+        gl.getUniformLocation(this.nodeShaderProgram, 'nodeSmoothness');
+    gl.uniform1f(nodeSmoothnessLocation, this.nodeSmoothness);
 
     let projectionMatrixLocation =
         gl.getUniformLocation(this.nodeShaderProgram, 'uProjectionMatrix');

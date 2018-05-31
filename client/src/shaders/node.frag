@@ -8,7 +8,7 @@ void main(void) {
   vec2 center = vec2(0.5);
   float radius = 0.425;
   float thickness = nodeOutline;
-  float blur = 0.05;
+  float blur = nodeSmoothness;
   float t = distance(uv, center) - radius;
   vec4 fillColor = vec4(1.0, 1.0, 1.0, 1.0);
   vec4 black = vec4(0.0, 0.0, 0.0, 1.0);
