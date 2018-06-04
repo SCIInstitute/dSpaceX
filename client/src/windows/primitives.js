@@ -84,21 +84,54 @@ export class Edge {
     this.y2 = y2;
 
     // Setup properties for drawing as quad
-    let width = lineWidth;
+    this.width = lineWidth;
     let vectorX = x2 - x1;
     let vectorY = y2 - y1;
     let lineVector = [vectorX, vectorY];
-    let offsetVector = [lineVector[1], -lineVector[0]];
+    this.offsetVector = [lineVector[1], -lineVector[0]];
 
     // Normalize the offset vector
-    let mag = Math.abs(Math.sqrt((offsetVector[0] * offsetVector[0])
-      + (offsetVector[1] * offsetVector[1])));
-    offsetVector = [offsetVector[0]/mag, offsetVector[1]/mag];
+    let mag = Math.abs(Math.sqrt((this.offsetVector[0] * this.offsetVector[0])
+      + (this.offsetVector[1] * this.offsetVector[1])));
+    this.offsetVector = [this.offsetVector[0]/mag, this.offsetVector[1]/mag];
 
-    let p1 = [x1 + offsetVector[0] * width, y1 + offsetVector[1] * width];
-    let p2 = [x1 - offsetVector[0] * width, y1 - offsetVector[1] * width];
-    let p3 = [x2 + offsetVector[0] * width, y2 + offsetVector[1] * width];
-    let p4 = [x2 - offsetVector[0] * width, y2 - offsetVector[1] * width];
+    this.updateVertices();
+  }
+
+  /**
+   * increase thickness
+   * will increase the width by scaler value
+   * will update the vertice positions
+   * @param {number} scaler
+   */
+  increaseThickness(scaler) {
+    this.width *= scaler;
+    this.updateVertices();
+  }
+
+  /**
+   * decrease thickness
+   * will decrease the width by scaler value
+   * will update the vertice positions
+   * @param {number} scaler
+   */
+  decreaseThickness(scaler) {
+    this.width = Math.max(0.0001, this.width / scaler);
+    this.updateVertices();
+  }
+
+  /**
+   * update vertice values
+   */
+  updateVertices() {
+    let p1 = [this.x1 + this.offsetVector[0] * this.width,
+      this.y1 + this.offsetVector[1] * this.width];
+    let p2 = [this.x1 - this.offsetVector[0] * this.width,
+      this.y1 - this.offsetVector[1] * this.width];
+    let p3 = [this.x2 + this.offsetVector[0] * this.width,
+      this.y2 + this.offsetVector[1] * this.width];
+    let p4 = [this.x2 - this.offsetVector[0] * this.width,
+      this.y2 - this.offsetVector[1] * this.width];
 
     // using vec3 as (x, y, UV)
     this.vertices = [
@@ -110,4 +143,3 @@ export class Edge {
       p4[0], p4[1], 3];
   }
 }
-

@@ -151,7 +151,7 @@ class GraphWebGLWindow extends React.Component {
       }
       this.updateBuffers();
       break;
-    case '\\':
+    case '\'':
       for (let i = 0; i < this.nodes.length; i++) {
         this.nodes[i].increaseRadius(1.1);
         let count = this.nodes[i].vertices.length;
@@ -174,10 +174,26 @@ class GraphWebGLWindow extends React.Component {
       this.nodeSmoothness *= 1.1;
       break;
     case 'm':
+      for (let i = 0; i < this.edges.length; i++) {
+        this.edges[i].decreaseThickness(1.1);
+        let count = this.edges[i].vertices.length;
+        for (let j = 0; j < count; j++) {
+          this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+        }
+      }
+      this.updateBuffers();
       this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
       consoleOutput = 'edgeThickness = ' + this.edgeThickness;
       break;
     case 'k':
+      for (let i = 0; i < this.edges.length; i++) {
+        this.edges[i].increaseThickness(1.1);
+        let count = this.edges[i].vertices.length;
+        for (let j = 0; j < count; j++) {
+          this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+        }
+      }
+      this.updateBuffers();
       this.edgeThickness *= 1.1;
       consoleOutput = 'edgeThickness = ' + this.edgeThickness;
       break;
