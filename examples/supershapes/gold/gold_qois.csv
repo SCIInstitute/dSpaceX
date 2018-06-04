@@ -1,4 +1,4 @@
-qoi1,qoi2,qoi3,qoi4,qoi5
+max_field,avg_field,scattering,extinction,absorption
 10.893,2.7951,2.0932e-16,6.1773e-16,4.0841e-16
 8.3822,2.0465,4.744e-17,1.632e-16,1.1576e-16
 4.0917,1.9225,6.3038e-17,1.4403e-16,8.0987e-17
