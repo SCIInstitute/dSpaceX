@@ -108,12 +108,8 @@ class Dataset {
     Dataset* build() {
       // TODO:  Add validation that sample counts match array sizes.
       //        Throw an exception if something doesn't match. 
-      if (m_dataset->m_hasSamplesMatrix) {
-        m_dataset->m_sampleCount = m_dataset->m_samplesMatrix.N();
-      } else if (m_dataset->m_hasDistanceMatrix) {
-        m_dataset->m_sampleCount = m_dataset->m_distanceMatrix.N();
-      }
-
+      // m_dataset->m_hasSamplesMatrix ==> m_dataset->m_samplesMatrix.N()
+      // _dataset->m_hasDistanceMatrix ==> m_dataset->m_distanceMatrix.N();
       return m_dataset;
     }
    private:
