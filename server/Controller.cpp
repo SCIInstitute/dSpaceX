@@ -58,6 +58,7 @@ void Controller::configureAvailableDatasets() {
   std::string crimesConfigPath = "../../examples/crimes/config.yaml";
   std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
   std::string coloradoConfigPath = "../../examples/truss/config.yaml";
+  std::string heatExchangerConfigPath = "../../examples/heat-exchanger/config.yaml";
   std::string silverConfigPath = "../../examples/supershapes/silver/config.yaml";
   std::string aluminumConfigPath = "../../examples/supershapes/aluminum/config.yaml";
   std::string goldConfigPath = "../../examples/supershapes/gold/config.yaml";
@@ -66,6 +67,7 @@ void Controller::configureAvailableDatasets() {
   m_availableDatasets.push_back({"Crimes", crimesConfigPath});
   m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
   m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
+  m_availableDatasets.push_back({"Heat Exchanger", heatExchangerConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Silver", silverConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Aluminum", aluminumConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Gold", goldConfigPath});
