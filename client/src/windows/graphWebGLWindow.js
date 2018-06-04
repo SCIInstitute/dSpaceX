@@ -376,11 +376,11 @@ class GraphWebGLWindow extends React.Component {
     this.vertColors = [];
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
-    let arrSize = array2DVertsForNodes.length;
-    this.vertices = [arrSize * 18];
-    this.nodes = [arrSize];
+    let arrLength = array2DVertsForNodes.length;
+    this.nodes = new Array(arrLength);
+    this.vertices = new Array(this.nodes.length * 18);
     // create a quad for each position in array2DVertsForNodes
-    for (let i = 0; i < arrSize; i++) {
+    for (let i = 0; i < arrLength; i++) {
       let quad = new Quad(array2DVertsForNodes[i][0],
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
@@ -391,12 +391,11 @@ class GraphWebGLWindow extends React.Component {
       this.nodes[i] = quad;
     }
 
-    arrSize = arrayBeginEndIndicesForEdges.length;
-    this.edges = [arrSize];
-    this.edgeVerts = [arrSize * 18];
-
+    arrLength = arrayBeginEndIndicesForEdges.length;
+    this.edges = new Array(arrLength);
+    this.edgeVerts = new Array(this.edges.length * 18);
     // create an Edge for each indicated edge in arrayBeginEndIndicesForEdges
-    for (let i = 0; i < arrSize; i++) {
+    for (let i = 0; i < arrLength; i++) {
       let index1 = arrayBeginEndIndicesForEdges[i][0];
       let index2 = arrayBeginEndIndicesForEdges[i][1];
 
