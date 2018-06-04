@@ -6,7 +6,7 @@ property double x
 property double y
 property double z
 element face 19612
-property list ushort uint vertex_indices
+property list uchar uint vertex_indices
 end_header
 0.957675 4.3 0.441767 
 0.957627 4.03125 0.441596 
