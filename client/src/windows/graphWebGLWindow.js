@@ -6,7 +6,7 @@ import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
 import React from 'react';
 import { mat4 } from 'gl-matrix';
-import { webGLErrorCheck } from './windowUtils';
+import { webGLErrorCheck } from './glUtils';
 
 const zoomRate = 1.2;
 const maxScale = 10;
