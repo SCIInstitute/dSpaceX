@@ -145,7 +145,8 @@ std::string DisplayGraph::title(){
 
 
 /**
- *
+ *    std::string imagesPathPrefix = "/home/sci/bronson/collab/shireen/new/xs/";
+
  */
 void DisplayGraph::printHelp() {
   std::cout << "TODO: Print controls here..." << std::endl;
@@ -175,7 +176,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
   //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-  HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne-layout.csv");
+  HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
   
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;
@@ -445,7 +446,7 @@ void DisplayGraph::initTextures() {
 
   for (int i = 0; i < thumbnailCount; i++) {
     // std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
-    std::string imagesPathPrefix = "/home/sci/bronson/collab/shireen/new/xs/";
+    std::string imagesPathPrefix = "../../examples/truss/images/";
     std::string pngSuffix = ".png";
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;

@@ -120,14 +120,14 @@ int main(int argc, char **argv) {
   FortranLinalg::DenseMatrix<Precision> md = 
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist3.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist-f.csv");
-      HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/xs_distance_matrix.txt");
+      HDProcess::loadCSVMatrix("../../examples/truss/distances.csv");
   
   std::cout << "Truss data contains " << md.N() << " samples." << std::endl;
 
   FortranLinalg::DenseVector<Precision> mv = 
   //    HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/results.csv", "max stress");  
   //    HDProcess::loadCSVColumn("/home/sci/bronson/collab/mukund/max-stress.csv");
-        HDProcess::loadCSVColumn("/home/sci/bronson/collab/shireen/new/max_stress.txt");
+        HDProcess::loadCSVColumn("../../examples/truss/max_stress.csv");
 
 
 
