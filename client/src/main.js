@@ -2,8 +2,12 @@ import Application from './application';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-
-ReactDOM.render(
-  <Application/>,
-  document.getElementById('root')
-);
+/**
+ * Main application entry point.
+ */
+(function main() {
+  ReactDOM.render(
+    <Application/>,
+    document.getElementById('root')
+  );
+})();
