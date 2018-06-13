@@ -39,6 +39,9 @@ class DisplayGraph : public Display{
 
     // Image atlas helper functions
     void createGLTexture(const GLuint textureID, const int maxTextureSize, const GLubyte *atlas);
+    void buildTextureAtlas(GLubyte *textureAtlas, const std::string imageDir,
+      const int thumbnailCount = 1000, const int thumbnailWidth = 80, const int thumbnailHeight = 40,
+      const int maxTextureSize = 2048);
 
     int m_currentLevel = -1;
     int m_currentCrystal = -1;

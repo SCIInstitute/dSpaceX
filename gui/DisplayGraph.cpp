@@ -444,9 +444,35 @@ void DisplayGraph::initTextures() {
   }
   glGenTextures(atlasCount, imageTextureID);  
 
+  buildTextureAtlas(textureAtlas, "../../examples/truss/images/");
+  createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);
+}
+
+void DisplayGraph::createGLTexture(const GLuint textureID, const int maxTextureSize, const GLubyte *atlas) {
+  glBindTexture(GL_TEXTURE_2D, textureID);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, true /*hasAlpha*/ ? 4 : 3, maxTextureSize,
+               maxTextureSize, 0, true /*hasAlpha*/ ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+               atlas);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string imageDir,
+  const int thumbnailCount, const int thumbnailWidth, const int thumbnailHeight,
+  const int maxTextureSize) {
+  if(textureAtlas == nullptr)
+    return;
+
+  int thumbnailsPerTextureRow = maxTextureSize / thumbnailWidth;
+  int thumbnailsPerTextureCol = maxTextureSize / thumbnailHeight;
+  int thumbnailsPerTexture = thumbnailsPerTextureRow * thumbnailsPerTextureCol;
+
   for (int i = 0; i < thumbnailCount; i++) {
-    // std::string imagesPathPrefix = "/home/sci/bronson/collab/mukund/images/";
-    std::string imagesPathPrefix = "../../examples/truss/images/";
+    std::string imagesPathPrefix = imageDir;
     std::string pngSuffix = ".png";
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
@@ -458,40 +484,22 @@ void DisplayGraph::initTextures() {
     if (success) {    
       std::cout << "Image loaded " << width << "x" << height << " alpha=" << hasAlpha << std::endl;
     }
-    // hasAlpha = true;
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;
     int atlasOffsetX = i % thumbnailsPerTextureRow;
-    int y = (atlasOffsetY * THUMBNAIL_HEIGHT);
-    int x = (atlasOffsetX * THUMBNAIL_WIDTH);
+    int y = (atlasOffsetY * thumbnailHeight);
+    int x = (atlasOffsetX * thumbnailWidth);
     for (int h=0; h < height; h++) {
       for (int w=0; w < width; w++) {        
-        int index = ((y+h)*MAX_TEXTURE_SIZE) + x + w;
+        int index = ((y+h)*maxTextureSize) + x + w;
         textureAtlas[4*index+0] = textureImage[4*(width*h + w) + 0];
         textureAtlas[4*index+1] = textureImage[4*(width*h + w) + 1];
         textureAtlas[4*index+2] = textureImage[4*(width*h + w) + 2];
-        // textureAtlas[4*index+3] = 255;// textureImage[4*(width*h + w) + 3];
       }
     }
   }
-  createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);
 }
-
-
-void DisplayGraph::createGLTexture(const GLuint textureID, const int maxTextureSize, const GLubyte *atlas) {
-  glBindTexture(GL_TEXTURE_2D, textureID);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, true /*hasAlpha*/ ? 4 : 3, maxTextureSize,
-               maxTextureSize, 0, true /*hasAlpha*/ ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-               atlas);    
-  glBindTexture(GL_TEXTURE_2D, 0);
-}
-
 
 void DisplayGraph::compileShaders() {
   compileNodeShaders();
