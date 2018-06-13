@@ -37,6 +37,9 @@ class DisplayGraph : public Display{
     void initTextures();
     void resetView();
 
+    // Image atlas helper functions
+    void createGLTexture(const GLuint textureID, const int maxTextureSize, const GLubyte *atlas);
+
     int m_currentLevel = -1;
     int m_currentCrystal = -1;
 

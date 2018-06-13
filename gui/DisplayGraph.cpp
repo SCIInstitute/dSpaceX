@@ -474,30 +474,21 @@ void DisplayGraph::initTextures() {
         // textureAtlas[4*index+3] = 255;// textureImage[4*(width*h + w) + 3];
       }
     }
-
-
-    // Load Thumbnail into a Texture
-    // glBindTexture(GL_TEXTURE_2D, imageTextureID[i]);
-    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexImage2D(GL_TEXTURE_2D, 0, hasAlpha ? 4 : 3, width,
-    //              height, 0, hasAlpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-    //              textureImage);    
-    // glBindTexture(GL_TEXTURE_2D, 0);
   }
+  createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);
+}
 
-  glBindTexture(GL_TEXTURE_2D, imageTextureID[0]);
+
+void DisplayGraph::createGLTexture(const GLuint textureID, const int maxTextureSize, const GLubyte *atlas) {
+  glBindTexture(GL_TEXTURE_2D, textureID);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, true /*hasAlpha*/ ? 4 : 3, MAX_TEXTURE_SIZE,
-               MAX_TEXTURE_SIZE, 0, true /*hasAlpha*/ ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
-               textureAtlas);    
+  glTexImage2D(GL_TEXTURE_2D, 0, true /*hasAlpha*/ ? 4 : 3, maxTextureSize,
+               maxTextureSize, 0, true /*hasAlpha*/ ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE,
+               atlas);    
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
