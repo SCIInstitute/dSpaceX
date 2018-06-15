@@ -44,7 +44,7 @@ SET_TARGET_PROPERTIES(HDViz PROPERTIES COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_
 
 
 
-ADD_EXECUTABLE(HDViz2 HDViz2.cpp DisplayTubes.cpp DisplayGraph.cpp)
+ADD_EXECUTABLE(HDViz2 HDViz2.cpp DisplayTubes.cpp DisplayGraph.cpp ImageLoader.cpp)
 TARGET_LINK_LIBRARIES (HDViz2 
     gle 
     hdprocess
