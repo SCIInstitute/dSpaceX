@@ -9,7 +9,8 @@ INCLUDE_DIRECTORIES(lib)
 
 
 SET(IMAGE_UTILS_HEADER_FILES
-  ImageLoader.h)
+  ImageLoader.h
+  Image.h)
 
 SET(IMAGE_UTILS_SOURCE_FILES
   ImageLoader.cpp)

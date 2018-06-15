@@ -3,12 +3,7 @@
 #include <png.h>
 #include <string>
 
-class Image {
-public:
-	int width;
-	int height;
-	unsigned char* imageData;
-};
+#include "Image.h"
 
 class ImageLoader {
 public:
