@@ -6,6 +6,12 @@
 #include <string>
 #include <cstdlib>
 
+Image ImageLoader::loadImage(const std::string filename) {
+  Image img;
+  loadPNG(filename, &img.width, &img.height, &img.imageData);
+  return img;
+}
+
 bool ImageLoader::loadPNG(std::string filename, int *width, int *height, png_byte **imageData) {
   int x, y;
   

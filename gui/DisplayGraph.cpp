@@ -370,25 +370,20 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
 
-    unsigned char *textureImage;
-    ImageLoader imgLdr;
-    int width, height;
-    bool success = imgLdr.loadPNG(filename, &width, &height, &textureImage);
-    if (success) {    
-      std::cout << "Image loaded " << width << "x" << height << std::endl;
-    }
+    ImageLoader imgLdr;    
+    Image image = imgLdr.loadImage(filename);
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;
     int atlasOffsetX = i % thumbnailsPerTextureRow;
     int y = (atlasOffsetY * thumbnailHeight);
     int x = (atlasOffsetX * thumbnailWidth);
-    for (int h=0; h < height; h++) {
-      for (int w=0; w < width; w++) {        
+    for (int h=0; h < image.height; h++) {
+      for (int w=0; w < image.width; w++) {        
         int index = ((y+h)*maxTextureSize) + x + w;
-        textureAtlas[4*index+0] = textureImage[4*(width*h + w) + 0];
-        textureAtlas[4*index+1] = textureImage[4*(width*h + w) + 1];
-        textureAtlas[4*index+2] = textureImage[4*(width*h + w) + 2];
+        textureAtlas[4*index+0] = image.imageData[4*(image.width*h + w) + 0];
+        textureAtlas[4*index+1] = image.imageData[4*(image.width*h + w) + 1];
+        textureAtlas[4*index+2] = image.imageData[4*(image.width*h + w) + 2];
       }
     }
   }
