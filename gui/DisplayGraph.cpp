@@ -5,7 +5,7 @@
 #include "hdprocess/util/csv/loaders.h"
 #include "metrics/EuclideanMetric.h"
 #include "precision/Precision.h"
-#include "ImageLoader.h"
+#include "imageutils/ImageLoader.h"
 #include <png.h>
 
 #include <iostream>
