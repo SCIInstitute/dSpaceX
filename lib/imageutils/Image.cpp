@@ -6,7 +6,7 @@ Image::Image(int width, int height, unsigned char *data)
 }
 
 unsigned char* Image::getData() {
-	return m_data;
+  return m_data;
 }
 
 int Image::getWidth() {
