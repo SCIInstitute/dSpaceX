@@ -5,6 +5,7 @@
 #include "flinalg/DenseMatrix.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
+#include "imageutils/ImageLoader.h"
 #include "HDVizState.h"
 
 #include <cstdlib>
@@ -30,6 +31,7 @@ class DisplayGraph : public Display{
     HDVizData *data;
     HDVizState *state;
     TopologyData *topoData;
+		ImageLoader m_imageLoader;
 
     void compileShaders();
     void compileNodeShaders();

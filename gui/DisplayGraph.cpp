@@ -5,7 +5,6 @@
 #include "hdprocess/util/csv/loaders.h"
 #include "metrics/EuclideanMetric.h"
 #include "precision/Precision.h"
-#include "imageutils/ImageLoader.h"
 #include <png.h>
 
 #include <iostream>
@@ -370,8 +369,7 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
 
-    ImageLoader imgLdr;    
-    Image image = imgLdr.loadImage(filename);
+    Image image = m_imageLoader.loadImage(filename);
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;
