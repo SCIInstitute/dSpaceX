@@ -369,7 +369,7 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
 
-    Image image = m_imageLoader.loadImage(filename);
+    Image image = m_imageLoader.loadImage(filename, ImageLoader::Format::PNG);
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;

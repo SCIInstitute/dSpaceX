@@ -1,13 +1,11 @@
 #pragma once
 
-#include <png.h>
-#include <string>
-
 #include "Image.h"
+#include <string>
 
 class ImageLoader {
 public:
-	Image loadImage(const std::string filename);
-private:
-	bool loadPNG(std::string filename, int *width, int *height, png_byte **imageData);
+  enum class Format { PNG };
+	Image loadImage(const std::string filename, ImageLoader::Format format);
+	Image loadPNG(std::string filename);
 };
