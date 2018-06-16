@@ -3,6 +3,7 @@
 #include "Dataset.h"
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
+#include "imageutils/Image.h"
 #include "precision/Precision.h"
 #include "yaml-cpp/yaml.h"
 
@@ -47,5 +48,8 @@ private:
   
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);
+
+  static std::vector<Image> parseThumbnails(
+          const YAML::Node &config, const std::string &filePath);
 };
 

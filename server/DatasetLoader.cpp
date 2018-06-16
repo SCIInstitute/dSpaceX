@@ -388,3 +388,36 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 		  	"No loader configured to read " + format + " qoi file.");
 	}
 }
+
+std::vector<Image> DatasetLoader::parseThumbnails(const YAML::Node &config,
+                                                const std::string &filePath) {
+  if(!config["thumbnails"]) {
+    throw std::runtime_error("Dataset config missing 'thumbnails' field.");
+  }
+  const YAML::Node &thumbnailsNode = config["thumbnails"];
+
+  if(!thumbnailsNode["format"]) {
+    throw std::runtime_error("Dataset config missing 'thumbnails.format' field.");
+  }
+  std::string format = thumbnailsNode["format"].as<std::string>();
+  if (format != "png") {
+    ("Dataset config specifies unsupported thumbnails format: " + format);
+  }
+
+  if(!thumbnailsNode["files"]) {
+    throw std::runtime_error("Dataset config missing 'thumbnails.files' field.");
+  }
+  std::string imageDir = thumbnailsNode["files"].as<std::string>();
+
+  if(!thumbnailsNode["padZeroes"]) {
+    throw std::runtime_error("Dataset config missing 'thumbnails.padZeroes' field.");
+  }
+  std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
+  bool bPadZeroes = ((padZeroes == "true") ? true : false);
+
+  // TODO: Load in thumbnail images using ImageLoader
+
+
+  return std::vector<Image>();
+}
+
