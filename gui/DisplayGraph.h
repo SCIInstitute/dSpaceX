@@ -31,7 +31,7 @@ class DisplayGraph : public Display{
     HDVizData *data;
     HDVizState *state;
     TopologyData *topoData;
-		ImageLoader m_imageLoader;
+    ImageLoader m_imageLoader;
 
     void compileShaders();
     void compileNodeShaders();
