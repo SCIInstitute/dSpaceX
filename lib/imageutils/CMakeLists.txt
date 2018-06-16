@@ -13,6 +13,7 @@ SET(IMAGE_UTILS_HEADER_FILES
   Image.h)
 
 SET(IMAGE_UTILS_SOURCE_FILES
-  ImageLoader.cpp)
+  ImageLoader.cpp
+  Image.cpp)
 
 ADD_LIBRARY(imageutils ${IMAGE_UTILS_HEADER_FILES} ${IMAGE_UTILS_SOURCE_FILES})

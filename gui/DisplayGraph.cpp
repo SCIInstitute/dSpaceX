@@ -376,12 +376,13 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     int atlasOffsetX = i % thumbnailsPerTextureRow;
     int y = (atlasOffsetY * thumbnailHeight);
     int x = (atlasOffsetX * thumbnailWidth);
-    for (int h=0; h < image.height; h++) {
-      for (int w=0; w < image.width; w++) {        
+    for (int h=0; h < image.getHeight(); h++) {
+      for (int w=0; w < image.getWidth(); w++) {        
         int index = ((y+h)*maxTextureSize) + x + w;
-        textureAtlas[4*index+0] = image.imageData[4*(image.width*h + w) + 0];
-        textureAtlas[4*index+1] = image.imageData[4*(image.width*h + w) + 1];
-        textureAtlas[4*index+2] = image.imageData[4*(image.width*h + w) + 2];
+        // TODO: Move pixel lookup logic into Image class method.
+        textureAtlas[4*index+0] = image.getData()[4*(image.getWidth()*h + w) + 0];
+        textureAtlas[4*index+1] = image.getData()[4*(image.getWidth()*h + w) + 1];
+        textureAtlas[4*index+2] = image.getData()[4*(image.getWidth()*h + w) + 2];
       }
     }
   }

@@ -6,10 +6,13 @@
 #include <string>
 #include <cstdlib>
 
+// TODO: Add support for JPG images.
 Image ImageLoader::loadImage(const std::string filename) {
-  Image img;
-  loadPNG(filename, &img.width, &img.height, &img.imageData);
-  return img;
+  int width, height;
+  unsigned char* data;
+  loadPNG(filename, &width, &height, &data);
+  Image image(width, height, data);
+  return image;
 }
 
 bool ImageLoader::loadPNG(std::string filename, int *width, int *height, png_byte **imageData) {
