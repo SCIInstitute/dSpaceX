@@ -13,7 +13,7 @@ Image ImageLoader::loadImage(const std::string filename, ImageLoader::Format for
   switch(format) {
     case ImageLoader::Format::PNG:
       return loadPNG(filename);
-   	default:
+    default:
       throw std::runtime_error("Unsupported file format");
   }
 }
