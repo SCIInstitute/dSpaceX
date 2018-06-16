@@ -1,7 +1,7 @@
 #include "Image.h"
 
 Image::Image(int width, int height, unsigned char *data)
-	: m_width(width), m_height(height), m_data(data) {
+    : m_width(width), m_height(height), m_data(data) {
   // intentionally left empty
 }
 
