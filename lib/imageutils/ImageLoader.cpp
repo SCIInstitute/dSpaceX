@@ -9,7 +9,7 @@
 #include <stdexcept>
 
 // TODO: Add support for JPG images.
-Image ImageLoader::loadImage(const std::string filename, ImageLoader::Format format) {
+Image ImageLoader::loadImage(const std::string &filename, ImageLoader::Format format) {
   switch(format) {
     case ImageLoader::Format::PNG:
       return loadPNG(filename);
@@ -18,7 +18,7 @@ Image ImageLoader::loadImage(const std::string filename, ImageLoader::Format for
   }
 }
 
-Image ImageLoader::loadPNG(std::string filename) {
+Image ImageLoader::loadPNG(const std::string &filename) {
   int x, y;
   
   png_structp png_ptr;

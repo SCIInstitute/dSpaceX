@@ -6,6 +6,6 @@
 class ImageLoader {
 public:
   enum class Format { PNG };
-  Image loadImage(const std::string filename, ImageLoader::Format format);
-  Image loadPNG(std::string filename);
+  Image loadImage(const std::string &filename, ImageLoader::Format format);
+  Image loadPNG(const std::string &filename);
 };
