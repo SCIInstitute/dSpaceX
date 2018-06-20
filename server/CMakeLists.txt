@@ -28,8 +28,10 @@ ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INC
 TARGET_LINK_LIBRARIES (dSpaceX 
   libwsserver 
   hdprocess   
-  blas 
-  lapack 
+  blas
+  lapack
+  lapack
+  imageutils
   pthread 
   dl 
   ${ZLIB_LIBRARIES} 

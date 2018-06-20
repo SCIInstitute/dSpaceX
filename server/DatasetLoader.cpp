@@ -1,9 +1,10 @@
 #include "DatasetLoader.h"
 #include "hdprocess/util/csv/loaders.h"
+#include "imageutils/ImageLoader.h"
 #include "yaml-cpp/yaml.h"
 
 #include <memory>
-
+#include <vector>
 
 std::string basePathOf(const std::string &filePath) {
   size_t found = filePath.find_last_of("/\\");
@@ -389,8 +390,8 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::vector<Image> DatasetLoader::parseThumbnails(const YAML::Node &config,
-                                                const std::string &filePath) {
+std::vector<Image*> DatasetLoader::parseThumbnails(const YAML::Node &config,
+                                                   const std::string &filePath) {
   if(!config["thumbnails"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails' field.");
   }
@@ -407,17 +408,31 @@ std::vector<Image> DatasetLoader::parseThumbnails(const YAML::Node &config,
   if(!thumbnailsNode["files"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails.files' field.");
   }
-  std::string imageDir = thumbnailsNode["files"].as<std::string>();
+  std::string imagePath = thumbnailsNode["files"].as<std::string>();
+  int imageNameLoc = imagePath.find('?');  
+  std::string imageDir = imagePath.substr(0,imageNameLoc);
+  std::string imageSuffix = imagePath.substr(imageNameLoc +1);
 
   if(!thumbnailsNode["padZeroes"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails.padZeroes' field.");
   }
   std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
-  bool bPadZeroes = ((padZeroes == "true") ? true : false);
+  bool bPadZeroes = (padZeroes == "true");
 
   // TODO: Load in thumbnail images using ImageLoader
+  ImageLoader imgLdr;
+  int thumbnailCount = parseSampleCount(config);
+  std::vector<Image*> thumbnailImages;
 
+  for (int i = 0; i < thumbnailCount; i++) {
+    imagePath = imageDir + std::to_string(i+1) + imageSuffix;
+    std::cout << "Loading image: " << imagePath << std::endl;
 
-  return std::vector<Image>();
+    Image* image = new Image(imgLdr.loadImage(
+            imagePath, ImageLoader::Format::PNG));
+    thumbnailImages.push_back(image);
+  }
+
+  return thumbnailImages;
 }
 
