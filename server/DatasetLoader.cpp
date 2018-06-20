@@ -390,49 +390,50 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::vector<Image*> DatasetLoader::parseThumbnails(
+std::vector<Image> DatasetLoader::parseThumbnails(
     const YAML::Node &config, const std::string &filePath) {
-  if(!config["thumbnails"]) {
+  if (!config["thumbnails"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails' field.");
   }
   const YAML::Node &thumbnailsNode = config["thumbnails"];
 
-  if(!thumbnailsNode["format"]) {
+  if (!thumbnailsNode["format"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails.format' field.");
   }
   std::string format = thumbnailsNode["format"].as<std::string>();
   if (format != "png") {
-    ("Dataset config specifies unsupported thumbnails format: " + format);
+    throw std::runtime_error("Dataset config specifies unsupported thumbnails format: " + format);
   }
 
-  if(!thumbnailsNode["files"]) {
+  if (!thumbnailsNode["files"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails.files' field.");
   }
   std::string imagePath = thumbnailsNode["files"].as<std::string>();
   int imageNameLoc = imagePath.find('?');  
-  std::string imageDir = imagePath.substr(0,imageNameLoc);
+  std::string imageBasePath = imagePath.substr(0,imageNameLoc);
   std::string imageSuffix = imagePath.substr(imageNameLoc +1);
 
-  if(!thumbnailsNode["padZeroes"]) {
-    throw std::runtime_error("Dataset config missing 'thumbnails.padZeroes' field.");
-  }
-  std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
-  bool bPadZeroes = (padZeroes == "true");
-
-  // TODO: Load in thumbnail images using ImageLoader
-  ImageLoader imgLdr;
+  bool shouldPadZeroes = false;
+  if (thumbnailsNode["padZeroes"]) {
+    std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
+    if (padZeroes == "true") {
+      shouldPadZeroes = true;
+    } else if (padZeroes != "false") {
+      throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
+    }
+  }  
+  
+  ImageLoader imageLoader;
   int thumbnailCount = parseSampleCount(config);
-  std::vector<Image*> thumbnailImages;
-
+  std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
-    imagePath = imageDir + std::to_string(i+1) + imageSuffix;
+    std::string path = imageBasePath + std::to_string(i+1) + imageSuffix;
     std::cout << "Loading image: " << imagePath << std::endl;
 
-    Image* image = new Image(imgLdr.loadImage(
-            imagePath, ImageLoader::Format::PNG));
-    thumbnailImages.push_back(image);
+    Image image = imageLoader.loadImage(imagePath, ImageLoader::Format::PNG);
+    thumbnails.push_back(image);
   }
 
-  return thumbnailImages;
+  return thumbnails;
 }
 

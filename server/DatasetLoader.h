@@ -49,7 +49,7 @@ private:
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);
 
-  static std::vector<Image*> parseThumbnails(
+  static std::vector<Image> parseThumbnails(
       const YAML::Node &config, const std::string &filePath);
 };
 
