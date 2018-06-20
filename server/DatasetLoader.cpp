@@ -428,9 +428,9 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
     std::string path = imageBasePath + std::to_string(i+1) + imageSuffix;
-    std::cout << "Loading image: " << imagePath << std::endl;
+    std::cout << "Loading image: " << path << std::endl;
 
-    Image image = imageLoader.loadImage(imagePath, ImageLoader::Format::PNG);
+    Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
     thumbnails.push_back(image);
   }
 
