@@ -390,8 +390,8 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::vector<Image*> DatasetLoader::parseThumbnails(const YAML::Node &config,
-                                                   const std::string &filePath) {
+std::vector<Image*> DatasetLoader::parseThumbnails(
+    const YAML::Node &config, const std::string &filePath) {
   if(!config["thumbnails"]) {
     throw std::runtime_error("Dataset config missing 'thumbnails' field.");
   }
