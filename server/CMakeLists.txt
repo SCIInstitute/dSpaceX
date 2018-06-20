@@ -30,7 +30,6 @@ TARGET_LINK_LIBRARIES (dSpaceX
   hdprocess   
   blas
   lapack
-  lapack
   imageutils
   pthread 
   dl 
