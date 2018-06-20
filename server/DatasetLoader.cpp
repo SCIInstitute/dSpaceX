@@ -410,8 +410,8 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   }
   std::string imagePath = thumbnailsNode["files"].as<std::string>();
   int imageNameLoc = imagePath.find('?');  
-  std::string imageBasePath = imagePath.substr(0,imageNameLoc);
-  std::string imageSuffix = imagePath.substr(imageNameLoc +1);
+  std::string imageBasePath = imagePath.substr(0, imageNameLoc);
+  std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
   bool shouldPadZeroes = false;
   if (thumbnailsNode["padZeroes"]) {
