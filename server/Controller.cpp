@@ -47,7 +47,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});  
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2, _3)});
 }
 
 
