@@ -484,6 +484,8 @@ class GraphWebGLWindow extends React.Component {
 
     this.thumbnailShaderProgram = this.createShaderProgram(gl,
       ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
+
+    this.activeNodeShader = this.nodeShaderProgram;
   }
 
 
