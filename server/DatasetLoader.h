@@ -51,5 +51,9 @@ private:
 
   static std::vector<Image> parseThumbnails(
       const YAML::Node &config, const std::string &filePath);
+
+  static std::string thumbnailPath(const std::string imageBasePath, const int index, 
+    const std::string imageSuffix, const unsigned int indexOffset,
+    const bool padZeroes, const unsigned int thumbnailCount);
 };
 

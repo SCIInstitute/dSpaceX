@@ -390,6 +390,28 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
+std::string DatasetLoader::thumbnailPath(const std::string imageBasePath, const int index, 
+  const std::string imageSuffix, const unsigned int indexOffset,
+  const bool padZeroes, const unsigned int thumbnailCount) {
+  std::string imageName = std::to_string(index);
+
+  if(padZeroes) {
+    unsigned int digitCount = 0;
+    unsigned int digitCounter = thumbnailCount;
+    while(digitCounter) {
+      digitCounter /= 10;
+      digitCount++;
+    }
+
+    for (int i = 0; i < (digitCount + indexOffset) - imageName.size(); i++) {
+      imageName.insert(0, "0");
+    }
+  }
+
+  std::string path = imageBasePath + imageName + imageSuffix;
+  return path;
+}
+
 std::vector<Image> DatasetLoader::parseThumbnails(
     const YAML::Node &config, const std::string &filePath) {
   if (!config["thumbnails"]) {
@@ -421,15 +443,18 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     } else if (padZeroes != "false") {
       throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
     }
-  }  
+  }
+
+  //TODO: add indexOffset to the yaml config and parse/apply
+  unsigned int indexOffset = 0;
   
   ImageLoader imageLoader;
-  int thumbnailCount = parseSampleCount(config);
+  unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
-    std::string path = imageBasePath + std::to_string(i+1) + imageSuffix;
+    std::string path = thumbnailPath(imageBasePath, i+1, imageSuffix, indexOffset, 
+      shouldPadZeroes, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
-
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
     thumbnails.push_back(image);
   }
