@@ -288,6 +288,19 @@ class Client {
   }
 
   /**
+   * Grab the thumbnails for the given dataset.
+   * @param {string} datasetId
+   * @return {Promise}
+   */
+  fetchThumbnails(datasetId) {
+    let command = {
+      name: 'fetchThumbnails',
+      datasetId: datasetId,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Text Socket onOpen event callback.
    * @param {Event} event
    */
