@@ -395,7 +395,7 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::string DatasetLoader::thumbnailPath(const std::string imageBasePath, const int index, 
+std::string DatasetLoader::createThumbnailPath(const std::string imageBasePath, const int index, 
   const std::string imageSuffix, const unsigned int indexOffset,
   const bool padZeroes, const unsigned int thumbnailCount) {
   std::string imageName = std::to_string(index);
@@ -457,7 +457,7 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
-    std::string path = thumbnailPath(imageBasePath, i+1, imageSuffix, indexOffset, 
+    std::string path = createThumbnailPath(imageBasePath, i+1, imageSuffix, indexOffset, 
       shouldPadZeroes, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
