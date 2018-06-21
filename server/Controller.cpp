@@ -47,6 +47,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});  
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
 }
 
 
@@ -476,7 +477,9 @@ void Controller::fetchLayoutForPersistenceLevel(
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
-
+/**
+ * Handle the command to fetch an array of a named QoI
+ */
 void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
@@ -508,6 +511,35 @@ void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) 
   wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
+
+/** 
+ * Handle the command to fetch sample image thumbnails if available.
+ */
+void Controller::fetchThumbnails(
+    void *wsi, int messageId, const Json::Value &request) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  maybeLoadDataset(datasetId);
+
+  auto thumbnails = m_currentDataset->getThumbnails();
+  
+  Json::Value response(Json::objectValue);
+  response["id"] = messageId;
+  response["thumbnails"] = Json::Value(Json::arrayValue);
+  for (auto image : thumbnails) {
+    Json::Value imageObject = Json::Value(Json::objectValue);
+    imageObject["width"] = image.getWidth();
+    imageObject["height"] = image.getHeight();
+    // TODO: Add image data with base64 encoding.
+    response["thumbnails"].append(imageObject);
+  }  
+
+  Json::StyledWriter writer;
+  std::string text = writer.write(response);
+  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+}
 
 /**
  * Checks if the requested dataset is loaded.
