@@ -458,8 +458,8 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = indexOffset; i < thumbnailCount; i++) {
-    std::string path = createThumbnailPath(imageBasePath, i, imageSuffix, indexOffset, 
-      shouldPadZeroes, thumbnailCount);
+    std::string path = createThumbnailPath(imageBasePath, i, imageSuffix, 
+      indexOffset, shouldPadZeroes, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
     thumbnails.push_back(image);
