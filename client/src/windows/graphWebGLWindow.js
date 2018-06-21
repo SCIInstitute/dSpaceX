@@ -5,6 +5,8 @@ import EdgeVertexShaderSource from '../shaders/edge.vert';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
 import React from 'react';
+import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
+import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
 import { mat4 } from 'gl-matrix';
 import { webGLErrorCheck } from './glUtils';
 
@@ -36,6 +38,7 @@ class GraphWebGLWindow extends React.Component {
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.thumbnailShaderProgram = null;
+    this.activeNodeShader = null;
     this.vertices = null;
     this.vertColors = null;
     this.nodes = null;
@@ -136,12 +139,10 @@ class GraphWebGLWindow extends React.Component {
 
   /**
    * Event handling for keydown event
-   * @param {Event} evt
+   * @param {Event} event
    */
-  handleKeyDown(evt) {
-    let keyName = evt.key;
-    let consoleOutput = '';
-    switch (keyName) {
+  handleKeyDown(event) {
+    switch (event.key) {
     case '/':
       for (let i = 0; i < this.nodes.length; i++) {
         this.nodes[i].decreaseRadius(1.1);
@@ -184,7 +185,7 @@ class GraphWebGLWindow extends React.Component {
       }
       this.updateBuffers();
       this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
-      consoleOutput = 'edgeThickness = ' + this.edgeThickness;
+      console.log('edgeThickness = ' + this.edgeThickness);
       break;
     case 'k':
       for (let i = 0; i < this.edges.length; i++) {
@@ -196,29 +197,27 @@ class GraphWebGLWindow extends React.Component {
       }
       this.updateBuffers();
       this.edgeThickness *= 1.1;
-      consoleOutput = 'edgeThickness = ' + this.edgeThickness;
+      console.log('edgeThickness = ' + this.edgeThickness);
       break;
     case 'n':
       this.edgeOpacity = Math.max(0.0002, this.edgeOpacity / 1.1);
-      consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
+      console.log('edgeOpacity = ' + this.edgeOpacity);
       break;
     case 'j':
       this.edgeOpacity *= 1.1;
-      consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
+      console.log('edgeOpacity = ' + this.edgeOpacity);
       break;
     case 't':
       if (this.activeNodeShader == this.nodeShaderProgram) {
+        console.log('Switching to thumbnail node shader.');
         this.activeNodeShader = this.thumbnailShaderProgram;
       } else {
+        console.log('Switching to default node shader.');
         this.activeNodeShader = this.nodeShaderProgram;
       }
       break;
     }
     this.resizeCanvas();
-
-    if (consoleOutput.length > 0) {
-      console.log(consoleOutput);
-    }
   }
 
   /**
@@ -482,6 +481,9 @@ class GraphWebGLWindow extends React.Component {
 
     this.edgeShaderProgram = this.createShaderProgram(gl,
       EdgeVertexShaderSource, EdgeFragmentShaderSource);
+
+    this.thumbnailShaderProgram = this.createShaderProgram(gl,
+      ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
   }
 
 
@@ -718,33 +720,33 @@ class GraphWebGLWindow extends React.Component {
     gl.enable(gl.CULL_FACE);
     gl.frontFace(gl.CW);
     gl.cullFace(gl.BACK);
-    gl.useProgram(this.nodeShaderProgram);
+    gl.useProgram(this.activeNodeShader);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     let coordinateAttrib =
-        gl.getAttribLocation(this.nodeShaderProgram, 'coordinates');
+        gl.getAttribLocation(this.activeNodeShader, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
     if (this.vertColors && this.vertColors.length == this.vertices.length) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      this.nodeShaderProgram.vertexColorAttribute =
-        gl.getAttribLocation(this.nodeShaderProgram, 'vertexColor');
-      gl.vertexAttribPointer(this.nodeShaderProgram.vertexColorAttribute,
+      let vertexColorAttribute =
+        gl.getAttribLocation(this.activeNodeShader, 'vertexColor');
+      gl.vertexAttribPointer(vertexColorAttribute,
         3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(this.nodeShaderProgram.vertexColorAttribute);
+      gl.enableVertexAttribArray(vertexColorAttribute);
     }
 
     let nodeOutlineLocation =
-        gl.getUniformLocation(this.nodeShaderProgram, 'nodeOutline');
+        gl.getUniformLocation(this.activeNodeShader, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
     let nodeSmoothnessLocation =
-        gl.getUniformLocation(this.nodeShaderProgram, 'nodeSmoothness');
+        gl.getUniformLocation(this.activeNodeShader, 'nodeSmoothness');
     gl.uniform1f(nodeSmoothnessLocation, this.nodeSmoothness);
 
     let projectionMatrixLocation =
-        gl.getUniformLocation(this.nodeShaderProgram, 'uProjectionMatrix');
+        gl.getUniformLocation(this.activeNodeShader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
