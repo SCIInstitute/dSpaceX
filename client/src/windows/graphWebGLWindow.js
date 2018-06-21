@@ -454,19 +454,33 @@ class GraphWebGLWindow extends React.Component {
     let vertexShader = gl.createShader(gl.VERTEX_SHADER);
     gl.shaderSource(vertexShader, vertexShaderSource);
     gl.compileShader(vertexShader);
-    webGLErrorCheck(gl);
+    let compiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+    if (compiled) {
+      console.log('Vertex shader compiled successfully');
+    } else {
+      console.log('Vertex shader failed to compile.');
+      let compilationLog = gl.getShaderInfoLog(vertexShader);
+      console.log('Shader compiler log: ' + compilationLog);
+    }
 
     let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fragmentShader, fragmentShaderSource);
     gl.compileShader(fragmentShader);
-    webGLErrorCheck(gl);
+
+    compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+    if (compiled) {
+      console.log('Fragment shader compiled successfully');
+    } else {
+      console.log('Fragment shader failed to compile.');
+      let compilationLog = gl.getShaderInfoLog(fragmentShader);
+      console.log('Shader compiler log: ' + compilationLog);
+    }
 
     let shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
     gl.useProgram(shaderProgram);
-    webGLErrorCheck(gl);
 
     return shaderProgram;
   }
