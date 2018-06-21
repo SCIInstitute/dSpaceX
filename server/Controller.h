@@ -24,18 +24,19 @@ class Controller {
   void maybeProcessData(int k);
 
   // Command Handlers
-  void fetchDatasetList(void *wsi, int messageId, const Json::Value &request);
-  void fetchDataset(void *wsi, int messageId, const Json::Value &request);
-  void fetchKNeighbors(void *wsi, int messageId, const Json::Value &request);
-  void fetchMorseSmalePersistence(void *wsi, int messageId, const Json::Value &request);
-  void fetchMorseSmalePersistenceLevel(void *wsi, int messageId, const Json::Value &request);
-  void fetchMorseSmaleCrystal(void *wsi, int messageId, const Json::Value &request);
-  void fetchMorseSmaleDecomposition(void *wsi, int messageId, const Json::Value &request);
-  void fetchLayoutForPersistenceLevel(void *wsi, int messageId, const Json::Value &request);
-  void fetchQoi(void *wsi, int messageId, const Json::Value &request);
-  void fetchThumbnails(void *wsi, int messageId, const Json::Value &request);
+  void fetchDatasetList(const Json::Value &request, Json::Value &response);
+  void fetchDataset(const Json::Value &request, Json::Value &response);
+  void fetchKNeighbors(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmalePersistence(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
+  void fetchLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response);
+  void fetchQoi(const Json::Value &request, Json::Value &response);
+  void fetchThumbnails(const Json::Value &request, Json::Value &response);
 
-  std::map<std::string, std::function<void(void*, int, const Json::Value&)>> m_commandMap;
+  typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
+  std::map<std::string, RequestHandler> m_commandMap;
 
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
   Dataset *m_currentDataset = nullptr;

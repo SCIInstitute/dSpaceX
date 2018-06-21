@@ -30,24 +30,20 @@ Controller::Controller() {
   configureAvailableDatasets();
 }
 
-// TODO: Extract a layer around handlers to deal with the websocket interface.
-//       The handlers should take only the json request and return a 
-//       json response. This layer should be resonsible for supplying messageIds.
-
 /**
  * Construct map of command names to command handlers.
  */
 void Controller::configureCommandHandlers() {
-  m_commandMap.insert({"fetchDatasetList", std::bind(&Controller::fetchDatasetList, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2, _3)});  
-  m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2, _3)});
-  m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2, _3)});
+  m_commandMap.insert({"fetchDatasetList", std::bind(&Controller::fetchDatasetList, this, _1, _2)});
+  m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
+  m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
+  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});  
+  m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
+  m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
 }
 
 
@@ -88,13 +84,19 @@ void Controller::handleText(void *wsi, const std::string &text) {
     std::string commandName = request["name"].asString();
     std::cout << "[" << messageId << "] " << commandName << std::endl;
 
+    Json::Value response(Json::objectValue);
+    response["id"] = messageId;    
+
     auto command = m_commandMap[commandName];
     if (command) {
-      command(wsi, messageId, request);
+      command(request, response);
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
 
+    Json::StyledWriter writer;
+    std::string text = writer.write(response);
+    wst_sendText(wsi, const_cast<char*>(text.c_str()));
   } catch (const std::exception &e) {
     std::cerr << "Command Execution Error: " << e.what() << std::endl;
     // TODO: Send back an error message.
@@ -105,9 +107,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
  * Handle the command to fetch list of available datasets.
  */
 void Controller::fetchDatasetList(
-    void *wsi, int messageId, const Json::Value &request) {
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+    const Json::Value &request, Json::Value &response) {
   response["datasets"] = Json::Value(Json::arrayValue);
 
   for (size_t i=0; i < m_availableDatasets.size(); i++) {
@@ -115,26 +115,20 @@ void Controller::fetchDatasetList(
     object["id"] = static_cast<int>(i);
     object["name"] = m_availableDatasets[i].first;
     response["datasets"].append(object);
-  }
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
+  }  
 }
 
 /**
  * Handle the command to load and fetch details of a dataset.
  */
 void Controller::fetchDataset(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
   maybeLoadDataset(datasetId);
-
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+  
   response["datasetId"] = datasetId;
   response["name"] = m_currentDataset->getName();
   response["numberOfSamples"] = m_currentDataset->numberOfSamples();
@@ -146,17 +140,13 @@ void Controller::fetchDataset(
   for (std::string qoiName : m_currentDataset->getQoiNames()) {
     response["qoiNames"].append(qoiName);
   }
-  
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
  * Handle the command to fetch the k-nearest-neighbor graph of a dataset.
  */
 void Controller::fetchKNeighbors(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -172,10 +162,7 @@ void Controller::fetchKNeighbors(
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
   Distance<Precision>::findKNN(
       m_currentDataset->getDistanceMatrix(), KNN, KNND);
-
-
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+ 
   response["datasetId"] = datasetId;
   response["k"] = k;
   response["graph"] = Json::Value(Json::arrayValue);
@@ -186,10 +173,6 @@ void Controller::fetchKNeighbors(
       response["graph"][i].append(KNN(i,j));
     }
   }
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 
@@ -197,7 +180,7 @@ void Controller::fetchKNeighbors(
  * Handle the command to fetch the morse smale persistence levels of a dataset.
  */
 void Controller::fetchMorseSmalePersistence(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -214,8 +197,6 @@ void Controller::fetchMorseSmalePersistence(
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["minPersistenceLevel"] = minLevel;
@@ -226,17 +207,13 @@ void Controller::fetchMorseSmalePersistence(
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
   }
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
 void Controller::fetchMorseSmalePersistenceLevel(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -258,9 +235,7 @@ void Controller::fetchMorseSmalePersistenceLevel(
   }
 
   MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
-
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+  
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["k"] = k;
@@ -278,17 +253,13 @@ void Controller::fetchMorseSmalePersistenceLevel(
   }
 
   // TODO: Add crystal adjacency information
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
 void Controller::fetchMorseSmaleCrystal(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -311,16 +282,13 @@ void Controller::fetchMorseSmaleCrystal(
 
   MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
 
-
   int crystalId = request["crystalId"].asInt();
   if (crystalId < 0 || crystalId >= complex->getCrystals().size()) {
     // TODO: Send back an error message. Invalid CrystalId.
   }
 
   Crystal *crystal = complex->getCrystals()[crystalId];
-
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+  
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["persistenceLevel"] = persistenceLevel;
@@ -335,17 +303,13 @@ void Controller::fetchMorseSmaleCrystal(
   }
 
   // TODO: Add crystal adjacency information
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
  * Handle the command to fetch the full morse smale decomposition of a dataset.
  */
 void Controller::fetchMorseSmaleDecomposition(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -362,8 +326,6 @@ void Controller::fetchMorseSmaleDecomposition(
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
 
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["minPersistenceLevel"] = minLevel;
@@ -388,14 +350,10 @@ void Controller::fetchMorseSmaleDecomposition(
     // TODO: Add adjacency to the complex json object.
     response["complexes"].append(complexObject);
   }
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 void Controller::fetchLayoutForPersistenceLevel(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -415,9 +373,6 @@ void Controller::fetchLayoutForPersistenceLevel(
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
   }  
-
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
 
   // TODO:  Modify logic to return layout based on chosen layout type.
   //        For now, only send back embeddings provided with the dataset.
@@ -470,17 +425,12 @@ void Controller::fetchLayoutForPersistenceLevel(
     }
     response["embedding"]["adjacency"] = adjacency; 
   }
-  
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
  * Handle the command to fetch an array of a named QoI
  */
-void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) {
+void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -497,18 +447,11 @@ void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) 
   int qoiIndex = result - std::begin(qois);
   auto qoiVector = m_currentDataset->getQoiVector(qoiIndex);
 
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
-
   response["qoiName"] = qoiName;
   response["qoi"] = Json::Value(Json::arrayValue);
   for (int i = 0; i < qoiVector.N(); i++) {
     response["qoi"].append(qoiVector(i));
   }
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 
@@ -516,7 +459,7 @@ void Controller::fetchQoi(void *wsi, int messageId, const Json::Value &request) 
  * Handle the command to fetch sample image thumbnails if available.
  */
 void Controller::fetchThumbnails(
-    void *wsi, int messageId, const Json::Value &request) {
+    const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -524,9 +467,7 @@ void Controller::fetchThumbnails(
   maybeLoadDataset(datasetId);
 
   auto thumbnails = m_currentDataset->getThumbnails();
-  
-  Json::Value response(Json::objectValue);
-  response["id"] = messageId;
+    
   response["thumbnails"] = Json::Value(Json::arrayValue);
   for (auto image : thumbnails) {
     Json::Value imageObject = Json::Value(Json::objectValue);
@@ -535,10 +476,6 @@ void Controller::fetchThumbnails(
     // TODO: Add image data with base64 encoding.
     response["thumbnails"].append(imageObject);
   }  
-
-  Json::StyledWriter writer;
-  std::string text = writer.write(response);
-  wst_sendText(wsi, const_cast<char*>(text.c_str()));
 }
 
 /**
