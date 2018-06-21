@@ -4,6 +4,8 @@
 #include "yaml-cpp/yaml.h"
 
 #include <memory>
+#include <iomanip>
+#include <sstream>
 #include <vector>
 
 std::string basePathOf(const std::string &filePath) {
@@ -408,9 +410,9 @@ std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath,
       digitCount++;
     }
 
-    for (int i = 0; i < (digitCount + indexOffset) - imageName.size(); i++) {
-      imageName.insert(0, "0");
-    }
+    std::stringstream paddedName;
+    paddedName << std::setfill('0') << std::setw(digitCount) << index;
+    imageName = paddedName.str();
   }
 
   std::string path = imageBasePath + imageName + imageSuffix;
