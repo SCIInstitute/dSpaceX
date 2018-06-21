@@ -63,7 +63,7 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
 
   if (config["thumbnails"]) {
     auto thumbnails = DatasetLoader::parseThumbnails(config, filePath);
-    builder.addThumbnails(thumbnails);
+    builder.withThumbnails(thumbnails);
   }
 
   return builder.build();

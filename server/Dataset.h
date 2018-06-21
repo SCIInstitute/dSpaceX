@@ -109,7 +109,7 @@ class Dataset {
       m_dataset->m_name = name;
       return (*this);
     }
-    Builder& addThumbnails(std::vector<Image> thumbnails) {
+    Builder& withThumbnails(std::vector<Image> thumbnails) {
       m_dataset->m_thumbnails = thumbnails;
       return (*this);
     }
