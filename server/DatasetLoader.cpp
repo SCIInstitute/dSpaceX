@@ -402,13 +402,10 @@ std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath,
     bool padZeroes, unsigned int thumbnailCount) {
   std::string imageName = std::to_string(index);
 
-  if(padZeroes) {
-    unsigned int digitCount = 0;
-    unsigned int digitCounter = thumbnailCount;
-    while(digitCounter) {
-      digitCounter /= 10;
-      digitCount++;
-    }
+  if (padZeroes) {
+    std::stringstream digitCounter;
+    digitCounter << thumbnailCount;
+    unsigned int digitCount = digitCounter.str().size() + indexOffset;    
 
     std::stringstream paddedName;
     paddedName << std::setfill('0') << std::setw(digitCount) << index;
