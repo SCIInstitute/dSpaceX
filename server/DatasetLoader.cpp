@@ -395,9 +395,9 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::string DatasetLoader::createThumbnailPath(const std::string imageBasePath, const int index, 
-  const std::string imageSuffix, const unsigned int indexOffset,
-  const bool padZeroes, const unsigned int thumbnailCount) {
+std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath, int index, 
+    const std::string imageSuffix, unsigned int indexOffset,
+    bool padZeroes, unsigned int thumbnailCount) {
   std::string imageName = std::to_string(index);
 
   if(padZeroes) {
