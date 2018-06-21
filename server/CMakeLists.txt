@@ -26,13 +26,14 @@ INCLUDE_DIRECTORIES(../lib/hdprocess)
 
 ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS}) 
 TARGET_LINK_LIBRARIES (dSpaceX 
-  libwsserver 
-  hdprocess   
+  base64
   blas
-  lapack
-  imageutils
-  pthread 
   dl 
+  hdprocess
+  imageutils
+  jsoncpp
+  libwsserver 
+  lapack  
+  pthread   
   ${ZLIB_LIBRARIES} 
-  yaml-cpp 
-  jsoncpp)
+  yaml-cpp)

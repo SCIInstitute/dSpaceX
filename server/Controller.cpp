@@ -1,3 +1,4 @@
+#include <base64/base64.h>
 #include "Controller.h"
 #include "DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
@@ -473,7 +474,9 @@ void Controller::fetchThumbnails(
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
-    // TODO: Add image data with base64 encoding.
+    imageObject["data"] = base64_encode(
+            reinterpret_cast<const unsigned char*>(image.getData()),
+            4*image.getWidth()*image.getHeight());
     response["thumbnails"].append(imageObject);
   }  
 }
