@@ -449,16 +449,16 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     }
   }
   
-  if(!thumbnailsNode["offset"]) {
-    throw std::runtime_error("Dataset config missing 'thumbnails.offset' field.");    
-  }
-  unsigned int indexOffset = thumbnailsNode["offset"].as<int>();
+  unsigned int indexOffset = 0; 
+  if (thumbnailsNode["offset"]) {
+    indexOffset = thumbnailsNode["offset"].as<int>();    
+  }  
   
   ImageLoader imageLoader;
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
-  for (int i = 0; i < thumbnailCount; i++) {
-    std::string path = createThumbnailPath(imageBasePath, i+1, imageSuffix, indexOffset, 
+  for (int i = indexOffset; i < thumbnailCount; i++) {
+    std::string path = createThumbnailPath(imageBasePath, i, imageSuffix, indexOffset, 
       shouldPadZeroes, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
