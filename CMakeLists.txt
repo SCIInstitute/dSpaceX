@@ -31,12 +31,12 @@ INCLUDE_DIRECTORIES(lib)
 INCLUDE_DIRECTORIES(lib/yaml-cpp/include)
 
 ADD_SUBDIRECTORY(lib/annmod/)
-ADD_SUBDIRECTORY(lib/jsoncpp)
+ADD_SUBDIRECTORY(lib/base64/)
 ADD_SUBDIRECTORY(lib/hdprocess)
 ADD_SUBDIRECTORY(lib/imageutils)
+ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/tinyply)
 ADD_SUBDIRECTORY(lib/yaml-cpp)
-
 
 
 if(BUILD_SERVER_LIB)
