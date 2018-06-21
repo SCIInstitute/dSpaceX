@@ -61,6 +61,11 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
     }
   }
 
+  if (config["thumbnails"]) {
+    auto thumbnails = DatasetLoader::parseThumbnails(config, filePath);
+    builder.addThumbnails(thumbnails);
+  }
+
   return builder.build();
 }
 
@@ -432,7 +437,7 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   }
   std::string imagePath = thumbnailsNode["files"].as<std::string>();
   int imageNameLoc = imagePath.find('?');  
-  std::string imageBasePath = imagePath.substr(0, imageNameLoc);
+  std::string imageBasePath = basePathOf(filePath) + imagePath.substr(0, imageNameLoc);
   std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
   bool shouldPadZeroes = false;

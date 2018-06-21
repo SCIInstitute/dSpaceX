@@ -3,6 +3,7 @@
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
 #include "precision/Precision.h"
+#include "imageutils/Image.h"
 
 #include <vector>
 
@@ -65,6 +66,10 @@ class Dataset {
     return m_name;
   }
 
+  std::vector<Image> getThumbnails() {
+    return m_thumbnails;
+  }
+
   class Builder {
    public:
     Builder() {
@@ -104,7 +109,10 @@ class Dataset {
       m_dataset->m_name = name;
       return (*this);
     }
-    // Builder& addThumbnails(std::vector<> thumbnails);
+    Builder& addThumbnails(std::vector<Image> thumbnails) {
+      m_dataset->m_thumbnails = thumbnails;
+      return (*this);
+    }
     Dataset* build() {
       // TODO:  Add validation that sample counts match array sizes.
       //        Throw an exception if something doesn't match. 
@@ -125,6 +133,7 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
+  std::vector<Image> m_thumbnails;
   std::string m_name;
 
   bool m_hasDistanceMatrix = false;
