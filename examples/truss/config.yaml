@@ -12,6 +12,7 @@ thumbnails:
    format: png
    files: images/?.png
    padZeroes: false
+   offset: 0
 
 distances:
      format: csv

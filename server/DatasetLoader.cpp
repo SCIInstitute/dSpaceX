@@ -449,9 +449,11 @@ std::vector<Image> DatasetLoader::parseThumbnails(
       throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
     }
   }
-
-  //TODO: add indexOffset to the yaml config and parse/apply
-  unsigned int indexOffset = 0;
+  
+  if(!thumbnailsNode["offset"]) {
+    throw std::runtime_error("Dataset config missing 'thumbnails.offset' field.");    
+  }
+  unsigned int indexOffset = thumbnailsNode["offset"].as<int>();
   
   ImageLoader imageLoader;
   unsigned int thumbnailCount = parseSampleCount(config);
