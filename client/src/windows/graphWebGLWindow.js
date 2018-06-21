@@ -35,6 +35,7 @@ class GraphWebGLWindow extends React.Component {
     this.vertColor_buffer = null;
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
+    this.thumbnailShaderProgram = null;
     this.vertices = null;
     this.vertColors = null;
     this.nodes = null;
@@ -204,6 +205,13 @@ class GraphWebGLWindow extends React.Component {
     case 'j':
       this.edgeOpacity *= 1.1;
       consoleOutput = 'edgeOpacity = ' + this.edgeOpacity;
+      break;
+    case 't':
+      if (this.activeNodeShader == this.nodeShaderProgram) {
+        this.activeNodeShader = this.thumbnailShaderProgram;
+      } else {
+        this.activeNodeShader = this.nodeShaderProgram;
+      }
       break;
     }
     this.resizeCanvas();
@@ -437,53 +445,43 @@ class GraphWebGLWindow extends React.Component {
   }
 
   /**
+   * Compile vertex and fragment shader into a shader program.
+   * @param {object} gl The OpenGL context.
+   * @param {string} vertexShaderSource
+   * @param {string} fragmentShaderSource
+   * @return {reference}
+   */
+  createShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
+    let vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, vertexShaderSource);
+    gl.compileShader(vertexShader);
+    webGLErrorCheck(gl);
+
+    let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, fragmentShaderSource);
+    gl.compileShader(fragmentShader);
+    webGLErrorCheck(gl);
+
+    let shaderProgram = gl.createProgram();
+    gl.attachShader(shaderProgram, vertexShader);
+    gl.attachShader(shaderProgram, fragmentShader);
+    gl.linkProgram(shaderProgram);
+    gl.useProgram(shaderProgram);
+    webGLErrorCheck(gl);
+
+    return shaderProgram;
+  }
+
+  /**
    * Compiles vertex and fragment shader programs.
    * @param {object} gl The OpenGL context.
    */
   createShaders(gl) {
-    let nodeVertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(nodeVertexShader, NodeVertexShaderSource);
-    gl.compileShader(nodeVertexShader);
+    this.nodeShaderProgram = this.createShaderProgram(gl,
+      NodeVertexShaderSource, NodeFragmentShaderSource);
 
-    webGLErrorCheck(gl);
-
-    let nodeFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(nodeFragmentShader, NodeFragmentShaderSource);
-    gl.compileShader(nodeFragmentShader);
-
-    webGLErrorCheck(gl);
-
-    let shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, nodeVertexShader);
-    gl.attachShader(shaderProgram, nodeFragmentShader);
-    gl.linkProgram(shaderProgram);
-    gl.useProgram(shaderProgram);
-
-    this.nodeShaderProgram = shaderProgram;
-
-    webGLErrorCheck(gl);
-
-    let edgeVertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(edgeVertexShader, EdgeVertexShaderSource);
-    gl.compileShader(edgeVertexShader);
-
-    webGLErrorCheck(gl);
-
-    let edgeFragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(edgeFragmentShader, EdgeFragmentShaderSource);
-    gl.compileShader(edgeFragmentShader);
-
-    webGLErrorCheck(gl);
-
-    let edgeShaderProgram = gl.createProgram();
-    gl.attachShader(edgeShaderProgram, edgeVertexShader);
-    gl.attachShader(edgeShaderProgram, edgeFragmentShader);
-    gl.linkProgram(edgeShaderProgram);
-    gl.useProgram(edgeShaderProgram);
-
-    webGLErrorCheck(gl);
-
-    this.edgeShaderProgram = edgeShaderProgram;
+    this.edgeShaderProgram = this.createShaderProgram(gl,
+      EdgeVertexShaderSource, EdgeFragmentShaderSource);
   }
 
 
