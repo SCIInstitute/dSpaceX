@@ -76,6 +76,9 @@ class GraphWebGLWindow extends React.Component {
 
     this.nodeOutline = 0.025;
     this.nodeSmoothness = 0.05;
+
+    this.thumbnails = null;
+    this.thumbnailsAtlasTexture = null;
   }
 
   /**
@@ -210,6 +213,14 @@ class GraphWebGLWindow extends React.Component {
     case 't':
       if (this.activeNodeShader == this.nodeShaderProgram) {
         console.log('Switching to thumbnail node shader.');
+        if (!this.thumbnails) {
+          this.client.fetchThumbnails(this.props.dataset.datasetId)
+            .then((result) => {
+              this.thumbnails = result.thumbnails;
+              this.createTextureAtlas();
+              requestAnimationFrame(this.drawScene.bind(this));
+            });
+        }
         this.activeNodeShader = this.thumbnailShaderProgram;
       } else {
         console.log('Switching to default node shader.');
@@ -504,6 +515,72 @@ class GraphWebGLWindow extends React.Component {
 
 
   /**
+   * Decode a base64 array into a Uint8Array
+   * @param {array} base64
+   * @return {Uint8Array}
+   */
+  _base64ToUint8Array(base64) {
+    let binaryString = atob(base64);
+    let array = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      array[i] = binaryString.charCodeAt(i);
+    }
+    return array;
+  }
+
+
+  /**
+   * Creates a texture atlas texture that can be used to render thumbnails
+   * to the graph.
+   */
+  createTextureAtlas() {
+    const canvas = this.refs.canvas;
+    let gl = canvas.getContext('webgl');
+
+    // TODO: Refactor to support thumbnails of various/heterogenous sizes.
+    let width = this.thumbnails[0].width;
+    let height = this.thumbnails[0].height;
+    const MAX_TEXTURE_SIZE = 2048;
+    const THUMBNAIL_WIDTH = 80;
+    const THUMBNAIL_HEIGHT = 40;
+    let thumbnailsPerTextureRow = MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH;
+    let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
+
+    for (let i=0; i < this.thumbnails.length; i++) {
+      let data = this._base64ToUint8Array(this.thumbnails[i].data);
+
+      // copy the thumbnail into the atlas.
+      let atlasOffsetY = i / thumbnailsPerTextureRow;
+      let atlasOffsetX = i % thumbnailsPerTextureRow;
+      let y = (atlasOffsetY * THUMBNAIL_HEIGHT);
+      let x = (atlasOffsetX * THUMBNAIL_WIDTH);
+      for (let h=0; h < height; h++) {
+        for (let w=0; w < width; w++) {
+          let sourceIndex = (width*h + w);
+          let targetIndex = ((y+h)*MAX_TEXTURE_SIZE) + x + w;
+          atlasBuffer[4*targetIndex + 0] = data[4*sourceIndex + 0];
+          atlasBuffer[4*targetIndex + 1] = data[4*sourceIndex + 1];
+          atlasBuffer[4*targetIndex + 2] = data[4*sourceIndex + 2];
+          atlasBuffer[4*targetIndex + 3] = data[4*sourceIndex + 3];
+        }
+      }
+    }
+
+    let texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE,
+      0, gl.RGBA, gl.UNSIGNED_BYTE, atlasBuffer);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    this.thumbnailsAtlasTexture = texture;
+  }
+
+
+  /**
    * Creates vertex buffers for dummy data.
    * @param {object} gl The OpenGL context.
    */
@@ -738,6 +815,11 @@ class GraphWebGLWindow extends React.Component {
     gl.cullFace(gl.BACK);
     gl.useProgram(this.activeNodeShader);
 
+    if (this.thumbnailsAtlasTexture) {
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.thumbnailsAtlasTexture);
+    }
+
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     let coordinateAttrib =
         gl.getAttribLocation(this.activeNodeShader, 'coordinates');
@@ -768,6 +850,7 @@ class GraphWebGLWindow extends React.Component {
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
 
     webGLErrorCheck(gl);
   }
