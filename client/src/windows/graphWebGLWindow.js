@@ -231,7 +231,7 @@ class GraphWebGLWindow extends React.Component {
       }
       break;
     }
-    this.resizeCanvas();
+    requestAnimationFrame(this.drawScene.bind(this));
   }
 
   /**
