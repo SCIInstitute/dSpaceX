@@ -3,6 +3,7 @@ uniform float nodeOutline;
 uniform float nodeSmoothness;
 varying vec2 vertexUV;
 varying vec3 geomColor;
+varying float index;
 
 void main(void) {
   vec2 uv = vertexUV.xy;

@@ -35,12 +35,15 @@ class GraphWebGLWindow extends React.Component {
     this.vertex_buffer = null;
     this.vertColor_array = null;
     this.vertColor_buffer = null;
+    this.sampleIndex_array = null;
+    this.sampleIndex_buffer = null;
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.thumbnailShaderProgram = null;
     this.activeNodeShader = null;
     this.vertices = null;
     this.vertColors = null;
+    this.sampleIndexes = null;
     this.nodes = null;
     this.edges = null;
     this.edgeVerts = null;
@@ -383,6 +386,7 @@ class GraphWebGLWindow extends React.Component {
 
   /**
    * Creates the geometry to be rendered.
+   * TODO: Refactor this routine for maintainability and readablity.
    * @param {array} array2DVertsForNodes
    * @param {array} arrayBeginEndIndicesForEdges
    * @param {number} quadHeight
@@ -391,21 +395,28 @@ class GraphWebGLWindow extends React.Component {
    */
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
     quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
+    this.sampleIndexes = [];
     this.vertColors = [];
     this.bDrawEdgesAsQuads = drawEdgesAsQuads;
 
     let arrLength = array2DVertsForNodes.length;
     this.nodes = new Array(arrLength);
     this.vertices = new Array(this.nodes.length * 18);
+    this.sampleIndexes = new Array(this.nodes.length * 6);
     // create a quad for each position in array2DVertsForNodes
     for (let i = 0; i < arrLength; i++) {
       let quad = new Quad(array2DVertsForNodes[i][0],
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
       let vertCount = quad.vertices.length;
+
       for (let j = 0; j < vertCount; j++) {
-        this.vertices[i*vertCount+j] = quad.vertices[j];
+        this.vertices[i*vertCount + j] = quad.vertices[j];
       }
+      for (let j = 0; j < 6; j++) {
+        this.sampleIndexes[i*6 + j] = i;
+      }
+
       this.nodes[i] = quad;
     }
 
@@ -543,17 +554,19 @@ class GraphWebGLWindow extends React.Component {
     const MAX_TEXTURE_SIZE = 2048;
     const THUMBNAIL_WIDTH = 80;
     const THUMBNAIL_HEIGHT = 40;
-    let thumbnailsPerTextureRow = MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH;
+    let thumbnailsPerTextureRow =
+      Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 
     for (let i=0; i < this.thumbnails.length; i++) {
       let data = this._base64ToUint8Array(this.thumbnails[i].data);
 
       // copy the thumbnail into the atlas.
-      let atlasOffsetY = i / thumbnailsPerTextureRow;
+      let atlasOffsetY = Math.floor(i / thumbnailsPerTextureRow);
       let atlasOffsetX = i % thumbnailsPerTextureRow;
       let y = (atlasOffsetY * THUMBNAIL_HEIGHT);
       let x = (atlasOffsetX * THUMBNAIL_WIDTH);
+
       for (let h=0; h < height; h++) {
         for (let w=0; w < width; w++) {
           let sourceIndex = (width*h + w);
@@ -585,31 +598,36 @@ class GraphWebGLWindow extends React.Component {
    * @param {object} gl The OpenGL context.
    */
   createBuffers(gl) {
-    // Quad buffers
+    // Quad buffer
     this.vertex_buffer = gl.createBuffer();
     this.vertex_array = new Float32Array(this.vertices);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
     webGLErrorCheck(gl);
 
-    // vertex Color buffers
+    // vertex Color buffer
     this.vertColor_buffer = gl.createBuffer();
     this.vertColor_array = new Float32Array(this.vertColors);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
     webGLErrorCheck(gl);
 
-    // Edge buffers
+    // sample index buffer
+    this.sampleIndex_buffer = gl.createBuffer();
+    this.sampleIndex_array = new Uint16Array(this.sampleIndexes);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.sampleIndex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
+    // Edge buffer
     this.edgeVerts_buffer = gl.createBuffer();
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
     webGLErrorCheck(gl);
   }
 
@@ -624,21 +642,24 @@ class GraphWebGLWindow extends React.Component {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertex_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
     webGLErrorCheck(gl);
 
     this.vertColor_array = new Float32Array(this.vertColors);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertColor_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
 
+    this.sampleIndex_array = new Uint16Array(this.sampleIndexes);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.sampleIndex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
     webGLErrorCheck(gl);
   }
 
@@ -833,6 +854,15 @@ class GraphWebGLWindow extends React.Component {
       gl.vertexAttribPointer(vertexColorAttribute,
         3, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(vertexColorAttribute);
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
+    let sampleIndexAttribute =
+      gl.getAttribLocation(this.activeNodeShader, 'sampleIndex');
+    if (sampleIndexAttribute > 0) {
+      gl.vertexAttribPointer(
+        sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+      gl.enableVertexAttribArray(sampleIndexAttribute);
     }
 
     let nodeOutlineLocation =

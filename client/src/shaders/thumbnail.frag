@@ -4,23 +4,27 @@ uniform float nodeSmoothness;
 uniform sampler2D imageTex;
 varying vec2 vertexUV;
 varying vec3 geomColor;
+varying float index;
+
+
+float modi(float a,float b) {
+  float m = a - floor((a+0.5)/b)*b;
+  return floor(m+0.5);
+}
 
 void main(void) {
   vec2 uv = vertexUV.xy;
-  int MAX_TEXTURE_SIZE = 2048;
-  int THUMBNAIL_WIDTH = 80;
-  int THUMBNAIL_HEIGHT = 40;
-  int thumbnailsPerTextureRow = 25;
+  float MAX_TEXTURE_SIZE = 2048.0;
+  float THUMBNAIL_WIDTH = 80.0;
+  float THUMBNAIL_HEIGHT = 40.0;
+  float thumbnailsPerTextureRow = floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
 
-  // TODO: Provide real index.
-  int geom_thumbnail = 0;
-
-  float aspect_ratio = float(THUMBNAIL_HEIGHT) / float(THUMBNAIL_WIDTH);
+  float aspect_ratio = THUMBNAIL_HEIGHT / THUMBNAIL_WIDTH;
   float inv_aspect = 1.0 / aspect_ratio;
-  float uscale = float(THUMBNAIL_WIDTH) / float(MAX_TEXTURE_SIZE);
-  float vscale = float(THUMBNAIL_HEIGHT) / float(MAX_TEXTURE_SIZE);
-  int atlasOffsetX = 0; // int(geom_thumbnail) % thumbnailsPerTextureRow;
-  int atlasOffsetY = 0; // int(geom_thumbnail) / thumbnailsPerTextureRow;
+  float uscale = THUMBNAIL_WIDTH / MAX_TEXTURE_SIZE;
+  float vscale = THUMBNAIL_HEIGHT / MAX_TEXTURE_SIZE;
+  float atlasOffsetX = modi(index, thumbnailsPerTextureRow);
+  float atlasOffsetY = modi(index, thumbnailsPerTextureRow);
 
   // Account for Thumbnail Aspect Ratio - Scale to Fit
   float aspect_u = uv.x;
