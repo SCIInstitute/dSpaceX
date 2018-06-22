@@ -24,7 +24,7 @@ void main(void) {
   float uscale = THUMBNAIL_WIDTH / MAX_TEXTURE_SIZE;
   float vscale = THUMBNAIL_HEIGHT / MAX_TEXTURE_SIZE;
   float atlasOffsetX = modi(index, thumbnailsPerTextureRow);
-  float atlasOffsetY = modi(index, thumbnailsPerTextureRow);
+  float atlasOffsetY = floor(index / thumbnailsPerTextureRow);
 
   // Account for Thumbnail Aspect Ratio - Scale to Fit
   float aspect_u = uv.x;
