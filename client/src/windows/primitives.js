@@ -55,6 +55,8 @@ export class Quad {
     let maxY = minY + this.height;
 
     // using vec3 as (x, y, UV)
+    // TODO: Factor out UV coordinates that do not belong here.
+    // TODO: Fix UV coordinate system which is upside down.
     this.vertices = [
       minX, maxY, 0,
       maxX, maxY, 1,
