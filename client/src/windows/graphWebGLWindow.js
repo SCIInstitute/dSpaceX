@@ -1,5 +1,6 @@
 ﻿import * as d3 from 'd3';
 import { Edge, Quad } from './primitives';
+import { createShaderProgram, webGLErrorCheck } from './glUtils';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
 import NodeFragmentShaderSource from '../shaders/node.frag';
@@ -8,7 +9,6 @@ import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
 import { mat4 } from 'gl-matrix';
-import { webGLErrorCheck } from './glUtils';
 
 const zoomRate = 1.2;
 const maxScale = 10;
@@ -465,60 +465,19 @@ class GraphWebGLWindow extends React.Component {
     }
   }
 
-  /**
-   * Compile vertex and fragment shader into a shader program.
-   * @param {object} gl The OpenGL context.
-   * @param {string} vertexShaderSource
-   * @param {string} fragmentShaderSource
-   * @return {reference}
-   */
-  createShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
-    let vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vertexShader, vertexShaderSource);
-    gl.compileShader(vertexShader);
-    let compiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
-    if (compiled) {
-      console.log('Vertex shader compiled successfully');
-    } else {
-      console.log('Vertex shader failed to compile.');
-      let compilationLog = gl.getShaderInfoLog(vertexShader);
-      console.log('Shader compiler log: ' + compilationLog);
-    }
-
-    let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fragmentShader, fragmentShaderSource);
-    gl.compileShader(fragmentShader);
-
-    compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
-    if (compiled) {
-      console.log('Fragment shader compiled successfully');
-    } else {
-      console.log('Fragment shader failed to compile.');
-      let compilationLog = gl.getShaderInfoLog(fragmentShader);
-      console.log('Shader compiler log: ' + compilationLog);
-    }
-
-    let shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
-    gl.useProgram(shaderProgram);
-
-    return shaderProgram;
-  }
 
   /**
    * Compiles vertex and fragment shader programs.
    * @param {object} gl The OpenGL context.
    */
   createShaders(gl) {
-    this.nodeShaderProgram = this.createShaderProgram(gl,
+    this.nodeShaderProgram = createShaderProgram(gl,
       NodeVertexShaderSource, NodeFragmentShaderSource);
 
-    this.edgeShaderProgram = this.createShaderProgram(gl,
+    this.edgeShaderProgram = createShaderProgram(gl,
       EdgeVertexShaderSource, EdgeFragmentShaderSource);
 
-    this.thumbnailShaderProgram = this.createShaderProgram(gl,
+    this.thumbnailShaderProgram = createShaderProgram(gl,
       ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
 
     this.activeNodeShader = this.nodeShaderProgram;

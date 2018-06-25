@@ -1,10 +1,52 @@
-// Utility functions
+/**
+ * Compile vertex and fragment shader into a shader program.
+ * @param {object} gl The OpenGL context.
+ * @param {string} vertexShaderSource
+ * @param {string} fragmentShaderSource
+ * @return {reference}
+ */
+export function createShaderProgram(
+  gl, vertexShaderSource, fragmentShaderSource) {
+  let vertexShader = gl.createShader(gl.VERTEX_SHADER);
+  gl.shaderSource(vertexShader, vertexShaderSource);
+  gl.compileShader(vertexShader);
+  let compiled = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+  if (compiled) {
+    console.log('Vertex shader compiled successfully');
+  } else {
+    console.log('Vertex shader failed to compile.');
+    let compilationLog = gl.getShaderInfoLog(vertexShader);
+    console.log('Shader compiler log: ' + compilationLog);
+  }
+
+  let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(fragmentShader, fragmentShaderSource);
+  gl.compileShader(fragmentShader);
+
+  compiled = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+  if (compiled) {
+    console.log('Fragment shader compiled successfully');
+  } else {
+    console.log('Fragment shader failed to compile.');
+    let compilationLog = gl.getShaderInfoLog(fragmentShader);
+    console.log('Shader compiler log: ' + compilationLog);
+  }
+
+  let shaderProgram = gl.createProgram();
+  gl.attachShader(shaderProgram, vertexShader);
+  gl.attachShader(shaderProgram, fragmentShader);
+  gl.linkProgram(shaderProgram);
+  gl.useProgram(shaderProgram);
+
+  return shaderProgram;
+}
+
 
 /**
  * WebGL error check wrapper - logs to console
  * @param {object} gl
  */
-export let webGLErrorCheck = function(gl) {
+export function webGLErrorCheck(gl) {
   let error = gl.getError();
   let str = '';
   switch (error) {
