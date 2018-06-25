@@ -3,7 +3,7 @@ import { Edge, Quad } from './primitives';
 import { createShaderProgram, webGLErrorCheck } from './glUtils';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
-import ErrorDialog from './errorDialog.js';
+import ErrorDialog from '../errorDialog.js';
 import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';

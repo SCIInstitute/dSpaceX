@@ -20,9 +20,19 @@ class GraphD3Window extends React.Component {
    * @return {HTML}
    */
   render() {
+    let nodes = [];
+    for (let i = 0; i < 10; i++) {
+      nodes.push({ x:0, y:0 });
+    }
     return (
       <svg width="100%" height="100%">
-
+        {
+          nodes.map((node, i) => {
+            return (
+              <circle key={i} cx={0} cy={0} r={4} />
+            );
+          })
+        }
       </svg>
     );
   }

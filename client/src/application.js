@@ -4,6 +4,7 @@ import DatasetPanel from './panels/datasetPanel.js';
 import DecompositionPanel from './panels/decompositionPanel.js';
 import DisplayPanel from './panels/displayPanel.js';
 import Drawer from 'material-ui/Drawer';
+import GraphD3Window from './windows/graphD3Window.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -43,7 +44,8 @@ const styles = (theme) => ({
   },
   toolbar: theme.mixins.toolbar,
 });
-
+const queryString = window.location.search.substring(1);
+const debug = queryString.split('=')[1] === 'true';
 
 /**
  * The top level dSpaceX client component.
@@ -218,11 +220,15 @@ class Application extends React.Component {
           <div className={classes.workspace}>
             {
               !!this.state.currentDecomposition ? [
-                <GraphGLWindow key='1' dataset={this.state.currentDataset}
-                  decomposition={this.state.currentDecomposition}
-                  qoi={this.state.currentQoi}
-                  client={this.client}/>,
-                // <WebGLWindow key='2' dataset={this.state.currentDataset}/>,
+                debug ?
+                  <GraphD3Window key='1' dataset={this.state.currentDataset}
+                    decomposition={this.state.currentDecomposition}
+                    qoi={this.state.currentQoi}
+                    client={this.client}/> :
+                  <GraphGLWindow key='1' dataset={this.state.currentDataset}
+                    decomposition={this.state.currentDecomposition}
+                    qoi={this.state.currentQoi}
+                    client={this.client}/>,
               ] : []
             }
           </div>
