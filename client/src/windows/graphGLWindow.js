@@ -3,6 +3,7 @@ import { Edge, Quad } from './primitives';
 import { createShaderProgram, webGLErrorCheck } from './glUtils';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
+import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
 import React from 'react';
@@ -21,7 +22,7 @@ const defaultEdgeOpacity = 0.05;
 /**
  * A WebGL Window Component for rendering Graphs.
  */
-class GraphWebGLWindow extends React.Component {
+class GraphGLWindow extends GLWindow {
   /**
    * GraphWebGLWindow constructor.
    * @param {object} props
@@ -909,4 +910,4 @@ class GraphWebGLWindow extends React.Component {
   }
 }
 
-export default GraphWebGLWindow;
+export default GraphGLWindow;

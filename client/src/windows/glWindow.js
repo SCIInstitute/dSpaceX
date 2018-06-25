@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * A base WebGL Window Component.
  */
-class WebGLWindow extends React.Component {
+class GLWindow extends React.Component {
   /**
    * WebGLWindow constructor.
    * @param {object} props
@@ -141,4 +141,4 @@ class WebGLWindow extends React.Component {
   }
 }
 
-export default WebGLWindow;
+export default GLWindow;
