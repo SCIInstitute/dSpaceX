@@ -44,6 +44,9 @@ const styles = (theme) => ({
   },
   toolbar: theme.mixins.toolbar,
 });
+
+// TODO: Move QueryParam Configuration to some central
+//       location and expand to support more fields.
 const queryString = window.location.search.substring(1);
 const debug = queryString.split('=')[1] === 'true';
 
