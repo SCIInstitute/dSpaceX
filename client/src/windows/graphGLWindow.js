@@ -768,6 +768,9 @@ class GraphGLWindow extends GLWindow {
           if (nextProps.decomposition) {
             let errorMessage = 'No decomposition layout provided.';
             this.refs.errorDialog.reportError(errorMessage);
+          } else {
+            let errorMessage = 'No decomposition provided.';
+            this.refs.errorDialog.reportError(errorMessage);
           }
         }
         this.updateBuffers();
