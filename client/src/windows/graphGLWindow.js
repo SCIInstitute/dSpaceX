@@ -766,11 +766,8 @@ class GraphGLWindow extends GLWindow {
         } else {
           // For now, if server fails. Render fake data.
           if (nextProps.decomposition) {
-            // let fakeNodePositions = this.createFakeNodePositions();
-            // let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
-            // this.createGeometry(fakeNodePositions, fakeEdgeIndices);
-            // let fakeNodeColors = this.createFakeNodeColors();
-            // this.addVertexColors(fakeNodeColors);
+            let errorMessage = 'No decomposition layout provided.';
+            this.refs.errorDialog.reportError(errorMessage);
           }
         }
         this.updateBuffers();
