@@ -3,6 +3,7 @@ import { Edge, Quad } from './primitives';
 import { createShaderProgram, webGLErrorCheck } from './glUtils';
 import EdgeFragmentShaderSource from '../shaders/edge.frag';
 import EdgeVertexShaderSource from '../shaders/edge.vert';
+import ErrorDialog from './errorDialog.js';
 import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
@@ -251,14 +252,6 @@ class GraphGLWindow extends GLWindow {
     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
       gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    // Create fake data if there's no decomposition information.
-    if (!this.props.decomposition) {
-      let fakeNodePositions = this.createFakeNodePositions();
-      let fakeEdgesIndices = this.createFakeEdges(fakeNodePositions);
-      this.createGeometry(fakeNodePositions, fakeEdgesIndices);
-      let fakeNodeColors = this.createFakeNodeColors();
-      this.addVertexColors(fakeNodeColors);
-    }
     this.createShaders(gl);
     this.createBuffers(gl);
 
@@ -677,13 +670,12 @@ class GraphGLWindow extends GLWindow {
             this.addVertexColors(colorsArray);
           }
         } else {
-          // For now, if server fails. Render fake data.
           if (this.props.decomposition) {
-            let fakeNodePositions = this.createFakeNodePositions();
-            let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
-            this.createGeometry(fakeNodePositions, fakeEdgeIndices);
-            let fakeNodeColors = this.createFakeNodeColors();
-            this.addVertexColors(fakeNodeColors);
+            let errorMessage = 'No decomposition layout provided.';
+            this.refs.errorDialog.reportError(errorMessage);
+          } else {
+            let errorMessage = 'No decomposition provided.';
+            this.refs.errorDialog.reportError(errorMessage);
           }
         }
         this.updateBuffers();
@@ -774,11 +766,11 @@ class GraphGLWindow extends GLWindow {
         } else {
           // For now, if server fails. Render fake data.
           if (nextProps.decomposition) {
-            let fakeNodePositions = this.createFakeNodePositions();
-            let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
-            this.createGeometry(fakeNodePositions, fakeEdgeIndices);
-            let fakeNodeColors = this.createFakeNodeColors();
-            this.addVertexColors(fakeNodeColors);
+            // let fakeNodePositions = this.createFakeNodePositions();
+            // let fakeEdgeIndices = this.createFakeEdges(fakeNodePositions);
+            // this.createGeometry(fakeNodePositions, fakeEdgeIndices);
+            // let fakeNodeColors = this.createFakeNodeColors();
+            // this.addVertexColors(fakeNodeColors);
           }
         }
         this.updateBuffers();
@@ -905,7 +897,10 @@ class GraphGLWindow extends GLWindow {
       boxSizing: 'border-box',
     };
     return (
-      <canvas ref='canvas' className='glCanvas' style={style} />
+      <React.Fragment>
+        <canvas ref='canvas' className='glCanvas' style={style} />
+        <ErrorDialog ref='errorDialog' />
+      </React.Fragment>
     );
   }
 }
