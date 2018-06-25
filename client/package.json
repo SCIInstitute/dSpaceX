@@ -30,7 +30,7 @@
     "eslint-plugin-react": "^7.5.1",
     "raw-loader": "^0.5.1",
     "webpack": "^4.12.1",
-    "webpack-cli": "^2.0.9"
+    "webpack-cli": "^3.0.8"
   },
   "dependencies": {
     "d3": "^5.0.0",
