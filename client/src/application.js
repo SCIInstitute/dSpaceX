@@ -1,14 +1,14 @@
-import Client from './client';
-import ConnectionDialog from './connectionDialog';
-import DatasetPanel from './panels/datasetPanel';
-import DecompositionPanel from './panels/decompositionPanel';
-import DisplayPanel from './panels/displayPanel';
+import Client from './client.js';
+import ConnectionDialog from './connectionDialog.js';
+import DatasetPanel from './panels/datasetPanel.js';
+import DecompositionPanel from './panels/decompositionPanel.js';
+import DisplayPanel from './panels/displayPanel.js';
 import Drawer from 'material-ui/Drawer';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
-import Toolbar from './toolbar';
-import Workspace from './workspace';
+import Toolbar from './toolbar.js';
+import Workspace from './workspace.js';
 import { withStyles } from 'material-ui/styles';
 
 const drawerWidth = 260;
