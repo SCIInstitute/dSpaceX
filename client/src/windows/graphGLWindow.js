@@ -7,6 +7,8 @@ import ErrorDialog from '../errorDialog.js';
 import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
+import PickingFragmentShaderSource from '../shaders/picking.frag';
+import PickingVertexShaderSource from '../shaders/picking.vert';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
@@ -40,6 +42,7 @@ class GraphGLWindow extends GLWindow {
     this.sampleIndex_buffer = null;
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
+    this.pickingShaderProgram = null;
     this.thumbnailShaderProgram = null;
     this.activeNodeShader = null;
     this.vertices = null;
@@ -213,6 +216,16 @@ class GraphGLWindow extends GLWindow {
     case 'j':
       this.edgeOpacity *= 1.1;
       console.log('edgeOpacity = ' + this.edgeOpacity);
+      break;
+    case 'p':
+      // TODO: Support thumbnail picking shader vs picking node shader.
+      if (this.activeNodeShader == this.nodeShaderProgram) {
+        console.log('Switching to picking node shader.');
+        this.activeNodeShader = this.pickingShaderProgram;
+      } else {
+        console.log('Switching to default node shader.');
+        this.activeNodeShader = this.nodeShaderProgram;
+      }
       break;
     case 't':
       if (this.activeNodeShader == this.nodeShaderProgram) {
@@ -409,6 +422,9 @@ class GraphGLWindow extends GLWindow {
 
     this.thumbnailShaderProgram = createShaderProgram(gl,
       ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
+
+    this.pickingShaderProgram = createShaderProgram(gl,
+      PickingVertexShaderSource, PickingFragmentShaderSource);
 
     this.activeNodeShader = this.nodeShaderProgram;
   }
@@ -738,9 +754,11 @@ class GraphGLWindow extends GLWindow {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
       let vertexColorAttribute =
         gl.getAttribLocation(this.activeNodeShader, 'vertexColor');
-      gl.vertexAttribPointer(vertexColorAttribute,
-        3, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(vertexColorAttribute);
+      if (vertexColorAttribute > 0) {
+        gl.vertexAttribPointer(vertexColorAttribute,
+          3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vertexColorAttribute);
+      }
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
