@@ -4,6 +4,7 @@ import DatasetPanel from './panels/datasetPanel.js';
 import DecompositionPanel from './panels/decompositionPanel.js';
 import DisplayPanel from './panels/displayPanel.js';
 import Drawer from 'material-ui/Drawer';
+import ErrorDialog from './errorDialog.js';
 import GraphD3Window from './windows/graphD3Window.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
@@ -125,8 +126,10 @@ class Application extends React.Component {
    * Handles the application disconnecting from the remote server.
    */
   onDisconnect() {
+    this.refs.errorDialog.reportError('Unable to communicate with server.');
     this.setState({
       connected: false,
+      networkActive: false,
     });
   }
 
@@ -236,6 +239,7 @@ class Application extends React.Component {
             }
           </div>
         </Workspace>
+        <ErrorDialog ref='errorDialog' />
       </div>
     );
   }
