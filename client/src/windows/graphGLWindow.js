@@ -1042,6 +1042,7 @@ class GraphGLWindow extends GLWindow {
         <canvas ref='canvas' className='glCanvas' style={style} />
         {
           this.state.hoverNode ? (<Paper style={{
+            padding: '4px',
             position: 'absolute',
             top: (this.state.hoverY - 10) + 'px',
             left: (this.state.hoverX + 10) + 'px',
