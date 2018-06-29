@@ -70,6 +70,7 @@ class GraphGLWindow extends GLWindow {
     this.sDown = false;
     this.oDown = false;
 
+    this.renderGL = this.renderGL.bind(this);
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseRelease = this.handleMouseRelease.bind(this);
@@ -235,7 +236,7 @@ class GraphGLWindow extends GLWindow {
             .then((result) => {
               this.thumbnails = result.thumbnails;
               this.createTextureAtlas();
-              requestAnimationFrame(this.drawScene.bind(this));
+              requestAnimationFrame(this.renderGL);
             });
         }
         this.activeNodeShader = this.thumbnailShaderProgram;
@@ -245,7 +246,7 @@ class GraphGLWindow extends GLWindow {
       }
       break;
     }
-    requestAnimationFrame(this.drawScene.bind(this));
+    requestAnimationFrame(this.renderGL);
   }
 
   /**
@@ -578,7 +579,7 @@ class GraphGLWindow extends GLWindow {
     canvas.height = canvas.clientHeight;
 
     this.setupOrtho(canvas.width, canvas.height);
-    requestAnimationFrame(this.drawScene.bind(this));
+    requestAnimationFrame(this.renderGL);
   }
 
   /**
@@ -631,7 +632,7 @@ class GraphGLWindow extends GLWindow {
           }
         }
         this.updateBuffers();
-        requestAnimationFrame(this.drawScene.bind(this));
+        requestAnimationFrame(this.renderGL);
       }.bind(this));
   }
 
@@ -661,7 +662,7 @@ class GraphGLWindow extends GLWindow {
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
     window.addEventListener('keydown', this.handleKeyDown);
-    requestAnimationFrame(this.drawScene.bind(this));
+    requestAnimationFrame(this.renderGL);
   }
 
   /**
@@ -725,7 +726,7 @@ class GraphGLWindow extends GLWindow {
           }
         }
         this.updateBuffers();
-        requestAnimationFrame(this.drawScene.bind(this));
+        requestAnimationFrame(this.renderGL);
       }.bind(this));
   }
 
@@ -824,10 +825,18 @@ class GraphGLWindow extends GLWindow {
   /**
    * Renders the OpenGL Content to the canvas.
    */
-  drawScene() {
+  renderGL() {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
+    this.drawScene(gl);
+  }
 
+  /**
+   * Draw the graph to be seen by the user.
+   * @param {object} gl
+   */
+  drawScene(gl) {
+    const canvas = this.refs.canvas;
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
