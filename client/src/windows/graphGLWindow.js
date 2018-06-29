@@ -262,6 +262,7 @@ class GraphGLWindow extends GLWindow {
 
     this.createShaders(gl);
     this.createBuffers(gl);
+    this.createFrameBuffers(gl);
 
     webGLErrorCheck(gl);
 
@@ -493,6 +494,13 @@ class GraphGLWindow extends GLWindow {
     this.thumbnailsAtlasTexture = texture;
   }
 
+  /**
+   * Creates render frame buffer and associated texture.
+   * @param {object} gl The OpenGL context.
+   */
+  createFrameBuffers(gl) {
+    // TODO: Implement
+  }
 
   /**
    * Creates vertex buffers for dummy data.
