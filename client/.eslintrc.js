@@ -5,7 +5,7 @@ module.exports = {
     "google",
   ],
   "rules": {
-    "indent": ["error", 2],
+    "indent": ["error", 2, { "SwitchCase": 1 }],
     "switch-colon-spacing": 0,
     "object-curly-spacing" : [
       "error", "always", {

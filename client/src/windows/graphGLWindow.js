@@ -151,97 +151,97 @@ class GraphGLWindow extends GLWindow {
    */
   handleKeyDown(event) {
     switch (event.key) {
-    case '/':
-      for (let i = 0; i < this.nodes.length; i++) {
-        this.nodes[i].decreaseRadius(1.1);
-        let count = this.nodes[i].vertices.length;
-        for (let j = 0; j < count; j++) {
-          this.vertices[i*count+j] = this.nodes[i].vertices[j];
+      case '/':
+        for (let i = 0; i < this.nodes.length; i++) {
+          this.nodes[i].decreaseRadius(1.1);
+          let count = this.nodes[i].vertices.length;
+          for (let j = 0; j < count; j++) {
+            this.vertices[i*count+j] = this.nodes[i].vertices[j];
+          }
         }
-      }
-      this.updateBuffers();
-      break;
-    case '\'':
-      for (let i = 0; i < this.nodes.length; i++) {
-        this.nodes[i].increaseRadius(1.1);
-        let count = this.nodes[i].vertices.length;
-        for (let j = 0; j < count; j++) {
-          this.vertices[i*count+j] = this.nodes[i].vertices[j];
+        this.updateBuffers();
+        break;
+      case '\'':
+        for (let i = 0; i < this.nodes.length; i++) {
+          this.nodes[i].increaseRadius(1.1);
+          let count = this.nodes[i].vertices.length;
+          for (let j = 0; j < count; j++) {
+            this.vertices[i*count+j] = this.nodes[i].vertices[j];
+          }
         }
-      }
-      this.updateBuffers();
-      break;
-    case '.':
-      this.nodeOutline = Math.max(0.00002, this.nodeOutline/1.1);
-      break;
-    case ';':
-      this.nodeOutline *= 1.1;
-      break;
-    case ',':
-      this.nodeSmoothness = Math.max(0.0002, this.nodeSmoothness / 1.1);
-      break;
-    case 'l':
-      this.nodeSmoothness *= 1.1;
-      break;
-    case 'm':
-      for (let i = 0; i < this.edges.length; i++) {
-        this.edges[i].decreaseThickness(1.1);
-        let count = this.edges[i].vertices.length;
-        for (let j = 0; j < count; j++) {
-          this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+        this.updateBuffers();
+        break;
+      case '.':
+        this.nodeOutline = Math.max(0.00002, this.nodeOutline/1.1);
+        break;
+      case ';':
+        this.nodeOutline *= 1.1;
+        break;
+      case ',':
+        this.nodeSmoothness = Math.max(0.0002, this.nodeSmoothness / 1.1);
+        break;
+      case 'l':
+        this.nodeSmoothness *= 1.1;
+        break;
+      case 'm':
+        for (let i = 0; i < this.edges.length; i++) {
+          this.edges[i].decreaseThickness(1.1);
+          let count = this.edges[i].vertices.length;
+          for (let j = 0; j < count; j++) {
+            this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+          }
         }
-      }
-      this.updateBuffers();
-      this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
-      console.log('edgeThickness = ' + this.edgeThickness);
-      break;
-    case 'k':
-      for (let i = 0; i < this.edges.length; i++) {
-        this.edges[i].increaseThickness(1.1);
-        let count = this.edges[i].vertices.length;
-        for (let j = 0; j < count; j++) {
-          this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+        this.updateBuffers();
+        this.edgeThickness = Math.max(0.0001, this.edgeThickness / 1.1);
+        console.log('edgeThickness = ' + this.edgeThickness);
+        break;
+      case 'k':
+        for (let i = 0; i < this.edges.length; i++) {
+          this.edges[i].increaseThickness(1.1);
+          let count = this.edges[i].vertices.length;
+          for (let j = 0; j < count; j++) {
+            this.edgeVerts[i*count+j] = this.edges[i].vertices[j];
+          }
         }
-      }
-      this.updateBuffers();
-      this.edgeThickness *= 1.1;
-      console.log('edgeThickness = ' + this.edgeThickness);
-      break;
-    case 'n':
-      this.edgeOpacity = Math.max(0.0002, this.edgeOpacity / 1.1);
-      console.log('edgeOpacity = ' + this.edgeOpacity);
-      break;
-    case 'j':
-      this.edgeOpacity *= 1.1;
-      console.log('edgeOpacity = ' + this.edgeOpacity);
-      break;
-    case 'p':
-      // TODO: Support thumbnail picking shader vs picking node shader.
-      if (this.activeNodeShader == this.nodeShaderProgram) {
-        console.log('Switching to picking node shader.');
-        this.activeNodeShader = this.pickingShaderProgram;
-      } else {
-        console.log('Switching to default node shader.');
-        this.activeNodeShader = this.nodeShaderProgram;
-      }
-      break;
-    case 't':
-      if (this.activeNodeShader == this.nodeShaderProgram) {
-        console.log('Switching to thumbnail node shader.');
-        if (!this.thumbnails) {
-          this.client.fetchThumbnails(this.props.dataset.datasetId)
-            .then((result) => {
-              this.thumbnails = result.thumbnails;
-              this.createTextureAtlas();
-              requestAnimationFrame(this.renderGL);
-            });
+        this.updateBuffers();
+        this.edgeThickness *= 1.1;
+        console.log('edgeThickness = ' + this.edgeThickness);
+        break;
+      case 'n':
+        this.edgeOpacity = Math.max(0.0002, this.edgeOpacity / 1.1);
+        console.log('edgeOpacity = ' + this.edgeOpacity);
+        break;
+      case 'j':
+        this.edgeOpacity *= 1.1;
+        console.log('edgeOpacity = ' + this.edgeOpacity);
+        break;
+      case 'p':
+        // TODO: Support thumbnail picking shader vs picking node shader.
+        if (this.activeNodeShader == this.nodeShaderProgram) {
+          console.log('Switching to picking node shader.');
+          this.activeNodeShader = this.pickingShaderProgram;
+        } else {
+          console.log('Switching to default node shader.');
+          this.activeNodeShader = this.nodeShaderProgram;
         }
-        this.activeNodeShader = this.thumbnailShaderProgram;
-      } else {
-        console.log('Switching to default node shader.');
-        this.activeNodeShader = this.nodeShaderProgram;
-      }
-      break;
+        break;
+      case 't':
+        if (this.activeNodeShader == this.nodeShaderProgram) {
+          console.log('Switching to thumbnail node shader.');
+          if (!this.thumbnails) {
+            this.client.fetchThumbnails(this.props.dataset.datasetId)
+              .then((result) => {
+                this.thumbnails = result.thumbnails;
+                this.createTextureAtlas();
+                requestAnimationFrame(this.renderGL);
+              });
+          }
+          this.activeNodeShader = this.thumbnailShaderProgram;
+        } else {
+          console.log('Switching to default node shader.');
+          this.activeNodeShader = this.nodeShaderProgram;
+        }
+        break;
     }
     requestAnimationFrame(this.renderGL);
   }
@@ -502,14 +502,13 @@ class GraphGLWindow extends GLWindow {
    */
   createFrameBuffers(gl) {
     let canvas = this.refs.canvas;
-
     let maxDimension = Math.max(canvas.width, canvas.height);
     let size = Math.pow(2, Math.ceil(Math.log(maxDimension)/Math.log(2)));
 
     this.frameBuffer = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     this.frameBuffer.width = size;
     this.frameBuffer.height = size;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 
     this.renderTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
@@ -517,7 +516,7 @@ class GraphGLWindow extends GLWindow {
     gl.texParameteri(
       gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.frameBuffer.width,
-      this.frameBuffer, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      this.frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
     this.renderBuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderBuffer);
@@ -527,7 +526,31 @@ class GraphGLWindow extends GLWindow {
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
       gl.TEXTURE_2D, this.renderTexture, 0);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
-      gl.RENDERBUFFER, this.renderbuffer);
+      gl.RENDERBUFFER, this.renderBuffer);
+
+    let status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    switch (status) {
+      case gl.FRAMEBUFFER_COMPLETE:
+        console.log('The framebuffer is ready to display.');
+        break;
+      case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+        console.log('The attachment types are mismatched or not all ' +
+          'framebuffer attachment points are framebuffer attachment complete.');
+        break;
+      case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+        console.log('There is no attachment.');
+        break;
+      case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+        console.log('Height and width of the attachment are not the same.');
+        break;
+      case gl.FRAMEBUFFER_UNSUPPORTED:
+        console.log('The format of the attachment is not supported or if ' +
+          'depth and stencil attachments are not the same renderbuffer.');
+        break;
+      default:
+        console.log('FramebufferStatus reported unknown status: ' + status);
+        break;
+    }
 
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
@@ -768,12 +791,13 @@ class GraphGLWindow extends GLWindow {
   /**
    * Render Graph Nodes
    * @param {object} gl
+   * @param {object} shader
    */
-  drawNodes(gl) {
+  drawNodes(gl, shader) {
     gl.enable(gl.CULL_FACE);
     gl.frontFace(gl.CW);
     gl.cullFace(gl.BACK);
-    gl.useProgram(this.activeNodeShader);
+    gl.useProgram(shader);
 
     if (this.thumbnailsAtlasTexture) {
       gl.activeTexture(gl.TEXTURE0);
@@ -782,14 +806,14 @@ class GraphGLWindow extends GLWindow {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
     let coordinateAttrib =
-        gl.getAttribLocation(this.activeNodeShader, 'coordinates');
+        gl.getAttribLocation(shader, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
     if (this.vertColors && this.vertColors.length == this.vertices.length) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
       let vertexColorAttribute =
-        gl.getAttribLocation(this.activeNodeShader, 'vertexColor');
+        gl.getAttribLocation(shader, 'vertexColor');
       if (vertexColorAttribute > 0) {
         gl.vertexAttribPointer(vertexColorAttribute,
           3, gl.FLOAT, false, 0, 0);
@@ -799,7 +823,7 @@ class GraphGLWindow extends GLWindow {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
     let sampleIndexAttribute =
-      gl.getAttribLocation(this.activeNodeShader, 'sampleIndex');
+      gl.getAttribLocation(shader, 'sampleIndex');
     if (sampleIndexAttribute > 0) {
       gl.vertexAttribPointer(
         sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
@@ -807,15 +831,15 @@ class GraphGLWindow extends GLWindow {
     }
 
     let nodeOutlineLocation =
-        gl.getUniformLocation(this.activeNodeShader, 'nodeOutline');
+        gl.getUniformLocation(shader, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
     let nodeSmoothnessLocation =
-        gl.getUniformLocation(this.activeNodeShader, 'nodeSmoothness');
+        gl.getUniformLocation(shader, 'nodeSmoothness');
     gl.uniform1f(nodeSmoothnessLocation, this.nodeSmoothness);
 
     let projectionMatrixLocation =
-        gl.getUniformLocation(this.activeNodeShader, 'uProjectionMatrix');
+        gl.getUniformLocation(shader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
@@ -863,6 +887,17 @@ class GraphGLWindow extends GLWindow {
   renderGL() {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
+
+    // draw scene offscreen for picking
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (this.vertices) {
+      this.drawNodes(gl, this.pickingShaderProgram);
+    }
+
+    // draw scene to screen
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.drawScene(gl);
   }
 
@@ -878,7 +913,7 @@ class GraphGLWindow extends GLWindow {
     // TODO: Replace with a safer check. Maybe add boolean to class.
     if (this.vertices) {
       this.drawEdges(gl);
-      this.drawNodes(gl);
+      this.drawNodes(gl, this.activeNodeShader);
     }
   }
 
