@@ -76,12 +76,14 @@ class GraphGLWindow extends GLWindow {
     this.edgeThickness = 0.0;
     this.edgeSmoothness = 0.0;
     this.edgeOpacity = 0.0;
-
     this.nodeOutline = 0.025;
     this.nodeSmoothness = 0.05;
 
     this.thumbnails = null;
     this.thumbnailsAtlasTexture = null;
+    this.frameBuffer = null;
+    this.renderBuffer = null;
+    this.renderTexture = null;
   }
 
   /**
@@ -499,7 +501,37 @@ class GraphGLWindow extends GLWindow {
    * @param {object} gl The OpenGL context.
    */
   createFrameBuffers(gl) {
-    // TODO: Implement
+    let canvas = this.refs.canvas;
+
+    let maxDimension = Math.max(canvas.width, canvas.height);
+    let size = Math.pow(2, Math.ceil(Math.log(maxDimension)/Math.log(2)));
+
+    this.frameBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    this.frameBuffer.width = size;
+    this.frameBuffer.height = size;
+
+    this.renderTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(
+      gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.frameBuffer.width,
+      this.frameBuffer, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    this.renderBuffer = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderBuffer);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16,
+      this.frameBuffer.width, this.frameBuffer.height);
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D, this.renderTexture, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+      gl.RENDERBUFFER, this.renderbuffer);
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   /**
