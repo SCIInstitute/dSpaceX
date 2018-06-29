@@ -503,7 +503,7 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Creates vertex buffers for dummy data.
+   * Creates vertex buffers for geometry data.
    * @param {object} gl The OpenGL context.
    */
   createBuffers(gl) {
