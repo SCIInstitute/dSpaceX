@@ -128,10 +128,10 @@ class GraphGLWindow extends GLWindow {
    * @param {Event} event
    */
   handleMouseMove(event) {
-    if (this.rightMouseDown) {
-      let x = event.offsetX;
-      let y = event.offsetY;
+    let x = event.offsetX;
+    let y = event.offsetY;
 
+    if (this.rightMouseDown) {
       let dx = (x - this.previousX);
       let dy = (y - this.previousY);
 
@@ -143,6 +143,25 @@ class GraphGLWindow extends GLWindow {
 
       this.resizeCanvas();
     }
+  }
+
+  /**
+   * Looks up the texture value at the coordinate cooordinate to determine
+   * what geometry is currently under the cursor.
+   * @param {number} x
+   * @param {number} y
+   */
+  pickGeometryUnderCursor(x, y) {
+    const canvas = this.refs.canvas;
+    let gl = canvas.getContext('webgl');
+
+    // Read one pixel
+    let readout = new Uint8Array(1 * 1 * 4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    console.log(readout);
   }
 
   /**
