@@ -22,6 +22,7 @@
 #include <cstring>
 #include <exception>
 #include <functional>
+#include <fstream>
 #include <string>
 
 using namespace std::placeholders;
@@ -477,6 +478,9 @@ void Controller::fetchThumbnails(
     imageObject["data"] = base64_encode(
             reinterpret_cast<const unsigned char*>(image.getData()),
             4*image.getWidth()*image.getHeight());
+    imageObject["rawData"] = base64_encode(
+            reinterpret_cast<const unsigned char*>(&image.getRawData()[0]),
+            image.getRawData().size());
     response["thumbnails"].append(imageObject);
   }  
 }

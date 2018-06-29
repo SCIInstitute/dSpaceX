@@ -1031,17 +1031,27 @@ class GraphGLWindow extends GLWindow {
       borderRight: '1px dashed gray',
       boxSizing: 'border-box',
     };
+
+    let imageBase64 = null;
+    if (this.thumbnails && this.state.hoverNode) {
+      imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
+    }
+
     return (
       <React.Fragment>
         <canvas ref='canvas' className='glCanvas' style={style} />
         {
           this.state.hoverNode ? (<Paper style={{
             position: 'absolute',
-            top: this.state.hoverY + 'px',
-            left: this.state.hoverX + 'px',
+            top: (this.state.hoverY - 10) + 'px',
+            left: (this.state.hoverX + 10) + 'px',
             width: '100px',
           }}>
             { 'Sample #' + this.state.hoverNode }
+            { imageBase64 ?
+              <img src={'data:image/png;base64, ' + imageBase64} /> :
+              []
+            }
           </Paper>) :
             []
         }

@@ -1,12 +1,13 @@
 #include "ImageLoader.h"
 #include "png.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <cstdlib>
 #include <stdexcept>
+#include <vector>
 
 // TODO: Add support for JPG images.
 Image ImageLoader::loadImage(const std::string &filename, ImageLoader::Format format) {
@@ -114,6 +115,15 @@ Image ImageLoader::loadPNG(const std::string &filename) {
   /* Close the file */
   fclose(fp);
 
-  return Image(width, height, image_data);
+  std::vector<char> raw_data = this->loadRawData(filename); 
+  return Image(width, height, image_data, std::move(raw_data), "png");
 }
 
+std::vector<char> ImageLoader::loadRawData(const std::string &filename) {
+  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+  std::ifstream::pos_type pos = ifs.tellg();
+  std::vector<char> result(pos);
+  ifs.seekg(0, std::ios::beg);
+  ifs.read(&result[0], pos);
+  return result;
+}
