@@ -812,12 +812,8 @@ class GraphGLWindow extends GLWindow {
    * @param {object} gl
    * @param {object} shader
    */
-  drawNodes(gl, shader) {
-    gl.enable(gl.CULL_FACE);
-    gl.frontFace(gl.CW);
-    gl.cullFace(gl.BACK);
+  drawNodes(gl, shader) {    
     gl.useProgram(shader);
-
     if (this.thumbnailsAtlasTexture) {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, this.thumbnailsAtlasTexture);
@@ -873,8 +869,7 @@ class GraphGLWindow extends GLWindow {
    * Render Graph Edges
    * @param {object} gl
    */
-  drawEdges(gl) {
-    gl.disable(gl.CULL_FACE);
+  drawEdges(gl) {    
     gl.useProgram(this.edgeShaderProgram);
     let projectionMatrixLocation =
         gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
