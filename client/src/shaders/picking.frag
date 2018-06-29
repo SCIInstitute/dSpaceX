@@ -20,7 +20,7 @@ void main(void) {
   float blur = nodeSmoothness;
   float t = distance(uv, center) - radius;
   vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-  if (t < (thickness + blur)) {
+  if (t < (thickness + 0.25*blur)) {
     int baseIndex = int(floor(index));
     int range = 255*255;   // for now limit to size of .gb channels
     int n = 1000;
