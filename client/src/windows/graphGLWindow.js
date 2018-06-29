@@ -7,6 +7,7 @@ import ErrorDialog from '../errorDialog.js';
 import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
+import Paper from 'material-ui/Paper';
 import PickingFragmentShaderSource from '../shaders/picking.frag';
 import PickingVertexShaderSource from '../shaders/picking.vert';
 import PreviewTexturVertexeShaderSource from '../shaders/previewTexture.vert';
@@ -33,6 +34,12 @@ class GraphGLWindow extends GLWindow {
    */
   constructor(props) {
     super(props);
+    this.state = {
+      hoverX: null,
+      hoverY: null,
+      hoverNode: null,
+      hoverShow: false,
+    };
 
     this.client = this.props.client;
     this.canvas = null;
@@ -80,6 +87,10 @@ class GraphGLWindow extends GLWindow {
     this.edgeOpacity = 0.0;
     this.nodeOutline = 0.025;
     this.nodeSmoothness = 0.05;
+
+    this.currentHoverNode = null;
+    this.currentHoverX = 0;
+    this.currentHoverY = 0;
 
     this.showPreview = false;
     this.previewTextureShader = null;
@@ -140,9 +151,6 @@ class GraphGLWindow extends GLWindow {
       let dx = (x - this.previousX);
       let dy = (y - this.previousY);
 
-      this.previousX = x;
-      this.previousY = y;
-
       this.xOffset -= this.pixelToGeometryRatioX * dx;
       this.yOffset += this.pixelToGeometryRatioY * dy;
 
@@ -150,6 +158,8 @@ class GraphGLWindow extends GLWindow {
       requestAnimationFrame(this.renderGL);
     }
 
+    this.previousX = x;
+    this.previousY = y;
     this.pickGeometryUnderCursor(x, y);
   }
 
@@ -179,8 +189,19 @@ class GraphGLWindow extends GLWindow {
     if (r != 255) {
       let mappedIndex = 255*g + b;
       let baseIndex = Math.floor(mappedIndex / Math.floor(range/n));
-      console.log('Node index: ' + baseIndex);
+      this.setState({
+        hoverNode: baseIndex,
+        hoverX: x,
+        hoverY: y,
+        hoverShow: baseIndex == this.state.hoverNode,
+      });
+    } else {
+      this.setState({
+        hoverNode: null,
+        hoverShow: false,
+      });
     }
+    console.log('Node index: ' + this.state.hoverNode);
   }
 
   /**
@@ -1013,6 +1034,17 @@ class GraphGLWindow extends GLWindow {
     return (
       <React.Fragment>
         <canvas ref='canvas' className='glCanvas' style={style} />
+        {
+          this.state.hoverNode ? (<Paper style={{
+            position: 'absolute',
+            top: this.state.hoverY + 'px',
+            left: this.state.hoverX + 'px',
+            width: '100px',
+          }}>
+            { 'Sample #' + this.state.hoverNode }
+          </Paper>) :
+            []
+        }
         <ErrorDialog ref='errorDialog' />
       </React.Fragment>
     );

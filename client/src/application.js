@@ -35,6 +35,7 @@ const styles = (theme) => ({
     flexGrow: 1,
     minWidth: 0,
     backgroundColor: '#eef',
+    position: 'relative',
   },
   workspace: {
     display: 'grid',
