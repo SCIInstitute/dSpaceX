@@ -1048,7 +1048,9 @@ class GraphGLWindow extends GLWindow {
             left: (this.state.hoverX + 10) + 'px',
             width: '100px',
           }}>
-            { 'Sample #' + this.state.hoverNode }
+            { 'Sample: ' + this.state.hoverNode }
+            <br/>
+            { 'Qoi: ' + this.props.qoi[this.state.hoverNode] }
             { imageBase64 ?
               <img src={'data:image/png;base64, ' + imageBase64} /> :
               []
