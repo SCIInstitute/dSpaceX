@@ -62,13 +62,8 @@ class GraphGLWindow extends GLWindow {
     this.yOffset = 0;
 
     this.previousX = 0;
-    this.previousY = 0;
-    this.netPanX = 0;
-    this.netPanY = 0;
-    this.rightMouseDown = false;
-    this.tDown = false;
-    this.sDown = false;
-    this.oDown = false;
+    this.previousY = 0;    
+    this.rightMouseDown = false;            
 
     this.renderGL = this.renderGL.bind(this);
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
