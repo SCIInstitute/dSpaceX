@@ -9,6 +9,8 @@ import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
 import PickingFragmentShaderSource from '../shaders/picking.frag';
 import PickingVertexShaderSource from '../shaders/picking.vert';
+import PreviewTexturVertexeShaderSource from '../shaders/previewTexture.vert';
+import PreviewTextureFragmentShaderSource from '../shaders/previewTexture.frag';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
@@ -79,6 +81,8 @@ class GraphGLWindow extends GLWindow {
     this.nodeOutline = 0.025;
     this.nodeSmoothness = 0.05;
 
+    this.showPreview = false;
+    this.previewTextureShader = null;
     this.thumbnails = null;
     this.thumbnailsAtlasTexture = null;
     this.frameBuffer = null;
@@ -97,7 +101,8 @@ class GraphGLWindow extends GLWindow {
     if (event.deltaY > 0 && this.scale < maxScale) {
       this.scale = this.scale * zoomRate;
     }
-    this.resizeCanvas();
+    this.setupOrtho();
+    requestAnimationFrame(this.renderGL);
   }
 
   /**
@@ -141,8 +146,11 @@ class GraphGLWindow extends GLWindow {
       this.xOffset -= this.pixelToGeometryRatioX * dx;
       this.yOffset += this.pixelToGeometryRatioY * dy;
 
-      this.resizeCanvas();
+      this.setupOrtho();
+      requestAnimationFrame(this.renderGL);
     }
+
+    this.pickGeometryUnderCursor(x, y);
   }
 
   /**
@@ -156,12 +164,23 @@ class GraphGLWindow extends GLWindow {
     let gl = canvas.getContext('webgl');
 
     // Read one pixel
-    let readout = new Uint8Array(1 * 1 * 4);
+    let readout = new Uint8Array(4);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+    gl.readPixels(x, canvas.height-y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    console.log(readout);
+    let range = 255*255;
+    let n = 1000;
+
+    let r = readout[0];
+    let g = readout[1];
+    let b = readout[2];
+
+    if (r != 255) {
+      let mappedIndex = 255*g + b;
+      let baseIndex = Math.floor(mappedIndex / Math.floor(range/n));
+      console.log('Node index: ' + baseIndex);
+    }
   }
 
   /**
@@ -235,14 +254,7 @@ class GraphGLWindow extends GLWindow {
         console.log('edgeOpacity = ' + this.edgeOpacity);
         break;
       case 'p':
-        // TODO: Support thumbnail picking shader vs picking node shader.
-        if (this.activeNodeShader == this.nodeShaderProgram) {
-          console.log('Switching to picking node shader.');
-          this.activeNodeShader = this.pickingShaderProgram;
-        } else {
-          console.log('Switching to default node shader.');
-          this.activeNodeShader = this.nodeShaderProgram;
-        }
+        this.showPreview = !this.showPreview;
         break;
       case 't':
         if (this.activeNodeShader == this.nodeShaderProgram) {
@@ -273,7 +285,7 @@ class GraphGLWindow extends GLWindow {
     let gl = canvas.getContext('webgl');
 
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(false);
@@ -294,10 +306,11 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Set up an orthographic projection.
-   * @param {number} width
-   * @param {number} height
    */
-  setupOrtho(width, height) {
+  setupOrtho() {
+    const canvas = this.refs.canvas;
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
     let sx = 1;
     let sy = 1;
 
@@ -315,7 +328,6 @@ class GraphGLWindow extends GLWindow {
     let geomWidth = Math.abs(geomRight - geomLeft);
     let geomHeight = Math.abs(geomTop - geomBottom);
 
-    let canvas = this.refs.canvas;
     this.pixelToGeometryRatioX = geomWidth / canvas.clientWidth;
     this.pixelToGeometryRatioY = geomHeight / canvas.clientHeight;
 
@@ -444,6 +456,9 @@ class GraphGLWindow extends GLWindow {
     this.pickingShaderProgram = createShaderProgram(gl,
       PickingVertexShaderSource, PickingFragmentShaderSource);
 
+    this.previewTextureShader = createShaderProgram(gl,
+      PreviewTexturVertexeShaderSource, PreviewTextureFragmentShaderSource);
+
     this.activeNodeShader = this.nodeShaderProgram;
   }
 
@@ -521,21 +536,22 @@ class GraphGLWindow extends GLWindow {
    */
   createFrameBuffers(gl) {
     let canvas = this.refs.canvas;
-    let maxDimension = Math.max(canvas.width, canvas.height);
-    let size = Math.pow(2, Math.ceil(Math.log(maxDimension)/Math.log(2)));
-
     this.frameBuffer = gl.createFramebuffer();
-    this.frameBuffer.width = size;
-    this.frameBuffer.height = size;
+    this.frameBuffer.width = canvas.clientWidth;
+    this.frameBuffer.height = canvas.clientHeight;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 
     this.renderTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(
-      gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.frameBuffer.width,
       this.frameBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    console.log('Created RenderTexture of size ',
+      this.frameBuffer.width, this.frameBuffer.height);
 
     this.renderBuffer = gl.createRenderbuffer();
     gl.bindRenderbuffer(gl.RENDERBUFFER, this.renderBuffer);
@@ -577,6 +593,15 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
+   * Recreates render frame buffer and associated texture with new sizes.
+   * @param {object} gl The OpenGL context.
+   */
+  resizeFrameBuffers(gl) {
+    // TODO: Tear down existing frame buffer and create new one with current
+    //       size. Otherwise, node picking may not work after window resize.
+  }
+
+  /**
    * Creates vertex buffers for geometry data.
    * @param {object} gl The OpenGL context.
    */
@@ -610,6 +635,20 @@ class GraphGLWindow extends GLWindow {
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
+    // preview box buffer
+    // TODO: Move logic into new function
+    this.previewBoxVertexBuffer = gl.createBuffer();
+    let dataArray = new Float32Array([
+      0, 0, 0, // v1
+      1, 0, 0, // v2
+      1, 1, 0, // v3
+      0, 1, 0, // v4
+    ]);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.previewBoxVertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, dataArray, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
   }
@@ -651,11 +690,13 @@ class GraphGLWindow extends GLWindow {
    * @param {object} gl The OpenGL context.
    */
   resizeCanvas() {
+    // Resize the webgl render resolution to match browser canvas size.
     let canvas = this.refs.canvas;
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    this.setupOrtho(canvas.width, canvas.height);
+    this.resizeFrameBuffers();
+    this.setupOrtho();
     requestAnimationFrame(this.renderGL);
   }
 
@@ -807,12 +848,34 @@ class GraphGLWindow extends GLWindow {
       }.bind(this));
   }
 
+
+  /**
+   * Draw PreviewBox. Useful for debugging and
+   * @param {object} gl
+   */
+  drawPreviewBox(gl) {
+    let shader = this.previewTextureShader;
+
+    gl.useProgram(shader);
+    gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.previewBoxVertexBuffer);
+    let vertsAttrib = gl.getAttribLocation(shader, 'verts');
+    gl.vertexAttribPointer(vertsAttrib, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vertsAttrib);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+
   /**
    * Render Graph Nodes
    * @param {object} gl
    * @param {object} shader
    */
-  drawNodes(gl, shader) {    
+  drawNodes(gl, shader) {
     gl.useProgram(shader);
     if (this.thumbnailsAtlasTexture) {
       gl.activeTexture(gl.TEXTURE0);
@@ -820,8 +883,7 @@ class GraphGLWindow extends GLWindow {
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertex_buffer);
-    let coordinateAttrib =
-        gl.getAttribLocation(shader, 'coordinates');
+    let coordinateAttrib = gl.getAttribLocation(shader, 'coordinates');
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
@@ -869,7 +931,7 @@ class GraphGLWindow extends GLWindow {
    * Render Graph Edges
    * @param {object} gl
    */
-  drawEdges(gl) {    
+  drawEdges(gl) {
     gl.useProgram(this.edgeShaderProgram);
     let projectionMatrixLocation =
         gl.getUniformLocation(this.edgeShaderProgram, 'uProjectionMatrix');
@@ -904,15 +966,21 @@ class GraphGLWindow extends GLWindow {
 
     // draw scene offscreen for picking
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
     if (this.vertices) {
       this.drawNodes(gl, this.pickingShaderProgram);
     }
 
     // draw scene to screen
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+    // gl.viewport(0, 0, canvas.width, canvas.height);
     this.drawScene(gl);
+
+    if (this.showPreview) {
+      this.drawPreviewBox(gl);
+    }
   }
 
   /**
@@ -921,7 +989,7 @@ class GraphGLWindow extends GLWindow {
    */
   drawScene(gl) {
     const canvas = this.refs.canvas;
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     // TODO: Replace with a safer check. Maybe add boolean to class.
