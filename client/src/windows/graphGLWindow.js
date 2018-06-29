@@ -62,8 +62,8 @@ class GraphGLWindow extends GLWindow {
     this.yOffset = 0;
 
     this.previousX = 0;
-    this.previousY = 0;    
-    this.rightMouseDown = false;            
+    this.previousY = 0;
+    this.rightMouseDown = false;
 
     this.renderGL = this.renderGL.bind(this);
     this.handleScrollEvent = this.handleScrollEvent.bind(this);
@@ -86,13 +86,13 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Event Handling for scroll wheel
-   * @param {Event} evt
+   * @param {Event} event
    */
-  handleScrollEvent(evt) {
-    if (evt.deltaY < 0 && this.scale > -maxScale) {
+  handleScrollEvent(event) {
+    if (event.deltaY < 0 && this.scale > -maxScale) {
       this.scale = this.scale / zoomRate;
     }
-    if (evt.deltaY > 0 && this.scale < maxScale) {
+    if (event.deltaY > 0 && this.scale < maxScale) {
       this.scale = this.scale * zoomRate;
     }
     this.resizeCanvas();
@@ -100,35 +100,35 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Event handling for mouse click down
-   * @param {Event} evt
+   * @param {Event} event
    */
-  handleMouseDown(evt) {
+  handleMouseDown(event) {
     // Handle Right click
-    if (evt.button == 2) {
+    if (event.button == 2) {
       this.rightMouseDown = true;
-      this.previousX = evt.offsetX;
-      this.previousY = evt.offsetY;
+      this.previousX = event.offsetX;
+      this.previousY = event.offsetY;
     }
   }
 
   /**
    * Event handling for mouse click up
-   * @param {Event} evt
+   * @param {Event} event
    */
-  handleMouseRelease(evt) {
-    if (evt.button == 2) {
+  handleMouseRelease(event) {
+    if (event.button == 2) {
       this.rightMouseDown = false;
     }
   }
 
   /**
    * Event handling for mouse movement
-   * @param {Event} evt
+   * @param {Event} event
    */
-  handleMouseMove(evt) {
+  handleMouseMove(event) {
     if (this.rightMouseDown) {
-      let x = evt.offsetX;
-      let y = evt.offsetY;
+      let x = event.offsetX;
+      let y = event.offsetY;
 
       let dx = (x - this.previousX);
       let dy = (y - this.previousY);
