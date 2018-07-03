@@ -15,6 +15,7 @@ import PreviewTextureFragmentShaderSource from '../shaders/previewTexture.frag';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
+import Typography from 'material-ui/Typography';
 import { mat4 } from 'gl-matrix';
 
 const zoomRate = 1.2;
@@ -1033,8 +1034,12 @@ class GraphGLWindow extends GLWindow {
     };
 
     let imageBase64 = null;
-    if (this.thumbnails && this.state.hoverNode) {
-      imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
+    let qoi = null;
+    if (this.state.hoverNode) {
+      qoi = (this.props.qoi[this.state.hoverNode]).toExponential(5);
+      if (this.thumbnails) {
+        imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
+      }
     }
 
     return (
@@ -1042,17 +1047,27 @@ class GraphGLWindow extends GLWindow {
         <canvas ref='canvas' className='glCanvas' style={style} />
         {
           this.state.hoverNode ? (<Paper style={{
-            padding: '4px',
             position: 'absolute',
+            width: '120px',
+            padding: '8px',
+            display: 'flex',
+            flexDirection: 'column',
             top: (this.state.hoverY - 10) + 'px',
             left: (this.state.hoverX + 10) + 'px',
-            width: '100px',
           }}>
-            { 'Sample: ' + this.state.hoverNode }
-            <br/>
-            { 'Qoi: ' + this.props.qoi[this.state.hoverNode] }
+            <Typography> { 'Sample: ' + this.state.hoverNode } </Typography>
+            <Typography> { 'Qoi: ' + qoi } </Typography>
             { imageBase64 ?
-              <img src={'data:image/png;base64, ' + imageBase64} /> :
+              <img src={'data:image/png;base64, ' + imageBase64}
+                style = {{
+                  display: 'block',
+                  borderColor: '#ddd',
+                  borderSize: '1px',
+                  borderStyle: 'solid',
+                  maxWidth: '115px',
+                  width: 'auto',
+                  height: 'auto',
+                }} /> :
               []
             }
           </Paper>) :
