@@ -1035,7 +1035,7 @@ class GraphGLWindow extends GLWindow {
 
     let imageBase64 = null;
     let qoi = null;
-    if (this.state.hoverNode) {
+    if (this.state.hoverNode && this.props.qoi) {
       qoi = (this.props.qoi[this.state.hoverNode]).toExponential(5);
       if (this.thumbnails) {
         imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
