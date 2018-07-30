@@ -10,3 +10,19 @@ parameters:
 qois:
   format: csv
   file: aluminum_qois.csv
+
+thumbnails:
+   format: png
+   files: images/?.png
+   padZeroes: false
+   offset: 1
+
+distances:
+     format: csv
+     file: distances.csv
+     metric: euclidean
+
+embeddings:
+  - name: tsne
+    format: csv
+    file: tsne-layout.csv
