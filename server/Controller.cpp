@@ -44,6 +44,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});  
+  m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
 }
@@ -426,6 +427,33 @@ void Controller::fetchLayoutForPersistenceLevel(
       
     }
     response["embedding"]["adjacency"] = adjacency; 
+  }
+}
+
+/**
+ * Handle the command to fetch an array of a named parameter.
+ */
+void Controller::fetchParameter(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  maybeLoadDataset(datasetId);
+
+  std::string parameterName = request["parameterName"].asString();
+  auto parameters = m_currentDataset->getParameterNames();
+  auto result = std::find(std::begin(parameters), std::end(parameters), parameterName);
+  if (result == std::end(parameters)) {
+    // TODO: Send back an error message. Invalid Qoi Name.
+  }
+
+  int parameterIndex = result - std::begin(parameters);
+  auto parameterVector = m_currentDataset->getParameterVector(parameterIndex);
+
+  response["parameterName"] = parameterName;
+  response["parameter"] = Json::Value(Json::arrayValue);
+  for (int i = 0; i < parameterVector.N(); i++) {
+    response["parameter"].append(parameterVector(i));
   }
 }
 
