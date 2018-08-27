@@ -19,9 +19,9 @@ class EmptyWindow extends React.Component {
    */
   render() {
     return (
-      <div style={{ 
-        borderColor: '#ddddff', 
-        borderWidth: '2px', 
+      <div style={{
+        borderColor: '#ddddff',
+        borderWidth: '2px',
         borderStyle: 'dashed',
       }}/>
     );
