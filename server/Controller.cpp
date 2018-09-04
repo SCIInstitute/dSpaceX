@@ -61,6 +61,7 @@ void Controller::configureAvailableDatasets() {
   std::string silverConfigPath = "../../examples/supershapes/silver/config.yaml";
   std::string aluminumConfigPath = "../../examples/supershapes/aluminum/config.yaml";
   std::string goldConfigPath = "../../examples/supershapes/gold/config.yaml";
+  std::string ellipseConfigPath = "../../examples/ellipses/config.yaml";
 
   m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
   m_availableDatasets.push_back({"Crimes", crimesConfigPath});
@@ -70,6 +71,7 @@ void Controller::configureAvailableDatasets() {
   m_availableDatasets.push_back({"SuperShapes-Silver", silverConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Aluminum", aluminumConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Gold", goldConfigPath});
+  m_availableDatasets.push_back({"Ellipses", ellipseConfigPath});
 }
 
 void Controller::handleData(void *wsi, void *data) {

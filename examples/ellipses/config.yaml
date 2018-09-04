@@ -1,0 +1,19 @@
+name: Ellipses
+
+samples:
+  count: 50
+
+parameters:
+  format: csv
+  file: parameters.csv
+
+qois:
+  format: csv
+  file: qois.csv
+
+thumbnails:
+  format: png
+  files: images/?.png
+  padZeroes: false
+  offset: 1
+
