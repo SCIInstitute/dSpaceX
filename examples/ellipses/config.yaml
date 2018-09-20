@@ -17,3 +17,13 @@ thumbnails:
   padZeroes: false
   offset: 1
 
+distances:
+  format: csv
+  file: distances.csv
+  metric: euclidean
+
+embeddings:
+- name: tsne
+  format: csv
+  file: tsne_layout.csv
+
