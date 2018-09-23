@@ -17,6 +17,7 @@ import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
 import Typography from 'material-ui/Typography';
 import { mat4 } from 'gl-matrix';
+import { withDSXContext } from '../dsxContext.js';
 
 const zoomRate = 1.2;
 const maxScale = 10;
@@ -42,7 +43,7 @@ class GraphGLWindow extends GLWindow {
       hoverShow: false,
     };
 
-    this.client = this.props.client;
+    this.client = this.props.dsxContext.client;
     this.canvas = null;
     this.vertex_array = null;
     this.vertex_buffer = null;
@@ -1079,4 +1080,4 @@ class GraphGLWindow extends GLWindow {
   }
 }
 
-export default GraphGLWindow;
+export default withDSXContext(GraphGLWindow);

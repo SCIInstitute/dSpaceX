@@ -1,5 +1,6 @@
 import Client from './client.js';
 import ConnectionDialog from './connectionDialog.js';
+import { DSXProvider } from './dsxContext.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import DecompositionPanel from './panels/decompositionPanel.js';
 import DisplayPanel from './panels/displayPanel.js';
@@ -191,57 +192,57 @@ class Application extends React.Component {
     const { classes } = this.props;
     let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
     return (
-      <div className={classes.root}>
-        <Toolbar className={classes.appBar}
-          connectedToServer={this.state.connected}
-          onConnectClick={this.connectButtonClicked}
-          networkActive={this.state.networkActive} />
-        <ConnectionDialog ref='connectiondialog' client={this.client}/>
-        <Drawer PaperProps={{ elevation:6 }} variant='permanent'
-          classes={{ paper:classes.drawerPaper }}>
-          { /* Add div to account for menu bar */ }
-          <div className={classes.toolbar} />
-          <DatasetPanel
-            enabled={this.state.connected}
-            datasets={this.state.datasets}
-            onDatasetChange={this.onDatasetChange}
-            onQoiChange={this.onQoiChange}
-            client={this.client}/>
-          <DecompositionPanel
-            enabled={this.state.connected}
-            dataset={this.state.currentDataset}
-            onDecompositionChange={this.onDecompositionChange}
-            client={this.client}/>
-          <DisplayPanel
-            dataset={this.state.currentDataset}
-            enabled={this.state.connected} />
-          <div style={{
-            backgroundColor: drawerMarginColor,
-            height: '100%',
-            width: '100%',
-          }}></div>
-        </Drawer>
-        <Workspace className={classes.content}>
-          { /* Add div to account for menu bar */ }
-          <div className={classes.toolbar}/>
-          <div className={classes.workspace}>
-            {
-              !!this.state.currentDecomposition ? [
-                debug ?
-                  <GraphD3Window key='1' dataset={this.state.currentDataset}
-                    decomposition={this.state.currentDecomposition}
-                    qoi={this.state.currentQoi}
-                    client={this.client}/> :
-                  <GraphGLWindow key='1' dataset={this.state.currentDataset}
-                    decomposition={this.state.currentDecomposition}
-                    qoi={this.state.currentQoi}
-                    client={this.client}/>,
-              ] : []
-            }
-          </div>
-        </Workspace>
-        <ErrorDialog ref='errorDialog' />
-      </div>
+      <DSXProvider value={{ client:this.client }}>
+        <div className={classes.root}>
+          <Toolbar className={classes.appBar}
+            connectedToServer={this.state.connected}
+            onConnectClick={this.connectButtonClicked}
+            networkActive={this.state.networkActive} />
+          <ConnectionDialog ref='connectiondialog' client={this.client}/>
+          <Drawer PaperProps={{ elevation:6 }} variant='permanent'
+            classes={{ paper:classes.drawerPaper }}>
+            { /* Add div to account for menu bar */ }
+            <div className={classes.toolbar} />
+            <DatasetPanel
+              enabled={this.state.connected}
+              datasets={this.state.datasets}
+              onDatasetChange={this.onDatasetChange}
+              onQoiChange={this.onQoiChange}
+              client={this.client}/>
+            <DecompositionPanel
+              enabled={this.state.connected}
+              dataset={this.state.currentDataset}
+              onDecompositionChange={this.onDecompositionChange}
+              client={this.client}/>
+            <DisplayPanel
+              dataset={this.state.currentDataset}
+              enabled={this.state.connected} />
+            <div style={{
+              backgroundColor: drawerMarginColor,
+              height: '100%',
+              width: '100%',
+            }}></div>
+          </Drawer>
+          <Workspace className={classes.content}>
+            { /* Add div to account for menu bar */ }
+            <div className={classes.toolbar}/>
+            <div className={classes.workspace}>
+              {
+                !!this.state.currentDecomposition ? [
+                  debug ?
+                    <GraphD3Window key='1' dataset={this.state.currentDataset}
+                      decomposition={this.state.currentDecomposition}
+                      qoi={this.state.currentQoi} /> :
+                    <GraphGLWindow key='1' dataset={this.state.currentDataset}
+                      decomposition={this.state.currentDecomposition}
+                      qoi={this.state.currentQoi} />,
+                ] : []
+              }
+            </div>
+          </Workspace>
+          <ErrorDialog ref='errorDialog' />
+        </div>
+      </DSXProvider>
     );
   }
 }
