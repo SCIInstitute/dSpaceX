@@ -7,4 +7,5 @@ CMakeLists.txt.user
 /data
 *.vs
 *.orig
-
+.idea/
+cmake-build-debug/
