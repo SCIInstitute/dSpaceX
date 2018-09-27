@@ -273,6 +273,21 @@ class Client {
   }
 
   /**
+   * Grab the parameter values for the given parameter
+   * @param {string} datasetId
+   * @param {string} parameterName
+   * @return {Promise}
+   */
+  fetchParameter(datasetId, parameterName) {
+    let command = {
+      name: 'fetchParameter',
+      datasetId: datasetId,
+      parameterName: parameterName,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Grab the qoi values for the given qoi.
    * @param {string} datasetId
    * @param {string} qoiName
