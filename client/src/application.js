@@ -206,9 +206,7 @@ class Application extends React.Component {
             <DatasetPanel
               enabled={this.state.connected}
               datasets={this.state.datasets}
-              onDatasetChange={this.onDatasetChange}
-              onQoiChange={this.onQoiChange}
-              client={this.client}/>
+              onDatasetChange={this.onDatasetChange}/>
             {
               !!this.state.currentDataset ? 
               this.state.windows.map((windowConfig, i) => {
@@ -217,8 +215,7 @@ class Application extends React.Component {
                     config={windowConfig}
                     onConfigChange={this.onWindowConfigChange}
                     dataset={this.state.currentDataset}
-                    enabled={this.state.connected}
-                    client={this.client} />
+                    enabled={this.state.connected}/>
                 );
               }) : []
             }
@@ -269,16 +266,14 @@ class Application extends React.Component {
                         <TableWindow key={i}
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
-                          focusRow={this.state.sampleFocusIndex}
-                          client={this.client}/>
+                          focusRow={this.state.sampleFocusIndex}/>
                       );
                     } else if (windowConfig.dataViewType == 'graph') {
                       return (
                         <GraphGLWindow key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
-                          onNodeHover={this.onSampleFocus}
-                          client={this.client}/>
+                          onNodeHover={this.onSampleFocus}/>
                       );
                     } else {
                       return (

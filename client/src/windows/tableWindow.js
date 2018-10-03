@@ -7,7 +7,7 @@ import TableCell from 'material-ui/Table/TableCell';
 import TableHead from 'material-ui/Table/TableHead';
 import TableRow from 'material-ui/Table/TableRow';
 import { withStyles } from 'material-ui/styles';
-
+import { withDSXContext } from '../dsxContext.js';
 
 const styles = (theme) => ({
   root: {
@@ -34,7 +34,7 @@ class TableWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.client = this.props.client;
+    this.client = this.props.dsxContext.client;
     this.state = {
       fields: [],
       focusRow: null,
@@ -51,9 +51,10 @@ class TableWindow extends React.Component {
     let data = [];
 
     for (let i=0; i < parameterNames.length; i++) {
-      let name = parameterNames[i];
-      let parameter = await this.client.fetchParameter(datasetId, name);
-      parameters.push(parameter);
+      let parameterName = parameterNames[i];
+      let { parameter } = 
+          await this.client.fetchParameter(datasetId, parameterName);
+      parameters.push(parameter);      
     }
 
     let sampleCount = parameters[0] ? parameters[0].length : 0;
@@ -216,4 +217,4 @@ TableWindow.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(TableWindow);
+export default withDSXContext(withStyles(styles)(TableWindow));

@@ -9,6 +9,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import Select from 'material-ui/Select';
 import { withStyles } from 'material-ui/styles';
+import { withDSXContext } from '../dsxContext.js';
 
 const disabledLabelColor = '#888';
 const enabledLabelColor = '#000';
@@ -27,16 +28,10 @@ class DatasetPanel extends React.Component {
     this.state = {
       datasetName: '',
       dataset: null,
-      parameterName: '',
-      parameterVector: null,
-      qoiName: '',
-      qoiVector: null,
     };
 
     this.handleDatasetChange = this.handleDatasetChange.bind(this);
-    this.handleParameterChange = this.handleParameterChange.bind(this);
-    this.handleQoiChange = this.handleQoiChange.bind(this);
-    this.client = this.props.client;
+    this.client = this.props.dsxContext.client;
     this.datasetMap = null;
     this.initializeDatasetMap();
   }
@@ -93,53 +88,6 @@ class DatasetPanel extends React.Component {
       this.props.onDatasetChange(dataset);
     }.bind(this));
   };
-
-  /**
-   * Handles the user changing the current active parameter.
-   * @param {Event} event
-   */
-  handleParameterChange(event) {
-    let parameterName = event.target.value;
-    if (parameterName === '') {
-      this.setState({
-        parameterName: '',
-        parameterVector: null,
-      });
-      return;
-    }
-
-    this.setState({ parameterName });
-  }
-
-  /**
-   * Handles the user changing the current active qoi.
-   * @param {Event} event
-   */
-  handleQoiChange(event) {
-    let qoiName = event.target.value;
-    if (qoiName === '') {
-      this.setState({
-        qoiName: '',
-        qoiVector: null,
-      });
-      if (this.props.onQoiChange) {
-        this.props.onQoiChange(null);
-      }
-      return;
-    }
-
-    this.setState({ qoiName });
-    let datasetId = this.state.dataset.id;
-    this.client.fetchQoi(datasetId, qoiName).then(function(response) {
-      let qoiVector = response.qoi;
-      this.setState({
-        qoiVector: qoiVector,
-      });
-      if (this.props.onQoiChange) {
-        this.props.onQoiChange(qoiVector);
-      }
-    }.bind(this));
-  }
 
   /**
    * Renders the component to HTML.
@@ -244,4 +192,4 @@ DatasetPanel.propTypes = {
 };
 
 // Wrap Application in Styling Container.
-export default withStyles({})(DatasetPanel);
+export default withDSXContext(withStyles({})(DatasetPanel));
