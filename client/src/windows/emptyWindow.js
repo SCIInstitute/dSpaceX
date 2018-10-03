@@ -23,7 +23,17 @@ class EmptyWindow extends React.Component {
         borderColor: '#ddddff',
         borderWidth: '2px',
         borderStyle: 'dashed',
-      }}/>
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <span style={{
+          fontSize: 72,
+          color: '#ddddff',
+        }}>
+          {this.props.id + 1}
+        </span>
+      </div>
     );
   }
 }

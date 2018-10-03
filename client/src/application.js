@@ -4,6 +4,7 @@ import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from 'material-ui/Drawer';
+import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
 import GraphD3Window from './windows/graphD3Window.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
@@ -210,9 +211,54 @@ class Application extends React.Component {
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
             <div className={classes.toolbar}/>
-            <div className={classes.workspace}>
+            <div className={classes.workspace} style={
+              (() => {
+                switch (this.state.windows.length) {
+                  case 1:
+                    return {
+                      gridTemplateColumns: '1fr',
+                      gridTemplateRows: '1fr',
+                    };
+                  case 2:
+                    return {
+                      gridTemplateColumns: '1fr 1fr',
+                      gridTemplateRows: '1fr',
+                    };
+                  case 3:
+                  case 4:
+                    return {
+                      gridTemplateColumns: '1fr 1fr',
+                      gridTemplateRows: '1fr 1fr',
+                    };
+                };
+              })()
+            }>
               {
-
+                !!this.state.currentDataset ?
+                  this.state.windows.map((windowConfig, i) => {
+                    if (windowConfig.dataViewType == 'table') {
+                      return (
+                        <TableWindow key={i}
+                          attributeGroup={windowConfig.tableAttributeGroup}
+                          dataset={this.state.currentDataset}
+                          focusRow={this.state.sampleFocusIndex}
+                          client={this.client}/>
+                      );
+                    } else if (windowConfig.dataViewType == 'graph') {
+                      return (
+                        <GraphGLWindow key={i}
+                          decomposition={windowConfig.decomposition}
+                          dataset={this.state.currentDataset}
+                          onNodeHover={this.onSampleFocus}
+                          client={this.client}/>
+                      );
+                    } else {
+                      return (
+                        <EmptyWindow key={i} id={i}/>
+                      );
+                    }
+                  }) :
+                  []
               }
             </div>
           </Workspace>
