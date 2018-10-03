@@ -202,8 +202,7 @@ class GraphGLWindow extends GLWindow {
         hoverNode: null,
         hoverShow: false,
       });
-    }
-    console.log('Node index: ' + this.state.hoverNode);
+    }    
   }
 
   /**
@@ -796,10 +795,14 @@ class GraphGLWindow extends GLWindow {
     this.initGL();
     this.resizeCanvas();
     window.addEventListener('resize', this.resizeCanvas);
-    this.refs.canvas.addEventListener('wheel', this.handleScrollEvent);
-    this.refs.canvas.addEventListener('mousedown', this.handleMouseDown);
-    this.refs.canvas.addEventListener('mouseup', this.handleMouseRelease);
-    this.refs.canvas.addEventListener('mousemove', this.handleMouseMove);
+    this.refs.canvas.addEventListener(
+      'wheel', this.handleScrollEvent, {passive: true});
+    this.refs.canvas.addEventListener(
+      'mousedown', this.handleMouseDown, {passive: true});
+    this.refs.canvas.addEventListener(
+      'mouseup', this.handleMouseRelease, {passive: true});
+    this.refs.canvas.addEventListener(
+      'mousemove', this.handleMouseMove, {passive: true});
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
     window.addEventListener('keydown', this.handleKeyDown);
