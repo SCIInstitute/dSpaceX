@@ -12,8 +12,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import Select from 'material-ui/Select';
 import Typography from 'material-ui/Typography';
-import { withStyles } from 'material-ui/styles';
 import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from 'material-ui/styles';
 
 /**
  * The Decomposition Panel component provides a display of the
@@ -29,23 +29,23 @@ class DecompositionPanel extends React.Component {
 
     this.handleDecompositionModeChange =
         this.handleDecompositionModeChange.bind(this);
-    this.handleDecompositionCategoryChange = 
+    this.handleDecompositionCategoryChange =
         this.handleDecompositionCategoryChange.bind(this);
-    this.handleDecompositionFieldChange = 
+    this.handleDecompositionFieldChange =
         this.handleDecompositionFieldChange.bind(this);
     this.handlePersistenceLevelChange =
         this.handlePersistenceLevelChange.bind(this);
     this.handleSliderChange = this.handleSliderChange.bind(this);
     this.handleSliderRelease = this.handleSliderRelease.bind(this);
-    this._getDecompositionFieldMenuItems = 
+    this._getDecompositionFieldMenuItems =
         this._getDecompositionFieldMenuItems.bind(this);
     this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
     this.fetchDecomposition = this.fetchDecomposition.bind(this);
 
     this.state = {
-      decompositionMode: 'Morse-Smale',      
+      decompositionMode: 'Morse-Smale',
       decompositionCategory: null,
-      decompositionField: null,      
+      decompositionField: null,
       persistenceLevel: '',
       minPersistence: null,
       maxPersistence: null,
@@ -59,6 +59,7 @@ class DecompositionPanel extends React.Component {
 
   /**
    * Returns true if the configuration set is valid.
+   * @param {object} config
    * @return {boolean}
    */
   decompositionConfigValid(config) {
@@ -83,7 +84,7 @@ class DecompositionPanel extends React.Component {
   async fetchDecomposition() {
     let k = 15;
     let datasetId = this.props.dataset.datasetId;
-    let result = await this.client.fetchMorseSmalePersistence(datasetId, k); 
+    let result = await this.client.fetchMorseSmalePersistence(datasetId, k);
     this.setState({
       minPersistence: result.minPersistenceLevel,
       maxPersistence: result.maxPersistenceLevel,
@@ -91,12 +92,12 @@ class DecompositionPanel extends React.Component {
       sliderPersistence: result.maxPersistenceLevel,
       persistenceLevel: ('' + result.maxPersistenceLevel),
     });
-    this.updateDataModel('' + result.maxPersistenceLevel);  
+    this.updateDataModel('' + result.maxPersistenceLevel);
   }
 
-  /** 
+  /**
    * Handle change of properties and state.
-   * @param {object} prevProps 
+   * @param {object} prevProps
    * @param {object} prevState
    * @param {object} snapshot
    */
@@ -104,9 +105,8 @@ class DecompositionPanel extends React.Component {
     if (prevState.decompositionMode != this.state.decompositionMode ||
         prevState.decompositionCategory != this.state.decompositionCategory ||
         prevState.decompositionField != this.state.decompositionField) {
-
       let config = {
-        decompositionMode: this.state.decompositionMode, 
+        decompositionMode: this.state.decompositionMode,
         decompositionCategory: this.state.decompositionCategory,
         decompositionField: this.state.decompositionField,
       };
@@ -153,7 +153,7 @@ class DecompositionPanel extends React.Component {
     }
   }
 
-  /** 
+  /**
    * Handle the decomposition field category changing.
    * @param {object} event
    */
@@ -164,13 +164,12 @@ class DecompositionPanel extends React.Component {
     });
   }
 
-  /** 
+  /**
    * Handle the decomposition field changing.
    * @param {object} event
    */
   handleDecompositionFieldChange(event) {
     let field = event.target.value;
-    console.log('setting decompositionField');
     this.setState({
       decompositionField: field,
     });
@@ -180,29 +179,26 @@ class DecompositionPanel extends React.Component {
    * Updates state when active persistence level changes.
    * @param {string} level
    */
-  updateDataModel(level) {
+  async updateDataModel(level) {
     if (level != '') {
       let k = 15;
       let datasetId = this.props.dataset.datasetId;
       let persistenceLevel = parseInt(level);
-      this.client
-        .fetchMorseSmalePersistenceLevel(datasetId, k, persistenceLevel)
-        .then(function(result) {
-          this.setState({
-            crystals: result.complex.crystals,
-          });
+      let result = await this.client.fetchMorseSmalePersistenceLevel(
+        datasetId, k, persistenceLevel);
 
-          console.log('about to print result from fetchMorseSmale');
-          console.dir(this.props.onDecompositionChange);
-          this.props.onDecompositionChange({            
-            datasetId: result.datasetId,
-            decompositionMode: this.state.decompositionMode,
-            decompositionCategory: this.state.decompositionCategory,
-            decompositionField: this.state.decompositionField,
-            k: result.k,
-            persistenceLevel: result.persistenceLevel
-          });
-        }.bind(this));
+      this.setState({
+        crystals: result.complex.crystals,
+      });
+
+      this.props.onDecompositionChange({
+        datasetId: result.datasetId,
+        decompositionMode: this.state.decompositionMode,
+        decompositionCategory: this.state.decompositionCategory,
+        decompositionField: this.state.decompositionField,
+        k: result.k,
+        persistenceLevel: result.persistenceLevel,
+      });
     } else {
       this.setState({
         crystals: [],
@@ -270,31 +266,31 @@ class DecompositionPanel extends React.Component {
 
   /**
    * A partial render of decomposition field UI.
+   * @return {JSX}
    */
-  _getDecompositionFieldMenuItems() {    
+  _getDecompositionFieldMenuItems() {
     let items = [];
     switch (this.state.decompositionCategory) {
-      case 'parameter': 
+      case 'parameter':
         items = this.props.dataset.parameterNames.map((name) => (
           <MenuItem value={name} key={name}>
             {name}
           </MenuItem>
-        ));        
+        ));
         break;
-      case 'qoi': 
+      case 'qoi':
         items = this.props.dataset.qoiNames.map((name) => (
           <MenuItem value={name} key={name}>
             {name}
           </MenuItem>
-        ));    
-        break;    
+        ));
+        break;
       default:
         break;
     };
 
     return items;
   }
-
 
   /**
    * Renders the component to HTML.
@@ -313,7 +309,7 @@ class DecompositionPanel extends React.Component {
     return (
       // TODO: set disabled only when there's no case data.
       <ExpansionPanel disabled={!this.props.enabled || !this.props.dataset}
-        style={{ paddingLeft:'0px', margin:'1px' }}>
+        defaultExpanded={true} style={{ paddingLeft:'0px', margin:'1px' }}>
         <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
           <Typography>Decomposition</Typography>
         </ExpansionPanelSummary>
@@ -336,7 +332,7 @@ class DecompositionPanel extends React.Component {
                 inputProps={{
                   name: 'mode',
                   id: 'mode-field',
-                }}>                
+                }}>
                 <MenuItem value='Morse-Smale'>
                   <em>Morse-Smale</em>
                 </MenuItem>
@@ -350,7 +346,7 @@ class DecompositionPanel extends React.Component {
             <FormControl className={classes.formControl}
               disabled={!this.props.enabled || !this.props.dataset}>
               <InputLabel htmlFor='category-input'>Field Category</InputLabel>
-              <Select ref="categoryCombo" 
+              <Select ref="categoryCombo"
                 value={this.state.decompositionCategory || ''}
                 onChange={this.handleDecompositionCategoryChange} inputProps={{
                   name: 'category',
@@ -358,9 +354,9 @@ class DecompositionPanel extends React.Component {
                 }}>
                 <MenuItem value="">
                   <em>None</em>
-                </MenuItem>                
+                </MenuItem>
                 <MenuItem value="parameter" disabled={
-                  !(this.props.dataset && 
+                  !(this.props.dataset &&
                     this.props.dataset.parameterNames.length > 0)
                 }>
                   <em>Parameter</em>
@@ -373,16 +369,16 @@ class DecompositionPanel extends React.Component {
                 </MenuItem>
                 <MenuItem value="precomputed">
                   <em>Precomputed</em>
-                </MenuItem>               
+                </MenuItem>
               </Select>
             </FormControl>
 
             { /* Decomposition Field Dropdown */ }
             <FormControl className={classes.formControl}
-              disabled={ !this.props.enabled || !this.props.dataset 
+              disabled={ !this.props.enabled || !this.props.dataset
                 || !this.state.decompositionCategory}>
               <InputLabel htmlFor='field-input'>Field</InputLabel>
-              <Select ref="fieldCombo" 
+              <Select ref="fieldCombo"
                 value={this.state.decompositionField || ''}
                 onChange={this.handleDecompositionFieldChange} inputProps={{
                   name: 'field',
@@ -393,10 +389,10 @@ class DecompositionPanel extends React.Component {
                 </MenuItem>
                 {
                   this._getDecompositionFieldMenuItems()
-                }              
+                }
               </Select>
-            </FormControl>                 
-            
+            </FormControl>
+
             <div style={{ height:'15px' }}></div>
             {
               persistenceLevels.length > 0 ? [
@@ -463,7 +459,7 @@ class DecompositionPanel extends React.Component {
                     </ExpansionPanel>
                   </ListItem>
                 ))
-              }             
+              }
             </List>
           </div>
         </ExpansionPanelDetails>

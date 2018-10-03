@@ -40,7 +40,7 @@ class WindowPanel extends React.Component {
     this.handleEmbeddingAlgorithmChange =
         this.handleEmbeddingAlgorithmChange.bind(this);
     this.handleDecompositionChange = this.handleDecompositionChange.bind(this);
-    
+
     this.getTableOptions = this.getTableOptions.bind(this);
     this.getGraphOptions = this.getGraphOptions.bind(this);
   }

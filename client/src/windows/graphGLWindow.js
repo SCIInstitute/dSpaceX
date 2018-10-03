@@ -202,7 +202,7 @@ class GraphGLWindow extends GLWindow {
         hoverNode: null,
         hoverShow: false,
       });
-    }    
+    }
   }
 
   /**
@@ -796,13 +796,13 @@ class GraphGLWindow extends GLWindow {
     this.resizeCanvas();
     window.addEventListener('resize', this.resizeCanvas);
     this.refs.canvas.addEventListener(
-      'wheel', this.handleScrollEvent, {passive: true});
+      'wheel', this.handleScrollEvent, { passive:true });
     this.refs.canvas.addEventListener(
-      'mousedown', this.handleMouseDown, {passive: true});
+      'mousedown', this.handleMouseDown, { passive:true });
     this.refs.canvas.addEventListener(
-      'mouseup', this.handleMouseRelease, {passive: true});
+      'mouseup', this.handleMouseRelease, { passive:true });
     this.refs.canvas.addEventListener(
-      'mousemove', this.handleMouseMove, {passive: true});
+      'mousemove', this.handleMouseMove, { passive:true });
     this.refs.canvas.addEventListener(
       'contextmenu', (e) => e.preventDefault(), false);
     window.addEventListener('keydown', this.handleKeyDown);
@@ -819,59 +819,66 @@ class GraphGLWindow extends GLWindow {
       return;
     }
     let { datasetId, k, persistenceLevel } = nextProps.decomposition;
-    let { qoi } = nextProps;
+    let qoi = nextProps.decomposition.decompositionField;
 
-    if ( datasetId == this.props.decomposition.datasetId &&
-         k == this.props.decomposition.k &&
-         persistenceLevel == this.props.decomposition.persistenceLevel &&
-         qoi == this.props.qoi ) {
+    if (this.props.decomposition &&
+        datasetId == this.props.decomposition.datasetId &&
+        k == this.props.decomposition.k &&
+        persistenceLevel == this.props.decomposition.persistenceLevel &&
+        qoi == this.props.decomposition.decompositionField) {
       return;
     }
 
-    this.client
-      .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
-      .then(function(result) {
-        if (result.embedding && result.embedding.layout) {
-          // let layout = [].concat(...result.embedding.layout);
-          let layout = result.embedding.layout;
-          let adjacency = result.embedding.adjacency;
-          this.createGeometry(layout, adjacency, 0.02, 0.02);
+    let qoiName = nextProps.decomposition.decompositionField;
 
-          if (nextProps.qoi) {
-            let min = Math.min(...nextProps.qoi);
-            let max = Math.max(...nextProps.qoi);
-            let color = d3.scaleLinear()
-              .domain([min, 0.5*(min+max), max])
-              .range(['blue', 'white', 'red']);
-            let colorsArray = [];
-            for (let i = 0; i < nextProps.qoi.length; i++) {
-              let colorString = color(nextProps.qoi[i]);
-              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
-              colorTriplet[0] /= 255;
-              colorTriplet[1] /= 255;
-              colorTriplet[2] /= 255;
-              colorsArray.push(...colorTriplet);
-            }
-            this.addVertexColors(colorsArray);
-          } else {
-            let colorsArray = [];
-            for (let i=0; i < layout.length; i++) {
-              colorsArray.push(1.0, 1.0, 1.0);
-            }
-            this.addVertexColors(colorsArray);
+    Promise.all([
+      this.client.fetchLayoutForPersistenceLevel(
+        datasetId, k, persistenceLevel),
+      this.client.fetchQoi(datasetId, qoiName),
+    ]).then((results) => {
+      const [result, qoiResult] = results;
+      const qoi = qoiResult.qoi;
+      if (result.embedding && result.embedding.layout) {
+        // let layout = [].concat(...result.embedding.layout);
+        let layout = result.embedding.layout;
+        let adjacency = result.embedding.adjacency;
+        this.createGeometry(layout, adjacency, 0.02, 0.02);
+
+        if (qoi) {
+          let min = Math.min(...qoi);
+          let max = Math.max(...qoi);
+          let color = d3.scaleLinear()
+            .domain([min, 0.5*(min+max), max])
+            .range(['blue', 'white', 'red']);
+          let colorsArray = [];
+          for (let i = 0; i < qoi.length; i++) {
+            let colorString = color(qoi[i]);
+            let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+            colorTriplet[0] /= 255;
+            colorTriplet[1] /= 255;
+            colorTriplet[2] /= 255;
+            colorsArray.push(...colorTriplet);
           }
+          this.addVertexColors(colorsArray);
         } else {
-          if (nextProps.decomposition) {
-            let errorMessage = 'No decomposition layout provided.';
-            this.refs.errorDialog.reportError(errorMessage);
-          } else {
-            let errorMessage = 'No decomposition provided.';
-            this.refs.errorDialog.reportError(errorMessage);
+          let colorsArray = [];
+          for (let i=0; i < layout.length; i++) {
+            colorsArray.push(1.0, 1.0, 1.0);
           }
+          this.addVertexColors(colorsArray);
         }
-        this.updateBuffers();
-        requestAnimationFrame(this.renderGL);
-      }.bind(this));
+      } else {
+        if (nextProps.decomposition) {
+          let errorMessage = 'No decomposition layout provided.';
+          this.refs.errorDialog.reportError(errorMessage);
+        } else {
+          let errorMessage = 'No decomposition provided.';
+          this.refs.errorDialog.reportError(errorMessage);
+        }
+      }
+      this.updateBuffers();
+      requestAnimationFrame(this.renderGL);
+    });
   }
 
 
@@ -1048,36 +1055,40 @@ class GraphGLWindow extends GLWindow {
 
     return (
       <React.Fragment>
-        <canvas ref='canvas' className='glCanvas' style={style} />
-        {
-          this.state.hoverNode ? (<Paper style={{
-            position: 'absolute',
-            width: '120px',
-            padding: '8px',
-            display: 'flex',
-            flexDirection: 'column',
-            top: (this.state.hoverY - 10) + 'px',
-            left: (this.state.hoverX + 10) + 'px',
-          }}>
-            <Typography> { 'Sample: ' + this.state.hoverNode } </Typography>
-            <Typography> { 'Qoi: ' + qoi } </Typography>
-            { imageBase64 ?
-              <img src={'data:image/png;base64, ' + imageBase64}
-                style = {{
-                  display: 'block',
-                  borderColor: '#ddd',
-                  borderSize: '1px',
-                  borderStyle: 'solid',
-                  maxWidth: '115px',
-                  width: 'auto',
-                  height: 'auto',
-                }} /> :
+        <div style={{ position:'relative' }}>
+          <canvas ref='canvas' className='glCanvas' style={style} />
+          {
+            this.state.hoverNode ? (<Paper style={{
+              position: 'absolute',
+              width: '120px',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              top: (this.state.hoverY - 10) + 'px',
+              left: (this.state.hoverX + 10) + 'px',
+            }}>
+              <Typography>
+                { 'Sample: ' + this.state.hoverNode }
+              </Typography>
+              { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
+              { imageBase64 ?
+                <img src={'data:image/png;base64, ' + imageBase64}
+                  style = {{
+                    display: 'block',
+                    borderColor: '#ddd',
+                    borderSize: '1px',
+                    borderStyle: 'solid',
+                    maxWidth: '115px',
+                    width: 'auto',
+                    height: 'auto',
+                  }} /> :
+                []
+              }
+            </Paper>) :
               []
-            }
-          </Paper>) :
-            []
-        }
-        <ErrorDialog ref='errorDialog' />
+          }
+          <ErrorDialog ref='errorDialog' />
+        </div>
       </React.Fragment>
     );
   }
