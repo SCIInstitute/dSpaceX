@@ -2,14 +2,13 @@ import Client from './client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
 import DatasetPanel from './panels/datasetPanel.js';
-import DecompositionPanel from './panels/decompositionPanel.js';
-import DisplayPanel from './panels/displayPanel.js';
 import Drawer from 'material-ui/Drawer';
 import ErrorDialog from './errorDialog.js';
 import GraphD3Window from './windows/graphD3Window.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
+import TableWindow from './windows/tableWindow.js';
 import Toolbar from './toolbar.js';
 import Workspace from './workspace.js';
 import { withStyles } from 'material-ui/styles';
@@ -209,14 +208,6 @@ class Application extends React.Component {
               onDatasetChange={this.onDatasetChange}
               onQoiChange={this.onQoiChange}
               client={this.client}/>
-            <DecompositionPanel
-              enabled={this.state.connected}
-              dataset={this.state.currentDataset}
-              onDecompositionChange={this.onDecompositionChange}
-              client={this.client}/>
-            <DisplayPanel
-              dataset={this.state.currentDataset}
-              enabled={this.state.connected} />
             <div style={{
               backgroundColor: drawerMarginColor,
               height: '100%',
@@ -228,15 +219,7 @@ class Application extends React.Component {
             <div className={classes.toolbar}/>
             <div className={classes.workspace}>
               {
-                !!this.state.currentDecomposition ? [
-                  debug ?
-                    <GraphD3Window key='1' dataset={this.state.currentDataset}
-                      decomposition={this.state.currentDecomposition}
-                      qoi={this.state.currentQoi} /> :
-                    <GraphGLWindow key='1' dataset={this.state.currentDataset}
-                      decomposition={this.state.currentDecomposition}
-                      qoi={this.state.currentQoi} />,
-                ] : []
+
               }
             </div>
           </Workspace>

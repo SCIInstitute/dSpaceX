@@ -231,50 +231,6 @@ class DatasetPanel extends React.Component {
               </div>
             </ListItem>
           </List>
-          <FormControl className={classes.formControl}
-            disabled={!this.props.enabled || !this.state.dataset}>
-            <InputLabel htmlFor='parameter-field'>Parameter</InputLabel>
-            <Select ref="parameterCombo" value={this.state.parameterName}
-              onChange={this.handleParameterChange} inputProps={{
-                name: 'parameter',
-                id: 'parameter-field',
-              }}>
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {
-                (this.state.dataset && this.state.dataset.parameterNames) ?
-                  this.state.dataset.parameterNames.map((name) => (
-                    <MenuItem value={name} key={name}>
-                      {name}
-                    </MenuItem>
-                  ))
-                  : []
-              }
-            </Select>
-          </FormControl>
-          <FormControl className={classes.formControl}
-            disabled={!this.props.enabled || !this.state.dataset}>
-            <InputLabel htmlFor='qoi-field'>QoI</InputLabel>
-            <Select ref="qoiCombo" value={this.state.qoiName}
-              onChange={this.handleQoiChange} inputProps={{
-                name: 'qoi',
-                id: 'qoi-field',
-              }}>
-              <MenuItem value="">
-                <em>None</em>
-              </MenuItem>
-              {
-                (this.state.dataset && this.state.dataset.qoiNames) ?
-                  this.state.dataset.qoiNames.map((name) => (
-                    <MenuItem value={name} key={name}>
-                      {name}
-                    </MenuItem>
-                  ))
-                  : []
-              }
-            </Select>
-          </FormControl>
           <div style={{ width:'100%', height:'5px' }}/>
         </div>
       </Paper>

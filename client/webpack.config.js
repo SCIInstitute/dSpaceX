@@ -4,7 +4,7 @@ let config = {
   target: 'web',
   mode: 'development',
   devtool: 'source-map',
-  entry: ['./src/main.js'],
+  entry: ['babel-polyfill', './src/main.js'],
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'client.bundle.js',
