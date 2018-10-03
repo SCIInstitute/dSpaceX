@@ -8,8 +8,8 @@ import Paper from 'material-ui/Paper';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Select from 'material-ui/Select';
-import { withStyles } from 'material-ui/styles';
 import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from 'material-ui/styles';
 
 const disabledLabelColor = '#888';
 const enabledLabelColor = '#000';

@@ -6,7 +6,6 @@ import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from 'material-ui/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
-import GraphD3Window from './windows/graphD3Window.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -173,15 +172,16 @@ class Application extends React.Component {
 
   /**
    * Handles the user changing the configuration for a window.
-   */ 
+   * @param {object} config
+   */
   onWindowConfigChange(config) {
-    let prevConfig = this.state.windows[config.id];    
+    let prevConfig = this.state.windows[config.id];
     let newConfig = Object.assign(prevConfig, config);
     let windows = this.state.windows;
     windows[config.id] = newConfig;
     this.setState({
-      windows: windows
-    });    
+      windows: windows,
+    });
   }
 
   /**
@@ -208,16 +208,16 @@ class Application extends React.Component {
               datasets={this.state.datasets}
               onDatasetChange={this.onDatasetChange}/>
             {
-              !!this.state.currentDataset ? 
-              this.state.windows.map((windowConfig, i) => {
-                return (
-                  <WindowPanel key={i} windowIndex={i} 
-                    config={windowConfig}
-                    onConfigChange={this.onWindowConfigChange}
-                    dataset={this.state.currentDataset}
-                    enabled={this.state.connected}/>
-                );
-              }) : []
+              !!this.state.currentDataset ?
+                this.state.windows.map((windowConfig, i) => {
+                  return (
+                    <WindowPanel key={i} windowIndex={i}
+                      config={windowConfig}
+                      onConfigChange={this.onWindowConfigChange}
+                      dataset={this.state.currentDataset}
+                      enabled={this.state.connected}/>
+                  );
+                }) : []
             }
             {
               (!!this.state.currentDataset && this.state.windows.length < 4) ?

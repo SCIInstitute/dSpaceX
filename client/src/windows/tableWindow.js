@@ -6,8 +6,8 @@ import TableBody from 'material-ui/Table/TableBody';
 import TableCell from 'material-ui/Table/TableCell';
 import TableHead from 'material-ui/Table/TableHead';
 import TableRow from 'material-ui/Table/TableRow';
-import { withStyles } from 'material-ui/styles';
 import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from 'material-ui/styles';
 
 const styles = (theme) => ({
   root: {
@@ -52,9 +52,9 @@ class TableWindow extends React.Component {
 
     for (let i=0; i < parameterNames.length; i++) {
       let parameterName = parameterNames[i];
-      let { parameter } = 
+      let { parameter } =
           await this.client.fetchParameter(datasetId, parameterName);
-      parameters.push(parameter);      
+      parameters.push(parameter);
     }
 
     let sampleCount = parameters[0] ? parameters[0].length : 0;
