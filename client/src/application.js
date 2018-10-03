@@ -12,6 +12,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import TableWindow from './windows/tableWindow.js';
 import Toolbar from './toolbar.js';
+import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from 'material-ui/styles';
 
@@ -75,6 +76,7 @@ class Application extends React.Component {
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
     this.addWindow = this.addWindow.bind(this);
+    this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -170,6 +172,19 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles the user changing the configuration for a window.
+   */ 
+  onWindowConfigChange(config) {
+    let prevConfig = this.state.windows[config.id];    
+    let newConfig = Object.assign(prevConfig, config);
+    let windows = this.state.windows;
+    windows[config.id] = newConfig;
+    this.setState({
+      windows: windows
+    });    
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -194,6 +209,19 @@ class Application extends React.Component {
               onDatasetChange={this.onDatasetChange}
               onQoiChange={this.onQoiChange}
               client={this.client}/>
+            {
+              !!this.state.currentDataset ? 
+              this.state.windows.map((windowConfig, i) => {
+                return (
+                  <WindowPanel key={i} windowIndex={i} 
+                    config={windowConfig}
+                    onConfigChange={this.onWindowConfigChange}
+                    dataset={this.state.currentDataset}
+                    enabled={this.state.connected}
+                    client={this.client} />
+                );
+              }) : []
+            }
             {
               (!!this.state.currentDataset && this.state.windows.length < 4) ?
                 <Button color="primary" className={classes.button}
