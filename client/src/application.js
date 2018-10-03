@@ -1,3 +1,4 @@
+import Button from 'material-ui/Button';
 import Client from './client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
@@ -47,11 +48,6 @@ const styles = (theme) => ({
   toolbar: theme.mixins.toolbar,
 });
 
-// TODO: Move QueryParam Configuration to some central
-//       location and expand to support more fields.
-const queryString = window.location.search.substring(1);
-const debug = queryString.split('=')[1] === 'true';
-
 /**
  * The top level dSpaceX client component.
  */
@@ -68,6 +64,7 @@ class Application extends React.Component {
       networkActive: false,
       currentDataset: null,
       datasets: [],
+      windows: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -76,6 +73,7 @@ class Application extends React.Component {
     this.onNetworkActivityStart = this.onNetworkActivityStart.bind(this);
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
+    this.addWindow = this.addWindow.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -159,6 +157,18 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles adding a new dataview window.
+   */
+  addWindow() {
+    let windowConfig = {
+      id: this.state.windows.length,
+    };
+    this.setState({
+      windows: this.state.windows.concat(windowConfig),
+    });
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -183,6 +193,14 @@ class Application extends React.Component {
               onDatasetChange={this.onDatasetChange}
               onQoiChange={this.onQoiChange}
               client={this.client}/>
+            {
+              (!!this.state.currentDataset && this.state.windows.length < 4) ?
+                <Button color="primary" className={classes.button}
+                  onClick={this.addWindow}>
+                  Add Window
+                </Button>
+                : []
+            }
             <div style={{
               backgroundColor: drawerMarginColor,
               height: '100%',
