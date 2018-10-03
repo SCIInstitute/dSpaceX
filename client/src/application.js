@@ -67,8 +67,6 @@ class Application extends React.Component {
       connected: false,
       networkActive: false,
       currentDataset: null,
-      currentDecomposition: null,
-      currentQoi: null,
       datasets: [],
     };
 
@@ -78,8 +76,6 @@ class Application extends React.Component {
     this.onNetworkActivityStart = this.onNetworkActivityStart.bind(this);
     this.onNetworkActivityEnd = this.onNetworkActivityEnd.bind(this);
     this.onDatasetChange = this.onDatasetChange.bind(this);
-    this.onDecompositionChange = this.onDecompositionChange.bind(this);
-    this.onQoiChange = this.onQoiChange.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -159,27 +155,6 @@ class Application extends React.Component {
   onDatasetChange(dataset) {
     this.setState({
       currentDataset: dataset,
-      currentDecomposition: null,
-    });
-  }
-
-  /**
-   * Handles updating dataflow to components when decomposition changes.
-   * @param {object} decomposition
-   */
-  onDecompositionChange(decomposition) {
-    this.setState({
-      currentDecomposition: decomposition,
-    });
-  }
-
-  /**
-   * Handles updating dataflow to changes when selected qoi changes.
-   * @param {Array} qoi
-   */
-  onQoiChange(qoi) {
-    this.setState({
-      currentQoi: qoi,
     });
   }
 
