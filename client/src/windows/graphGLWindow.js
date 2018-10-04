@@ -7,7 +7,7 @@ import ErrorDialog from '../errorDialog.js';
 import GLWindow from './glWindow.js';
 import NodeFragmentShaderSource from '../shaders/node.frag';
 import NodeVertexShaderSource from '../shaders/node.vert';
-import Paper from 'material-ui/Paper';
+import Paper from '@material-ui/core/Paper';
 import PickingFragmentShaderSource from '../shaders/picking.frag';
 import PickingVertexShaderSource from '../shaders/picking.vert';
 import PreviewTexturVertexeShaderSource from '../shaders/previewTexture.vert';
@@ -15,7 +15,7 @@ import PreviewTextureFragmentShaderSource from '../shaders/previewTexture.frag';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
-import Typography from 'material-ui/Typography';
+import Typography from '@material-ui/core/Typography';
 import { mat4 } from 'gl-matrix';
 import { withDSXContext } from '../dsxContext.js';
 
