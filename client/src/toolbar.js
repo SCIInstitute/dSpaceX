@@ -1,10 +1,18 @@
-import AppBar from 'material-ui/AppBar';
-import Button from 'material-ui/Button';
-import { LinearProgress } from 'material-ui/Progress';
-import MaterialToolbar from 'material-ui/Toolbar';
+import AppBar from '@material-ui/core/AppBar';
+import Button from '@material-ui/core/Button';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import MaterialToolbar from '@material-ui/core/Toolbar';
+import PropTypes from 'prop-types';
 import React from 'react';
-import Typography from 'material-ui/Typography';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 
+
+const styles = (theme) => ({
+  appBar: {
+    zIndex: theme.zIndex.drawer + 1,
+  },
+});
 
 /**
  * The Toolbar Component presents an application toolbar
@@ -24,8 +32,9 @@ class Toolbar extends React.Component {
    * @return {HTML}
    */
   render() {
+    const { classes } = this.props;
     return (
-      <AppBar position='absolute' className={this.props.className}>
+      <AppBar position='absolute' className={classes.appBar}>
         <MaterialToolbar>
           <Typography variant='title' color='inherit'>
             dSpaceX
@@ -52,4 +61,8 @@ class Toolbar extends React.Component {
   }
 }
 
-export default Toolbar;
+Toolbar.propTypes = {
+  classes: PropTypes.object.isRequired,
+};
+
+export default withStyles(styles)(Toolbar);

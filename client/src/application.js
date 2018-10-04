@@ -1,9 +1,9 @@
-import Button from 'material-ui/Button';
+import Button from '@material-ui/core/Button';
 import Client from './client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
 import DatasetPanel from './panels/datasetPanel.js';
-import Drawer from 'material-ui/Drawer';
+import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
@@ -13,7 +13,7 @@ import TableWindow from './windows/tableWindow.js';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -24,9 +24,6 @@ const styles = (theme) => ({
     position: 'relative',
     display: 'flex',
     height: 'calc(100vh)',
-  },
-  appBar: {
-    zIndex: theme.zIndex.drawer + 1,
   },
   drawerPaper: {
     position: 'relative',
@@ -194,11 +191,10 @@ class Application extends React.Component {
     return (
       <DSXProvider value={{ client:this.client }}>
         <div className={classes.root}>
-          <Toolbar className={classes.appBar}
-            connectedToServer={this.state.connected}
+          <ConnectionDialog ref='connectiondialog' client={this.client}/>
+          <Toolbar connectedToServer={this.state.connected}
             onConnectClick={this.connectButtonClicked}
             networkActive={this.state.networkActive} />
-          <ConnectionDialog ref='connectiondialog' client={this.client}/>
           <Drawer PaperProps={{ elevation:6 }} variant='permanent'
             classes={{ paper:classes.drawerPaper }}>
             { /* Add div to account for menu bar */ }
