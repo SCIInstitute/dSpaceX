@@ -1,19 +1,19 @@
-import ExpandMoreIcon from 'material-ui-icons/ExpandMore';
-import ExpansionPanel from 'material-ui/ExpansionPanel';
-import { ExpansionPanelDetails } from 'material-ui/ExpansionPanel';
-import { ExpansionPanelSummary } from 'material-ui/ExpansionPanel';
-import { FormControl } from 'material-ui/Form';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import FormControl from '@material-ui/core/FormControl';
 import Histogram from './histogram';
-import { InputLabel } from 'material-ui/Input';
-import List from 'material-ui/List';
-import { ListItem } from 'material-ui/List';
-import { MenuItem } from 'material-ui/Menu';
+import InputLabel from '@material-ui/core/InputLabel';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
-import Select from 'material-ui/Select';
-import Typography from 'material-ui/Typography';
+import Select from '@material-ui/core/Select';
+import Typography from '@material-ui/core/Typography';
 import { withDSXContext } from '../dsxContext.js';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 /**
  * The Decomposition Panel component provides a display of the
