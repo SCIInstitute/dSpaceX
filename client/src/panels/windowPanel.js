@@ -10,8 +10,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import Select from 'material-ui/Select';
 import TextField from 'material-ui/TextField';
-import Typography from 'material-ui/Typography';
-import { withStyles } from 'material-ui/styles';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 
 /**
  * A Window Panel provides a display of the settings associated with any given
