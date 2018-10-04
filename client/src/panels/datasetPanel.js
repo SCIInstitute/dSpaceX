@@ -1,15 +1,15 @@
-import Divider from 'material-ui/Divider';
-import { FormControl } from 'material-ui/Form';
-import { InputLabel } from 'material-ui/Input';
-import List from 'material-ui/List';
-import { ListItem } from 'material-ui/List';
-import { MenuItem } from 'material-ui/Menu';
-import Paper from 'material-ui/Paper';
+import Divider from '@material-ui/core/Divider';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import MenuItem from '@material-ui/core/MenuItem';
+import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 import React from 'react';
-import Select from 'material-ui/Select';
+import Select from '@material-ui/core/Select';
 import { withDSXContext } from '../dsxContext.js';
-import { withStyles } from 'material-ui/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 const disabledLabelColor = '#888';
 const enabledLabelColor = '#000';
