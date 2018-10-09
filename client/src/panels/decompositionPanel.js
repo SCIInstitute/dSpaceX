@@ -1,3 +1,4 @@
+import Checkbox from '@material-ui/core/Checkbox';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
@@ -7,6 +8,7 @@ import Histogram from './histogram';
 import InputLabel from '@material-ui/core/InputLabel';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -37,6 +39,7 @@ class DecompositionPanel extends React.Component {
         this.handlePersistenceLevelChange.bind(this);
     this.handleSliderChange = this.handleSliderChange.bind(this);
     this.handleSliderRelease = this.handleSliderRelease.bind(this);
+    this.handleCrystalToggle = this.handleCrystalToggle.bind(this);
     this._getDecompositionFieldMenuItems =
         this._getDecompositionFieldMenuItems.bind(this);
     this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
@@ -245,6 +248,17 @@ class DecompositionPanel extends React.Component {
   }
 
   /**
+   * Handles when a user toggles a crystal visibility on or off.
+   * @param {number} index - Which crystal is being toggled.
+   */
+  handleCrystalToggle(index) {
+    let crystals = this.state.crystals;
+    let isDisabled = crystals[index].isDisabled;
+    crystals[index].isDisabled = !isDisabled;
+    this.setState({ crystals:crystals });
+  }
+
+  /**
    * React to new props. Reset views if dataset changes.
    * @param {object} nextProps
    */
@@ -448,15 +462,13 @@ class DecompositionPanel extends React.Component {
             <List style={{ maxHeight:'200px', overflow:'auto' }}>
               {
                 this.state.crystals.map((crystal, i) => (
-                  <ListItem key={i} style={{ padding:'1px' }}>
-                    <ExpansionPanel style={{ width:'100%' }}>
-                      <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
-                        <Typography>{'Crystal ' + (i+1)}</Typography>
-                      </ExpansionPanelSummary>
-                      <ExpansionPanelDetails>
-                        <div>{'... '}</div>
-                      </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                  <ListItem key={i} style={{ padding:'1px' }}
+                    dense button
+                    onClick={() => this.handleCrystalToggle(i)}>
+                    <Checkbox checked={!this.state.crystals[i].isDisabled}
+                      tabIndex={-1} disableRipple
+                      color="primary" style={{ paddingLeft:0 }}/>
+                    <ListItemText primary={'Crystal ' + (i+1)} />
                   </ListItem>
                 ))
               }
