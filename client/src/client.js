@@ -244,6 +244,25 @@ class Client {
   }
 
   /**
+   * Fetch the details of a set of crystals of a persistence level.
+   * @param {string} datasetId
+   * @param {number} k number of neighbors.
+   * @param {number} persistenceLevel
+   * @param {array} crystalIds
+   * @return {Promise}
+   */
+  fetchMoreSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
+    let command = {
+      name: 'fetchMorseSmaleCrystals',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+      crystalIds: crystalIds,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Grab the 2d graph embedding of the specified crystals.
    * @param {string} datasetId
    * @param {number} k
