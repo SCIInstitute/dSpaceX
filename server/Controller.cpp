@@ -43,7 +43,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
-  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});  
+  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -56,14 +56,15 @@ void Controller::configureCommandHandlers() {
 void Controller::configureAvailableDatasets() {
   std::string concreteConfigPath = "../../examples/concrete/config.yaml";
   std::string crimesConfigPath = "../../examples/crimes/config.yaml";
-  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";  
+  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";
   std::string coloradoConfigPath = "../../examples/truss/config.yaml";
   std::string heatExchangerConfigPath = "../../examples/heat-exchanger/config.yaml";
   std::string silverConfigPath = "../../examples/supershapes/silver/config.yaml";
   std::string aluminumConfigPath = "../../examples/supershapes/aluminum/config.yaml";
   std::string goldConfigPath = "../../examples/supershapes/gold/config.yaml";
+  std::string rocketConfigPath = "../../examples/rocket/config.yaml";
 
-  m_availableDatasets.push_back({"Concrete", concreteConfigPath});      
+  m_availableDatasets.push_back({"Concrete", concreteConfigPath});
   m_availableDatasets.push_back({"Crimes", crimesConfigPath});
   m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
   m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
@@ -71,6 +72,7 @@ void Controller::configureAvailableDatasets() {
   m_availableDatasets.push_back({"SuperShapes-Silver", silverConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Aluminum", aluminumConfigPath});
   m_availableDatasets.push_back({"SuperShapes-Gold", goldConfigPath});
+  m_availableDatasets.push_back({"Solid Rocket", rocketConfigPath});
 }
 
 void Controller::handleData(void *wsi, void *data) {
@@ -88,7 +90,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
     std::cout << "[" << messageId << "] " << commandName << std::endl;
 
     Json::Value response(Json::objectValue);
-    response["id"] = messageId;    
+    response["id"] = messageId;
 
     auto command = m_commandMap[commandName];
     if (command) {
@@ -118,7 +120,7 @@ void Controller::fetchDatasetList(
     object["id"] = static_cast<int>(i);
     object["name"] = m_availableDatasets[i].first;
     response["datasets"].append(object);
-  }  
+  }
 }
 
 /**
@@ -131,7 +133,7 @@ void Controller::fetchDataset(
     // TODO: Send back an error message.
   }
   maybeLoadDataset(datasetId);
-  
+
   response["datasetId"] = datasetId;
   response["name"] = m_currentDataset->getName();
   response["numberOfSamples"] = m_currentDataset->numberOfSamples();
@@ -165,7 +167,7 @@ void Controller::fetchKNeighbors(
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
   Distance<Precision>::findKNN(
       m_currentDataset->getDistanceMatrix(), KNN, KNND);
- 
+
   response["datasetId"] = datasetId;
   response["k"] = k;
   response["graph"] = Json::Value(Json::arrayValue);
@@ -238,7 +240,7 @@ void Controller::fetchMorseSmalePersistenceLevel(
   }
 
   MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
-  
+
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["k"] = k;
@@ -291,7 +293,7 @@ void Controller::fetchMorseSmaleCrystal(
   }
 
   Crystal *crystal = complex->getCrystals()[crystalId];
-  
+
   response["datasetId"] = datasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["persistenceLevel"] = persistenceLevel;
@@ -375,7 +377,7 @@ void Controller::fetchLayoutForPersistenceLevel(
   int persistenceLevel = request["persistenceLevel"].asInt();
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
     // TODO: Send back an error message. Invalid persistenceLevel.
-  }  
+  }
 
   // TODO:  Modify logic to return layout based on chosen layout type.
   //        For now, only send back embeddings provided with the dataset.
@@ -406,7 +408,7 @@ void Controller::fetchLayoutForPersistenceLevel(
     for (int i = 0; i < embedding.M(); i++) {
       auto row = Json::Value(Json::arrayValue);
       for (int j = 0; j < embedding.N(); j++) {
-        row.append(embedding(i, j));        
+        row.append(embedding(i, j));
       }
       layout.append(row);
     }
@@ -414,7 +416,7 @@ void Controller::fetchLayoutForPersistenceLevel(
 
     auto adjacency = Json::Value(Json::arrayValue);
     auto neighbors = m_currentVizData->getNearestNeighbors();
-    for (int i = 0; i < neighbors.N(); i++) {      
+    for (int i = 0; i < neighbors.N(); i++) {
       for (int j = 0; j < neighbors.M(); j++) {
         int neighbor = neighbors(j, i);
         if (i == neighbor)
@@ -424,9 +426,9 @@ void Controller::fetchLayoutForPersistenceLevel(
         row.append(neighbor);
         adjacency.append(row);
       }
-      
+
     }
-    response["embedding"]["adjacency"] = adjacency; 
+    response["embedding"]["adjacency"] = adjacency;
   }
 }
 
@@ -485,7 +487,7 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
 }
 
 
-/** 
+/**
  * Handle the command to fetch sample image thumbnails if available.
  */
 void Controller::fetchThumbnails(
@@ -497,7 +499,7 @@ void Controller::fetchThumbnails(
   maybeLoadDataset(datasetId);
 
   auto thumbnails = m_currentDataset->getThumbnails();
-    
+
   response["thumbnails"] = Json::Value(Json::arrayValue);
   for (auto image : thumbnails) {
     Json::Value imageObject = Json::Value(Json::objectValue);
@@ -510,7 +512,7 @@ void Controller::fetchThumbnails(
             reinterpret_cast<const unsigned char*>(&image.getRawData()[0]),
             image.getRawData().size());
     response["thumbnails"].append(imageObject);
-  }  
+  }
 }
 
 /**
@@ -535,8 +537,8 @@ void Controller::maybeLoadDataset(int datasetId) {
     m_currentTopoData = nullptr;
   }
   m_currentK = -1;
-  
-  DatasetLoader loader; 
+
+  DatasetLoader loader;
   std::string configPath = m_availableDatasets[datasetId].second;
   m_currentDataset = loader.loadDataset(configPath);
   std::cout << m_currentDataset->getName() << " dataset loaded." << std::endl;
@@ -565,7 +567,7 @@ void Controller::maybeProcessData(int k) {
     delete m_currentTopoData;
     m_currentTopoData = nullptr;
   }
-  
+
   if (m_currentDataset->hasDistanceMatrix()) {
     m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix();
   } else if (m_currentDataset->hasSamplesMatrix()) {
@@ -574,8 +576,8 @@ void Controller::maybeProcessData(int k) {
   } else {
     std::runtime_error("No distance matrix or samplesMatrix available.");
   }
-  
-  
+
+
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   m_currentK = k;
@@ -583,7 +585,7 @@ void Controller::maybeProcessData(int k) {
   // TODO: Provide mechanism to select QoI used.
   // TODO: Expose processing parameters to function interface.
   try {
-    m_currentProcessResult = genericProcessor.processOnMetric(        
+    m_currentProcessResult = genericProcessor.processOnMetric(
         m_currentDistanceMatrix,
         m_currentDataset->getQoiVector(0),
         m_currentK  /* knn */,
