@@ -40,6 +40,8 @@ ADD_SUBDIRECTORY(lib/yaml-cpp)
 
 
 if(BUILD_SERVER_LIB)
+  INCLUDE_DIRECTORIES(lib/boost)
+  ADD_SUBDIRECTORY(lib/boost)
   ADD_SUBDIRECTORY(lib/serverlib)
 endif()
 

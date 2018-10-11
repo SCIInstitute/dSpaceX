@@ -10,7 +10,7 @@
 
 std::string basePathOf(const std::string &filePath) {
   size_t found = filePath.find_last_of("/\\");
-  std::string path = filePath.substr(0,found);  
+  std::string path = filePath.substr(0,found);
   if(path.empty()) {
     path = "./";
   }
@@ -21,15 +21,15 @@ std::string basePathOf(const std::string &filePath) {
 }
 
 Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
-  YAML::Node config = YAML::LoadFile(filePath);  
+  YAML::Node config = YAML::LoadFile(filePath);
   Dataset::Builder builder;
 
   std::cout << "Reading " << filePath << std::endl;
-  
+
   std::string name = DatasetLoader::parseName(config);
-  std::cout << "name: " << name << std::endl;    
+  std::cout << "name: " << name << std::endl;
   builder.withName(name);
-  
+
   int sampleCount = DatasetLoader::parseSampleCount(config);
   std::cout << "samples: " << sampleCount << std::endl;
   builder.withSampleCount(sampleCount);
@@ -71,8 +71,14 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
   return builder.build();
 }
 
+std::string DatasetLoader::getDatasetName(const std::string &filePath) {
+  YAML::Node config = YAML::LoadFile(filePath);
+  std::string name = DatasetLoader::parseName(config);
+  return name;
+}
 
-std::string DatasetLoader::parseName(const YAML::Node &config) {  
+
+std::string DatasetLoader::parseName(const YAML::Node &config) {
   if (!config["name"]) {
     throw std::runtime_error("Dataset config missing 'name' field.");
   }
@@ -95,13 +101,13 @@ std::vector<ParameterNameValuePair> DatasetLoader::parseParameters(
     const YAML::Node &config, const std::string &filePath) {
   std::vector<ParameterNameValuePair> parameters;
   if (!config["parameters"]) {
-    throw std::runtime_error("Dataset config missing 'parameters' field.");    
+    throw std::runtime_error("Dataset config missing 'parameters' field.");
   }
   const YAML::Node &parametersNode = config["parameters"];
 
   if (parametersNode.IsSequence()) {
     // Parse Parameters one by one if in list form:
-    std::cout << "Reading sequence of " << parametersNode.size() 
+    std::cout << "Reading sequence of " << parametersNode.size()
               << " parameters." << std::endl;
     for (std::size_t i = 0; i < parametersNode.size(); i++) {
       const YAML::Node &parameterNode = parametersNode[i];
@@ -122,8 +128,8 @@ std::vector<ParameterNameValuePair> DatasetLoader::parseParameters(
     std::cout << "parameters filename: " << filename << std::endl;
     std::string path = basePathOf(filePath);
 
-    // TODO: Factor out some file format reading handler. 
-    //       Fileformat could be a key for map to loading function.  
+    // TODO: Factor out some file format reading handler.
+    //       Fileformat could be a key for map to loading function.
     std::cout << "Loading " << format << " from " << path + filename << std::endl;
     auto columnNames = HDProcess::loadCSVColumnNames(path + filename);
 
@@ -147,7 +153,7 @@ ParameterNameValuePair DatasetLoader::parseParameter(
   std::cout << "parameter name: " << name << std::endl;
 
   if (!parameterNode["format"]) {
-     throw std::runtime_error("Parameter missing 'format' field."); 
+     throw std::runtime_error("Parameter missing 'format' field.");
   }
   std::string format = parameterNode["format"].as<std::string>();
   // TODO: Move Format Strings to typed enums or constants.
@@ -165,11 +171,11 @@ ParameterNameValuePair DatasetLoader::parseParameter(
   std::cout << "parameter filename: " << filename << std::endl;
   std::string path = basePathOf(filePath);
 
-  // TODO: Factor out some file format reading handler. 
-  //       Fileformat could be a key for map to loading function.  
+  // TODO: Factor out some file format reading handler.
+  //       Fileformat could be a key for map to loading function.
   std::cout << "Loading " << format << " from " << path + filename << std::endl;
   FortranLinalg::DenseVector<Precision> parameter;
-  if (format == "Linalg.DenseVector") {    
+  if (format == "Linalg.DenseVector") {
     parameter = FortranLinalg::LinalgIO<Precision>::readVector(path + filename);
   } else if (format == "csv") {
     parameter = HDProcess::loadCSVColumn(path + filename);
@@ -185,7 +191,7 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
     throw std::runtime_error("Dataset config missing 'qois' field.");
   }
   const YAML::Node &qoisNode = config["qois"];
-  
+
   if (qoisNode.IsSequence()) {
     // Parse QoIs one by one if in list form:
     std::cout << "Reading sequence of " << qoisNode.size() << " qois." << std::endl;
@@ -208,8 +214,8 @@ std::vector<QoiNameValuePair> DatasetLoader::parseQois(
     std::cout << "qois filename: " << filename << std::endl;
     std::string path = basePathOf(filePath);
 
-    // TODO: Factor out some file format reading handler. 
-    //       Fileformat could be a key for map to loading function.  
+    // TODO: Factor out some file format reading handler.
+    //       Fileformat could be a key for map to loading function.
     std::cout << "Loading " << format << " from " << path + filename << std::endl;
     auto columnNames = HDProcess::loadCSVColumnNames(path + filename);
 
@@ -233,7 +239,7 @@ QoiNameValuePair DatasetLoader::parseQoi(
   std::cout << "qoi name: " << name << std::endl;
 
   if (!qoiNode["format"]) {
-     throw std::runtime_error("Qoi missing 'format' field."); 
+     throw std::runtime_error("Qoi missing 'format' field.");
   }
   std::string format = qoiNode["format"].as<std::string>();
   // TODO: Move Format Strings to typed enums or constants.
@@ -251,11 +257,11 @@ QoiNameValuePair DatasetLoader::parseQoi(
   std::cout << "qoi filename: " << filename << std::endl;
   std::string path = basePathOf(filePath);
 
-  // TODO: Factor out some file format reading handler. 
-  //       Fileformat could be a key for map to loading function.  
+  // TODO: Factor out some file format reading handler.
+  //       Fileformat could be a key for map to loading function.
   std::cout << "Loading " << format << " from " << path + filename << std::endl;
   FortranLinalg::DenseVector<Precision> qoi;
-  if (format == "Linalg.DenseVector") {    
+  if (format == "Linalg.DenseVector") {
     qoi = FortranLinalg::LinalgIO<Precision>::readVector(path + filename);
   } else if (format == "csv") {
     qoi = HDProcess::loadCSVColumn(path + filename);
@@ -275,7 +281,7 @@ std::vector<EmbeddingPair> DatasetLoader::parseEmbeddings(
 
   if (embeddingsNode.IsSequence()) {
     // Parse Embeddings one by one if in list form:
-    std::cout << "Reading sequence of " << embeddingsNode.size() 
+    std::cout << "Reading sequence of " << embeddingsNode.size()
               << " embeddings." << std::endl;
     for (std::size_t i = 0; i < embeddingsNode.size(); i++) {
       const YAML::Node &embeddingNode = embeddingsNode[i];
@@ -299,7 +305,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(
   std::cout << "Embedding name: " << name << std::endl;
 
   if (!embeddingNode["format"]) {
-     throw std::runtime_error("Embedding missing 'format' field."); 
+     throw std::runtime_error("Embedding missing 'format' field.");
   }
   std::string format = embeddingNode["format"].as<std::string>();
   // TODO: Move Format Strings to typed enums or constants.
@@ -317,11 +323,11 @@ EmbeddingPair DatasetLoader::parseEmbedding(
   std::cout << "Embedding filename: " << filename << std::endl;
   std::string path = basePathOf(filePath);
 
-  // TODO: Factor out some file format reading handler. 
-  //       Fileformat could be a key for map to loading function.  
+  // TODO: Factor out some file format reading handler.
+  //       Fileformat could be a key for map to loading function.
   std::cout << "Loading " << format << " from " << path + filename << std::endl;
   FortranLinalg::DenseMatrix<Precision> embedding;
-  if (format == "Linalg.DenseMatrix") {    
+  if (format == "Linalg.DenseMatrix") {
     embedding = FortranLinalg::LinalgIO<Precision>::readMatrix(path + filename);
   } else if (format == "csv") {
     embedding = HDProcess::loadCSVMatrix(path + filename);
@@ -382,10 +388,10 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
   std::string filename = distancesNode["file"].as<std::string>();
   std::string path = basePathOf(filePath);
 
-  // TODO: Factor out some file format reading handler. 
-  //       Fileformat could be a key for map to loading function.  
+  // TODO: Factor out some file format reading handler.
+  //       Fileformat could be a key for map to loading function.
   std::cout << "Loading " << format << " from " << path + filename << std::endl;
-  if (format == "Linalg.DenseVector") {    
+  if (format == "Linalg.DenseVector") {
     auto distances = FortranLinalg::LinalgIO<Precision>::readMatrix(path + filename);
 		return distances;
   } else if (format == "csv") {
@@ -397,7 +403,7 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
 	}
 }
 
-std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath, int index, 
+std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath, int index,
     const std::string imageSuffix, unsigned int indexOffset,
     bool padZeroes, unsigned int thumbnailCount) {
   std::string imageName = std::to_string(index);
@@ -405,7 +411,7 @@ std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath,
   if (padZeroes) {
     std::stringstream digitCounter;
     digitCounter << thumbnailCount;
-    unsigned int digitCount = digitCounter.str().size() + indexOffset;    
+    unsigned int digitCount = digitCounter.str().size() + indexOffset;
 
     std::stringstream paddedName;
     paddedName << std::setfill('0') << std::setw(digitCount) << index;
@@ -435,7 +441,7 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     throw std::runtime_error("Dataset config missing 'thumbnails.files' field.");
   }
   std::string imagePath = thumbnailsNode["files"].as<std::string>();
-  int imageNameLoc = imagePath.find('?');  
+  int imageNameLoc = imagePath.find('?');
   std::string imageBasePath = basePathOf(filePath) + imagePath.substr(0, imageNameLoc);
   std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
@@ -448,17 +454,17 @@ std::vector<Image> DatasetLoader::parseThumbnails(
       throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
     }
   }
-  
-  unsigned int indexOffset = 0; 
+
+  unsigned int indexOffset = 0;
   if (thumbnailsNode["offset"]) {
-    indexOffset = thumbnailsNode["offset"].as<int>();    
-  }  
-  
+    indexOffset = thumbnailsNode["offset"].as<int>();
+  }
+
   ImageLoader imageLoader;
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
-    std::string path = createThumbnailPath(imageBasePath, i+indexOffset, 
+    std::string path = createThumbnailPath(imageBasePath, i+indexOffset,
       imageSuffix, indexOffset, shouldPadZeroes, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);

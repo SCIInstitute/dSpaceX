@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
-typedef 
+typedef
 std::pair<std::string, FortranLinalg::DenseVector<Precision>> ParameterNameValuePair;
-typedef 
+typedef
 std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
 typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
@@ -20,6 +20,7 @@ std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
 class DatasetLoader {
 public:
   static Dataset* loadDataset(const std::string &filePath);
+  static std::string getDatasetName(const std::string &filePath);
 private:
   static std::string parseName(const YAML::Node &config);
 
@@ -38,21 +39,21 @@ private:
       const YAML::Node &config, const std::string &filePath);
 
   static QoiNameValuePair parseQoi(
-      const YAML::Node &qoiNode,const std::string &filePath);  
+      const YAML::Node &qoiNode,const std::string &filePath);
 
   static std::vector<EmbeddingPair> parseEmbeddings(
       const YAML::Node &config, const std::string &filePath);
 
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
-  
+
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);
 
   static std::vector<Image> parseThumbnails(
       const YAML::Node &config, const std::string &filePath);
 
-  static std::string createThumbnailPath(const std::string& imageBasePath, 
+  static std::string createThumbnailPath(const std::string& imageBasePath,
       int index, const std::string imageSuffix, unsigned int indexOffset,
       bool padZeroes, unsigned int thumbnailCount);
 };
