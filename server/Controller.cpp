@@ -1,4 +1,5 @@
 #include <base64/base64.h>
+#include <boost/filesystem.hpp>
 #include "Controller.h"
 #include "DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
@@ -16,6 +17,7 @@
 #include "util/csv/loaders.h"
 #include "util/utils.h"
 
+#include <cassert>
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -25,7 +27,12 @@
 #include <fstream>
 #include <string>
 
+// Simplify namespace access to _1, _2 for std::bind parameter binding.
 using namespace std::placeholders;
+
+// Maximum number of directories from root path to seek config.yaml files
+const int MAX_DATASET_DEPTH = 3;
+
 
 Controller::Controller() {
   configureCommandHandlers();
@@ -53,26 +60,48 @@ void Controller::configureCommandHandlers() {
 /**
  * Construct list of available datasets.
  */
-void Controller::configureAvailableDatasets() {
-  std::string concreteConfigPath = "../../examples/concrete/config.yaml";
-  std::string crimesConfigPath = "../../examples/crimes/config.yaml";
-  std::string gaussianConfigPath = "../../examples/gaussian2d/config.yaml";
-  std::string coloradoConfigPath = "../../examples/truss/config.yaml";
-  std::string heatExchangerConfigPath = "../../examples/heat-exchanger/config.yaml";
-  std::string silverConfigPath = "../../examples/supershapes/silver/config.yaml";
-  std::string aluminumConfigPath = "../../examples/supershapes/aluminum/config.yaml";
-  std::string goldConfigPath = "../../examples/supershapes/gold/config.yaml";
-  std::string rocketConfigPath = "../../examples/rocket/config.yaml";
+void Controller::configureAvailableDatasets(const std::string &path) {
 
-  m_availableDatasets.push_back({"Concrete", concreteConfigPath});
-  m_availableDatasets.push_back({"Crimes", crimesConfigPath});
-  m_availableDatasets.push_back({"Gaussian", gaussianConfigPath});
-  m_availableDatasets.push_back({"Colorado", coloradoConfigPath});
-  m_availableDatasets.push_back({"Heat Exchanger", heatExchangerConfigPath});
-  m_availableDatasets.push_back({"SuperShapes-Silver", silverConfigPath});
-  m_availableDatasets.push_back({"SuperShapes-Aluminum", aluminumConfigPath});
-  m_availableDatasets.push_back({"SuperShapes-Gold", goldConfigPath});
-  m_availableDatasets.push_back({"Solid Rocket", rocketConfigPath});
+  boost::filesystem::path rootPath(path);
+  if (!boost::filesystem::is_directory(rootPath)) {
+    std::cout << "Data path " << rootPath.string() << " is not a valid directory." << std::endl;
+  }
+
+  auto currentPath = boost::filesystem::current_path();
+  std::cout << "Running server from current path: " << currentPath.string() << std::endl;
+
+  try {
+    auto canonicalRootPath = boost::filesystem::canonical(rootPath, currentPath);
+    std::cout << "Configuring data from root path: " << canonicalRootPath.string() << std::endl;
+  } catch(const boost::filesystem::filesystem_error& e) {
+    std::cout << e.code().message() << std::endl;
+    return;
+  }
+
+  std::vector<boost::filesystem::path> configPaths;
+  boost::filesystem::recursive_directory_iterator iter{rootPath};
+  while (iter != boost::filesystem::recursive_directory_iterator{}) {
+    if (iter.level() == MAX_DATASET_DEPTH) {
+      iter.pop();
+    }
+    if (iter->path().filename() != "config.yaml") {
+      iter++;
+      continue;
+    }
+    configPaths.push_back(*iter);
+    iter++;
+  }
+
+  std::cout << "Found the following datasets:" << std::endl;
+  for (auto path : configPaths) {
+    try {
+      std::string name  = DatasetLoader::getDatasetName(path.string());
+      std::cout << "  " << path.string() << " --> " << name << std::endl;
+      m_availableDatasets.push_back({name, path.string()});
+    } catch(const std::exception &error) {
+      std::cout << "  " << path.string() << " --> " << "[ FAILED TO LOAD ]" << std::endl;
+    }
+  }
 }
 
 void Controller::handleData(void *wsi, void *data) {
@@ -538,9 +567,8 @@ void Controller::maybeLoadDataset(int datasetId) {
   }
   m_currentK = -1;
 
-  DatasetLoader loader;
   std::string configPath = m_availableDatasets[datasetId].second;
-  m_currentDataset = loader.loadDataset(configPath);
+  m_currentDataset = DatasetLoader::loadDataset(configPath);
   std::cout << m_currentDataset->getName() << " dataset loaded." << std::endl;
 
   m_currentDatasetId = datasetId;
