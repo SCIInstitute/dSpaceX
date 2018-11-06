@@ -12,6 +12,7 @@ import React from 'react';
 import Toolbar from './toolbar.js';
 import Workspace from './workspace.js';
 import { withStyles } from 'material-ui/styles';
+import ParametersPanel from "./panels/parametersPanel";
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -135,7 +136,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Handles whent he applications starts communicating with the server.
+   * Handles when the applications starts communicating with the server.
    */
   onNetworkActivityStart() {
     this.setState({
