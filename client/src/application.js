@@ -10,6 +10,7 @@ import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 import TableWindow from './windows/tableWindow.js';
+import ScatterPlotWindow from './windows/scatterPlotWindow';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
@@ -270,6 +271,12 @@ class Application extends React.Component {
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
                           onNodeHover={this.onSampleFocus}/>
+                      );
+                    } else if (windowConfig.dataViewType == 'scatter_plot') {
+                      return (
+                        <ScatterPlotWindow key={i}
+                        attributGroup={windowConfig.scatterPlotAttributeGroup}
+                        dataset={this.state.currentDataset}/>
                       );
                     } else {
                       return (
