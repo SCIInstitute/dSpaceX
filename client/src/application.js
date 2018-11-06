@@ -128,7 +128,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Handles whent he applications starts communicating with the server.
+   * Handles when the applications starts communicating with the server.
    */
   onNetworkActivityStart() {
     this.setState({
