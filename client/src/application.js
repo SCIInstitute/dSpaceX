@@ -14,12 +14,7 @@ import ScatterPlotWindow from './windows/scatterPlotWindow';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
-<<<<<<< HEAD
 import { withStyles } from '@material-ui/core/styles';
-=======
-import { withStyles } from 'material-ui/styles';
-import ParametersPanel from "./panels/parametersPanel";
->>>>>>> beb51a8852c09a49f9652b79f8b27283ad06a6e1
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -280,7 +275,7 @@ class Application extends React.Component {
                     } else if (windowConfig.dataViewType == 'scatter_plot') {
                       return (
                         <ScatterPlotWindow key={i}
-                        attributGroup={windowConfig.scatterPlotAttributeGroup}
+                        attributeGroup={windowConfig.scatterPlotAttributeGroup}
                         dataset={this.state.currentDataset}/>
                       );
                     } else {
