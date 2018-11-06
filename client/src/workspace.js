@@ -18,7 +18,11 @@ class Workspace extends React.Component {
    * @return {HTML}
    */
   render() {
-    return (<div className={this.props.className}>{this.props.children}</div>);
+    return (
+      <div className={this.props.className}>
+        {this.props.children}
+      </div>
+    );
   }
 }
 

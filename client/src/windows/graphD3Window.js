@@ -1,4 +1,5 @@
 import React from 'react';
+import { withDSXContext } from '../dsxContext.js';
 
 
 /**
@@ -12,7 +13,7 @@ class GraphD3Window extends React.Component {
   constructor(props) {
     super(props);
 
-    this.client = this.props.client;
+    this.client = this.props.dsxContext.client;
   }
 
   /**
@@ -38,4 +39,4 @@ class GraphD3Window extends React.Component {
   }
 }
 
-export default GraphD3Window;
+export default withDSXContext(GraphD3Window);
