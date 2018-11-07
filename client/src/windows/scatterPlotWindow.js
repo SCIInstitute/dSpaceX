@@ -74,9 +74,7 @@ class ScatterPlotWindow extends React.Component {
     switch (this.props.attributeGroup) {
       case 'parameters':
         this.getParameters().then((data) => {
-          this.setState({
-            fields: data,
-          });
+          this.drawChart(data);
         });
         break;
       case 'qois':
@@ -100,16 +98,12 @@ class ScatterPlotWindow extends React.Component {
       switch (this.props.attributeGroup) {
         case 'parameters':
           this.getParameters().then((data) => {
-            this.setState({
-              fields: data,
-            });
+            this.drawChart(data);
           });
           break;
         case 'qois':
           this.getQois().then((data) => {
-            this.setState({
-              fields: data,
-            });
+            this.drawChart(data);
           });
           break;
         default:
@@ -121,29 +115,40 @@ class ScatterPlotWindow extends React.Component {
     }
   }
 
-  render() {
-    const {classes} = this.props;
-
-    const xScale = d3.scaleLinear()
-      .range([0, this.props.width])
-      .domain(d3.extent(this.state.fields, function (d) {
-        return d[0];
+  drawChart(data) {
+    const node = this.node;
+    let xScale = d3.scaleLinear()
+      .range([0, 500])
+      .domain(d3.extent(data, function (d) {
+        return d["Major Axis"];
       }))
       .nice();
 
     let yScale = d3.scaleLinear()
-      .range([this.props.height, 0])
-      .domain(d3.extent(this.state.fields, function (d) {
-        return d[1];
+      .range([500, 0])
+      .domain(d3.extent(data, function(d){
+        return d["Minor Axis"];
       }))
       .nice();
 
-    const test = this.state.fields;
-    const circles = this.state.fields.map((d, i) => <circle key={i} cx={xScale(d[0])} cy={yScale(d[1])} r={5}></circle>);
+    let xAxis = d3.axisBottom(xScale);
 
-    return <svg width={500} height={500}>
-      {circles}
-    </svg>
+    let yAxis = d3.axisLeft(yScale);
+
+    d3.select(node)
+      .append("g")
+      .attr("transform", "translate(0," + 500 + ")")
+      .call(xAxis);
+
+    d3.select(node)
+      .append("g")
+      .attr("transform", "translate(0,0)")
+      .call(yAxis);
+
+  }
+
+  render() {
+    return <svg ref={node => this.node = node} width={500} height={500}></svg>
   }
 }
 
