@@ -11,14 +11,27 @@ const styles = (theme) => ({
   }
 });
 
-const SVGStyle = {
-  width: "100%",
-  height: "100%",
+const svg_container = {
+  "display": "inline-block",
+  "position": "relative",
+  "width": "100%",
+  "vertical-alight": "top",
+  "overflow": "hidden",
+};
+
+const svg_content = {
+  display: "inline-block",
+  position: "absolute",
+  top: 0,
+  left: 0,
 };
 
 class ScatterPlotWindow extends React.Component {
   constructor(props) {
     super(props);
+
+    this.viewBoxWidth = 500;
+    this.viewBoxHeight = 250;
 
     this.client = this.props.dsxContext.client;
     this.state = {
@@ -53,7 +66,7 @@ class ScatterPlotWindow extends React.Component {
   /**
    * Calculates the qois for the given parameters
    */
-   calculateQOIS(parameters) {
+  calculateQOIS(parameters) {
     let qois = [];
     let that = this;
     parameters.forEach(function (d, i) {
@@ -79,7 +92,7 @@ class ScatterPlotWindow extends React.Component {
    * Calculates perimeter of ellipse
    */
   perimeter(majorAxis, minorAxis) {
-    return Math.PI * (3*(majorAxis+minorAxis) - Math.sqrt((3*majorAxis+minorAxis)*(majorAxis+3*minorAxis)));
+    return Math.PI * (3 * (majorAxis + minorAxis) - Math.sqrt((3 * majorAxis + minorAxis) * (majorAxis + 3 * minorAxis)));
   };
 
   componentWillMount() {
@@ -128,16 +141,13 @@ class ScatterPlotWindow extends React.Component {
   drawChart(data) {
     // Get this node
     const node = this.node;
+    d3.select(node).selectAll('*').remove();
 
-    // Remove stale chart
-    d3.select(node).selectAll("*").remove();
-
-    // Get bounding rect and create margins
-    let boundingRect = node.getBoundingClientRect();
+    // Create margins
     let margin = {top: 30, right: 50, bottom: 40, left: 40};
     let padding = {x_small: 10, small: 15};
-    let width = boundingRect.width - margin.left - margin.right;
-    let height = boundingRect.height - margin.top - margin.bottom;
+    let width = this.viewBoxWidth - margin.left - margin.right;
+    let height = this.viewBoxHeight - margin.top - margin.bottom;
 
     // Get column names
     let columnNames = [];
@@ -163,7 +173,8 @@ class ScatterPlotWindow extends React.Component {
       .nice();
 
     // Add axes
-    let xAxis = d3.axisBottom(xScale);
+    let xAxis = d3.axisBottom(xScale)
+      .tickFormat(d3.format(".0s"));
     let yAxis = d3.axisLeft(yScale);
     d3.select(node)
       .append("g")
@@ -180,14 +191,12 @@ class ScatterPlotWindow extends React.Component {
       .attr("x", (margin.top + padding.small))
       .attr("y", (-1 * (margin.left + padding.x_small)))
       .attr("transform", "rotate(90)")
-      .classed("label", true)
       .text(columnNames[0]);
 
     d3.select(node).append("text")
       .attr("x", (width + padding.small))
       .attr("y", (height + margin.bottom - padding.x_small))
       .attr("text-anchor", "end")
-      .classed("label", true)
       .text(columnNames[1]);
 
     // Add data
@@ -202,12 +211,14 @@ class ScatterPlotWindow extends React.Component {
       .attr("cx", d => xScale(d[columnNames[0]]))
       .attr("cy", d => yScale(d[columnNames[1]]))
       .attr("transform", "translate(" + margin.left + "," + margin.bottom + ")")
-      .attr("r", 5);
+      .attr("r", 2);
 
   }
 
   render() {
-    return <svg ref={node => this.node = node} style={SVGStyle}></svg>
+    return <div style={svg_container}>
+      <svg ref={node => this.node = node} style={svg_content} viewBox={"0 0 " + this.viewBoxWidth + " " + this.viewBoxHeight} preserveAspectRatio={"xMinYMid meet"}></svg>
+    </div>
   }
 }
 
