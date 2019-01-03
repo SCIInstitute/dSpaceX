@@ -15,7 +15,7 @@ const svg_container = {
   "display": "inline-block",
   "position": "relative",
   "width": "100%",
-  "vertical-alight": "top",
+  "verticalAlight": "top",
   "overflow": "hidden",
 };
 
@@ -24,14 +24,18 @@ const svg_content = {
   position: "absolute",
   top: 0,
   left: 0,
+  "font-size":"1em",
+
 };
 
 class ScatterPlotWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.viewBoxWidth = 500;
-    this.viewBoxHeight = 250;
+    this.svgWidth = 1000;
+    this.svgHeight = 500;
+    this.viewBoxWidth = 1000;
+    this.viewBoxHeight = 500;
 
     this.client = this.props.dsxContext.client;
     this.state = {
@@ -146,8 +150,8 @@ class ScatterPlotWindow extends React.Component {
     // Create margins
     let margin = {top: 30, right: 50, bottom: 40, left: 40};
     let padding = {x_small: 10, small: 15};
-    let width = this.viewBoxWidth - margin.left - margin.right;
-    let height = this.viewBoxHeight - margin.top - margin.bottom;
+    let width = this.svgWidth - margin.left - margin.right;
+    let height = this.svgHeight - margin.top - margin.bottom;
 
     // Get column names
     let columnNames = [];
@@ -211,7 +215,7 @@ class ScatterPlotWindow extends React.Component {
       .attr("cx", d => xScale(d[columnNames[0]]))
       .attr("cy", d => yScale(d[columnNames[1]]))
       .attr("transform", "translate(" + margin.left + "," + margin.bottom + ")")
-      .attr("r", 2);
+      .attr("r", 3);
 
   }
 
