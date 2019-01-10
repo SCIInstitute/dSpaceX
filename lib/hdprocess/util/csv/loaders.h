@@ -6,7 +6,7 @@
 #include "precision/Precision.h"
 
 #include <string>
-
+#include <vector>
 
 namespace HDProcess {
 
