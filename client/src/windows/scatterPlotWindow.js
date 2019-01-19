@@ -1,33 +1,36 @@
+import * as d3 from 'd3';
 import PropTypes from 'prop-types';
 import React from 'react';
-import * as d3 from "d3";
-import {withDSXContext} from '../dsxContext.js';
-import {withStyles} from '@material-ui/core/styles';
-
+import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from '@material-ui/core/styles';
 
 const styles = (theme) => ({
   root: {
     overflowX: 'auto',
-  }
+  },
 });
 
-const svg_container = {
-  "display": "inline-block",
-  "position": "relative",
-  "width": "100%",
-  "verticalAlight": "top",
-  "overflow": "hidden",
+const svgContainer = {
+  'display': 'inline-block',
+  'position': 'relative',
+  'width': '100%',
+  'verticalAlight': 'top',
+  'overflow': 'hidden',
 };
 
-const svg_content = {
-  display: "inline-block",
-  position: "absolute",
-  top: 0,
-  left: 0,
-  "font-size":"1em",
+const svgContent = {
+  'display': 'inline-block',
+  'position': 'absolute',
+  'top': 0,
+  'left': 0,
+  'fontSize': '1em',
 
 };
 
+/**
+ * This class provides the functionality for the d3 scatter plot.
+ * Currently only works for Ellipse example data set.
+ */
 class ScatterPlotWindow extends React.Component {
   constructor(props) {
     super(props);
@@ -43,14 +46,18 @@ class ScatterPlotWindow extends React.Component {
     };
   }
 
+  /**
+   * This gets the parameters for the dataset
+   * @return {Promise<Array>}
+   */
   async getParameters() {
-    let {datasetId, parameterNames} = this.props.dataset;
+    let { datasetId, parameterNames } = this.props.dataset;
     let parameters = [];
     let data = [];
 
     for (let i = 0; i < parameterNames.length; i++) {
       let parameterName = parameterNames[i];
-      let {parameter} =
+      let { parameter } =
         await this.client.fetchParameter(datasetId, parameterName);
       parameters.push(parameter);
     }
@@ -68,35 +75,45 @@ class ScatterPlotWindow extends React.Component {
   }
 
   /**
-   * Calculates the qois for the given parameters
+   * Calculates the QOIs for the dataset
+   * @return {Array}
+   * @param {Array} parameters
    */
   calculateQOIS(parameters) {
     let qois = [];
     let that = this;
-    parameters.forEach(function (d, i) {
-      let a = d["Major Axis"];
-      let b = d["Minor Axis"];
-      let calc_qoi = {
-        "Area": that.area(a, b),
-        "Perimeter": that.perimeter(a, b)
+    parameters.forEach(function(d, i) {
+      let a = d['Major Axis'];
+      let b = d['Minor Axis'];
+      let calcQOI = {
+        'Area': that.area(a, b),
+        'Perimeter': that.perimeter(a, b),
       };
-      qois.push(calc_qoi);
+      qois.push(calcQOI);
     });
     return qois;
   }
 
   /**
-   * Calculates area of ellipse
+   * Calculates area given major and minor axis
+   * @param {double} majorAxis
+   * @param {double} minorAxis
+   * @return {number}
    */
   area(majorAxis, minorAxis) {
     return majorAxis * minorAxis * Math.PI;
   };
 
   /**
-   * Calculates perimeter of ellipse
+   * Calculates perimeter given major and minor axis
+   * @param {double} majorAxis
+   * @param {double} minorAxis
+   * @return {number}
    */
   perimeter(majorAxis, minorAxis) {
-    return Math.PI * (3 * (majorAxis + minorAxis) - Math.sqrt((3 * majorAxis + minorAxis) * (majorAxis + 3 * minorAxis)));
+    return Math.PI
+      * (3 * (majorAxis + minorAxis) - Math.sqrt((3 * majorAxis + minorAxis)
+        * (majorAxis + 3 * minorAxis)));
   };
 
   componentWillMount() {
@@ -148,8 +165,8 @@ class ScatterPlotWindow extends React.Component {
     d3.select(node).selectAll('*').remove();
 
     // Create margins
-    let margin = {top: 30, right: 50, bottom: 40, left: 40};
-    let padding = {x_small: 10, small: 15};
+    let margin = { top: 30, right: 50, bottom: 40, left: 40 };
+    let padding = { x_small: 10, small: 5 };
     let width = this.svgWidth - margin.left - margin.right;
     let height = this.svgHeight - margin.top - margin.bottom;
 
@@ -164,65 +181,68 @@ class ScatterPlotWindow extends React.Component {
     // Create scales
     let xScale = d3.scaleLinear()
       .range([0, width])
-      .domain(d3.extent(data, function (d) {
+      .domain(d3.extent(data, function(d) {
         return d[columnNames[0]];
       }))
       .nice();
 
     let yScale = d3.scaleLinear()
       .range([height, 0])
-      .domain(d3.extent(data, function (d) {
+      .domain(d3.extent(data, function(d) {
         return d[columnNames[1]];
       }))
       .nice();
 
     // Add axes
     let xAxis = d3.axisBottom(xScale)
-      .tickFormat(d3.format(".0s"));
+      .tickFormat(d3.format('.0s'));
     let yAxis = d3.axisLeft(yScale);
     d3.select(node)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + (height + margin.bottom) + ")")
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + (height + margin.bottom) + ')')
       .call(xAxis);
 
     d3.select(node)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.bottom + ")")
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.bottom + ')')
       .call(yAxis);
 
     // Add Labels
-    d3.select(node).append("text")
-      .attr("x", (margin.top + padding.small))
-      .attr("y", (-1 * (margin.left + padding.x_small)))
-      .attr("transform", "rotate(90)")
+    d3.select(node).append('text')
+      .attr('x', (margin.top + padding.small))
+      .attr('y', (-1 * (margin.left + padding.x_small)))
+      .attr('transform', 'rotate(90)')
       .text(columnNames[0]);
 
-    d3.select(node).append("text")
-      .attr("x", (width + padding.small))
-      .attr("y", (height + margin.bottom - padding.x_small))
-      .attr("text-anchor", "end")
+    d3.select(node).append('text')
+      .attr('x', (width + padding.small))
+      .attr('y', (height + margin.bottom - padding.x_small))
+      .attr('text-anchor', 'end')
       .text(columnNames[1]);
 
     // Add data
-    let circles = d3.select(node).append("g")
-      .selectAll("circle")
+    let circles = d3.select(node).append('g')
+      .selectAll('circle')
       .data(data);
-    let circlesEntering = circles.enter().append("circle");
+    let circlesEntering = circles.enter().append('circle');
     circles.exit().remove();
     circles = circles.merge(circlesEntering);
 
     circles
-      .attr("cx", d => xScale(d[columnNames[0]]))
-      .attr("cy", d => yScale(d[columnNames[1]]))
-      .attr("transform", "translate(" + margin.left + "," + margin.bottom + ")")
-      .attr("r", 3);
-
+      .attr('cx', (d) => xScale(d[columnNames[0]]))
+      .attr('cy', (d) => yScale(d[columnNames[1]]))
+      .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
+      .attr('r', 3);
   }
 
   render() {
-    return <div style={svg_container}>
-      <svg ref={node => this.node = node} style={svg_content} viewBox={"0 0 " + this.viewBoxWidth + " " + this.viewBoxHeight} preserveAspectRatio={"xMinYMid meet"}></svg>
-    </div>
+    return (<div style={svgContainer}>
+      <svg ref={(node) => this.node = node} style={svgContent}
+           viewBox={'0 0 ' + this.viewBoxWidth + ' ' + this.viewBoxHeight}
+           preserveAspectRatio={'xMinYMid meet'}/>
+    </div>);
   }
 }
 

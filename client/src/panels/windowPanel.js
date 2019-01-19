@@ -11,7 +11,7 @@ import React from 'react';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import {withStyles} from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 /**
  * A Window Panel provides a display of the settings associated with any given
@@ -46,7 +46,7 @@ class WindowPanel extends React.Component {
 
     this.getTableOptions = this.getTableOptions.bind(this);
     this.getGraphOptions = this.getGraphOptions.bind(this);
-    this.getScatterPlotOptions = this.getScatterPlotOptions.bind(this)
+    this.getScatterPlotOptions = this.getScatterPlotOptions.bind(this);
   }
 
   /**
@@ -117,25 +117,25 @@ class WindowPanel extends React.Component {
    * @return {JSX}
    */
   getTableOptions() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     return (
       <React.Fragment>
         {/* Table Attribute Group Dropdown */}
         <FormControl className={classes.formControl}
-                     disabled={!this.props.enabled || !this.props.dataset}>
+          disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='tablegroup-input'>Attribute Group</InputLabel>
           <Select ref="tablegroupCombo"
-                  value={this.state.tableAttributeGroup || ''}
-                  onChange={this.handleTableAttributeGroup} inputProps={{
-            name: 'tablegroup',
-            id: 'tablegroup-input',
-          }}>
+            value={this.state.tableAttributeGroup || ''}
+            onChange={this.handleTableAttributeGroup} inputProps={{
+              name: 'tablegroup',
+              id: 'tablegroup-input',
+            }}>
             <MenuItem value="parameters"
-                      disabled={!this.props.dataset.parameterNames.length}>
+              disabled={!this.props.dataset.parameterNames.length}>
               <em>Parameters</em>
             </MenuItem>
             <MenuItem value="qois"
-                      disabled={!this.props.dataset.qoiNames.length}>
+              disabled={!this.props.dataset.qoiNames.length}>
               <em>Qois</em>
             </MenuItem>
           </Select>
@@ -149,19 +149,19 @@ class WindowPanel extends React.Component {
    * @return {JSX}
    */
   getGraphOptions() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     return (
       <React.Fragment>
         {/* Metric Dropdown */}
         <FormControl className={classes.formControl}
-                     disabled={!this.props.enabled}>
+          disabled={!this.props.enabled}>
           <InputLabel htmlFor='metric-field'>Metric</InputLabel>
           <Select ref="metricCombo"
-                  value="precomputed"
-                  inputProps={{
-                    name: 'metric',
-                    id: 'metric-field',
-                  }}>
+            value="precomputed"
+            inputProps={{
+              name: 'metric',
+              id: 'metric-field',
+            }}>
             <MenuItem value='precomputed'>
               <em>Precomputed</em>
             </MenuItem>
@@ -181,14 +181,14 @@ class WindowPanel extends React.Component {
 
         {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
-                     disabled={!this.props.enabled || !this.props.dataset}>
+          disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='algorithm-input'>Embedding Algorithm</InputLabel>
           <Select ref="algorithmCombo"
-                  value={this.state.embeddingAlgorithm || 'precomputed'}
-                  onChange={this.handleEmbeddingAlgorithmChange} inputProps={{
-            name: 'algorithm',
-            id: 'algorithm-input',
-          }}>
+            value={this.state.embeddingAlgorithm || 'precomputed'}
+            onChange={this.handleEmbeddingAlgorithmChange} inputProps={{
+              name: 'algorithm',
+              id: 'algorithm-input',
+            }}>
             <MenuItem value="precomputed">
               <em>Precomputed</em>
             </MenuItem>
@@ -204,7 +204,7 @@ class WindowPanel extends React.Component {
           </Select>
         </FormControl>
 
-        <div style={{height: '8px'}}></div>
+        <div style={{ height:'8px' }}></div>
         <DecompositionPanel
           enabled={true}
           dataset={this.props.dataset}
@@ -215,44 +215,44 @@ class WindowPanel extends React.Component {
   }
 
   getScatterPlotOptions() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     return (
       <React.Fragment>
         {/* Scatter Plot Group Dropdown */}
         <FormControl className={classes.formControl}
-                     disabled={!this.props.enabled || !this.props.dataset}>
-          <InputLabel htmlFor='scatterplotgroup-input'>Attribute Group</InputLabel>
+          disabled={!this.props.enabled || !this.props.dataset}>
+          <InputLabel htmlFor='scatterplotgroup-input'>
+            Attribute Group</InputLabel>
           <Select ref="scatterPlotGroupCombo"
-                  value={this.state.scatterPlotAttributeGroup || ''}
-                  onChange={this.handleScatterPlotAttributeGroup} inputProps={{
-            name: 'scatterplotgroup',
-            id: 'scatterplotgroup-input',
-          }}>
+            value={this.state.scatterPlotAttributeGroup || ''}
+            onChange={this.handleScatterPlotAttributeGroup} inputProps={{
+              name: 'scatterplotgroup',
+              id: 'scatterplotgroup-input',
+            }}>
             <MenuItem value="parameters"
-                      disabled={!this.props.dataset.parameterNames.length}>
+              disabled={!this.props.dataset.parameterNames.length}>
               <em>Parameters</em>
             </MenuItem>
             <MenuItem value="qois"
-                      disabled={!this.props.dataset.qoiNames.length}>
+              disabled={!this.props.dataset.qoiNames.length}>
               <em>Qois</em>
             </MenuItem>
           </Select>
         </FormControl>
       </React.Fragment>
     );
-
-  }
+  };
 
   /**
    * Renders the component to HTML.
    * @return {HTML}
    */
   render() {
-    const {classes} = this.props;
+    const { classes } = this.props;
     return (
       <ExpansionPanel
         disabled={!this.props.enabled} defaultExpanded={true}
-        style={{paddingLeft: '0px', margin: '1px', paddingTop: '0px'}}>
+        style={{ paddingLeft:'0px', margin:'1px', paddingTop:'0px' }}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
           <Typography>
             {'Window # ' + (this.props.windowIndex + 1)}
@@ -261,35 +261,38 @@ class WindowPanel extends React.Component {
         <ExpansionPanelDetails style={{
           paddingLeft: '15px', paddingTop: '0px',
           paddingRight: '10px', marginLeft: '1px', marginRight: '1px',
-          width: '100%', boxSizing: 'border-box'
+          width: '100%', boxSizing: 'border-box',
         }}>
           <div style={{
             display: 'flex', flexDirection: 'column',
-            width: '100%', boxSizing: 'border-box'
+            width: '100%', boxSizing: 'border-box',
           }}>
 
             {/* DataView Type Dropdown */}
             <FormControl className={classes.formControl}
-                         disabled={!this.props.enabled || !this.props.dataset}>
+              disabled={!this.props.enabled || !this.props.dataset}>
               <InputLabel htmlFor='dataview-input'>Data View Type</InputLabel>
               <Select ref="dataviewCombo"
-                      value={this.state.dataViewType || ''}
-                      onChange={this.handleDataViewTypeChange} inputProps={{
-                name: 'dataview',
-                id: 'dataview-input',
-              }}>
+                value={this.state.dataViewType || ''}
+                onChange={this.handleDataViewTypeChange} inputProps={{
+                  name: 'dataview',
+                  id: 'dataview-input',
+                }}>
                 <MenuItem value="table">
                   <em>Table</em>
                 </MenuItem>
                 <MenuItem value="graph">
                   <em>Graph</em>
                 </MenuItem>
-                <MenuItem value="scatter_plot">
+                {this.props.dataset.name === 'Ellipses'
+                && <MenuItem value="scatter_plot">
                   <em>Scatter Plot</em>
+                </MenuItem>}
+                <MenuItem value="thumbnail">
+                  <em>Thumbnail</em>
                 </MenuItem>
               </Select>
             </FormControl>
-
             {
               /* Render the Appropriate Fields for the DataView Type */
               (() => {
@@ -302,8 +305,7 @@ class WindowPanel extends React.Component {
                     return this.getScatterPlotOptions();
                   default:
                     return null;
-                }
-                ;
+                };
               })()
             }
 

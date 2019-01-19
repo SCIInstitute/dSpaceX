@@ -9,8 +9,9 @@ import ErrorDialog from './errorDialog.js';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
-import TableWindow from './windows/tableWindow.js';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
+import TableWindow from './windows/tableWindow.js';
+import ThumbnailWindow from './windows/thumbnailWindow'
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
@@ -258,27 +259,30 @@ class Application extends React.Component {
               {
                 !!this.state.currentDataset ?
                   this.state.windows.map((windowConfig, i) => {
-                    if (windowConfig.dataViewType == 'table') {
+                    if (windowConfig.dataViewType === 'table') {
                       return (
                         <TableWindow key={i}
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
                           focusRow={this.state.sampleFocusIndex}/>
                       );
-                    } else if (windowConfig.dataViewType == 'graph') {
+                    } else if (windowConfig.dataViewType === 'graph') {
                       return (
                         <GraphGLWindow key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
                           onNodeHover={this.onSampleFocus}/>
                       );
-                    } else if (windowConfig.dataViewType == 'scatter_plot') {
+                    } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
                         <ScatterPlotWindow key={i}
                         attributeGroup={windowConfig.scatterPlotAttributeGroup}
                         dataset={this.state.currentDataset}/>
                       );
-                    } else {
+                    } else if (windowConfig.dataViewType === 'thumbnail') {
+                      return (<ThumbnailWindow key={i} dataset={this.state.currentDataset}/>)
+                    }
+                    else {
                       return (
                         <EmptyWindow key={i} id={i}/>
                       );
