@@ -15,7 +15,7 @@ const styles = (theme) => ({
 /**
  *Present all thumbnails and filtering options
  */
-class ThumbnailWindow extends Component {
+class GalleryWindow extends Component {
   /**
    *
    * @param {Object} props
@@ -85,5 +85,5 @@ class ThumbnailWindow extends Component {
   }
 }
 
-export default withDSXContext(withStyles(styles)(ThumbnailWindow));
+export default withDSXContext(withStyles(styles)(GalleryWindow));
 
