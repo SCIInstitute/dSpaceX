@@ -44,10 +44,10 @@ class GalleryWindow extends Component {
         that.setState({ thumbnails });
       });
 
-    this.client.fetchParameter(this.props.dataset.datasetId)
-      .then(result => {
-        console.log(result);
-      })
+    // this.client.fetchParameter(this.props.dataset.datasetId)
+    //   .then(result => {
+    //     console.log(result);
+    //   })
   }
 
   handleImageClick(id) {

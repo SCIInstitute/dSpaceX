@@ -288,8 +288,8 @@ class WindowPanel extends React.Component {
                 && <MenuItem value="scatter_plot">
                   <em>Scatter Plot</em>
                 </MenuItem>}
-                <MenuItem value="thumbnail">
-                  <em>Thumbnail</em>
+                <MenuItem value="gallery">
+                  <em>Gallery</em>
                 </MenuItem>
               </Select>
             </FormControl>

@@ -11,7 +11,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
 import TableWindow from './windows/tableWindow.js';
-import ThumbnailWindow from './windows/thumbnailWindow'
+import GalleryWindow from './windows/galleryWindow'
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
@@ -279,8 +279,8 @@ class Application extends React.Component {
                         attributeGroup={windowConfig.scatterPlotAttributeGroup}
                         dataset={this.state.currentDataset}/>
                       );
-                    } else if (windowConfig.dataViewType === 'thumbnail') {
-                      return (<ThumbnailWindow key={i} dataset={this.state.currentDataset}/>)
+                    } else if (windowConfig.dataViewType === 'gallery') {
+                      return (<GalleryWindow key={i} dataset={this.state.currentDataset}/>)
                     }
                     else {
                       return (
