@@ -1,5 +1,5 @@
 import Button from '@material-ui/core/Button';
-import Client from './client.js';
+import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
 import DatasetPanel from './panels/datasetPanel.js';
