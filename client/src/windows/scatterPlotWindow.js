@@ -70,7 +70,6 @@ class ScatterPlotWindow extends React.Component {
       }
       data.push(row);
     }
-
     return data;
   }
 
