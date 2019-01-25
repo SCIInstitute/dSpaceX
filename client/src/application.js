@@ -2,6 +2,7 @@ import Button from '@material-ui/core/Button';
 import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
+import DataHelper from './data/dataHelper.js'
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
@@ -83,6 +84,8 @@ class Application extends React.Component {
     this.client.addEventListener('networkInactive', this.onNetworkActivityEnd);
     // export client for debugging
     window.client = this.client;
+
+    this.dataHelper = new DataHelper(this.client);
   }
 
   /**
