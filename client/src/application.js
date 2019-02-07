@@ -2,17 +2,17 @@ import Button from '@material-ui/core/Button';
 import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
-import DataHelper from './data/dataHelper.js'
+import DataHelper from './data/dataHelper.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
+import GalleryWindow from './windows/galleryWindow';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
 import TableWindow from './windows/tableWindow.js';
-import GalleryWindow from './windows/galleryWindow'
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
@@ -232,7 +232,7 @@ class Application extends React.Component {
               backgroundColor: drawerMarginColor,
               height: '100%',
               width: '100%',
-            }}></div>
+            }}/>
           </Drawer>
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
@@ -256,7 +256,7 @@ class Application extends React.Component {
                       gridTemplateColumns: '1fr 1fr',
                       gridTemplateRows: '1fr 1fr',
                     };
-                };
+                }
               })()
             }>
               {
@@ -279,13 +279,14 @@ class Application extends React.Component {
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
                         <ScatterPlotWindow key={i}
-                        attributeGroup={windowConfig.scatterPlotAttributeGroup}
-                        dataset={this.state.currentDataset}/>
+                          attributeGroup=
+                            {windowConfig.scatterPlotAttributeGroup}
+                          dataset={this.state.currentDataset}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
-                      return (<GalleryWindow key={i} dataset={this.state.currentDataset}/>)
-                    }
-                    else {
+                      return (<GalleryWindow key={i}
+                        dataset={this.state.currentDataset}/>);
+                    } else {
                       return (
                         <EmptyWindow key={i} id={i}/>
                       );
