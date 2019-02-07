@@ -29,16 +29,16 @@ class GalleryWindow extends Component {
     this.state = {
       thumbnails: [],
       parameters: [],
-      qois: {},
+      qois: [],
     };
 
     this.handleImageClick = this.handleImageClick.bind(this);
   }
 
-  componentDidMount() {
+  componentWillMount() {
     let { datasetId } = this.props.dataset;
 
-    // Get Thumbnails
+    // Get Thumbnailss
     this.client.fetchThumbnails(datasetId)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
@@ -55,17 +55,33 @@ class GalleryWindow extends Component {
     this.getParameters().then((parameters) => {
       this.setState({ parameters });
     });
+
+    // Get Qois
+    this.getQois().then((qois) => {
+      this.setState({ qois });
+    });
   }
 
   async getParameters() {
     const { datasetId, parameterNames } = this.props.dataset;
     let parameters = [];
-    for (let i = 0; i < parameterNames.length; ++i) {
+    parameterNames.forEach(async (parameterName) => {
       let parameter =
-        await this.client.fetchParameter(datasetId, parameterNames[i]);
+        await this.client.fetchParameter(datasetId, parameterName);
       parameters.push(parameter);
-    }
+    });
     return parameters;
+  }
+
+  async getQois() {
+    const { datasetId, qoiNames } = this.props.dataset;
+    let qois = [];
+    qoiNames.forEach(async (qoiName) => {
+      let qoi =
+        await this.client.fetchQoi(datasetId, qoiName);
+      qois.push(qoi);
+    });
+    return qois;
   }
 
   handleImageClick(id) {
@@ -85,7 +101,7 @@ class GalleryWindow extends Component {
 
     return (
       <Paper className={classes.root}>
-        <GalleryPanel/>
+        <GalleryPanel parameters={this.state.parameters} qois={this.state.qois}/>
         <Grid container
           justify={'center'}
           spacing={8}

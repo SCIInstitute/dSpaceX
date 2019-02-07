@@ -51,7 +51,11 @@ class GalleryPanel extends Component {
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
         <ExpansionPanelDetails>
           {this.state.filters.map((filterConfig, i) => {
-            return <FilterPanel key={i} filterConfig={filterConfig}/>;
+            return <FilterPanel
+              key={i}
+              filterConfig={filterConfig}
+              parameters={this.props.parameters}
+              qois={this.props.qois}/>;
           })}
           <IconButton variant='raised' onClick={this.addFilter}>
             <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
