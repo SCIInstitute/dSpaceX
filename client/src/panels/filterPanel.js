@@ -1,12 +1,11 @@
-import Input from '@material-ui/core/Input';
 import React, { Component } from 'react';
 import FormControl from '@material-ui/core/es/FormControl/FormControl';
+import Histogram from './histogram';
+import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/es/MenuItem/MenuItem';
-import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/core/styles';
-import Histogram from './histogram';
 
 /**
  * The FilterPanel provides the drop downs
@@ -60,11 +59,28 @@ class FilterPanel extends Component {
   };
 
   getData() {
+    let data = null;
     if (this.state.attributeGroup === 'parameters') {
-      return this.props.parameters.filter((p) => p.parameterName === this.state.attribute)[0].parameter;
+      data = this.props.parameters.filter((p) => p.parameterName === this.state.attribute)[0].parameter;
     } else if (this.state.attributeGroup === 'qois') {
-      return this.props.qois.filter((q) => q.qoiName === this.state.attribute)[0].qoi;
+      data = this.props.qois.filter((q) => q.qoiName === this.state.attribute)[0].qoi;
     }
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const stepSize = (max - min) / this.state.numberBins;
+    let step = min;
+    let counts = [];
+    while (step < max) {
+      let low = step;
+      let high = step + stepSize;
+      counts.push(data.filter((d) => d >= low && d < high).length);
+      step = high;
+    }
+    console.log('data');
+    console.log(data);
+    console.log('counts');
+    console.log(counts);
+    return counts;
   };
 
   /**
@@ -74,10 +90,8 @@ class FilterPanel extends Component {
   render() {
     const { classes } = this.props;
     return (
-      <div style={{ width:'100%' }}>
-        {this.state.attributeGroup && this.state.attribute &&
-        <Histogram size={[500, 500]} data={this.getData()}/>}
-        <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
+      <div style={{ width:'200px', marginLeft:'10px' }}>
+        <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
           <InputLabel htmlFor='filter-group-label'>Attribute Group</InputLabel>
           <Select
             value={this.state.attributeGroup}
@@ -90,7 +104,7 @@ class FilterPanel extends Component {
             <MenuItem value='qois'>Qois</MenuItem>
           </Select>
         </FormControl>
-        <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
+        <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
           <InputLabel htmlFor='filter-attribute-label'>Attribute</InputLabel>
           <Select
             value={this.state.attribute}
@@ -104,6 +118,9 @@ class FilterPanel extends Component {
             ))}
           </Select>
         </FormControl>
+        {this.state.attributeGroup && this.state.attribute &&
+        <Histogram size={[190, 100]} data={this.getData()}/>}
+        {this.state.attributeGroup && this.state.attribute &&
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
           <InputLabel htmlFor='filter-bin-label'># of bins</InputLabel>
           <Select
@@ -117,7 +134,7 @@ class FilterPanel extends Component {
             <MenuItem value={25}>25</MenuItem>
             <MenuItem value={50}>50</MenuItem>
           </Select>
-        </FormControl>
+        </FormControl>}
       </div>);
   }
 }

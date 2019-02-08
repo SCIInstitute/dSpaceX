@@ -57,9 +57,11 @@ class GalleryPanel extends Component {
               parameters={this.props.parameters}
               qois={this.props.qois}/>;
           })}
-          <IconButton variant='raised' onClick={this.addFilter}>
-            <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
-          </IconButton>
+          <div style={{ width:'50px', height:'50px' }}>
+            <IconButton variant='raised' onClick={this.addFilter}>
+              <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
+            </IconButton>
+          </div>
         </ExpansionPanelDetails>
       </ExpansionPanel>
     );
