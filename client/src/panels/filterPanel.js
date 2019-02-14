@@ -28,6 +28,7 @@ class FilterPanel extends Component {
     this.handleGroupChange = this.handleGroupChange.bind(this);
     this.handleAttributeChange = this.handleAttributeChange.bind(this);
     this.handleBinChange = this.handleBinChange.bind(this);
+    this.onBrush = this.onBrush.bind(this);
   };
 
   /**
@@ -67,21 +68,23 @@ class FilterPanel extends Component {
     }
     const max = Math.max(...data);
     const min = Math.min(...data);
-    const stepSize = (max - min) / this.state.numberBins;
+    this.stepSize = (max - min) / this.state.numberBins;
+    console.log('Step Size: ' + this.stepSize);
     let step = min;
     let counts = [];
     while (step < max) {
       let low = step;
-      let high = step + stepSize;
+      let high = step + this.stepSize;
       counts.push(data.filter((d) => d >= low && d < high).length);
       step = high;
     }
-    console.log('data');
-    console.log(data);
-    console.log('counts');
-    console.log(counts);
     return counts;
   };
+
+  onBrush(min, max) {
+    min = min * this.stepSize;
+    max = max * this.stepSize;
+  }
 
   /**
    * Renders the filter panel
@@ -119,7 +122,7 @@ class FilterPanel extends Component {
           </Select>
         </FormControl>
         {this.state.attributeGroup && this.state.attribute &&
-        <Histogram size={[190, 100]} data={this.getData()}/>}
+        <Histogram size={[190, 100]} data={this.getData()} brushEnabled={true} onBrush={this.onBrush}/>}
         {this.state.attributeGroup && this.state.attribute &&
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
           <InputLabel htmlFor='filter-bin-label'># of bins</InputLabel>
