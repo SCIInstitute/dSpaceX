@@ -69,7 +69,6 @@ class FilterPanel extends Component {
     const max = Math.max(...data);
     const min = Math.min(...data);
     this.stepSize = (max - min) / this.state.numberBins;
-    console.log('Step Size: ' + this.stepSize);
     let step = min;
     let counts = [];
     while (step < max) {
@@ -84,6 +83,7 @@ class FilterPanel extends Component {
   onBrush(min, max) {
     min = min * this.stepSize;
     max = max * this.stepSize;
+    this.props.addFilter(min, max, this.state.attributeGroup, this.state.attribute);
   }
 
   /**
@@ -122,7 +122,11 @@ class FilterPanel extends Component {
           </Select>
         </FormControl>
         {this.state.attributeGroup && this.state.attribute &&
-        <Histogram size={[190, 100]} data={this.getData()} brushEnabled={true} onBrush={this.onBrush}/>}
+        <Histogram
+          size={[190, 100]}
+          data={this.getData()}
+          brushEnabled={true}
+          onBrush={this.onBrush}/>}
         {this.state.attributeGroup && this.state.attribute &&
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
           <InputLabel htmlFor='filter-bin-label'># of bins</InputLabel>

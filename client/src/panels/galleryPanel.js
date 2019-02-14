@@ -25,13 +25,13 @@ class GalleryPanel extends Component {
       filters: [],
     };
 
-    this.addFilter = this.addFilter.bind(this);
+    this.addFilterPanel = this.addFilterPanel.bind(this);
   };
 
   /**
    * Handles when a user selects the add filter button
    */
-  addFilter() {
+  addFilterPanel() {
     let filterConfig = {
       id: this.state.filters.length,
     };
@@ -55,10 +55,11 @@ class GalleryPanel extends Component {
               key={i}
               filterConfig={filterConfig}
               parameters={this.props.parameters}
-              qois={this.props.qois}/>;
+              qois={this.props.qois}
+              addFilter={this.props.addFilter}/>;
           })}
           <div style={{ width:'50px', height:'50px' }}>
-            <IconButton variant='raised' onClick={this.addFilter}>
+            <IconButton variant='raised' onClick={this.addFilterPanel}>
               <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
             </IconButton>
           </div>

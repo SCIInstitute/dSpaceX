@@ -27,18 +27,23 @@ class GalleryWindow extends Component {
     this.client = this.props.dsxContext.client;
     this.dataHelper = this.props.dsxContext.dataHelper;
     this.state = {
+      allThumbnails: [],
+      allParameters: [],
+      allQois: [],
       thumbnails: [],
       parameters: [],
       qois: [],
+      filteredImages: [],
     };
 
     this.handleImageClick = this.handleImageClick.bind(this);
+    this.handleAddFilter = this.handleAddFilter.bind(this);
   }
 
   componentWillMount() {
     let { datasetId } = this.props.dataset;
 
-    // Get Thumbnailss
+    // Get Thumbnails
     this.client.fetchThumbnails(datasetId)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
@@ -92,6 +97,26 @@ class GalleryWindow extends Component {
     this.setState({ thumbnails });
   }
 
+  handleAddFilter(min, max, attributeGroup, attribute) {
+    let filteredImages = [];
+    if (attributeGroup === 'parameters') {
+      let params = this.state.parameters.filter((p) => p.parameterName === attribute)[0].parameter;
+      let filteredParams = params.filter((p) => p <= min || p >= max);
+      filteredParams.forEach((value) => {
+        let index = params.findIndex((v) => v === value);
+        filteredImages.push(index);
+      });
+    } else if (attributeGroup === 'qois') {
+      let qois = this.state.qois.filter((q) => q.qoiName === attribute)[0].qoi;
+      let filteredQois = qois.filter((q) => q <= min || q >= max);
+      filteredQois.forEach((value) => {
+        let index = qois.findIndex((v) => v === value);
+        filteredImages.push(index);
+      });
+    }
+    this.setState({ filteredImages });
+  }
+
   /**
    *
    * @return {*}
@@ -101,14 +126,14 @@ class GalleryWindow extends Component {
 
     return (
       <Paper className={classes.root}>
-        <GalleryPanel parameters={this.state.parameters} qois={this.state.qois}/>
+        <GalleryPanel parameters={this.state.parameters} qois={this.state.qois} addFilter={this.handleAddFilter}/>
         <Grid container
           justify={'center'}
           spacing={8}
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
           && this.state.thumbnails.map((thumbnail, i) =>
-            <Grid key={i} item>
+            !this.state.filteredImages.includes(i) && <Grid key={i} item>
               <Paper
                 style={{ backgroundColor:thumbnail.isSelected ? red['700'] : grey['200'] }}>
                 <img alt={'Image:' + i} onClick={() => this.handleImageClick(i)} height='75'
