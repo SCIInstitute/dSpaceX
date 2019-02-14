@@ -284,8 +284,9 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
-                      return (<GalleryWindow key={i}
-                        dataset={this.state.currentDataset}/>);
+                      return (
+                        <GalleryWindow key={i}
+                          dataset={this.state.currentDataset}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>
