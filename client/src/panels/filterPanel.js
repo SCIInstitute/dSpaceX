@@ -83,7 +83,7 @@ class FilterPanel extends Component {
   onBrush(min, max) {
     min = min * this.stepSize;
     max = max * this.stepSize;
-    this.props.addFilter(min, max, this.state.attributeGroup, this.state.attribute);
+    this.props.addFilter(this.props.id, min, max, this.state.attributeGroup, this.state.attribute);
   }
 
   /**

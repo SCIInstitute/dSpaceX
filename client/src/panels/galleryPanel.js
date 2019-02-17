@@ -1,12 +1,10 @@
 import React, { Component } from 'react';
 import { AddCircle } from '@material-ui/icons';
-import Button from '@material-ui/core/Button/Button';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import FilterPanel from './filterPanel';
-import Icon from '@material-ui/core/Icon';
 import IconButton from '@material-ui/core/es/IconButton/IconButton';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -53,6 +51,7 @@ class GalleryPanel extends Component {
           {this.state.filters.map((filterConfig, i) => {
             return <FilterPanel
               key={i}
+              id={i}
               filterConfig={filterConfig}
               parameters={this.props.parameters}
               qois={this.props.qois}

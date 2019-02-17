@@ -33,7 +33,7 @@ class GalleryWindow extends Component {
       thumbnails: [],
       parameters: [],
       qois: [],
-      visibleImages: new Set(),
+      filters: [],
     };
 
     this.handleImageClick = this.handleImageClick.bind(this);
@@ -41,7 +41,7 @@ class GalleryWindow extends Component {
   }
 
   componentWillMount() {
-    let { datasetId, numberOfSamples } = this.props.dataset;
+    let { datasetId } = this.props.dataset;
 
     // Get Thumbnails
     this.client.fetchThumbnails(datasetId)
@@ -97,24 +97,55 @@ class GalleryWindow extends Component {
     this.setState({ thumbnails });
   }
 
-  handleAddFilter(min, max, attributeGroup, attribute) {
-    let visibleImages = new Set();
-    if (attributeGroup === 'parameters') {
-      let params = this.state.parameters.filter((p) => p.parameterName === attribute)[0].parameter;
-      let filteredParams = params.filter((p) => p >= min && p <= max);
-      filteredParams.forEach((value) => {
-        let index = params.findIndex((v) => v === value);
-        visibleImages.add(index);
-      });
-    } else if (attributeGroup === 'qois') {
-      let qois = this.state.qois.filter((q) => q.qoiName === attribute)[0].qoi;
-      let filteredQois = qois.filter((q) => q >= min && q <= max);
-      filteredQois.forEach((value) => {
-        let index = qois.findIndex((v) => v === value);
-        visibleImages.add(index);
-      });
+  handleAddFilter(id, min, max, attributeGroup, attribute) {
+    let filters = [...this.state.filters];
+    let index = filters.findIndex((f) => f.id === id);
+
+    const filter = {
+      'id': id,
+      'min': min,
+      'max': max,
+      'attributeGroup': attributeGroup,
+      'attribute': attribute,
+    };
+
+    if (index === -1) {
+      console.log('Adding Filter');
+      filters.push(filter);
+    } else {
+      filters[index] = filter;
     }
-    this.setState({ visibleImages:visibleImages.add(...this.state.visibleImages) });
+
+    this.setState({
+      filters: filters,
+    });
+  }
+
+  getVisibleImages() {
+    let { numberOfSamples } = this.props.dataset;
+    if (this.state.filters.length === 0) {
+      return new Set([...Array(numberOfSamples).keys()]);
+    } else {
+      let visibleImages = new Set();
+      this.state.filters.forEach((f) => {
+        if (f.attributeGroup === 'parameters') {
+          let params = this.state.parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+          visibleParams.forEach((value) => {
+            let index = params.findIndex((v) => v === value);
+            visibleImages.add(index);
+          });
+        } else if (f.attributeGroup === 'qois') {
+          let qois = this.state.qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+          let visibleQois = qois.filter((q) => q >= f.min && q <= f.max);
+          visibleQois.forEach((value) => {
+            let index = qois.findIndex((v) => v === value);
+            visibleImages.add(index);
+          });
+        }
+      });
+      return visibleImages;
+    }
   }
 
   /**
@@ -123,7 +154,7 @@ class GalleryWindow extends Component {
    */
   render() {
     const { classes } = this.props;
-
+    const visibleImages = this.getVisibleImages();
     return (
       <Paper className={classes.root}>
         <GalleryPanel parameters={this.state.parameters} qois={this.state.qois} addFilter={this.handleAddFilter}/>
@@ -133,7 +164,7 @@ class GalleryWindow extends Component {
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
           && this.state.thumbnails.map((thumbnail, i) =>
-            (this.state.visibleImages.size === 0 || this.state.visibleImages.has(i)) && <Grid key={i} item>
+            visibleImages.has(i) && <Grid key={i} item>
               <Paper
                 style={{ backgroundColor:thumbnail.isSelected ? red['700'] : grey['200'] }}>
                 <img alt={'Image:' + i} onClick={() => this.handleImageClick(i)} height='75'
