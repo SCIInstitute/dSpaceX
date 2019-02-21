@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import FormControl from '@material-ui/core/es/FormControl/FormControl';
 import Histogram from './histogram';
+import IconButton from '@material-ui/core/es/IconButton/IconButton';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/es/MenuItem/MenuItem';
 import Select from '@material-ui/core/Select';
+import { Close } from '@material-ui/icons';
 import { withStyles } from '@material-ui/core/styles';
 
 /**
@@ -93,7 +95,10 @@ class FilterPanel extends Component {
   render() {
     const { classes } = this.props;
     return (
-      <div style={{ width:'200px', marginLeft:'10px' }}>
+      <div style={{ width:'200px', marginLeft:'10px'}}>
+        <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => { console.log('Remove Clicked'); }}>
+          <Close className={classes.icon} fontSize='small'/>
+        </IconButton>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
           <InputLabel htmlFor='filter-group-label'>Attribute Group</InputLabel>
           <Select

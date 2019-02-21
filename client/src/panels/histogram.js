@@ -39,11 +39,19 @@ class Histogram extends React.Component {
       .domain([0, dataMax])
       .range([0, this.props.size[1]]);
 
+    const barGroup = d3.select(svg)
+      .selectAll('g.bars')
+      .data([0])
+      .enter()
+      .append('g')
+      .attr('class', 'bars');
+
     d3.select(svg)
-      .selectAll('rect')
+      .selectAll('rect.hist')
       .data(this.props.data)
       .enter()
-      .append('rect');
+      .append('rect')
+      .attr('class', 'hist');
 
     this.xScale = d3.scaleLinear()
       .domain([0, this.props.data.length])
@@ -51,7 +59,7 @@ class Histogram extends React.Component {
     let xAxis = d3.axisBottom(this.xScale).ticks(0);
 
     d3.select(svg)
-      .selectAll('rect')
+      .selectAll('rect.hist')
       .data(this.props.data)
       .exit()
       .remove();
@@ -64,7 +72,7 @@ class Histogram extends React.Component {
     let barWidth = this.props.size[0] / this.props.data.length;
 
     d3.select(svg)
-      .selectAll('rect')
+      .selectAll('rect.hist')
       .data(this.props.data)
       .style('fill', '#3f51b5')
       .style('stroke-width', '1')
@@ -77,7 +85,13 @@ class Histogram extends React.Component {
     // Add brushing capability - if enabled
     if (this.props.brushEnabled) {
       d3.select(svg)
-        .attr('class', 'brush')
+        .selectAll('g.brush')
+        .data([0])
+        .enter()
+        .append('g')
+        .attr('class', 'brush');
+      d3.select(svg)
+        .select('g.brush')
         .call(d3.brush().on('brush', () => this.props.onBrush(this.xScale.invert(d3.event.selection[0][0]),
           this.xScale.invert(d3.event.selection[1][0]))));
     }
