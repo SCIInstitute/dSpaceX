@@ -39,19 +39,19 @@ class Histogram extends React.Component {
       .domain([0, dataMax])
       .range([0, this.props.size[1]]);
 
-    const barGroup = d3.select(svg)
-      .selectAll('g.bars')
+    d3.select(svg)
+      .selectAll('g.histogram')
       .data([0])
       .enter()
       .append('g')
-      .attr('class', 'bars');
+      .attr('class', 'histogram');
 
     d3.select(svg)
-      .selectAll('rect.hist')
+      .select('g.histogram')
+      .selectAll('rect')
       .data(this.props.data)
       .enter()
-      .append('rect')
-      .attr('class', 'hist');
+      .append('rect');
 
     this.xScale = d3.scaleLinear()
       .domain([0, this.props.data.length])
@@ -59,7 +59,8 @@ class Histogram extends React.Component {
     let xAxis = d3.axisBottom(this.xScale).ticks(0);
 
     d3.select(svg)
-      .selectAll('rect.hist')
+      .select('g.histogram')
+      .selectAll('rect')
       .data(this.props.data)
       .exit()
       .remove();
@@ -72,7 +73,8 @@ class Histogram extends React.Component {
     let barWidth = this.props.size[0] / this.props.data.length;
 
     d3.select(svg)
-      .selectAll('rect.hist')
+      .select('g.histogram')
+      .selectAll('rect')
       .data(this.props.data)
       .style('fill', '#3f51b5')
       .style('stroke-width', '1')
