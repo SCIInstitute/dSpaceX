@@ -22,6 +22,25 @@ class GalleryPanel extends Component {
   };
 
   /**
+   * Need to make sure that a unique id is assigned
+   * to each filter
+   * @return {number} unique identifier for filter
+   */
+  getId() {
+    const { filters } = this.props;
+    if (filters.length === 0) {
+      return 1;
+    } else {
+      let ids = [];
+      filters.forEach((f) => {
+        ids.push(f.id);
+      });
+      return Math.max(...ids) + 1;
+    }
+  }
+
+
+  /**
    * Renders the gallery panel
    * @return {jsx}
    */
@@ -30,8 +49,13 @@ class GalleryPanel extends Component {
     return (
       <ExpansionPanel defaultExpanded={true}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
-        <ExpansionPanelDetails>
-          {filters.map((filterConfig, i) => {
+        <ExpansionPanelDetails style={{ overflow:'auto hidden' }}>
+          <div style={{ width:'50px', height:'50px', marginRight:'10px' }}>
+            <IconButton variant='raised' onClick={() => addFilter(this.getId())}>
+              <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
+            </IconButton>
+          </div>
+          {filters.sort((a, b) => b.id - a.id).map((filterConfig, i) => {
             return <FilterPanel
               key={i}
               filterConfig={filterConfig}
@@ -40,11 +64,6 @@ class GalleryPanel extends Component {
               updateFilter={this.props.updateFilter}
               removeFilter={this.props.removeFilter}/>;
           })}
-          <div style={{ width:'50px', height:'50px' }}>
-            <IconButton variant='raised' onClick={() => addFilter(filters.length)}>
-              <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
-            </IconButton>
-          </div>
         </ExpansionPanelDetails>
       </ExpansionPanel>
     );

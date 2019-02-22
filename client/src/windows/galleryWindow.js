@@ -5,14 +5,6 @@ import Paper from '@material-ui/core/Paper';
 import grey from '@material-ui/core/es/colors/grey';
 import red from '@material-ui/core/es/colors/red';
 import { withDSXContext } from '../dsxContext.js';
-import { withStyles } from '@material-ui/core/styles';
-
-const styles = (theme) => ({
-  root: {
-    overflowY: 'auto',
-    overflowX: 'hidden',
-  },
-});
 
 /**
  *Present all thumbnails and filtering options
@@ -97,7 +89,7 @@ class GalleryWindow extends Component {
       return new Set([...Array(numberOfSamples).keys()]);
     } else {
       let visibleImages = new Set();
-      filters.forEach((f) => {
+      enabledFilters.forEach((f) => {
         if (f.attributeGroup === 'parameters') {
           let params = this.state.parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
           let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
@@ -131,33 +123,27 @@ class GalleryWindow extends Component {
     const filter = {
       'id': id,
       'enabled': false,
+      'min': 0,
+      'max': Infinity,
+      'attributeGroup': '',
+      'attribute': '',
+      'numberOfBins': 10,
     };
     filters.push(filter);
     this.setState({ filters });
   }
 
-  handleUpdateFilter(id, min, max, attributeGroup, attribute) {
+  handleUpdateFilter(filterConfig) {
     let filters = [...this.state.filters];
-    let index = filters.findIndex((f) => f.id === id);
-
-    const filter = {
-      'id': id,
-      'enabled': true,
-      'min': min,
-      'max': max,
-      'attributeGroup': attributeGroup,
-      'attribute': attribute,
-    };
-
-    filters[index] = filter;
-
+    let index = filters.findIndex((f) => f.id === filterConfig.id);
+    filters[index] = filterConfig;
     this.setState({ filters });
   }
 
   handleRemoveFilter(id) {
     let filters = [...this.state.filters];
     filters = filters.filter((f) => f.id !== id);
-
+    console.log(filters)
     this.setState({ filters });
   }
 
@@ -166,10 +152,9 @@ class GalleryWindow extends Component {
    * @return {*}
    */
   render() {
-    const { classes } = this.props;
     const visibleImages = this.getVisibleImages();
     return (
-      <Paper className={classes.root}>
+      <Paper style={{ overflow:'hidden auto' }}>
         <GalleryPanel
           parameters={this.state.parameters}
           qois={this.state.qois}
@@ -187,8 +172,8 @@ class GalleryWindow extends Component {
               <Paper
                 style={{ backgroundColor:thumbnail.isSelected ? red['700'] : grey['200'] }}>
                 <img alt={'Image:' + i} onClick={() => this.handleImageSelect(i)} height='75'
-                     style={{ margin:'5px 5px 5px 5px' }}
-                     src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
+                  style={{ margin:'5px 5px 5px 5px' }}
+                  src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
               </Paper>
             </Grid>)}
         </Grid>
@@ -197,5 +182,5 @@ class GalleryWindow extends Component {
   }
 }
 
-export default withDSXContext(withStyles(styles)(GalleryWindow));
+export default withDSXContext(GalleryWindow);
 

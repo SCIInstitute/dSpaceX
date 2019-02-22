@@ -1,3 +1,4 @@
+import { Close } from '@material-ui/icons';
 import React, { Component } from 'react';
 import FormControl from '@material-ui/core/es/FormControl/FormControl';
 import Histogram from './histogram';
@@ -6,7 +7,6 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/es/MenuItem/MenuItem';
 import Select from '@material-ui/core/Select';
-import { Close } from '@material-ui/icons';
 import { withStyles } from '@material-ui/core/styles';
 
 /**
@@ -21,11 +21,7 @@ class FilterPanel extends Component {
    */
   constructor(props) {
     super(props);
-    this.state = {
-      attributeGroup: '',
-      attribute: '',
-      numberBins: 10,
-    };
+
 
     this.handleGroupChange = this.handleGroupChange.bind(this);
     this.handleAttributeChange = this.handleAttributeChange.bind(this);
@@ -38,7 +34,10 @@ class FilterPanel extends Component {
    * @param {object} event
    */
   handleGroupChange(event) {
-    this.setState({ attributeGroup:event.target.value, attribute:'' });
+    const { updateFilter, filterConfig } = this.props;
+    filterConfig.attributeGroup = event.target.value;
+    filterConfig.attribute = '';
+    updateFilter(filterConfig);
   };
 
   /**
@@ -46,47 +45,58 @@ class FilterPanel extends Component {
    * @param {object} event
    */
   handleAttributeChange(event) {
-    this.setState({ attribute:event.target.value });
+    const { updateFilter, filterConfig } = this.props;
+    filterConfig.attribute = event.target.value;
+    updateFilter(filterConfig);
   };
 
   handleBinChange(event) {
-    this.setState( { numberBins:event.target.value });
+    const { updateFilter, filterConfig } = this.props;
+    filterConfig.numberOfBins = event.target.value;
+    updateFilter(filterConfig);
   };
 
   getAttributeNames() {
-    if (this.state.attributeGroup === 'parameters') {
-      return this.props.parameters.map((param) => param.parameterName);
-    } else if (this.state.attributeGroup === 'qois') {
-      return this.props.qois.map((qoi) => qoi.qoiName);
+    const { filterConfig, parameters, qois } = this.props;
+    if (filterConfig.attributeGroup === 'parameters') {
+      return parameters.map((param) => param.parameterName);
+    } else if (filterConfig.attributeGroup === 'qois') {
+      return qois.map((qoi) => qoi.qoiName);
     }
   };
 
   getData() {
+    const { filterConfig, parameters, qois } = this.props;
     let data = null;
-    if (this.state.attributeGroup === 'parameters') {
-      data = this.props.parameters.filter((p) => p.parameterName === this.state.attribute)[0].parameter;
-    } else if (this.state.attributeGroup === 'qois') {
-      data = this.props.qois.filter((q) => q.qoiName === this.state.attribute)[0].qoi;
+    if (filterConfig.attributeGroup === 'parameters') {
+      data = parameters.filter((p) => p.parameterName === filterConfig.attribute)[0].parameter;
+    } else if (filterConfig.attributeGroup === 'qois') {
+      data = qois.filter((q) => q.qoiName === filterConfig.attribute)[0].qoi;
     }
-    const max = Math.max(...data);
-    const min = Math.min(...data);
-    this.stepSize = (max - min) / this.state.numberBins;
-    let step = min;
+    const globalMax = Math.max(...data);
+    const globalMin = Math.min(...data);
+    this.stepSize = (globalMax - globalMin) / filterConfig.numberOfBins;
+
     let counts = [];
-    while (step < max) {
-      let low = step;
-      let high = step + this.stepSize;
+    let low = globalMin;
+    while (low < globalMax) {
+      let high = low + this.stepSize;
       counts.push(data.filter((d) => d >= low && d < high).length);
-      step = high;
+      low = high;
     }
     return counts;
   };
 
-  onBrush(min, max) {
+  onBrush(selectionMin, selectionMax) {
     const { updateFilter, filterConfig } = this.props;
-    min = min * this.stepSize;
-    max = max * this.stepSize;
-    updateFilter(filterConfig.id, min, max, this.state.attributeGroup, this.state.attribute);
+
+    filterConfig.enabled = true;
+    filterConfig.min = selectionMin * this.stepSize;
+    filterConfig.max = selectionMax * this.stepSize;
+    filterConfig.selectionMin = selectionMin;
+    filterConfig.selectionMax = selectionMax;
+
+    updateFilter(filterConfig);
   }
 
   /**
@@ -103,7 +113,7 @@ class FilterPanel extends Component {
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
           <InputLabel htmlFor='filter-group-label'>Attribute Group</InputLabel>
           <Select
-            value={this.state.attributeGroup}
+            value={filterConfig.attributeGroup}
             onChange={this.handleGroupChange}
             input={<Input name='attributeGroup' id='filter-group-label'/>}
             displayEmpty
@@ -116,28 +126,29 @@ class FilterPanel extends Component {
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
           <InputLabel htmlFor='filter-attribute-label'>Attribute</InputLabel>
           <Select
-            value={this.state.attribute}
+            value={filterConfig.attribute}
             onChange={this.handleAttributeChange}
             input={<Input name='attribute' id='filter-attribute-label'/>}
             displayEmpty
             name='attribute'
             autoWidth={true}>
-            {this.state.attributeGroup && this.getAttributeNames().map((attributeName, i) => (
+            {filterConfig.attributeGroup && this.getAttributeNames().map((attributeName, i) => (
               <MenuItem key={i} value={attributeName.trim()}>{attributeName}</MenuItem>
             ))}
           </Select>
         </FormControl>
-        {this.state.attributeGroup && this.state.attribute &&
+        {filterConfig.attributeGroup && filterConfig.attribute &&
         <Histogram
           size={[190, 100]}
           data={this.getData()}
           brushEnabled={true}
+          filterConfig={filterConfig}
           onBrush={this.onBrush}/>}
-        {this.state.attributeGroup && this.state.attribute &&
+        {filterConfig.attributeGroup && filterConfig.attribute &&
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap' }}>
           <InputLabel htmlFor='filter-bin-label'># of bins</InputLabel>
           <Select
-            value={this.state.numberBins}
+            value={filterConfig.numberOfBins}
             onChange={this.handleBinChange}
             input={<Input name='bin' id='filter-bin-label'/>}
             displayEmpty
