@@ -83,9 +83,10 @@ class FilterPanel extends Component {
   };
 
   onBrush(min, max) {
+    const { updateFilter, filterConfig } = this.props;
     min = min * this.stepSize;
     max = max * this.stepSize;
-    this.props.addFilter(this.props.id, min, max, this.state.attributeGroup, this.state.attribute);
+    updateFilter(filterConfig.id, min, max, this.state.attributeGroup, this.state.attribute);
   }
 
   /**
@@ -93,10 +94,10 @@ class FilterPanel extends Component {
    * @return {jsx}
    */
   render() {
-    const { classes } = this.props;
+    const { classes, removeFilter, filterConfig } = this.props;
     return (
       <div style={{ width:'200px', marginLeft:'10px'}}>
-        <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => { console.log('Remove Clicked'); }}>
+        <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => removeFilter(filterConfig.id)}>
           <Close className={classes.icon} fontSize='small'/>
         </IconButton>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>

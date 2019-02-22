@@ -19,23 +19,6 @@ class GalleryPanel extends Component {
    */
   constructor(props) {
     super(props);
-    this.state = {
-      filters: [],
-    };
-
-    this.addFilterPanel = this.addFilterPanel.bind(this);
-  };
-
-  /**
-   * Handles when a user selects the add filter button
-   */
-  addFilterPanel() {
-    let filterConfig = {
-      id: this.state.filters.length,
-    };
-    this.setState({
-      filters: this.state.filters.concat(filterConfig),
-    });
   };
 
   /**
@@ -43,22 +26,22 @@ class GalleryPanel extends Component {
    * @return {jsx}
    */
   render() {
-    const { classes } = this.props;
+    const { classes, filters, addFilter } = this.props;
     return (
       <ExpansionPanel defaultExpanded={true}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
         <ExpansionPanelDetails>
-          {this.state.filters.map((filterConfig, i) => {
+          {filters.map((filterConfig, i) => {
             return <FilterPanel
               key={i}
-              id={i}
               filterConfig={filterConfig}
               parameters={this.props.parameters}
               qois={this.props.qois}
-              addFilter={this.props.addFilter}/>;
+              updateFilter={this.props.updateFilter}
+              removeFilter={this.props.removeFilter}/>;
           })}
           <div style={{ width:'50px', height:'50px' }}>
-            <IconButton variant='raised' onClick={this.addFilterPanel}>
+            <IconButton variant='raised' onClick={() => addFilter(filters.length)}>
               <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
             </IconButton>
           </div>

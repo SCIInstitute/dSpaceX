@@ -86,6 +86,7 @@ class Histogram extends React.Component {
 
     // Add brushing capability - if enabled
     if (this.props.brushEnabled) {
+      const { onBrush } = this.props;
       d3.select(svg)
         .selectAll('g.brush')
         .data([0])
@@ -94,7 +95,7 @@ class Histogram extends React.Component {
         .attr('class', 'brush');
       d3.select(svg)
         .select('g.brush')
-        .call(d3.brush().on('brush', () => this.props.onBrush(this.xScale.invert(d3.event.selection[0][0]),
+        .call(d3.brush().on('brush', () => onBrush(this.xScale.invert(d3.event.selection[0][0]),
           this.xScale.invert(d3.event.selection[1][0]))));
     }
   }
