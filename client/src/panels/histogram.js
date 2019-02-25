@@ -13,20 +13,40 @@ class Histogram extends React.Component {
     super(props);
 
     this.createBarChart = this.createBarChart.bind(this);
+    this.drawBrush = this.drawBrush.bind(this);
   }
 
   /**
    * Callback invoked immediately after the component is mounted.
    */
   componentDidMount() {
+    console.log('Histogram did mount. ID: ' + this.props.filterConfig.id);
     this.createBarChart();
+    this.drawBrush();
   }
 
   /**
    * Callback invoked immediately after the component is updated.
    */
   componentDidUpdate() {
+    console.log('Histogram did update. ID: ' + this.props.filterConfig.id);
     this.createBarChart();
+  }
+
+  /**
+   * Makes sure that if a brush was already applied to histogram
+   * this it is redrawn after the component mounts
+   */
+  drawBrush() {
+    const { brushEnabled } = this.props;
+    const { selectionMin, selectionMax } = this.props.filterConfig;
+    if (brushEnabled) {
+      if (selectionMin !== undefined && selectionMax !== undefined) {
+        d3.select(this.refs.svgRoot)
+          .select('g.brush')
+          .call(this.brush.move, [this.xScale(selectionMin), this.xScale(selectionMax)]);
+      }
+    }
   }
 
   /**
@@ -87,22 +107,18 @@ class Histogram extends React.Component {
     // Add brushing capability - if enabled
     if (this.props.brushEnabled) {
       const { onBrush } = this.props;
-      const { selectionMin, selectionMax } = this.props.filterConfig;
       d3.select(svg)
         .selectAll('g.brush')
         .data([0])
         .enter()
         .append('g')
         .attr('class', 'brush');
-      const brush = d3.brushX()
+      this.brush = d3.brushX()
         .on('brush', () => onBrush(this.xScale.invert(d3.event.selection[0]),
           this.xScale.invert(d3.event.selection[1])));
       d3.select(svg)
         .select('g.brush')
-        .call(brush);
-      // if (selectionMin !== undefined && selectionMax !== undefined) {
-      //   brush.move([selectionMin, selectionMax]);
-      // }
+        .call(this.brush);
     }
   }
 

@@ -143,7 +143,6 @@ class GalleryWindow extends Component {
   handleRemoveFilter(id) {
     let filters = [...this.state.filters];
     filters = filters.filter((f) => f.id !== id);
-    console.log(filters)
     this.setState({ filters });
   }
 
