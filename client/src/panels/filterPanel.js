@@ -1,5 +1,5 @@
-import { Close } from '@material-ui/icons';
 import React, { Component } from 'react';
+import { Close } from '@material-ui/icons';
 import FormControl from '@material-ui/core/es/FormControl/FormControl';
 import Histogram from './histogram';
 import IconButton from '@material-ui/core/es/IconButton/IconButton';
@@ -30,7 +30,7 @@ class FilterPanel extends Component {
   };
 
   /**
-   * Handle attribute group change
+   * Handles attribute group change
    * @param {object} event
    */
   handleGroupChange(event) {
@@ -41,7 +41,7 @@ class FilterPanel extends Component {
   };
 
   /**
-   * Handle attribute change
+   * Handles attribute change
    * @param {object} event
    */
   handleAttributeChange(event) {
@@ -50,12 +50,21 @@ class FilterPanel extends Component {
     updateFilter(filterConfig);
   };
 
+  /**
+   * Handles bin number change
+   * @param {object} event
+   */
   handleBinChange(event) {
     const { updateFilter, filterConfig } = this.props;
     filterConfig.numberOfBins = event.target.value;
     updateFilter(filterConfig);
   };
 
+  /**
+   * Gets the current attribute names based on the selected
+   * attribute group
+   * @return {Array} attribute names
+   */
   getAttributeNames() {
     const { filterConfig, parameters, qois } = this.props;
     if (filterConfig.attributeGroup === 'parameters') {
@@ -65,6 +74,10 @@ class FilterPanel extends Component {
     }
   };
 
+  /**
+   * Gets the data necessary to draw the histogram correctly
+   * @return {Array}
+   */
   getData() {
     const { filterConfig, parameters, qois } = this.props;
     let data = null;
@@ -87,6 +100,12 @@ class FilterPanel extends Component {
     return counts;
   };
 
+  /**
+   * When the histogram is brushed the functional collect all the necessary
+   * data to update the filter
+   * @param {number} selectionMin
+   * @param {number} selectionMax
+   */
   onBrush(selectionMin, selectionMax) {
     const { updateFilter, filterConfig } = this.props;
 
@@ -106,7 +125,7 @@ class FilterPanel extends Component {
   render() {
     const { classes, removeFilter, filterConfig } = this.props;
     return (
-      <div style={{ width:'200px', marginLeft:'10px'}}>
+      <div style={{ width:'200px', marginLeft:'10px' }}>
         <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => removeFilter(filterConfig.id)}>
           <Close className={classes.icon} fontSize='small'/>
         </IconButton>
@@ -142,6 +161,7 @@ class FilterPanel extends Component {
           size={[190, 100]}
           data={this.getData()}
           brushEnabled={true}
+          filterCount={this.props.filterCount}
           filterConfig={filterConfig}
           onBrush={this.onBrush}/>}
         {filterConfig.attributeGroup && filterConfig.attribute &&

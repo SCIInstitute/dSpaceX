@@ -7,12 +7,13 @@ import red from '@material-ui/core/es/colors/red';
 import { withDSXContext } from '../dsxContext.js';
 
 /**
- *Present all thumbnails and filtering options
+ * Present all thumbnails and ability to use histogram on parameters and qois
+ * to filter the thumbnails
  */
 class GalleryWindow extends Component {
   /**
-   *
-   * @param {Object} props
+   *  Creates gallery window object
+   * @param {Object} props from parent component
    */
   constructor(props) {
     super(props);
@@ -31,6 +32,9 @@ class GalleryWindow extends Component {
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
   }
 
+  /**
+   * Gets data from server when component mounts
+   */
   componentWillMount() {
     let { datasetId } = this.props.dataset;
 
@@ -58,6 +62,10 @@ class GalleryWindow extends Component {
     });
   }
 
+  /**
+   * Gets the parameters for the current data set
+   * @return {Promise<Array>}
+   */
   async getParameters() {
     const { datasetId, parameterNames } = this.props.dataset;
     let parameters = [];
@@ -69,6 +77,10 @@ class GalleryWindow extends Component {
     return parameters;
   }
 
+  /**
+   * Gets the qois for the current data set
+   * @return {Promise<Array>}
+   */
   async getQois() {
     const { datasetId, qoiNames } = this.props.dataset;
     let qois = [];
@@ -80,6 +92,11 @@ class GalleryWindow extends Component {
     return qois;
   }
 
+  /**
+   * Gets the images that should be displayed after the filters
+   * are applied
+   * @return {Set} indexes of images that should be visible
+   */
   getVisibleImages() {
     const { numberOfSamples } = this.props.dataset;
     const { filters } = this.state;
@@ -110,6 +127,10 @@ class GalleryWindow extends Component {
     }
   }
 
+  /**
+   * Handles when and image is selected
+   * @param {int} id
+   */
   handleImageSelect(id) {
     const thumbnails = [...this.state.thumbnails];
     thumbnails.forEach((thumbnail) => thumbnail.isSelected = false);
@@ -118,6 +139,10 @@ class GalleryWindow extends Component {
     this.setState({ thumbnails });
   }
 
+  /**
+   * Handles when a new filter is added by selecting the '+' icon
+   * @param {int} id
+   */
   handleAddFilter(id) {
     let filters = [...this.state.filters];
     const filter = {
@@ -133,6 +158,10 @@ class GalleryWindow extends Component {
     this.setState({ filters });
   }
 
+  /**
+   * Updates the filter in the filters array
+   * @param {object} filterConfig
+   */
   handleUpdateFilter(filterConfig) {
     let filters = [...this.state.filters];
     let index = filters.findIndex((f) => f.id === filterConfig.id);
@@ -140,6 +169,10 @@ class GalleryWindow extends Component {
     this.setState({ filters });
   }
 
+  /**
+   * Removes the filter from the filters array
+   * @param {int} id
+   */
   handleRemoveFilter(id) {
     let filters = [...this.state.filters];
     filters = filters.filter((f) => f.id !== id);
@@ -147,8 +180,8 @@ class GalleryWindow extends Component {
   }
 
   /**
-   *
-   * @return {*}
+   *  Renders the Gallery Window
+   * @return {jsx}
    */
   render() {
     const visibleImages = this.getVisibleImages();

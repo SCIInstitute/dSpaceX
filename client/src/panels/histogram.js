@@ -12,6 +12,7 @@ class Histogram extends React.Component {
   constructor(props) {
     super(props);
 
+
     this.createBarChart = this.createBarChart.bind(this);
     this.drawBrush = this.drawBrush.bind(this);
   }
@@ -20,17 +21,23 @@ class Histogram extends React.Component {
    * Callback invoked immediately after the component is mounted.
    */
   componentDidMount() {
-    console.log('Histogram did mount. ID: ' + this.props.filterConfig.id);
     this.createBarChart();
     this.drawBrush();
   }
 
   /**
    * Callback invoked immediately after the component is updated.
+   * @param {object} prevProps
+   * @param {object} prevState
+   * @param {object} prevContext
    */
-  componentDidUpdate() {
-    console.log('Histogram did update. ID: ' + this.props.filterConfig.id);
+  componentDidUpdate(prevProps, prevState, prevContext) {
     this.createBarChart();
+
+    // Need to see if filter is removed so brush draws correctly
+    if (prevProps.filterCount > this.props.filterCount) {
+      this.drawBrush();
+    }
   }
 
   /**
@@ -39,8 +46,8 @@ class Histogram extends React.Component {
    */
   drawBrush() {
     const { brushEnabled } = this.props;
-    const { selectionMin, selectionMax } = this.props.filterConfig;
     if (brushEnabled) {
+      const { selectionMin, selectionMax } = this.props.filterConfig;
       if (selectionMin !== undefined && selectionMax !== undefined) {
         d3.select(this.refs.svgRoot)
           .select('g.brush')

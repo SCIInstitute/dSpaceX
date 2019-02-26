@@ -39,7 +39,6 @@ class GalleryPanel extends Component {
     }
   }
 
-
   /**
    * Renders the gallery panel
    * @return {jsx}
@@ -58,6 +57,7 @@ class GalleryPanel extends Component {
           {filters.sort((a, b) => b.id - a.id).map((filterConfig, i) => {
             return <FilterPanel
               key={i}
+              filterCount={filters.length}
               filterConfig={filterConfig}
               parameters={this.props.parameters}
               qois={this.props.qois}
