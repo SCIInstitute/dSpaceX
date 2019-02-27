@@ -94,6 +94,8 @@ class GalleryWindow extends Component {
       this.getQois().then((qois) => {
         this.setState({ qois });
       });
+
+      this.setState({ filters:[]});
     }
   }
 
