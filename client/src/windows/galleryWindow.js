@@ -63,6 +63,41 @@ class GalleryWindow extends Component {
   }
 
   /**
+   * Gets the new data when the data set changes
+   * @param {object} prevProps
+   * @param {object} prevState
+   * @param {object} prevContext
+   */
+  componentDidUpdate(prevProps, prevState, prevContext) {
+    let { datasetId } = this.props.dataset;
+
+    if (prevProps.dataset.datasetId !== datasetId) {
+      // Get Thumbnails
+      this.client.fetchThumbnails(datasetId)
+        .then((result) => {
+          const thumbnails = result.thumbnails.map((thumbnail, i) => {
+            return {
+              img: thumbnail,
+              id: i,
+              isSelected: false,
+            };
+          });
+          this.setState({ thumbnails });
+        });
+
+      // Get Parameters
+      this.getParameters().then((parameters) => {
+        this.setState({ parameters });
+      });
+
+      // Get Qois
+      this.getQois().then((qois) => {
+        this.setState({ qois });
+      });
+    }
+  }
+
+  /**
    * Gets the parameters for the current data set
    * @return {Promise<Array>}
    */
