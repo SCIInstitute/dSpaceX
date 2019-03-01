@@ -87,13 +87,16 @@ class FilterPanel extends Component {
       data = qois.filter((q) => q.qoiName === filterConfig.attribute)[0].qoi;
     }
     const globalMax = Math.max(...data);
-    const globalMin = Math.min(...data);
-    this.stepSize = (globalMax - globalMin) / filterConfig.numberOfBins;
+    this.globalMin = Math.min(...data);
+    this.stepSize = (globalMax - this.globalMin) / filterConfig.numberOfBins;
 
     let counts = [];
-    let low = globalMin;
+    let steps = [];
+    let low = this.globalMin;
     while (low < globalMax) {
       let high = low + this.stepSize;
+      steps.push(low);
+      steps.push(high);
       counts.push(data.filter((d) => d >= low && d < high).length);
       low = high;
     }
@@ -110,8 +113,8 @@ class FilterPanel extends Component {
     const { updateFilter, filterConfig } = this.props;
 
     filterConfig.enabled = true;
-    filterConfig.min = selectionMin * this.stepSize;
-    filterConfig.max = selectionMax * this.stepSize;
+    filterConfig.min = (selectionMin * this.stepSize) + this.globalMin;
+    filterConfig.max = (selectionMax * this.stepSize) + this.globalMin;
     filterConfig.selectionMin = selectionMin;
     filterConfig.selectionMax = selectionMax;
 
@@ -123,7 +126,7 @@ class FilterPanel extends Component {
    * @return {jsx}
    */
   render() {
-    const { classes, removeFilter, filterConfig } = this.props;
+    const { classes, removeFilter, filterConfig, parameters, qois } = this.props;
     return (
       <div style={{ width:'200px', marginLeft:'10px' }}>
         <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => removeFilter(filterConfig.id)}>
@@ -138,8 +141,8 @@ class FilterPanel extends Component {
             displayEmpty
             name='attributeGroup'
             autoWidth={true}>
-            <MenuItem value='parameters'>Parameters</MenuItem>
-            <MenuItem value='qois'>Qois</MenuItem>
+            {parameters.length > 0 && <MenuItem value='parameters'>Parameters</MenuItem>}
+            {qois.length > 0 && <MenuItem value='qois'>Qois</MenuItem>}
           </Select>
         </FormControl>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
