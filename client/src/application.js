@@ -279,8 +279,7 @@ class Application extends React.Component {
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
                         <ScatterPlotWindow key={i}
-                          attributeGroup=
-                            {windowConfig.scatterPlotAttributeGroup}
+                          config={windowConfig}
                           dataset={this.state.currentDataset}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {

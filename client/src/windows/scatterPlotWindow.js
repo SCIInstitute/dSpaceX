@@ -14,7 +14,7 @@ const svgContainer = {
   'display': 'inline-block',
   'position': 'relative',
   'width': '100%',
-  'verticalAlight': 'top',
+  'verticalAlign': 'top',
   'overflow': 'hidden',
 };
 
@@ -35,15 +35,21 @@ class ScatterPlotWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.client = this.props.dsxContext.client;
+
     this.svgWidth = 1000;
     this.svgHeight = 500;
-    this.viewBoxWidth = 1000;
-    this.viewBoxHeight = 500;
 
-    this.client = this.props.dsxContext.client;
     this.state = {
+      parameters: [],
+      qois: [],
       fields: [],
     };
+
+    this.getParameters = this.getParameters.bind(this);
+    this.getQois = this.getQois.bind(this);
+    this.drawChart = this.drawChart.bind(this);
+    this.compareConfigs = this.compareConfigs.bind(this);
   }
 
   /**
@@ -51,102 +57,81 @@ class ScatterPlotWindow extends React.Component {
    * @return {Promise<Array>}
    */
   async getParameters() {
-    let { datasetId, parameterNames } = this.props.dataset;
+    const { datasetId, parameterNames } = this.props.dataset;
     let parameters = [];
-    let data = [];
-
-    for (let i = 0; i < parameterNames.length; i++) {
-      let parameterName = parameterNames[i];
-      let { parameter } =
+    parameterNames.forEach(async (parameterName) => {
+      let parameter =
         await this.client.fetchParameter(datasetId, parameterName);
       parameters.push(parameter);
-    }
-
-    let sampleCount = parameters[0] ? parameters[0].length : 0;
-    for (let i = 0; i < sampleCount; i++) {
-      let row = {};
-      for (let j = 0; j < parameterNames.length; j++) {
-        row[parameterNames[j]] = parameters[j][i];
-      }
-      data.push(row);
-    }
-    return data;
+    });
+    return parameters;
   }
 
   /**
-   * Calculates the QOIs for the dataset
+   * This get the QOIs for the dataset
    * @return {Array}
-   * @param {Array} parameters
    */
-  calculateQOIS(parameters) {
+  async getQois() {
+    const { datasetId, qoiNames } = this.props.dataset;
     let qois = [];
-    let that = this;
-    parameters.forEach(function(d, i) {
-      let a = d['Major Axis'];
-      let b = d['Minor Axis'];
-      let calcQOI = {
-        'Area': that.area(a, b),
-        'Perimeter': that.perimeter(a, b),
-      };
-      qois.push(calcQOI);
+    qoiNames.forEach(async (qoiName) => {
+      let qoi =
+        await this.client.fetchQoi(datasetId, qoiName);
+      qois.push(qoi);
     });
     return qois;
   }
 
   /**
-   * Calculates area given major and minor axis
-   * @param {double} majorAxis
-   * @param {double} minorAxis
-   * @return {number}
+   * This compare two configs to see if
+   * the graph needs to be updated
+   * @param prevConfig
+   * @param currentConfig
+   * @returns {boolean}
    */
-  area(majorAxis, minorAxis) {
-    return majorAxis * minorAxis * Math.PI;
-  };
-
-  /**
-   * Calculates perimeter given major and minor axis
-   * @param {double} majorAxis
-   * @param {double} minorAxis
-   * @return {number}
-   */
-  perimeter(majorAxis, minorAxis) {
-    return Math.PI
-      * (3 * (majorAxis + minorAxis) - Math.sqrt((3 * majorAxis + minorAxis)
-        * (majorAxis + 3 * minorAxis)));
-  };
+  compareConfigs(prevConfig, currentConfig) {
+    if (prevConfig.xAttributeGroup !== currentConfig.xAttributeGroup) {
+      return false;
+    }
+    if (prevConfig.xAttribute !== currentConfig.xAttribute) {
+      return false;
+    }
+    if (prevConfig.yAttributeGroup !== currentConfig.yAttributeGroup) {
+      return false;
+    }
+    if (prevConfig.yAttribute !== currentConfig.yAttribute) {
+      return false;
+    }
+    if (prevConfig.markerAttributeGroup !== currentConfig.markerAttributeGroup) {
+      return false;
+    }
+    if (prevConfig.markerAttribute !== currentConfig.markerAttribute) {
+      return false;
+    }
+    return true;
+  }
 
   componentWillMount() {
-    switch (this.props.attributeGroup) {
-      case 'parameters':
-        this.getParameters().then((data) => {
-          this.drawChart(data);
-        });
-        break;
-      case 'qois':
-        this.getParameters().then((data) => {
-          this.drawChart(this.calculateQOIS(data));
-        });
-        break;
-      default:
-        this.setState({
-          fields: [],
-        });
-        break;
-    }
+    this.getParameters().then((data) => {
+      this.setState({ parameters:data } );
+    });
+    this.getQois().then((data) => {
+      this.setState({ qois:data } );
+    });
+    this.drawChart();
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.dataset !== prevProps.dataset ||
-      this.props.attributeGroup !== prevProps.attributeGroup) {
-      switch (this.props.attributeGroup) {
+    if (this.props.dataset !== prevProps.dataset || !this.compareConfigs(prevProps.config, this.props.config)) {
+      switch (this.props.config.xAttributeGroup) {
         case 'parameters':
           this.getParameters().then((data) => {
-            this.drawChart(data);
+            this.setState({ parameters:data } );
           });
           break;
         case 'qois':
-          this.getParameters().then((data) => {
-            this.drawChart(this.calculateQOIS(data));
+          this.getQois().then((data) => {
+            this.setState({ qois:data } );
           });
           break;
         default:
@@ -164,18 +149,11 @@ class ScatterPlotWindow extends React.Component {
     d3.select(node).selectAll('*').remove();
 
     // Create margins
-    let margin = { top: 30, right: 50, bottom: 40, left: 40 };
-    let padding = { x_small: 10, small: 5 };
+    let margin = { top:30, right:50, bottom:40, left:40 };
+    let padding = { x_small:10, small:5 };
     let width = this.svgWidth - margin.left - margin.right;
     let height = this.svgHeight - margin.top - margin.bottom;
 
-    // Get column names
-    let columnNames = [];
-    if (this.props.attributeGroup === 'parameters') {
-      columnNames = this.props.dataset.parameterNames;
-    } else if (this.props.attributeGroup === 'qois') {
-      columnNames = ['Area', 'Perimeter'];
-    }
 
     // Create scales
     let xScale = d3.scaleLinear()
@@ -238,9 +216,10 @@ class ScatterPlotWindow extends React.Component {
 
   render() {
     return (<div style={svgContainer}>
-      <svg ref={(node) => this.node = node} style={svgContent}
-           viewBox={'0 0 ' + this.viewBoxWidth + ' ' + this.viewBoxHeight}
-           preserveAspectRatio={'xMinYMid meet'}/>
+      <svg ref={(node) => this.node = node}
+        style={svgContent}
+        viewBox={'0 0 1000 500'}
+        preserveAspectRatio={'xMinYMid meet'}/>
     </div>);
   }
 }
