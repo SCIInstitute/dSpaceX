@@ -423,18 +423,17 @@ class WindowPanel extends React.Component {
                   name: 'dataview',
                   id: 'dataview-input',
                 }}>
-                <MenuItem value="table">
-                  <em>Table</em>
+                <MenuItem value="gallery">
+                  <em>Gallery</em>
                 </MenuItem>
                 <MenuItem value="graph">
                   <em>Graph</em>
                 </MenuItem>
-                {this.props.dataset.name === 'Ellipses'
-                && <MenuItem value="scatter_plot">
+                <MenuItem value="scatter_plot">
                   <em>Scatter Plot</em>
-                </MenuItem>}
-                <MenuItem value="gallery">
-                  <em>Gallery</em>
+                </MenuItem>
+                <MenuItem value="table">
+                  <em>Table</em>
                 </MenuItem>
               </Select>
             </FormControl>
