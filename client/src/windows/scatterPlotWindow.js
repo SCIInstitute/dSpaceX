@@ -48,7 +48,7 @@ class ScatterPlotWindow extends React.Component {
     this.getParameters = this.getParameters.bind(this);
     this.getQois = this.getQois.bind(this);
     this.drawChart = this.drawChart.bind(this);
-    this.areConfigsSet = this.areConfigsSet.bind(this);
+    this.areAxesSet = this.areAxesSet.bind(this);
   }
 
   /**
@@ -85,7 +85,7 @@ class ScatterPlotWindow extends React.Component {
    * Verify all data necessary is set to draw chart
    * @return {boolean}
    */
-  areConfigsSet() {
+  areAxesSet() {
     const { config } = this.props;
     if (config.xAttributeGroup === undefined) {
       return false;
@@ -97,12 +97,6 @@ class ScatterPlotWindow extends React.Component {
       return false;
     }
     if (config.yAttribute === undefined) {
-      return false;
-    }
-    if (config.markerAttributeGroup === undefined) {
-      return false;
-    }
-    if (config.markerAttribute === undefined) {
       return false;
     }
     return true;
@@ -119,7 +113,7 @@ class ScatterPlotWindow extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.areConfigsSet()) {
+    if (this.areAxesSet()) {
       this.drawChart();
     }
   }
