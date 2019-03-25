@@ -38,7 +38,7 @@ class ScatterPlotWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.svgWidth = 1000;
-    this.svgHeight = 500;
+    this.svgHeight = 600;
 
     this.state = {
       parameters: [],
@@ -49,6 +49,8 @@ class ScatterPlotWindow extends React.Component {
     this.getQois = this.getQois.bind(this);
     this.drawChart = this.drawChart.bind(this);
     this.areAxesSet = this.areAxesSet.bind(this);
+    this.getData = this.getData.bind(this);
+    this.areMarkersSet = this.areMarkersSet.bind(this);
   }
 
   /**
@@ -82,24 +84,35 @@ class ScatterPlotWindow extends React.Component {
   }
 
   /**
-   * Verify all data necessary is set to draw chart
+   * Verify x and y axes values are set
    * @return {boolean}
    */
   areAxesSet() {
-    const { config } = this.props;
-    if (config.xAttributeGroup === undefined) {
+    const { xAttributeGroup, xAttribute, yAttributeGroup, yAttribute } = this.props.config;
+    if (xAttributeGroup === undefined) {
       return false;
     }
-    if (config.xAttribute === undefined) {
+    if (xAttribute === undefined) {
       return false;
     }
-    if (config.yAttributeGroup === undefined) {
+    if (yAttributeGroup === undefined) {
       return false;
     }
-    if (config.yAttribute === undefined) {
+    return yAttribute !== undefined;
+
+  }
+
+  /**
+   * Verify marker values are set
+   * @returns {boolean}
+   */
+  areMarkersSet() {
+    const { markerAttributeGroup, markerAttribute } = this.props.config;
+    if (markerAttributeGroup === undefined) {
       return false;
     }
-    return true;
+    return markerAttribute !== undefined;
+
   }
 
   componentWillMount() {
@@ -109,7 +122,9 @@ class ScatterPlotWindow extends React.Component {
     this.getQois().then((data) => {
       this.setState({ qois:data } );
     });
-    // this.drawChart();
+    if (this.areAxesSet()) {
+      this.drawChart();
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -118,49 +133,61 @@ class ScatterPlotWindow extends React.Component {
     }
   }
 
+  getData(attributeGroup, attribute) {
+    if (attributeGroup === 'parameters') {
+      return this.state.parameters.filter((p) => p.parameterName === attribute)[0].parameter;
+    } else {
+      return this.state.qois.filter((q) => q.qoiName === attribute)[0].qoi;
+    }
+  }
+
   drawChart() {
-    console.log('Draw Chart');
-    // // Get this node
-    // const node = this.node;
-    // d3.select(node).selectAll('*').remove();
-    //
-    // // Create margins
-    // let margin = { top:30, right:50, bottom:40, left:40 };
-    // let padding = { x_small:10, small:5 };
-    // let width = this.svgWidth - margin.left - margin.right;
-    // let height = this.svgHeight - margin.top - margin.bottom;
-    //
-    //
-    // // Create scales
-    // let xScale = d3.scaleLinear()
-    //   .range([0, width])
-    //   .domain(d3.extent(data, function(d) {
-    //     return d[columnNames[0]];
-    //   }))
-    //   .nice();
-    //
-    // let yScale = d3.scaleLinear()
-    //   .range([height, 0])
-    //   .domain(d3.extent(data, function(d) {
-    //     return d[columnNames[1]];
-    //   }))
-    //   .nice();
-    //
-    // // Add axes
-    // let xAxis = d3.axisBottom(xScale)
-    //   .tickFormat(d3.format('.0s'));
-    // let yAxis = d3.axisLeft(yScale);
-    // d3.select(node)
-    //   .append('g')
-    //   .attr('transform',
-    //     'translate(' + margin.left + ',' + (height + margin.bottom) + ')')
-    //   .call(xAxis);
-    //
-    // d3.select(node)
-    //   .append('g')
-    //   .attr('transform',
-    //     'translate(' + margin.left + ',' + margin.bottom + ')')
-    //   .call(yAxis);
+    // Get this node
+    const node = this.node;
+    // d3.select(node).selectAll('*').remove(); TODO remove this line if possible; update correctly
+
+    // Get the data
+    const { xAttributeGroup, xAttribute, yAttributeGroup, yAttribute,
+      markerAttributeGroup, markerAttribute } = this.props.config;
+
+    let markerValues = [];
+    if (this.areMarkersSet()) {
+      markerValues = this.getData(markerAttributeGroup, markerAttribute);
+    }
+
+    // Create margins
+    let margin = { top:50, right:50, bottom:50, left:50 };
+    let chartWidth = this.svgWidth - margin.left - margin.right;
+    let chartHeight = this.svgHeight - margin.top - margin.bottom;
+
+
+    // Create scales
+    const xValues = this.getData(xAttributeGroup, xAttribute);
+    let xScale = d3.scaleLinear()
+      .range([0, chartWidth])
+      .domain([0, d3.max(xValues)])
+      .nice();
+
+    const yValues = this.getData(yAttributeGroup, yAttribute);
+    let yScale = d3.scaleLinear()
+      .range([chartHeight, 0])
+      .domain([0, d3.max(yValues)])
+      .nice();
+
+    // Add axes
+    let xAxis = d3.axisBottom(xScale);
+    d3.select(node)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + (chartHeight + margin.top) + ')')
+      .call(xAxis);
+
+    let yAxis = d3.axisLeft(yScale);
+    d3.select(node)
+      .append('g')
+      .attr('transform',
+        'translate(' + margin.left + ',' + margin.top + ')')
+      .call(yAxis);
     //
     // // Add Labels
     // d3.select(node).append('text')
@@ -194,8 +221,8 @@ class ScatterPlotWindow extends React.Component {
     return (<div style={svgContainer}>
       <svg ref={(node) => this.node = node}
         style={svgContent}
-        viewBox={'0 0 1000 500'}
-        preserveAspectRatio={'xMinYMid meet'}/>
+        viewBox={'0 0 '+ this.svgWidth +' '+ this.svgHeight}
+        preserveAspectRatio='xMidYMid meet'/>
     </div>);
   }
 }
