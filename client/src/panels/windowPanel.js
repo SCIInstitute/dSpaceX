@@ -92,7 +92,8 @@ class WindowPanel extends React.Component {
 
   handleXAttributeGroup(event) {
     let xAttributeGroup = event.target.value;
-    this.setState({ xAttributeGroup });
+    let xAttribute = undefined;
+    this.setState({ xAttributeGroup, xAttribute });
   }
 
   handleXAttribute(event) {
@@ -102,7 +103,8 @@ class WindowPanel extends React.Component {
 
   handleYAttributeGroup(event) {
     let yAttributeGroup = event.target.value;
-    this.setState({ yAttributeGroup });
+    let yAttribute = undefined;
+    this.setState({ yAttributeGroup, yAttribute });
   }
 
   handleYAttribute(event) {
@@ -112,7 +114,8 @@ class WindowPanel extends React.Component {
 
   handleMarkerAttributeGroup(event) {
     let markerAttributeGroup = event.target.value;
-    this.setState({ markerAttributeGroup });
+    let markerAttribute = undefined;
+    this.setState({ markerAttributeGroup, markerAttribute });
   }
 
   handleMarkerAttribute(event) {
