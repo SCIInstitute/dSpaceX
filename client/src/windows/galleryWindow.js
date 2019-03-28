@@ -3,7 +3,6 @@ import GalleryPanel from '../panels/galleryPanel';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import grey from '@material-ui/core/es/colors/grey';
-import red from '@material-ui/core/es/colors/red';
 import { withDSXContext } from '../dsxContext.js';
 
 /**
@@ -26,7 +25,6 @@ class GalleryWindow extends Component {
       filters: [],
     };
 
-    this.handleImageSelect = this.handleImageSelect.bind(this);
     this.handleAddFilter = this.handleAddFilter.bind(this);
     this.handleUpdateFilter = this.handleUpdateFilter.bind(this);
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
@@ -45,7 +43,6 @@ class GalleryWindow extends Component {
           return {
             img: thumbnail,
             id: i,
-            isSelected: false,
           };
         });
         this.setState({ thumbnails });
@@ -79,7 +76,6 @@ class GalleryWindow extends Component {
             return {
               img: thumbnail,
               id: i,
-              isSelected: false,
             };
           });
           this.setState({ thumbnails });
@@ -165,18 +161,6 @@ class GalleryWindow extends Component {
   }
 
   /**
-   * Handles when and image is selected
-   * @param {int} id
-   */
-  handleImageSelect(id) {
-    const thumbnails = [...this.state.thumbnails];
-    thumbnails.forEach((thumbnail) => thumbnail.isSelected = false);
-    let index = thumbnails.findIndex((thumbnail) => thumbnail.id === id);
-    thumbnails[index].isSelected = true;
-    this.setState({ thumbnails });
-  }
-
-  /**
    * Handles when a new filter is added by selecting the '+' icon
    * @param {int} id
    */
@@ -222,6 +206,7 @@ class GalleryWindow extends Component {
    */
   render() {
     const visibleImages = this.getVisibleImages();
+    const { selectedDesigns } = this.props;
     return (
       <Paper style={{ overflow:'hidden auto' }}>
         <GalleryPanel
@@ -239,8 +224,8 @@ class GalleryWindow extends Component {
           && this.state.thumbnails.map((thumbnail, i) =>
             visibleImages.has(i) && <Grid key={i} item>
               <Paper
-                style={{ backgroundColor:thumbnail.isSelected ? red['700'] : grey['200'] }}>
-                <img alt={'Image:' + i} onClick={() => this.handleImageSelect(i)} height='75'
+                style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#ff3d00' : grey['200'] }}>
+                <img alt={'Image:' + i} onClick={(e) => this.props.onDesignSelection(e, thumbnail.id)} height='75'
                   style={{ margin:'5px 5px 5px 5px' }}
                   src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
               </Paper>

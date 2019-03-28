@@ -66,7 +66,7 @@ class Application extends React.Component {
       currentDataset: null,
       datasets: [],
       windows: [],
-      selectedDesigns: [],
+      selectedDesigns: new Set(),
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -78,7 +78,6 @@ class Application extends React.Component {
     this.addWindow = this.addWindow.bind(this);
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
     this.onDesignSelection = this.onDesignSelection.bind(this);
-    this.onMultipleDesignSelection = this. onMultipleDesignSelection.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -192,18 +191,21 @@ class Application extends React.Component {
 
   /**
    * Handles selection of a design from any window
+   * @param { object } event
    * @param { number } id
    */
-  onDesignSelection(id) {
-    console.log('Design Selected');
-  }
+  onDesignSelection(event, id) {
+    event.stopPropagation();
 
-  /**
-   * Handles selecting multiple designs simultaneously
-   * @param {Array<number>} ids
-   */
-  onMultipleDesignSelection(ids) {
-    console.log('Multiple Designs Selected');
+    if (event.ctrlKey) {
+      let selectedDesigns = this.state.selectedDesigns;
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    } else {
+      let selectedDesigns = new Set();
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    }
   }
 
   /**
@@ -287,25 +289,31 @@ class Application extends React.Component {
                         <TableWindow key={i}
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
-                          focusRow={this.state.sampleFocusIndex}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
                         <GraphGLWindow key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
-                          onNodeHover={this.onSampleFocus}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
                         <ScatterPlotWindow key={i}
                           config={windowConfig}
-                          dataset={this.state.currentDataset}/>
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (
                         <GalleryWindow key={i}
-                          dataset={this.state.currentDataset}/>);
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>
