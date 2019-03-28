@@ -196,8 +196,7 @@ class Application extends React.Component {
    */
   onDesignSelection(event, id) {
     event.stopPropagation();
-
-    if (event.ctrlKey) {
+    if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
       let selectedDesigns = this.state.selectedDesigns;
       selectedDesigns.add(id);
       this.setState({ selectedDesigns });
