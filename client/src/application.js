@@ -66,6 +66,7 @@ class Application extends React.Component {
       currentDataset: null,
       datasets: [],
       windows: [],
+      selectedDesigns: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -76,6 +77,8 @@ class Application extends React.Component {
     this.onDatasetChange = this.onDatasetChange.bind(this);
     this.addWindow = this.addWindow.bind(this);
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
+    this.onDesignSelection = this.onDesignSelection.bind(this);
+    this.onMultipleDesignSelection = this. onMultipleDesignSelection.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -185,6 +188,22 @@ class Application extends React.Component {
     this.setState({
       windows: windows,
     });
+  }
+
+  /**
+   * Handles selection of a design from any window
+   * @param { number } id
+   */
+  onDesignSelection(id) {
+    console.log('Design Selected');
+  }
+
+  /**
+   * Handles selecting multiple designs simultaneously
+   * @param {Array<number>} ids
+   */
+  onMultipleDesignSelection(ids) {
+    console.log('Multiple Designs Selected');
   }
 
   /**
