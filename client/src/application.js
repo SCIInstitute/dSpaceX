@@ -17,6 +17,7 @@ import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
+import * as d3 from 'd3';
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -78,6 +79,7 @@ class Application extends React.Component {
     this.addWindow = this.addWindow.bind(this);
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
     this.onDesignSelection = this.onDesignSelection.bind(this);
+    this.onDesignLasso = this.onDesignLasso.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -87,6 +89,10 @@ class Application extends React.Component {
     // export client for debugging
     window.client = this.client;
 
+    // TODO Fix this! This is a hack to get d3-lasso working in the scatterPlotWindow
+    window.d3=d3;
+
+    // TODO finish data helper so data is managed in one place
     this.dataHelper = new DataHelper(this.client);
   }
 
@@ -208,6 +214,16 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles lasso of design from ScatterPlotWindow
+   * @param {Array<object>} selection selected designs
+   */
+  onDesignLasso(selection) {
+    let selectedDesigns = new Set();
+    selection.each((s) => { selectedDesigns.add(s.id); });
+    this.setState({ selectedDesigns });
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -305,7 +321,8 @@ class Application extends React.Component {
                           config={windowConfig}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}/>
+                          onDesignSelection={this.onDesignSelection}
+                          onDesignLasso={this.onDesignLasso}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (

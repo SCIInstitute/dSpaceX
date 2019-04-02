@@ -20,6 +20,8 @@ const styles = (theme) => ({
 const CustomTableRow = withStyles((theme) => ({
   selected: {
     backgroundColor: 'rgb(201, 220, 252)',
+    border: 'solid thin',
+    borderColor: '#ff3d00',
   },
 }))(TableRow);
 
@@ -160,7 +162,7 @@ class TableWindow extends React.Component {
    * @return {HTML}
    */
   render() {
-    const { classes } = this.props;
+    const { classes, selectedDesigns } = this.props;
 
     let columnNames = [];
     if (this.props.attributeGroup === 'parameters') {
@@ -190,7 +192,7 @@ class TableWindow extends React.Component {
                 this.state.fields.map((n, i) => {
                   return (
                     <CustomTableRow hover className={classes.row} key={i}
-                      selected={this.props.focusRow == i}>
+                      selected={selectedDesigns.has(i)}>
                       <TableCell numeric padding='dense'>{i}</TableCell>
                       {
                         columnNames.map((p) => {

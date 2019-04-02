@@ -1,8 +1,11 @@
+import '../css/lasso.css';
 import * as d3 from 'd3';
+import * as d3lasso from 'd3-lasso';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
+
 
 const styles = () => ({
   root: {
@@ -54,6 +57,9 @@ class ScatterPlotWindow extends React.Component {
     this.areAxesSet = this.areAxesSet.bind(this);
     this.getData = this.getData.bind(this);
     this.combineData = this.combineData.bind(this);
+    this.lassoStart = this.lassoStart.bind(this);
+    this.lassoDraw = this.lassoDraw.bind(this);
+    this.lassoEnd = this.lassoEnd.bind(this);
   }
 
   /**
@@ -180,6 +186,33 @@ class ScatterPlotWindow extends React.Component {
     return combinedData;
   }
 
+  lassoStart() {
+    this.lasso.items()
+      .classed('not_possible', true)
+      .classed('selected', false);
+  };
+
+  lassoDraw() {
+    this.lasso.possibleItems()
+      .classed('not_possible', false)
+      .classed('possible', true);
+
+    this.lasso.notPossibleItems()
+      .classed('not_possible', true)
+      .classed('possible', false);
+  }
+
+  lassoEnd() {
+    // Reset the color of all dots
+    this.lasso.items()
+      .classed('not_possible', false)
+      .classed('possible', false);
+
+    // Update the list of selected design across the application
+    let selected = this.lasso.selectedItems();
+    this.props.onDesignLasso(selected);
+  }
+
   /**
    * Draws the scatter plot in rendered svg
    */
@@ -246,13 +279,14 @@ class ScatterPlotWindow extends React.Component {
 
     // Add markers - will be different depending on if the attribute group and attribute are
     // set for these.
+    let circles;
     if (markerValues.length > 0) {
       let cScale = d3.scalePow().exponent(0.5)
         .domain([d3.min(markerValues), d3.max(markerValues)])
         .range([2.5, 10]);
 
       let chartData = this.combineData(xValues, yValues, markerValues);
-      let circles = d3.select(node).append('g')
+      circles = d3.select(node).append('g')
         .selectAll('circle')
         .data(chartData);
       let circlesEntering = circles.enter().append('circle');
@@ -269,7 +303,7 @@ class ScatterPlotWindow extends React.Component {
         .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
     } else {
       const chartData = this.combineData(xValues, yValues, undefined);
-      let circles = d3.select(node).append('g')
+      circles = d3.select(node).append('g')
         .selectAll('circle')
         .data(chartData);
       let circlesEntering = circles.enter().append('circle');
@@ -284,6 +318,17 @@ class ScatterPlotWindow extends React.Component {
         .attr('stroke', 'black')
         .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
     }
+
+    this.lasso = d3lasso.lasso()
+      .closePathSelect(true)
+      .closePathDistance(100)
+      .items(circles)
+      .targetArea(d3.select(this.node))
+      .on('start', this.lassoStart)
+      .on('draw', this.lassoDraw)
+      .on('end', this.lassoEnd);
+
+    d3.select(this.node).call(this.lasso);
   }
 
   /**

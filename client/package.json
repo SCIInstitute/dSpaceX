@@ -19,10 +19,10 @@
   "homepage": "https://github.com/SCIInstitute/dSpaceX",
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
+    "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.2",
     "babel-loader": "^7.1.3",
-    "babel-preset-env": "^1.6.1",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
     "eslint": "^4.18.2",
     "eslint-config-google": "^0.9.1",
@@ -35,12 +35,15 @@
   "dependencies": {
     "@material-ui/core": "^3.1.2",
     "@material-ui/icons": "^3.0.1",
+    "css-loader": "^2.1.1",
     "d3": "^5.7.0",
     "d3-brush": "^1.0.6",
+    "d3-lasso": "0.0.5",
     "gl-matrix": "^2.4.1",
     "npm": "^6.7.0",
     "prop-types": "^15.6.1",
     "react": "^16.3.0",
-    "react-dom": "^16.3.0"
+    "react-dom": "^16.3.0",
+    "style-loader": "^0.23.1"
   }
 }
