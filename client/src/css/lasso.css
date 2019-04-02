@@ -23,5 +23,6 @@
 }
 
 .possible {
-    fill: #EC888C;
+    fill: #ff3d00;
+    fill-opacity: 0.5;
 }
