@@ -60,6 +60,7 @@ void Controller::configureCommandHandlers() {
 /**
  * Construct list of available datasets.
  */
+
 void Controller::configureAvailableDatasets(const std::string &path) {
 
   boost::filesystem::path rootPath(path);

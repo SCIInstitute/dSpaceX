@@ -411,7 +411,7 @@ class DecompositionPanel extends React.Component {
             {
               persistenceLevels.length > 0 ? [
                 <Histogram key="histogram" size={[190, 100]}
-                  data={this.state.complexSizes} />,
+                  data={this.state.complexSizes} brushEnabled={false}/>,
                 <input key="slider" type="range" step={1} id="myRange"
                   min={this.state.minPersistence}
                   max={this.state.maxPersistence}

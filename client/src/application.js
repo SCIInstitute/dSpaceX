@@ -1,19 +1,23 @@
 import Button from '@material-ui/core/Button';
-import Client from './client.js';
+import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
+import DataHelper from './data/dataHelper.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
+import GalleryWindow from './windows/galleryWindow';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
+import ScatterPlotWindow from './windows/scatterPlotWindow';
 import TableWindow from './windows/tableWindow.js';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
+import * as d3 from 'd3';
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -63,6 +67,7 @@ class Application extends React.Component {
       currentDataset: null,
       datasets: [],
       windows: [],
+      selectedDesigns: new Set(),
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -73,6 +78,8 @@ class Application extends React.Component {
     this.onDatasetChange = this.onDatasetChange.bind(this);
     this.addWindow = this.addWindow.bind(this);
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
+    this.onDesignSelection = this.onDesignSelection.bind(this);
+    this.onDesignLasso = this.onDesignLasso.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -81,6 +88,12 @@ class Application extends React.Component {
     this.client.addEventListener('networkInactive', this.onNetworkActivityEnd);
     // export client for debugging
     window.client = this.client;
+
+    // TODO Fix this! This is a hack to get d3-lasso working in the scatterPlotWindow
+    window.d3=d3;
+
+    // TODO finish data helper so data is managed in one place
+    this.dataHelper = new DataHelper(this.client);
   }
 
   /**
@@ -128,7 +141,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Handles whent he applications starts communicating with the server.
+   * Handles when the applications starts communicating with the server.
    */
   onNetworkActivityStart() {
     this.setState({
@@ -152,6 +165,7 @@ class Application extends React.Component {
   onDatasetChange(dataset) {
     this.setState({
       currentDataset: dataset,
+      windows: [],
     });
   }
 
@@ -179,6 +193,34 @@ class Application extends React.Component {
     this.setState({
       windows: windows,
     });
+  }
+
+  /**
+   * Handles selection of a design from any window
+   * @param { object } event
+   * @param { number } id
+   */
+  onDesignSelection(event, id) {
+    event.stopPropagation();
+    if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
+      let selectedDesigns = this.state.selectedDesigns;
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    } else {
+      let selectedDesigns = new Set();
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    }
+  }
+
+  /**
+   * Handles lasso of design from ScatterPlotWindow
+   * @param {Array<object>} selection selected designs
+   */
+  onDesignLasso(selection) {
+    let selectedDesigns = new Set();
+    selection.each((s) => { selectedDesigns.add(s.id); });
+    this.setState({ selectedDesigns });
   }
 
   /**
@@ -227,7 +269,7 @@ class Application extends React.Component {
               backgroundColor: drawerMarginColor,
               height: '100%',
               width: '100%',
-            }}></div>
+            }}/>
           </Drawer>
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
@@ -251,26 +293,43 @@ class Application extends React.Component {
                       gridTemplateColumns: '1fr 1fr',
                       gridTemplateRows: '1fr 1fr',
                     };
-                };
+                }
               })()
             }>
               {
                 !!this.state.currentDataset ?
                   this.state.windows.map((windowConfig, i) => {
-                    if (windowConfig.dataViewType == 'table') {
+                    if (windowConfig.dataViewType === 'table') {
                       return (
                         <TableWindow key={i}
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
-                          focusRow={this.state.sampleFocusIndex}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>
                       );
-                    } else if (windowConfig.dataViewType == 'graph') {
+                    } else if (windowConfig.dataViewType === 'graph') {
                       return (
                         <GraphGLWindow key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
-                          onNodeHover={this.onSampleFocus}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>
                       );
+                    } else if (windowConfig.dataViewType === 'scatter_plot') {
+                      return (
+                        <ScatterPlotWindow key={i}
+                          config={windowConfig}
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}
+                          onDesignLasso={this.onDesignLasso}/>
+                      );
+                    } else if (windowConfig.dataViewType === 'gallery') {
+                      return (
+                        <GalleryWindow key={i}
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>

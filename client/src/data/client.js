@@ -1,5 +1,3 @@
-
-
 /**
  * The Client class encapsulates all client-server communication.
  */
