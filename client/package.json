@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/SCIInstitute/dSpaceX",
   "devDependencies": {
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
     "@babel/types": "^7.4.0",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
@@ -41,6 +43,7 @@
     "d3": "^5.7.0",
     "d3-brush": "^1.0.6",
     "d3-lasso": "0.0.5",
+    "expand-range": "^2.0.2",
     "gl-matrix": "^2.4.1",
     "inquirer": "^6.2.2",
     "lodash": "^4.17.11",
