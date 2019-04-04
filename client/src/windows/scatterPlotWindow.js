@@ -348,7 +348,7 @@ class ScatterPlotWindow extends React.Component {
       d3.select(this.node).call(this.lasso);
     } else {
       d3.select(this.node)
-        .on('click', null);
+        .on('mousedown.drag', null);
       d3.select(this.node)
         .selectAll('circle')
         .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
