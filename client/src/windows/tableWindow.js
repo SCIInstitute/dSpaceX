@@ -19,7 +19,7 @@ const styles = (theme) => ({
 
 const CustomTableRow = withStyles((theme) => ({
   selected: {
-    backgroundColor: 'rgb(201, 220, 252)',
+    backgroundColor: 'C9DCFC',
     border: 'solid thin',
     borderColor: '#ff3d00',
   },
@@ -176,7 +176,7 @@ class TableWindow extends React.Component {
         <Table className={classes.table}>
           <TableHead>
             <TableRow>
-              <TableCell numeric padding='dense'>id</TableCell>
+              {columnNames.length > 0 && <TableCell numeric padding='dense'>id</TableCell>}
               {
                 columnNames.map((n) => {
                   return (

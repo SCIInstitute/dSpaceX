@@ -1,10 +1,13 @@
 import '../css/lasso.css';
 import * as d3 from 'd3';
 import * as d3lasso from 'd3-lasso';
+import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 import React from 'react';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/es/Switch/Switch";
 
 
 const styles = () => ({
@@ -25,6 +28,14 @@ const styles = () => ({
     'left': 0,
     'fontSize': '0.75em',
     'fontFamily': '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  switchContainer: {
+    'display': 'flex',
+    'flex-direction': 'row-reverse',
+  },
+  switch: {
+    'margin-top': '10px',
+    'margin-right': '75px',
   },
 });
 
@@ -47,10 +58,12 @@ class ScatterPlotWindow extends React.Component {
     this.svgHeight = 600;
 
     this.state = {
+      lassoEnabled: false,
       parameters: [],
       qois: [],
     };
 
+    this.handleLassoChange = this.handleLassoChange.bind(this);
     this.getParameters = this.getParameters.bind(this);
     this.getQois = this.getQois.bind(this);
     this.drawChart = this.drawChart.bind(this);
@@ -88,6 +101,11 @@ class ScatterPlotWindow extends React.Component {
     if (this.areAxesSet()) {
       this.drawChart();
     }
+  }
+
+  handleLassoChange() {
+    let lassoEnabled = !this.state.lassoEnabled;
+    this.setState({ lassoEnabled });
   }
 
   /**
@@ -297,10 +315,9 @@ class ScatterPlotWindow extends React.Component {
         .attr('cy', (d) => yScale(d.y))
         .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
         .attr('r', (d) => cScale(d.marker))
-        .attr('fill', (d) => selectedDesigns.has(d.id) ? '#ff3d00' : '#3f51b5')
+        .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
         .attr('fill-opacity', '0.75')
-        .attr('stroke', 'black')
-        .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
+        .attr('stroke', 'black');
     } else {
       const chartData = this.combineData(xValues, yValues, undefined);
       circles = d3.select(node).append('g')
@@ -314,21 +331,28 @@ class ScatterPlotWindow extends React.Component {
         .attr('cy', (d) => yScale(d.y))
         .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
         .attr('r', 2.5)
-        .attr('fill', (d) => selectedDesigns.has(d.id) ? '#ff3d00' : '#3f51b5')
-        .attr('stroke', 'black')
-        .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
+        .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
+        .attr('stroke', 'black');
     }
 
-    this.lasso = d3lasso.lasso()
-      .closePathSelect(true)
-      .closePathDistance(100)
-      .items(circles)
-      .targetArea(d3.select(this.node))
-      .on('start', this.lassoStart)
-      .on('draw', this.lassoDraw)
-      .on('end', this.lassoEnd);
+    if (this.state.lassoEnabled) {
+      this.lasso = d3lasso.lasso()
+        .closePathSelect(true)
+        .closePathDistance(100)
+        .items(circles)
+        .targetArea(d3.select(this.node))
+        .on('start', this.lassoStart)
+        .on('draw', this.lassoDraw)
+        .on('end', this.lassoEnd);
 
-    d3.select(this.node).call(this.lasso);
+      d3.select(this.node).call(this.lasso);
+    } else {
+      d3.select(this.node)
+        .on('click', null);
+      d3.select(this.node)
+        .selectAll('circle')
+        .on('click', (d) => this.props.onDesignSelection(d3.event, d.id));
+    }
   }
 
   /**
@@ -337,12 +361,20 @@ class ScatterPlotWindow extends React.Component {
    */
   render() {
     const { classes } = this.props;
-    return (<div className={classes.svgContainer}>
-      <svg ref={(node) => this.node = node}
-        className={classes.svgContent}
-        viewBox={'0 0 '+ this.svgWidth +' '+ this.svgHeight}
-        preserveAspectRatio='xMidYMid meet'/>
-    </div>);
+    return (
+      <Paper className={[classes.root, classes.svgContainer].join(' ')}>
+        <div className={classes.switchContainer}>
+          {this.areAxesSet() && <FormControlLabel className={classes.switch} control={<Switch
+            checked={this.state.lassoEnabled}
+            onChange={this.handleLassoChange}
+            color='primary'/>} label="Lasso"/>}
+        </div>
+        <svg ref={(node) => this.node = node}
+          id='scatterPlotSvg'
+          className={classes.svgContent}
+          viewBox={'0 0 '+ this.svgWidth +' '+ this.svgHeight}
+          preserveAspectRatio='xMidYMid meet'/>
+      </Paper>);
   }
 }
 

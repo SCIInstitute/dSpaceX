@@ -201,6 +201,7 @@ class Application extends React.Component {
    * @param { number } id
    */
   onDesignSelection(event, id) {
+    console.log('Circle Selected');
     event.stopPropagation();
     if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
       let selectedDesigns = this.state.selectedDesigns;
