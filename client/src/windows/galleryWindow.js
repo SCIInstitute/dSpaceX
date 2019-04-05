@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import GalleryPanel from '../panels/galleryPanel';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import grey from '@material-ui/core/es/colors/grey';
 import { withDSXContext } from '../dsxContext.js';
 
 /**
@@ -28,6 +27,7 @@ class GalleryWindow extends Component {
     this.handleAddFilter = this.handleAddFilter.bind(this);
     this.handleUpdateFilter = this.handleUpdateFilter.bind(this);
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
+    this.sortThumbnails = this.sortThumbnails.bind(this);
   }
 
   /**
@@ -201,6 +201,22 @@ class GalleryWindow extends Component {
   }
 
   /**
+   * Sorts the thumbnails so selected images are the first in list.
+   * @return {Array<object>} thumbnails with selected images first
+   */
+  sortThumbnails() {
+    let thumbnails = this.state.thumbnails;
+    const { selectedDesigns } = this.props;
+    selectedDesigns.forEach((id) => {
+      const index = thumbnails.findIndex((t) => t.id === id);
+      const thumbnail = thumbnails.splice(index, 1);
+      thumbnails.unshift(thumbnail[0]);
+    });
+    console.log(thumbnails);
+    return thumbnails;
+  }
+
+  /**
    *  Renders the Gallery Window
    * @return {jsx}
    */
@@ -221,10 +237,10 @@ class GalleryWindow extends Component {
           spacing={8}
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
-          && this.state.thumbnails.map((thumbnail, i) =>
+          && this.sortThumbnails().map((thumbnail, i) =>
             visibleImages.has(i) && <Grid key={i} item>
               <Paper
-                style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#ff3d00' : grey['200'] }}>
+                style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#3f51b5' : '#D3D3D3' }}>
                 <img alt={'Image:' + i} onClick={(e) => this.props.onDesignSelection(e, thumbnail.id)} height='75'
                   style={{ margin:'5px 5px 5px 5px' }}
                   src={'data:image/png;base64, ' + thumbnail.img.rawData}/>

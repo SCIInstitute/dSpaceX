@@ -24,7 +24,7 @@ const styles = () => ({
   svgContent: {
     'display': 'inline-block',
     'position': 'absolute',
-    'top': 0,
+    'top': 10,
     'left': 0,
     'fontSize': '0.75em',
     'fontFamily': '"Roboto", "Helvetica", "Arial", sans-serif',
@@ -34,8 +34,8 @@ const styles = () => ({
     'flex-direction': 'row-reverse',
   },
   switch: {
-    'margin-top': '10px',
-    'margin-right': '75px',
+    'margin-top': 10,
+    'margin-right': 50,
   },
 });
 
@@ -330,7 +330,7 @@ class ScatterPlotWindow extends React.Component {
         .attr('cx', (d) => xScale(d.x))
         .attr('cy', (d) => yScale(d.y))
         .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
-        .attr('r', 2.5)
+        .attr('r', 5)
         .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
         .attr('stroke', 'black');
     }
