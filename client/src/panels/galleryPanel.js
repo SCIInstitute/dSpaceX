@@ -46,7 +46,7 @@ class GalleryPanel extends Component {
   render() {
     const { classes, filters, addFilter } = this.props;
     return (
-      <ExpansionPanel defaultExpanded={true}>
+      <ExpansionPanel defaultExpanded={false}>
         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
         <ExpansionPanelDetails style={{ overflow:'auto hidden' }}>
           <div style={{ width:'50px', height:'50px', marginRight:'10px' }}>

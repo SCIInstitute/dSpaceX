@@ -237,7 +237,8 @@ class GalleryWindow extends Component {
           spacing={8}
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
-          && this.sortThumbnails().map((thumbnail, i) =>
+          // && this.sortThumbnails().map((thumbnail, i) =>
+          && this.state.thumbnails.map((thumbnail, i) =>
             visibleImages.has(i) && <Grid key={i} item>
               <Paper
                 style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#3f51b5' : '#D3D3D3' }}>

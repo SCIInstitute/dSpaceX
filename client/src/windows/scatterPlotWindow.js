@@ -1,14 +1,13 @@
 import '../css/lasso.css';
 import * as d3 from 'd3';
 import * as d3lasso from 'd3-lasso';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 import React from 'react';
+import Switch from '@material-ui/core/es/Switch/Switch';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Switch from "@material-ui/core/es/Switch/Switch";
-
 
 const styles = () => ({
   root: {
@@ -103,6 +102,10 @@ class ScatterPlotWindow extends React.Component {
     }
   }
 
+  /**
+   * Called when lasso selection is enabled or disabled
+   * using toggle switch
+   */
   handleLassoChange() {
     let lassoEnabled = !this.state.lassoEnabled;
     this.setState({ lassoEnabled });
@@ -204,12 +207,18 @@ class ScatterPlotWindow extends React.Component {
     return combinedData;
   }
 
+  /**
+   * Called when lasso starts drawing
+   */
   lassoStart() {
     this.lasso.items()
       .classed('not_possible', true)
       .classed('selected', false);
   };
 
+  /**
+   * Called while lasso is drawing
+   */
   lassoDraw() {
     this.lasso.possibleItems()
       .classed('not_possible', false)
@@ -220,6 +229,9 @@ class ScatterPlotWindow extends React.Component {
       .classed('possible', false);
   }
 
+  /**
+   * Called when lasso is done drawing
+   */
   lassoEnd() {
     // Reset the color of all dots
     this.lasso.items()

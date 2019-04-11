@@ -15,15 +15,10 @@ const styles = (theme) => ({
   },
   table: {},
   tableWrapper: {},
-});
-
-const CustomTableRow = withStyles((theme) => ({
   selected: {
-    backgroundColor: 'C9DCFC',
-    border: 'solid thin',
-    borderColor: '#ff3d00',
+    backgroundColor: '#c5cae8',
   },
-}))(TableRow);
+});
 
 /**
  * A Window Component for displaying tabular data.
@@ -191,8 +186,10 @@ class TableWindow extends React.Component {
               this.state.fields ?
                 this.state.fields.map((n, i) => {
                   return (
-                    <CustomTableRow hover className={classes.row} key={i}
-                      selected={selectedDesigns.has(i)}>
+                    <TableRow
+                      key={i}
+                      className={selectedDesigns.has(i) ? classes.selected : classes.row}
+                      onClick={(e) => this.props.onDesignSelection(e, i)}>
                       <TableCell numeric padding='dense'>{i}</TableCell>
                       {
                         columnNames.map((p) => {
@@ -204,7 +201,7 @@ class TableWindow extends React.Component {
                           );
                         })
                       }
-                    </CustomTableRow>
+                    </TableRow>
                   );
                 }) : []
             }
