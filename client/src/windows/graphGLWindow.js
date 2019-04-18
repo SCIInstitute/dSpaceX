@@ -1113,7 +1113,7 @@ class GraphGLWindow extends GLWindow {
 
     return (
       <React.Fragment>
-        <div style={{ position:'relative' }}>
+        <Paper style={{ position:'relative' }}>
           <canvas ref='canvas' className='glCanvas' style={style} />
           {
             this.state.hoverNode ? (<Paper style={{
@@ -1146,7 +1146,7 @@ class GraphGLWindow extends GLWindow {
               []
           }
           <ErrorDialog ref='errorDialog' />
-        </div>
+        </Paper>
       </React.Fragment>
     );
   }
