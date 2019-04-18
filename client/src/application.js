@@ -1,3 +1,4 @@
+import * as d3 from 'd3';
 import Button from '@material-ui/core/Button';
 import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
@@ -17,7 +18,6 @@ import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
-import * as d3 from 'd3';
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -201,10 +201,9 @@ class Application extends React.Component {
    * @param { number } id
    */
   onDesignSelection(event, id) {
-    console.log('Circle Selected');
     event.stopPropagation();
     if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
-      let selectedDesigns = this.state.selectedDesigns;
+      let selectedDesigns = new Set(this.state.selectedDesigns);
       selectedDesigns.add(id);
       this.setState({ selectedDesigns });
     } else {

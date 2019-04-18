@@ -136,6 +136,15 @@ class GraphGLWindow extends GLWindow {
    * @param {Event} event
    */
   handleMouseRelease(event) {
+    // Handle left click release
+    if (event.button == 0) {
+      let x = event.offsetX;
+      let y = event.offsetY;
+      let id = this.getGeometryUnderCursor(x, y);
+      this.props.onDesignSelection(event, id);
+    }
+
+    // Handle right click release
     if (event.button == 2) {
       this.rightMouseDown = false;
     }
@@ -162,16 +171,16 @@ class GraphGLWindow extends GLWindow {
 
     this.previousX = x;
     this.previousY = y;
-    this.pickGeometryUnderCursor(x, y);
+    this.setHoverUnderCursor(x, y);
   }
 
   /**
-   * Looks up the texture value at the coordinate cooordinate to determine
-   * what geometry is currently under the cursor.
+   * Looks up the texture value at the coordinate  to determine
+   * what geometry is currently under the cursor and sets the state for hover.
    * @param {number} x
    * @param {number} y
    */
-  pickGeometryUnderCursor(x, y) {
+  setHoverUnderCursor(x, y) {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
@@ -203,6 +212,37 @@ class GraphGLWindow extends GLWindow {
         hoverShow: false,
       });
     }
+  }
+
+  /**
+   * Looks up the texture value at the coordinate to determine
+   * what geometry is currently under the cursor for left click to select.
+   * @param {number} x
+   * @param {number} y
+   */
+  getGeometryUnderCursor(x, y) {
+    const canvas = this.refs.canvas;
+    let gl = canvas.getContext('webgl');
+
+    // Read one pixel
+    let readout = new Uint8Array(4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.readPixels(x, canvas.height-y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    let range = 255*255;
+    let n = 1000;
+
+    let r = readout[0];
+    let g = readout[1];
+    let b = readout[2];
+
+    let baseIndex = null;
+    if (r != 255) {
+      let mappedIndex = 255*g + b;
+      baseIndex = Math.floor(mappedIndex / Math.floor(range/n));
+    }
+    return baseIndex;
   }
 
   /**
@@ -726,6 +766,7 @@ class GraphGLWindow extends GLWindow {
    * Callback invoked before the React Component is rendered.
    */
   componentWillMount() {
+    const { selectedDesigns } = this.props;
     if (!this.props.decomposition) {
       return;
     }
@@ -744,21 +785,29 @@ class GraphGLWindow extends GLWindow {
             let max = Math.max(...this.props.qoi);
             let color = d3.scaleLinear()
               .domain([min, 0.5*(min+max), max])
-              .range(['blue', 'white', 'red']);
+              .range(['white', '#b53f51']);
             let colorsArray = [];
             for (let i = 0; i < this.props.qoi.length; i++) {
-              let colorString = color(this.props.qoi[i]);
-              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
-              colorTriplet[0] /= 255;
-              colorTriplet[1] /= 255;
-              colorTriplet[2] /= 255;
-              colorsArray.push(...colorTriplet);
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                let colorString = color(this.props.qoi[i]);
+                let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+                colorTriplet[0] /= 255;
+                colorTriplet[1] /= 255;
+                colorTriplet[2] /= 255;
+                colorsArray.push(...colorTriplet);
+              }
             }
             this.addVertexColors(colorsArray);
           } else {
             let colorsArray = [];
             for (let i=0; i < layout.length; i++) {
-              colorsArray.push(1.0, 1.0, 1.0);
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                colorsArray.push(1.0, 1.0, 1.0);
+              }
             }
             this.addVertexColors(colorsArray);
           }
@@ -818,18 +867,19 @@ class GraphGLWindow extends GLWindow {
     if (!nextProps.decomposition) {
       return;
     }
-    let { datasetId, k, persistenceLevel } = nextProps.decomposition;
-    let qoi = nextProps.decomposition.decompositionField;
+
+    const { selectedDesigns } = nextProps;
+    const { datasetId, k, persistenceLevel } = nextProps.decomposition;
+    const qoiName = nextProps.decomposition.decompositionField;
 
     if (this.props.decomposition &&
-        datasetId == this.props.decomposition.datasetId &&
-        k == this.props.decomposition.k &&
-        persistenceLevel == this.props.decomposition.persistenceLevel &&
-        qoi == this.props.decomposition.decompositionField) {
+        datasetId === this.props.decomposition.datasetId &&
+        k === this.props.decomposition.k &&
+        persistenceLevel === this.props.decomposition.persistenceLevel &&
+        qoiName === this.props.decomposition.decompositionField &&
+        selectedDesigns === this.props.selectedDesigns) {
       return;
     }
-
-    let qoiName = nextProps.decomposition.decompositionField;
 
     Promise.all([
       this.client.fetchLayoutForPersistenceLevel(
@@ -849,21 +899,29 @@ class GraphGLWindow extends GLWindow {
           let max = Math.max(...qoi);
           let color = d3.scaleLinear()
             .domain([min, 0.5*(min+max), max])
-            .range(['blue', 'white', 'red']);
+            .range(['white', '#b53f51']);
           let colorsArray = [];
           for (let i = 0; i < qoi.length; i++) {
-            let colorString = color(qoi[i]);
-            let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
-            colorTriplet[0] /= 255;
-            colorTriplet[1] /= 255;
-            colorTriplet[2] /= 255;
-            colorsArray.push(...colorTriplet);
+            if (selectedDesigns.has(i)) {
+              colorsArray.push((63/255), (81/255), (181/255));
+            } else {
+              let colorString = color(qoi[i]);
+              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+              colorTriplet[0] /= 255;
+              colorTriplet[1] /= 255;
+              colorTriplet[2] /= 255;
+              colorsArray.push(...colorTriplet);
+            }
           }
           this.addVertexColors(colorsArray);
         } else {
           let colorsArray = [];
           for (let i=0; i < layout.length; i++) {
-            colorsArray.push(1.0, 1.0, 1.0);
+            if (selectedDesigns.has(i)) {
+              colorsArray.push((63/255), (81/255), (181/255));
+            } else {
+              colorsArray.push(1.0, 1.0, 1.0);
+            }
           }
           this.addVertexColors(colorsArray);
         }
