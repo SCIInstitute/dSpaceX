@@ -47,7 +47,7 @@ class DecompositionPanel extends React.Component {
 
     this.state = {
       decompositionMode: 'Morse-Smale',
-      decompositionCategory: null,
+      decompositionCategory: 'qoi',
       decompositionField: null,
       persistenceLevel: '',
       minPersistence: null,
@@ -350,8 +350,8 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value='Morse-Smale'>
                   <em>Morse-Smale</em>
                 </MenuItem>
-                <MenuItem value='Shape-Odds'>
-                  <em>Shape-Odds</em>
+                <MenuItem value='Shape-Odds' disabled={true}>
+                  <em>Infinite Shape-Odds</em>
                 </MenuItem>
               </Select>
             </FormControl>
@@ -369,19 +369,16 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={
-                  !(this.props.dataset &&
-                    this.props.dataset.parameterNames.length > 0)
-                }>
+                <MenuItem value="parameter" disabled={true}>
                   <em>Parameter</em>
                 </MenuItem>
-                <MenuItem value="geometry">
+                <MenuItem value="geometry" disabled={true}>
                   <em>Geometry</em>
                 </MenuItem>
                 <MenuItem value="qoi">
                   <em>QoI</em>
                 </MenuItem>
-                <MenuItem value="precomputed">
+                <MenuItem value="precomputed" disabled={true}>
                   <em>Precomputed</em>
                 </MenuItem>
               </Select>

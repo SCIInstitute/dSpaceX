@@ -184,33 +184,6 @@ class WindowPanel extends React.Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
-        {/* Metric Dropdown */}
-        <FormControl className={classes.formControl}
-          disabled={!this.props.enabled}>
-          <InputLabel htmlFor='metric-field'>Metric</InputLabel>
-          <Select ref="metricCombo"
-            value="precomputed"
-            inputProps={{
-              name: 'metric',
-              id: 'metric-field',
-            }}>
-            <MenuItem value='precomputed'>
-              <em>Precomputed</em>
-            </MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Neighborhood (k) */}
-        <TextField
-          id="neighborhood"
-          label="Neighborhood Size"
-          type="number"
-          defaultValue="15"
-          disabled={true}
-          InputLabelProps={{
-            shrink: true,
-          }}/>
-
         {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
           disabled={!this.props.enabled || !this.props.dataset}>
@@ -236,6 +209,40 @@ class WindowPanel extends React.Component {
           </Select>
         </FormControl>
 
+        {/* Metric Dropdown */}
+        <FormControl className={classes.formControl}
+          disabled={!this.props.enabled}>
+          <InputLabel htmlFor='metric-field'>Metric</InputLabel>
+          <Select ref="metricCombo"
+            value="precomputed"
+            inputProps={{
+              name: 'metric',
+              id: 'metric-field',
+            }}>
+            <MenuItem value='precomputed'>
+              <em>Precomputed</em>
+            </MenuItem>
+            <MenuItem value='l2' disabled={true}>
+              <em>L2</em>
+            </MenuItem>
+            <MenuItem value='l1' disabled={true}>
+              <em>L1</em>
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Neighborhood (k) */}
+        <TextField
+          id="neighborhood"
+          label="Neighborhood Size"
+          type="number"
+          defaultValue="15"
+          disabled={true}
+          InputLabelProps={{
+            shrink: true,
+          }}/>
+
+        {/* Decomposition Panel */}
         <div style={{ height:'8px' }}/>
         <DecompositionPanel
           enabled={true}
