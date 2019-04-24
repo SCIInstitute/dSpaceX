@@ -141,8 +141,8 @@ class FilterPanel extends Component {
             displayEmpty
             name='attributeGroup'
             autoWidth={true}>
-            {parameters.length > 0 && <MenuItem value='parameters'>Parameters</MenuItem>}
-            {qois.length > 0 && <MenuItem value='qois'>Qois</MenuItem>}
+            {<MenuItem value='parameters' disabled={!parameters.length > 0}>Parameters</MenuItem>}
+            {<MenuItem value='qois' disabled={!qois.length > 0}>Qois</MenuItem>}
           </Select>
         </FormControl>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
