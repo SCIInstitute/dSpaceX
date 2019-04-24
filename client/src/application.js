@@ -166,6 +166,7 @@ class Application extends React.Component {
     this.setState({
       currentDataset: dataset,
       windows: [],
+      selectedDesigns: new Set(),
     });
   }
 

@@ -867,7 +867,6 @@ class GraphGLWindow extends GLWindow {
     if (!nextProps.decomposition) {
       return;
     }
-
     const { selectedDesigns } = nextProps;
     const { datasetId, k, persistenceLevel } = nextProps.decomposition;
     const qoiName = nextProps.decomposition.decompositionField;
@@ -879,33 +878,26 @@ class GraphGLWindow extends GLWindow {
         qoiName === this.props.decomposition.decompositionField &&
         selectedDesigns === this.props.selectedDesigns) {
       return;
-    }
-
-    Promise.all([
-      this.client.fetchLayoutForPersistenceLevel(
-        datasetId, k, persistenceLevel),
-      this.client.fetchQoi(datasetId, qoiName),
-    ]).then((results) => {
-      const [result, qoiResult] = results;
-      const qoi = qoiResult.qoi;
-      if (result.embedding && result.embedding.layout) {
-        // let layout = [].concat(...result.embedding.layout);
-        let layout = result.embedding.layout;
-        let adjacency = result.embedding.adjacency;
-        this.createGeometry(layout, adjacency, 0.02, 0.02);
-
-        if (qoi) {
-          let min = Math.min(...qoi);
-          let max = Math.max(...qoi);
+    } else if (this.props.decomposition &&
+        datasetId === this.props.decomposition.datasetId &&
+        k === this.props.decomposition.k &&
+        persistenceLevel === this.props.decomposition.persistenceLevel &&
+        qoiName === this.props.decomposition.decompositionField &&
+        selectedDesigns !== this.props.selectedDesigns) {
+      if (this.layout && this.adjacency) {
+        this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
+        if (this.qoi) {
+          let min = Math.min(...this.qoi);
+          let max = Math.max(...this.qoi);
           let color = d3.scaleLinear()
             .domain([min, 0.5*(min+max), max])
             .range(['white', '#b53f51']);
           let colorsArray = [];
-          for (let i = 0; i < qoi.length; i++) {
+          for (let i = 0; i < this.qoi.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
             } else {
-              let colorString = color(qoi[i]);
+              let colorString = color(this.qoi[i]);
               let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
               colorTriplet[0] /= 255;
               colorTriplet[1] /= 255;
@@ -916,7 +908,7 @@ class GraphGLWindow extends GLWindow {
           this.addVertexColors(colorsArray);
         } else {
           let colorsArray = [];
-          for (let i=0; i < layout.length; i++) {
+          for (let i=0; i < this.layout.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
             } else {
@@ -925,18 +917,67 @@ class GraphGLWindow extends GLWindow {
           }
           this.addVertexColors(colorsArray);
         }
-      } else {
-        if (nextProps.decomposition) {
-          let errorMessage = 'No decomposition layout provided.';
-          this.refs.errorDialog.reportError(errorMessage);
-        } else {
-          let errorMessage = 'No decomposition provided.';
-          this.refs.errorDialog.reportError(errorMessage);
-        }
       }
       this.updateBuffers();
       requestAnimationFrame(this.renderGL);
-    });
+    } else {
+      Promise.all([
+        this.client.fetchLayoutForPersistenceLevel(
+          datasetId, k, persistenceLevel),
+        this.client.fetchQoi(datasetId, qoiName),
+      ]).then((results) => {
+        const [result, qoiResult] = results;
+        this.qoi = qoiResult.qoi;
+        if (result.embedding && result.embedding.layout) {
+          // let layout = [].concat(...result.embedding.layout);
+          this.layout = result.embedding.layout;
+          this.adjacency = result.embedding.adjacency;
+          this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
+
+          if (this.qoi) {
+            let min = Math.min(...this.qoi);
+            let max = Math.max(...this.qoi);
+            let color = d3.scaleLinear()
+              .domain([min, 0.5*(min+max), max])
+              .range(['white', '#b53f51']);
+            let colorsArray = [];
+            for (let i = 0; i < this.qoi.length; i++) {
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                let colorString = color(this.qoi[i]);
+                let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+                colorTriplet[0] /= 255;
+                colorTriplet[1] /= 255;
+                colorTriplet[2] /= 255;
+                colorsArray.push(...colorTriplet);
+              }
+            }
+            this.addVertexColors(colorsArray);
+          } else {
+            let colorsArray = [];
+            for (let i=0; i < this.layout.length; i++) {
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                colorsArray.push(1.0, 1.0, 1.0);
+              }
+            }
+            this.addVertexColors(colorsArray);
+          }
+        } else {
+          if (nextProps.decomposition) {
+            let errorMessage = 'No decomposition layout provided.';
+            this.refs.errorDialog.reportError(errorMessage);
+          } else {
+            let errorMessage = 'No decomposition provided.';
+            this.refs.errorDialog.reportError(errorMessage);
+          }
+        }
+        this.updateBuffers();
+        requestAnimationFrame(this.renderGL);
+      });
+    }
   }
 
 
