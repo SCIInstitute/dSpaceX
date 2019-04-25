@@ -224,7 +224,7 @@ class GalleryWindow extends Component {
     const visibleImages = this.getVisibleImages();
     const { selectedDesigns } = this.props;
     return (
-      <Paper style={{ overflow:'hidden auto' }}>
+      <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
         <GalleryPanel
           parameters={this.state.parameters}
           qois={this.state.qois}

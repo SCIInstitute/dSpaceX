@@ -19,6 +19,7 @@ const styles = () => ({
     'width': '100%',
     'verticalAlign': 'top',
     'overflow': 'hidden',
+    'border': '1px solid gray',
   },
   svgContent: {
     'display': 'inline-block',

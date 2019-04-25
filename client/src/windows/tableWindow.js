@@ -12,6 +12,7 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = (theme) => ({
   root: {
     overflowX: 'auto',
+    border: '1px solid gray',
   },
   table: {},
   tableWrapper: {},

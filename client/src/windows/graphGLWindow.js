@@ -1139,8 +1139,8 @@ class GraphGLWindow extends GLWindow {
     let style = {
       width: '100%',
       height: '100%',
-      borderRight: '1px dashed gray',
       boxSizing: 'border-box',
+      position: 'absolute',
     };
 
     let imageBase64 = null;
@@ -1154,7 +1154,7 @@ class GraphGLWindow extends GLWindow {
 
     return (
       <React.Fragment>
-        <Paper style={{ position:'relative' }}>
+        <Paper style={{ position:'relative', border:'1px solid gray' }}>
           <canvas ref='canvas' className='glCanvas' style={style} />
           {
             this.state.hoverNode ? (<Paper style={{
