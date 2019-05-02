@@ -24,7 +24,7 @@ supported by all modern browsers.
 **BUILDING ON OS MOJAVE OR LATER**
 
 Apple made changes that removed the /usr/include file and now some programs won't compile, including dSpaceX. 
-The following steps provide instructions for adding the /usr/include file back.
+The following steps provide instructions for adding the /usr/include file back. This only needs to be done once.
 1. Check to see if you have Xcode command line tools installed
     1. Start terminal
     2. run command ``` xcode-select -p ```
