@@ -36,6 +36,7 @@ class GraphGLWindow extends GLWindow {
    */
   constructor(props) {
     super(props);
+
     this.state = {
       hoverX: null,
       hoverY: null,
@@ -346,8 +347,10 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
+    // Clear the canvas
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(false);
@@ -863,6 +866,9 @@ class GraphGLWindow extends GLWindow {
    * @param {object} nextProps
    */
   componentWillReceiveProps(nextProps) {
+    // Make sure canvas is re-sized so hover and selection work
+    this.resizeCanvas();
+
     // TODO:  Simplify and remove code duplication.
     if (!nextProps.decomposition) {
       return;
@@ -1021,34 +1027,27 @@ class GraphGLWindow extends GLWindow {
 
     if (this.vertColors && this.vertColors.length == this.vertices.length) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      let vertexColorAttribute =
-        gl.getAttribLocation(shader, 'vertexColor');
+      let vertexColorAttribute = gl.getAttribLocation(shader, 'vertexColor');
       if (vertexColorAttribute > 0) {
-        gl.vertexAttribPointer(vertexColorAttribute,
-          3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vertexColorAttribute);
       }
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
-    let sampleIndexAttribute =
-      gl.getAttribLocation(shader, 'sampleIndex');
+    let sampleIndexAttribute = gl.getAttribLocation(shader, 'sampleIndex');
     if (sampleIndexAttribute > 0) {
-      gl.vertexAttribPointer(
-        sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+      gl.vertexAttribPointer(sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
       gl.enableVertexAttribArray(sampleIndexAttribute);
     }
 
-    let nodeOutlineLocation =
-        gl.getUniformLocation(shader, 'nodeOutline');
+    let nodeOutlineLocation = gl.getUniformLocation(shader, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
-    let nodeSmoothnessLocation =
-        gl.getUniformLocation(shader, 'nodeSmoothness');
+    let nodeSmoothnessLocation = gl.getUniformLocation(shader, 'nodeSmoothness');
     gl.uniform1f(nodeSmoothnessLocation, this.nodeSmoothness);
 
-    let projectionMatrixLocation =
-        gl.getUniformLocation(shader, 'uProjectionMatrix');
+    let projectionMatrixLocation = gl.getUniformLocation(shader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
