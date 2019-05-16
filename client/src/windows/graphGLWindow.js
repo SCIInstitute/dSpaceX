@@ -10,8 +10,8 @@ import NodeVertexShaderSource from '../shaders/node.vert';
 import Paper from '@material-ui/core/Paper';
 import PickingFragmentShaderSource from '../shaders/picking.frag';
 import PickingVertexShaderSource from '../shaders/picking.vert';
-import PreviewTexturVertexeShaderSource from '../shaders/previewTexture.vert';
 import PreviewTextureFragmentShaderSource from '../shaders/previewTexture.frag';
+import PreviewTextureVertexShaderSource from '../shaders/previewTexture.vert';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
@@ -67,7 +67,6 @@ class GraphGLWindow extends GLWindow {
     this.edgeVerts_buffer = null;
 
     this.projectionMatrix = mat4.create();
-    this.bDrawEdgesAsQuads = null;
 
     this.scale = 1;
     this.xOffset = 0;
@@ -105,7 +104,7 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Event Handling for scroll wheel
+   * Event Handling for scroll wheel; zoom in and out of graph
    * @param {Event} event
    */
   handleScrollEvent(event) {
@@ -141,7 +140,7 @@ class GraphGLWindow extends GLWindow {
     if (event.button == 0) {
       let x = event.offsetX;
       let y = event.offsetY;
-      let id = this.getGeometryUnderCursor(x, y);
+      let id = this.getDesignUnderCursor(x, y);
       this.props.onDesignSelection(event, id);
     }
 
@@ -217,11 +216,12 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Looks up the texture value at the coordinate to determine
-   * what geometry is currently under the cursor for left click to select.
+   * what design is currently under the cursor for left click to select.
    * @param {number} x
    * @param {number} y
+   * @return {number} index of design
    */
-  getGeometryUnderCursor(x, y) {
+  getDesignUnderCursor(x, y) {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
@@ -371,6 +371,7 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Set up an orthographic projection.
+   * This is used to position the graph correctly in space.
    */
   setupOrtho() {
     const canvas = this.refs.canvas;
@@ -407,22 +408,6 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Return x,y pixel coords in gl coords
-   * @param {array} XY
-   * @return {array}
-   */
-  convertToGLCoords(XY) {
-    let canvas = this.refs.canvas;
-    let resolution = [canvas.clientWidth, canvas.clientHeight];
-    let zeroToOne = [XY[0] / resolution[0], XY[1] / resolution[1]];
-    let zeroToTwo = [zeroToOne[0] * 2, zeroToOne[1] * 2];
-    let clipSpace = [zeroToTwo[0] - 1, zeroToTwo[1] - 1];
-    let returnXY = [clipSpace[0], -clipSpace[1]];
-    return returnXY;
-  }
-
-
-  /**
    * Creates the geometry to be rendered.
    * TODO: Refactor this routine for maintainability and readablity.
    * @param {array} array2DVertsForNodes
@@ -431,12 +416,12 @@ class GraphGLWindow extends GLWindow {
    * @param {number} quadWidth
    * @param {bool} drawEdgesAsQuads
    */
-  createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
-    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
+  createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges, quadHeight = 0.1, quadWidth = 0.1) {
     this.sampleIndexes = [];
     this.vertColors = [];
-    this.bDrawEdgesAsQuads = drawEdgesAsQuads;
+    // this.bDrawEdgesAsQuads = true;
 
+    // Graph Vertex Geometry
     let arrLength = array2DVertsForNodes.length;
     this.nodes = new Array(arrLength);
     this.vertices = new Array(this.nodes.length * 18);
@@ -447,7 +432,6 @@ class GraphGLWindow extends GLWindow {
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
       let vertCount = quad.vertices.length;
-
       for (let j = 0; j < vertCount; j++) {
         this.vertices[i*vertCount + j] = quad.vertices[j];
       }
@@ -458,6 +442,7 @@ class GraphGLWindow extends GLWindow {
       this.nodes[i] = quad;
     }
 
+    // Graph Edge Geometry
     arrLength = arrayBeginEndIndicesForEdges.length;
     this.edges = new Array(arrLength);
     this.edgeVerts = new Array(this.edges.length * 18);
@@ -469,22 +454,11 @@ class GraphGLWindow extends GLWindow {
       let node1 = this.nodes[index1];
       let node2 = this.nodes[index2];
 
-      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
-        defaultEdgeThickness);
+      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y, defaultEdgeThickness);
 
       this.edges[i] = edge;
-      if (this.bDrawEdgesAsQuads) {
-        for (let j = 0; j < 18; j++) {
-          this.edgeVerts[i*18+j] = edge.vertices[j];
-        }
-      } else {
-        // push back xy1, uv1, xy2, uv2
-        this.edgeVerts[i * 6] = edge.x1;
-        this.edgeVerts[i * 6 + 1] = edge.y1;
-        this.edgeVerts[i * 6 + 2] = 0.0;
-        this.edgeVerts[i * 6 + 3] = edge.x2;
-        this.edgeVerts[i * 6 + 4] = edge.y2;
-        this.edgeVerts[i * 6 + 5] = 1.0;
+      for (let j = 0; j < 18; j++) {
+        this.edgeVerts[i*18+j] = edge.vertices[j];
       }
     }
   }
@@ -522,7 +496,7 @@ class GraphGLWindow extends GLWindow {
       PickingVertexShaderSource, PickingFragmentShaderSource);
 
     this.previewTextureShader = createShaderProgram(gl,
-      PreviewTexturVertexeShaderSource, PreviewTextureFragmentShaderSource);
+      PreviewTextureVertexShaderSource, PreviewTextureFragmentShaderSource);
 
     this.activeNodeShader = this.nodeShaderProgram;
   }
@@ -891,6 +865,7 @@ class GraphGLWindow extends GLWindow {
         qoiName === this.props.decomposition.decompositionField &&
         selectedDesigns !== this.props.selectedDesigns) {
       if (this.layout && this.adjacency) {
+        console.log(this.adjacency);
         this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
         if (this.qoi) {
           let min = Math.min(...this.qoi);
@@ -1079,11 +1054,8 @@ class GraphGLWindow extends GLWindow {
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
-    if (this.bDrawEdgesAsQuads) {
-      gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
-    } else {
-      gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 3);
-    }
+    gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
   }

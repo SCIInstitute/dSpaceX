@@ -21,32 +21,32 @@ export class Quad {
 
   /**
    * increase radius
-   * will increase the width and height by scaler value
-   * will update the vertice positions
-   * @param {number} scaler
+   * will increase the width and height by scalar value
+   * will update the vertex positions
+   * @param {number} scalar
    */
-  increaseRadius(scaler) {
-    this.width *= scaler;
-    this.height *= scaler;
+  increaseRadius(scalar) {
+    this.width *= scalar;
+    this.height *= scalar;
 
     this.updateVertices();
   }
 
   /**
    * decrease radius
-   * will decrease the width and height by scaler value
-   * will update the vertice positions
-   * @param {number} scaler
+   * will decrease the width and height by scalar value
+   * will update the vertex positions
+   * @param {number} scalar
    */
-  decreaseRadius(scaler) {
-    this.width = Math.max(0.002, this.width / scaler);
-    this.height = Math.max(0.002, this.height / scaler);
+  decreaseRadius(scalar) {
+    this.width = Math.max(0.002, this.width / scalar);
+    this.height = Math.max(0.002, this.height / scalar);
 
     this.updateVertices();
   }
 
   /**
-   * update vertice values
+   * update vertex values
    */
   updateVertices() {
     let minX = -(this.width / 2.0) + this.X;
@@ -89,36 +89,34 @@ export class Edge {
     this.width = lineWidth;
     let vectorX = x2 - x1;
     let vectorY = y2 - y1;
-    let lineVector = [vectorX, vectorY];
-    this.offsetVector = [lineVector[1], -lineVector[0]];
+    this.offsetVector = [vectorY, -vectorX];
 
     // Normalize the offset vector
-    let mag = Math.abs(Math.sqrt((this.offsetVector[0] * this.offsetVector[0])
-      + (this.offsetVector[1] * this.offsetVector[1])));
-    this.offsetVector = [this.offsetVector[0]/mag, this.offsetVector[1]/mag];
+    let euclidDist = Math.sqrt(Math.pow(this.offsetVector[0], 2) + Math.pow(this.offsetVector[1], 2));
+    this.offsetVector = [this.offsetVector[0]/euclidDist, this.offsetVector[1]/euclidDist];
 
     this.updateVertices();
   }
 
   /**
    * increase thickness
-   * will increase the width by scaler value
-   * will update the vertice positions
-   * @param {number} scaler
+   * will increase the width by scalar value
+   * will update the vertex positions
+   * @param {number} scalar
    */
-  increaseThickness(scaler) {
-    this.width *= scaler;
+  increaseThickness(scalar) {
+    this.width *= scalar;
     this.updateVertices();
   }
 
   /**
    * decrease thickness
-   * will decrease the width by scaler value
-   * will update the vertice positions
-   * @param {number} scaler
+   * will decrease the width by scalar value
+   * will update the vertex positions
+   * @param {number} scalar
    */
-  decreaseThickness(scaler) {
-    this.width = Math.max(0.0001, this.width / scaler);
+  decreaseThickness(scalar) {
+    this.width = Math.max(0.0001, this.width / scalar);
     this.updateVertices();
   }
 
