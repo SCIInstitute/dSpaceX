@@ -233,7 +233,7 @@ class GraphGLWindow extends GLWindow {
 
     let range = 255*255;
     let n = 1000;
-
+    console.log(readout);
     let r = readout[0];
     let g = readout[1];
     let b = readout[2];
@@ -360,7 +360,7 @@ class GraphGLWindow extends GLWindow {
 
     this.createShaders(gl);
     this.createBuffers(gl);
-    this.createFrameBuffers(gl);
+    this.createSelectionFrameBuffer(gl);
 
     webGLErrorCheck(gl);
 
@@ -477,23 +477,18 @@ class GraphGLWindow extends GLWindow {
     }
   }
 
-
   /**
    * Compiles vertex and fragment shader programs.
    * @param {object} gl The OpenGL context.
    */
   createShaders(gl) {
-    this.nodeShaderProgram = createShaderProgram(gl,
-      NodeVertexShaderSource, NodeFragmentShaderSource);
+    this.nodeShaderProgram = createShaderProgram(gl, NodeVertexShaderSource, NodeFragmentShaderSource);
 
-    this.edgeShaderProgram = createShaderProgram(gl,
-      EdgeVertexShaderSource, EdgeFragmentShaderSource);
+    this.edgeShaderProgram = createShaderProgram(gl, EdgeVertexShaderSource, EdgeFragmentShaderSource);
 
-    this.thumbnailShaderProgram = createShaderProgram(gl,
-      ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
+    this.thumbnailShaderProgram = createShaderProgram(gl, ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
 
-    this.pickingShaderProgram = createShaderProgram(gl,
-      PickingVertexShaderSource, PickingFragmentShaderSource);
+    this.pickingShaderProgram = createShaderProgram(gl, PickingVertexShaderSource, PickingFragmentShaderSource);
 
     this.previewTextureShader = createShaderProgram(gl,
       PreviewTextureVertexShaderSource, PreviewTextureFragmentShaderSource);
@@ -525,14 +520,13 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    // TODO: Refactor to support thumbnails of various/heterogenous sizes.
+    // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
     let width = this.thumbnails[0].width;
     let height = this.thumbnails[0].height;
     const MAX_TEXTURE_SIZE = 2048;
     const THUMBNAIL_WIDTH = 80;
     const THUMBNAIL_HEIGHT = 40;
-    let thumbnailsPerTextureRow =
-      Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
+    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 
     for (let i=0; i < this.thumbnails.length; i++) {
@@ -571,15 +565,19 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Creates render frame buffer and associated texture.
+   * The picking shader program is drawn to this framebuffer and
+   * used when hovering over or selecting designs.
    * @param {object} gl The OpenGL context.
    */
-  createFrameBuffers(gl) {
+  createSelectionFrameBuffer(gl) {
+    // Create FrameBuffer
     let canvas = this.refs.canvas;
     this.frameBuffer = gl.createFramebuffer();
     this.frameBuffer.width = canvas.clientWidth;
     this.frameBuffer.height = canvas.clientHeight;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 
+    // TODO better comment than -> Create Texture - empty by default, this is the target of a render.
     this.renderTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -635,7 +633,7 @@ class GraphGLWindow extends GLWindow {
    * Recreates render frame buffer and associated texture with new sizes.
    * @param {object} gl The OpenGL context.
    */
-  resizeFrameBuffers(gl) {
+  resizeSelectionFrameBuffer(gl) {
     // TODO: Tear down existing frame buffer and create new one with current
     //       size. Otherwise, node picking may not work after window resize.
   }
@@ -734,7 +732,7 @@ class GraphGLWindow extends GLWindow {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    this.resizeFrameBuffers();
+    this.resizeSelectionFrameBuffer();
     this.setupOrtho();
     requestAnimationFrame(this.renderGL);
   }
@@ -865,7 +863,6 @@ class GraphGLWindow extends GLWindow {
         qoiName === this.props.decomposition.decompositionField &&
         selectedDesigns !== this.props.selectedDesigns) {
       if (this.layout && this.adjacency) {
-        console.log(this.adjacency);
         this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
         if (this.qoi) {
           let min = Math.min(...this.qoi);
@@ -1067,7 +1064,7 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    // draw scene offscreen for picking
+    // draw scene offscreen for picking (selection)
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
