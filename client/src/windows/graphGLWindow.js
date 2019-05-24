@@ -958,6 +958,17 @@ class GraphGLWindow extends GLWindow {
     }
   }
 
+  /**
+   * React lifecycle method run after componenet updates
+   * @param {object} prevProps previous props
+   * @param {object} prevState previous state
+   * @param {object} prevContext previous context
+   */
+  componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
+      this.resizeCanvas();
+    }
+  }
 
   /**
    * Draw PreviewBox. Useful for debugging and

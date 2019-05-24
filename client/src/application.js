@@ -314,7 +314,8 @@ class Application extends React.Component {
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}/>
+                          onDesignSelection={this.onDesignSelection}
+                          numberOfWindows={this.state.windows.length}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
