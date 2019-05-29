@@ -12,12 +12,13 @@ ENDIF()
 ExternalProject_Add(googletest
    PREFIX "${GTEST_INSTALL_DIR}"
    GIT_REPOSITORY "https://github.com/google/googletest.git"
+   GIT_TAG "ec44c6c1675c25b9827aacd08c02433cccde7780"
    INSTALL_DIR "${GTEST_INSTALL_DIR}/include"
    BINARY_DIR "${GTEST_INSTALL_DIR}/lib"
    INSTALL_COMMAND ""
 )
 
-# Copy and Specfy Include Directory
+# Copy and Specify Include Directory
 ExternalProject_Get_Property(googletest source_dir)
 ExternalProject_Add_Step(
    googletest
@@ -28,7 +29,7 @@ ExternalProject_Add_Step(
 )
 include_directories("${GTEST_INSTALL_DIR}/include")
 
-# Set up librarie paths
+# Set up library paths
 ExternalProject_Get_Property(googletest binary_dir)
 SET(GTEST_LIBRARY_PATH ${binary_dir}/googlemock/gtest/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
 SET(GTEST_LIBRARY gtest)
