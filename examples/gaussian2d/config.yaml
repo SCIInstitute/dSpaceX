@@ -1,0 +1,13 @@
+name: Gaussian
+
+samples:
+  count: 2000
+
+geometry:
+  format: Linalg.DenseMatrix
+  file: Geom.data.hdr
+
+qois:
+  - name: function
+    format: Linalg.DenseVector
+    file: Function.data.hdr

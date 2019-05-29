@@ -1,0 +1,17 @@
+name: Heat Exchanger
+
+samples:
+  count: 7
+
+geometry:
+  format: ply
+  files: HX_???.ply
+
+parameters:
+  format: csv
+  file: parameters.csv
+
+qois:
+  format: csv
+  file: qois.csv
+

@@ -1,0 +1,29 @@
+name: Rocket
+
+samples:
+  count: 11000
+
+parameters:
+  format: csv
+  file: supershapes_asym_nonunit_design_params.csv
+
+qois:
+  format: csv
+  file: supershapes_asym_nonunit_design_params.csv
+
+thumbnails:
+  format: png
+  files: images/?.png
+  padZeroes: false
+  offset: 1
+
+#distances:
+#  format: csv
+#  file: distances.csv
+#  metric: euclidean
+
+#embeddings:
+#- name: tsne
+#  format: csv
+#  file: tsne_layout.csv
+

@@ -1,0 +1,12 @@
+name: SuperShapes-Gold
+
+samples:
+  count: 106
+
+parameters:
+  format: csv
+  file: gold_params.csv
+
+qois:
+  format: csv
+  file: gold_qois.csv
