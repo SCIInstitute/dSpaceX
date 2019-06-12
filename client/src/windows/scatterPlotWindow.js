@@ -253,7 +253,7 @@ class ScatterPlotWindow extends React.Component {
     d3.select(node).selectAll('*').remove();
 
     // Get necessary props and data
-    const { selectedDesigns } = this.props;
+    const { selectedDesigns, activeDesigns } = this.props;
     const { xAttributeGroup, xAttribute, yAttributeGroup, yAttribute,
       markerAttributeGroup, markerAttribute } = this.props.config;
 
@@ -329,8 +329,9 @@ class ScatterPlotWindow extends React.Component {
         .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
         .attr('r', (d) => cScale(d.marker))
         .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
-        .attr('fill-opacity', '0.75')
-        .attr('stroke', 'black');
+        .attr('fill-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15')
+        .attr('stroke', 'black')
+        .attr('stroke-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15');
     } else {
       const chartData = this.combineData(xValues, yValues, undefined);
       circles = d3.select(node).append('g')
@@ -345,7 +346,9 @@ class ScatterPlotWindow extends React.Component {
         .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
         .attr('r', 5)
         .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
-        .attr('stroke', 'black');
+        .attr('fill-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15')
+        .attr('stroke', 'black')
+        .attr('stroke-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15');
     }
 
     if (this.state.lassoEnabled) {

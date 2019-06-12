@@ -84,7 +84,7 @@ class GalleryWindow extends Component {
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
           && this.state.thumbnails.map((thumbnail, i) =>
-            (activeDesigns.size === 0 || activeDesigns.has(i)) && <Grid key={i} item>
+            activeDesigns.has(i) && <Grid key={i} item>
               <Paper
                 style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#3f51b5' : '#D3D3D3' }}>
                 <img alt={'Image:' + i} onClick={(e) => this.props.onDesignSelection(e, thumbnail.id)} height='75'

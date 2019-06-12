@@ -71,7 +71,6 @@ class Application extends React.Component {
       windows: [],
       filters: [],
       selectedDesigns: new Set(),
-      activeDesigns: new Set(),
       parameters: [],
       qois: [],
     };
@@ -183,7 +182,6 @@ class Application extends React.Component {
         currentDataset: dataset,
         windows: [],
         selectedDesigns: new Set(),
-        activeDesigns: new Set(),
         filters: [],
         parameters: parameters,
         qois: qois,
@@ -270,9 +268,7 @@ class Application extends React.Component {
       'numberOfBins': 10,
     };
     filters.push(filter);
-    this.setState({
-      activeDesigns: this.getActiveDesigns(filters),
-      filters: filters });
+    this.setState({ filters });
   }
 
   /**
@@ -283,9 +279,7 @@ class Application extends React.Component {
     let filters = [...this.state.filters];
     let index = filters.findIndex((f) => f.id === filterConfig.id);
     filters[index] = filterConfig;
-    this.setState({
-      activeDesigns: this.getActiveDesigns(filters),
-      filters: filters });
+    this.setState({ filters });
   }
 
   /**
@@ -295,9 +289,7 @@ class Application extends React.Component {
   onRemoveFilter(id) {
     let filters = [...this.state.filters];
     filters = filters.filter((f) => f.id !== id);
-    this.setState({
-      activeDesigns: this.getActiveDesigns(filters),
-      filters: filters });
+    this.setState({ filters });
   }
 
   /**
@@ -337,9 +329,13 @@ class Application extends React.Component {
    * are applied
    * @return {Set} indexes of images that should be visible
    */
-  getActiveDesigns(filters) {
+  getActiveDesigns() {
+    if (this.state.currentDataset === null) {
+      return new Set();
+    }
+
     const { numberOfSamples } = this.state.currentDataset;
-    const { parameters, qois } = this.state;
+    const { filters, parameters, qois } = this.state;
     if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
       return new Set([...Array(numberOfSamples).keys()]);
     } else {
@@ -368,10 +364,11 @@ class Application extends React.Component {
 
   /**
    * Renders the component to HTML.
-   * @return {HTML}
+   * @return {JSX}
    */
   render() {
     const { classes } = this.props;
+    const activeDesigns = this.getActiveDesigns();
     let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
     return (
       <DSXProvider value={{ client:this.client }}>
@@ -383,7 +380,7 @@ class Application extends React.Component {
             networkActive={this.state.networkActive}
             onDisplayFilterDrawer={this.onDisplayFilterDrawer}
             displayFilterDrawer={this.state.displayFilterDrawer}
-            filtersEnabled={this.state.activeDesigns.length > 0}/>
+            filtersEnabled={this.state.filters.filter((f) => f.enabled).length > 0}/>
           <Drawer PaperProps={{ elevation:6 }} variant='permanent'
             classes={{ paper:classes.drawerPaper }}>
             { /* Add div to account for menu bar */ }
@@ -476,7 +473,8 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          onDesignLasso={this.onDesignLasso}/>
+                          onDesignLasso={this.onDesignLasso}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (
@@ -484,7 +482,7 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          activeDesigns={this.state.activeDesigns}/>);
+                          activeDesigns={activeDesigns}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>
