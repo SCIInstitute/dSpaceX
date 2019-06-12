@@ -1,10 +1,12 @@
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
+import Icon from '@mdi/react';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import MaterialToolbar from '@material-ui/core/Toolbar';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Typography from '@material-ui/core/Typography';
+import { mdiFilter } from '@mdi/js';
 import { withStyles } from '@material-ui/core/styles';
 
 
@@ -44,6 +46,11 @@ class Toolbar extends React.Component {
             display: 'flex',
             flexDirection: 'row-reverse',
           }}>
+            <Button variant='raised' style={{ backgroundColor:'white', marginLeft:'5px' }}
+              disabled={!this.props.dataset}>
+              <Icon path={mdiFilter} size={0.75} color='grey' style={{ paddingRight:'5px' }}/>
+              Filter
+            </Button>
             <Button variant='raised' style={{ backgroundColor:'white' }}
               onClick={this.props.onConnectClick}
               disabled={this.props.connectedToServer} >
