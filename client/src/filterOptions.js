@@ -6,6 +6,7 @@ import IconButton from '@material-ui/core/es/IconButton/IconButton';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/es/MenuItem/MenuItem';
+import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -128,8 +129,8 @@ class FilterOptions extends Component {
   render() {
     const { classes, removeFilter, filterConfig, parameters, qois } = this.props;
     return (
-      <div style={{ width:'200px', marginLeft:'10px' }}>
-        <IconButton variant='raised' style={{ marginLeft:'165px' }} onClick={() => removeFilter(filterConfig.id)}>
+      <Paper style={{ paddingLeft:'10px', paddingRight:'10px', paddingBottom:'20px' }}>
+        <IconButton variant='raised' style={{ marginLeft:'170px' }} onClick={() => removeFilter(filterConfig.id)}>
           <Close className={classes.icon} fontSize='small'/>
         </IconButton>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
@@ -161,7 +162,7 @@ class FilterOptions extends Component {
         </FormControl>
         {filterConfig.attributeGroup && filterConfig.attribute &&
         <Histogram
-          size={[190, 100]}
+          size={[200, 100]}
           data={this.getHistogramData()}
           brushEnabled={true}
           filterCount={this.props.filterCount}
@@ -182,7 +183,7 @@ class FilterOptions extends Component {
             <MenuItem value={50}>50</MenuItem>
           </Select>
         </FormControl>}
-      </div>);
+      </Paper>);
   }
 }
 

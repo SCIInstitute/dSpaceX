@@ -1,12 +1,16 @@
 import React, { Component } from 'react';
-import { AddCircle } from '@material-ui/icons';
+import Button from '@material-ui/core/Button';
 import Drawer from '@material-ui/core/Drawer';
 import FilterOptions from '../filterOptions';
-import IconButton from '@material-ui/core/es/IconButton/IconButton';
 import { withStyles } from '@material-ui/core/styles';
 
+const drawerWidth = 230;
 const styles = (theme) => ({
   toolbar: theme.mixins.toolbar,
+  drawerPaper: {
+    width: drawerWidth,
+    overflowX: 'hidden',
+  },
 });
 
 /**
@@ -45,26 +49,25 @@ class FilterPanel extends Component {
    * @return {jsx}
    */
   render() {
-    const { classes, filters, addFilter } = this.props;
+    const { classes, filters, addFilter, updateFilter, removeFilter, qois, parameters } = this.props;
     return (
       <Drawer open={true} PaperProps={{ elevation:6 }} variant='persistent'
         classes={{ paper:classes.drawerPaper }} anchor='right'>
         { /* Add div to account for menu bar */ }
         <div className={classes.toolbar} />
-        <div style={{ width:'50px', height:'50px' }}>
-          <IconButton variant='raised' onClick={() => addFilter(this.getId())}>
-            <AddCircle className={classes.icon} color='disabled' fontSize='large'/>
-          </IconButton>
-        </div>
-        {filters.sort((a, b) => b.id - a.id).map((filterConfig, i) => {
+        <Button color="primary" className={classes.button}
+          onClick={() => addFilter(this.getId())}>
+          Add Filter
+        </Button>
+        {filters.sort((a, b) => a.id - b.id).map((filterConfig, i) => {
           return <FilterOptions
             key={i}
             filterCount={filters.length}
             filterConfig={filterConfig}
-            parameters={this.props.parameters}
-            qois={this.props.qois}
-            updateFilter={this.props.updateFilter}
-            removeFilter={this.props.removeFilter}/>;
+            parameters={parameters}
+            qois={qois}
+            updateFilter={updateFilter}
+            removeFilter={removeFilter}/>;
         })}
       </Drawer>);
   }

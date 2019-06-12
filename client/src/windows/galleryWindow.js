@@ -71,47 +71,11 @@ class GalleryWindow extends Component {
   }
 
   /**
-   * Gets the images that should be displayed after the filters
-   * are applied
-   * @return {Set} indexes of images that should be visible
-   */
-  getVisibleImages() {
-    const { numberOfSamples } = this.props.dataset;
-    const { filters, parameters, qois } = this.props;
-    console.log(filters);
-    if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
-      return new Set([...Array(numberOfSamples).keys()]);
-    } else {
-      let visibleImages = new Set();
-      const enabledFilters = filters.filter((f) => f.enabled);
-      enabledFilters.forEach((f) => {
-        if (f.attributeGroup === 'parameters') {
-          let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
-          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
-          visibleParams.forEach((value) => {
-            let index = params.findIndex((v) => v === value);
-            visibleImages.add(index);
-          });
-        } else if (f.attributeGroup === 'qois') {
-          let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
-          let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
-          visibleQois.forEach((value) => {
-            let index = qois.findIndex((v) => v === value);
-            visibleImages.add(index);
-          });
-        }
-      });
-      return visibleImages;
-    }
-  }
-
-  /**
    *  Renders the Gallery Window
    * @return {jsx}
    */
   render() {
-    const visibleImages = this.getVisibleImages();
-    const { selectedDesigns } = this.props;
+    const { activeDesigns, selectedDesigns } = this.props;
     return (
       <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
         <Grid container
@@ -120,7 +84,7 @@ class GalleryWindow extends Component {
           style={{ margin:'5px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
           && this.state.thumbnails.map((thumbnail, i) =>
-            visibleImages.has(i) && <Grid key={i} item>
+            (activeDesigns.size === 0 || activeDesigns.has(i)) && <Grid key={i} item>
               <Paper
                 style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#3f51b5' : '#D3D3D3' }}>
                 <img alt={'Image:' + i} onClick={(e) => this.props.onDesignSelection(e, thumbnail.id)} height='75'

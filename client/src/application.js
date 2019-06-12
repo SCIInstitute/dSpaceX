@@ -20,7 +20,6 @@ import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
 
-
 const drawerWidth = 260;
 const styles = (theme) => ({
   root: {
@@ -67,10 +66,12 @@ class Application extends React.Component {
       connected: false,
       networkActive: false,
       currentDataset: null,
+      displayFilterDrawer: false,
       datasets: [],
       windows: [],
-      selectedDesigns: new Set(),
       filters: [],
+      selectedDesigns: new Set(),
+      activeDesigns: new Set(),
       parameters: [],
       qois: [],
     };
@@ -85,6 +86,7 @@ class Application extends React.Component {
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
     this.onDesignSelection = this.onDesignSelection.bind(this);
     this.onDesignLasso = this.onDesignLasso.bind(this);
+    this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
     this.onRemoveFilter = this.onRemoveFilter.bind(this);
@@ -181,6 +183,8 @@ class Application extends React.Component {
         currentDataset: dataset,
         windows: [],
         selectedDesigns: new Set(),
+        activeDesigns: new Set(),
+        filters: [],
         parameters: parameters,
         qois: qois,
       });
@@ -242,6 +246,15 @@ class Application extends React.Component {
   }
 
   /**
+   * Open and closes filter drawer when 'Filter' button is clicked
+   */
+  onDisplayFilterDrawer() {
+    this.setState({
+      displayFilterDrawer: !this.state.displayFilterDrawer,
+    });
+  }
+
+  /**
    * Handles when a new filter is added by selecting the '+' icon
    * @param {int} id
    */
@@ -257,7 +270,9 @@ class Application extends React.Component {
       'numberOfBins': 10,
     };
     filters.push(filter);
-    this.setState({ filters });
+    this.setState({
+      activeDesigns: this.getActiveDesigns(filters),
+      filters: filters });
   }
 
   /**
@@ -268,7 +283,9 @@ class Application extends React.Component {
     let filters = [...this.state.filters];
     let index = filters.findIndex((f) => f.id === filterConfig.id);
     filters[index] = filterConfig;
-    this.setState({ filters });
+    this.setState({
+      activeDesigns: this.getActiveDesigns(filters),
+      filters: filters });
   }
 
   /**
@@ -278,7 +295,9 @@ class Application extends React.Component {
   onRemoveFilter(id) {
     let filters = [...this.state.filters];
     filters = filters.filter((f) => f.id !== id);
-    this.setState({ filters });
+    this.setState({
+      activeDesigns: this.getActiveDesigns(filters),
+      filters: filters });
   }
 
   /**
@@ -314,6 +333,40 @@ class Application extends React.Component {
   }
 
   /**
+   * Gets the images that should be displayed after the filters
+   * are applied
+   * @return {Set} indexes of images that should be visible
+   */
+  getActiveDesigns(filters) {
+    const { numberOfSamples } = this.state.currentDataset;
+    const { parameters, qois } = this.state;
+    if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
+      return new Set([...Array(numberOfSamples).keys()]);
+    } else {
+      let activeDesigns = new Set();
+      const enabledFilters = filters.filter((f) => f.enabled);
+      enabledFilters.forEach((f) => {
+        if (f.attributeGroup === 'parameters') {
+          let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+          visibleParams.forEach((value) => {
+            let index = params.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        } else if (f.attributeGroup === 'qois') {
+          let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+          let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
+          visibleQois.forEach((value) => {
+            let index = qois.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        }
+      });
+      return activeDesigns;
+    }
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -327,7 +380,10 @@ class Application extends React.Component {
           <Toolbar connectedToServer={this.state.connected}
             dataset={this.state.currentDataset}
             onConnectClick={this.connectButtonClicked}
-            networkActive={this.state.networkActive} />
+            networkActive={this.state.networkActive}
+            onDisplayFilterDrawer={this.onDisplayFilterDrawer}
+            displayFilterDrawer={this.state.displayFilterDrawer}
+            filtersEnabled={this.state.activeDesigns.length > 0}/>
           <Drawer PaperProps={{ elevation:6 }} variant='permanent'
             classes={{ paper:classes.drawerPaper }}>
             { /* Add div to account for menu bar */ }
@@ -365,7 +421,7 @@ class Application extends React.Component {
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
             <div className={classes.toolbar}/>
-            {true && <FilterPanel parameters={this.state.parameters}
+            {this.state.displayFilterDrawer && <FilterPanel parameters={this.state.parameters}
               qois={this.state.qois}
               filters={this.state.filters}
               addFilter={this.onAddFilter}
@@ -428,9 +484,7 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          filters={this.state.filters}
-                          parameters={this.state.parameters}
-                          qois={this.state.qois}/>);
+                          activeDesigns={this.state.activeDesigns}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>

@@ -46,9 +46,14 @@ class Toolbar extends React.Component {
             display: 'flex',
             flexDirection: 'row-reverse',
           }}>
-            <Button variant='raised' style={{ backgroundColor:'white', marginLeft:'5px' }}
-              disabled={!this.props.dataset}>
-              <Icon path={mdiFilter} size={0.75} color='grey' style={{ paddingRight:'5px' }}/>
+            <Button variant='raised' style={{
+              backgroundColor: this.props.displayFilterDrawer ? '#ddd' : 'white',
+              marginLeft: '5px' }}
+            disabled={!this.props.dataset}
+            onClick={this.props.onDisplayFilterDrawer}>
+              <Icon path={mdiFilter} size={0.75}
+                color={this.props.filtersEnabled ? 'green' : 'grey'}
+                style={{ paddingRight:'5px' }}/>
               Filter
             </Button>
             <Button variant='raised' style={{ backgroundColor:'white' }}
