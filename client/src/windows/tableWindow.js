@@ -19,6 +19,9 @@ const styles = (theme) => ({
   selected: {
     backgroundColor: '#c5cae8',
   },
+  active: {
+    backgroundColor: '#D3D3D3',
+  },
 });
 
 /**
@@ -154,11 +157,26 @@ class TableWindow extends React.Component {
   }
 
   /**
+   * Get the right class name for the table row
+   * @param {number} id
+   * @return {Object} class name
+   */
+  getClassName(id) {
+    const { classes, selectedDesigns, activeDesigns } = this.props;
+    if (selectedDesigns.has(id)) {
+      return classes.selected;
+    } else if (activeDesigns.has(id)) {
+      return classes.active;
+    }
+    return classes.row;
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
   render() {
-    const { classes, selectedDesigns } = this.props;
+    const { classes } = this.props;
 
     let columnNames = [];
     if (this.props.attributeGroup === 'parameters') {
@@ -189,7 +207,7 @@ class TableWindow extends React.Component {
                   return (
                     <TableRow
                       key={i}
-                      className={selectedDesigns.has(i) ? classes.selected : classes.row}
+                      className={this.getClassName(i)}
                       onClick={(e) => this.props.onDesignSelection(e, i)}>
                       <TableCell numeric padding='dense'>{i}</TableCell>
                       {

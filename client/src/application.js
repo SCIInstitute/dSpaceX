@@ -455,7 +455,8 @@ class Application extends React.Component {
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}/>
+                          onDesignSelection={this.onDesignSelection}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
@@ -464,7 +465,8 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          numberOfWindows={this.state.windows.length}/>
+                          numberOfWindows={this.state.windows.length}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
