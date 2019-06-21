@@ -249,7 +249,7 @@ class Client {
    * @param {array} crystalIds
    * @return {Promise}
    */
-  fetchMoreSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
+  fetchMorseSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
     let command = {
       name: 'fetchMorseSmaleCrystals',
       datasetId: datasetId,

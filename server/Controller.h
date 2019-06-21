@@ -4,7 +4,7 @@
 #include "hdprocess/HDProcessResult.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
-#include <jsoncpp/json.h>
+#include <jsoncpp/json/json.h>
 
 #include <map>
 #include <functional>

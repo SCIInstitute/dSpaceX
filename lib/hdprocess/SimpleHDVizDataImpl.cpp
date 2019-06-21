@@ -67,7 +67,8 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
     auto ef = m_data->extremaValues[level];
     efmin[level] = FortranLinalg::Linalg<Precision>::Min(ef);
     efmax[level] = FortranLinalg::Linalg<Precision>::Max(ef);
-    
+
+    // Rescaling/min-max normalization of extrema
     auto ez = FortranLinalg::DenseVector<Precision>(ef.N());
     FortranLinalg::Linalg<Precision>::Subtract(ef, efmin[level], ez);
     FortranLinalg::Linalg<Precision>::Scale(ez, 1.f/(efmax[level] - efmin[level]), ez);
@@ -85,7 +86,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
 
       for(unsigned int k=0; k< yw[i].N(); k++){  
         if(yw[i](k) < widthMin[level]){
-          widthMin[level] = yw[i]( k);
+          widthMin[level] = yw[i](k);
         }      
         if(yw[i](k) > widthMax[level]){
           widthMax[level] = yw[i](k);
@@ -168,7 +169,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(resul
 
   computeScaledLayouts();
   //
-};
+} // END CONSTRUCTOR
 
 void SimpleHDVizDataImpl::computeScaledLayouts() {
   // Resize vectors

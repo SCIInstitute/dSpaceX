@@ -10,7 +10,7 @@
 #include "hdprocess/LegacyTopologyDataImpl.h"
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
-#include <jsoncpp/json.h>
+#include <jsoncpp/json/json.h>
 #include "precision/Precision.h"
 #include "serverlib/wst.h"
 #include "util/DenseVectorSample.h"
@@ -141,8 +141,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
 /**
  * Handle the command to fetch list of available datasets.
  */
-void Controller::fetchDatasetList(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchDatasetList(const Json::Value &request, Json::Value &response) {
   response["datasets"] = Json::Value(Json::arrayValue);
 
   for (size_t i=0; i < m_availableDatasets.size(); i++) {
@@ -156,8 +155,7 @@ void Controller::fetchDatasetList(
 /**
  * Handle the command to load and fetch details of a dataset.
  */
-void Controller::fetchDataset(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchDataset(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -195,8 +193,7 @@ void Controller::fetchKNeighbors(
   int n = m_currentDataset->getDistanceMatrix().N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
-  Distance<Precision>::findKNN(
-      m_currentDataset->getDistanceMatrix(), KNN, KNND);
+  Distance<Precision>::findKNN(m_currentDataset->getDistanceMatrix(), KNN, KNND);
 
   response["datasetId"] = datasetId;
   response["k"] = k;
@@ -247,8 +244,7 @@ void Controller::fetchMorseSmalePersistence(
 /**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
-void Controller::fetchMorseSmalePersistenceLevel(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -293,8 +289,7 @@ void Controller::fetchMorseSmalePersistenceLevel(
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
-void Controller::fetchMorseSmaleCrystal(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.

@@ -8,10 +8,10 @@ FIND_PACKAGE(Freetype REQUIRED)
 FIND_PACKAGE(FTGL REQUIRED)
 FIND_PACKAGE(Threads)
 #FIND_PACKAGE(GLE)
-find_package(PNG REQUIRED)
+FIND_PACKAGE(PNG REQUIRED)
 
 
-set(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_BUILD_TYPE "Debug")
 
 # option(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
 # option(BUILD_HDVIZPORCESSING "Build HDViz preprocessing tool" OFF)
