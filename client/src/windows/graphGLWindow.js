@@ -233,7 +233,6 @@ class GraphGLWindow extends GLWindow {
 
     let range = 255*255;
     let n = 1000;
-    console.log(readout);
     let r = readout[0];
     let g = readout[1];
     let b = readout[2];
@@ -1115,7 +1114,13 @@ class GraphGLWindow extends GLWindow {
    * @return {HTML}
    */
   render() {
-    let style = {
+    let paperStyle = {
+      position: 'relative',
+      border: '1px solid gray',
+      flexBasis: '50%',
+    };
+
+    let canvasStyle = {
       width: '100%',
       height: '100%',
       boxSizing: 'border-box',
@@ -1132,42 +1137,40 @@ class GraphGLWindow extends GLWindow {
     }
 
     return (
-      <React.Fragment>
-        <Paper style={{ position:'relative', border:'1px solid gray' }}>
-          <canvas ref='canvas' className='glCanvas' style={style} />
-          {
-            this.state.hoverNode ? (<Paper style={{
-              position: 'absolute',
-              width: '120px',
-              padding: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              top: (this.state.hoverY - 10) + 'px',
-              left: (this.state.hoverX + 10) + 'px',
-            }}>
-              <Typography>
-                { 'Sample: ' + this.state.hoverNode }
-              </Typography>
-              { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
-              { imageBase64 ?
-                <img src={'data:image/png;base64, ' + imageBase64}
-                  style = {{
-                    display: 'block',
-                    borderColor: '#ddd',
-                    borderSize: '1px',
-                    borderStyle: 'solid',
-                    maxWidth: '115px',
-                    width: 'auto',
-                    height: 'auto',
-                  }} /> :
-                []
-              }
-            </Paper>) :
+      <Paper style={paperStyle}>
+        <canvas ref='canvas' className='glCanvas' style={canvasStyle} />
+        {
+          this.state.hoverNode ? (<Paper style={{
+            position: 'absolute',
+            width: '120px',
+            padding: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            top: (this.state.hoverY - 10) + 'px',
+            left: (this.state.hoverX + 10) + 'px',
+          }}>
+            <Typography>
+              { 'Sample: ' + this.state.hoverNode }
+            </Typography>
+            { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
+            { imageBase64 ?
+              <img src={'data:image/png;base64, ' + imageBase64}
+                style = {{
+                  display: 'block',
+                  borderColor: '#ddd',
+                  borderSize: '1px',
+                  borderStyle: 'solid',
+                  maxWidth: '115px',
+                  width: 'auto',
+                  height: 'auto',
+                }} /> :
               []
-          }
-          <ErrorDialog ref='errorDialog' />
-        </Paper>
-      </React.Fragment>
+            }
+          </Paper>) :
+            []
+        }
+        <ErrorDialog ref='errorDialog' />
+      </Paper>
     );
   }
 }

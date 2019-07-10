@@ -347,12 +347,7 @@ class DecompositionPanel extends React.Component {
                   name: 'mode',
                   id: 'mode-field',
                 }}>
-                {/* This code change was for the demo only - morse smale did not make sense because we were not doing
-                morse smales*/}
                 <MenuItem value='Morse-Smale'>
-                  <em>Color Encoding (QOI)</em>
-                </MenuItem>
-                <MenuItem value='Morse-Smale2' disabled={true}>
                   <em>Morse-Smale</em>
                 </MenuItem>
                 <MenuItem value='Shape-Odds' disabled={true}>

@@ -18,6 +18,7 @@ import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
+import MsGraphWindow from "./windows/msGraphWindow";
 
 const drawerWidth = 260;
 const styles = (theme) => ({
@@ -310,7 +311,8 @@ class Application extends React.Component {
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
-                        <GraphGLWindow key={i}
+                        <MsGraphWindow
+                          key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
