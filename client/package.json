@@ -46,8 +46,8 @@
     "expand-range": "^2.0.2",
     "gl-matrix": "^2.4.1",
     "inquirer": "^6.2.2",
-    "lodash": "^4.17.11",
-    "npm": "^6.9.0",
+    "lodash": "^4.17.13",
+    "npm": "^6.10.0",
     "prop-types": "^15.6.1",
     "react": "^16.3.0",
     "react-dom": "^16.3.0"
