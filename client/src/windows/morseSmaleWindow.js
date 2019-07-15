@@ -51,6 +51,15 @@ class MorseSmaleWindow extends React.Component {
     gl.drawArrays(primitiveType, 0, (positions.length / size));
   }
 
+  componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.decomposition !== null) {
+      const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((r) => {
+        console.log(r);
+      });
+    }
+  }
+
   /**
    * Renders Morse-Smale Decomposition
    * @return {JSX} Morse-Smale JSX component

@@ -51,6 +51,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleLayoutForPersistenceLevel", std::bind(&Controller::fetchMorseSmaleLayoutForPersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -62,7 +63,6 @@ void Controller::configureCommandHandlers() {
  */
 
 void Controller::configureAvailableDatasets(const std::string &path) {
-
   boost::filesystem::path rootPath(path);
   if (!boost::filesystem::is_directory(rootPath)) {
     std::cout << "Data path " << rootPath.string() << " is not a valid directory." << std::endl;
@@ -382,6 +382,11 @@ void Controller::fetchMorseSmaleDecomposition(
   }
 }
 
+/**
+ * This fetches the graph embedding layout for a given persistence level
+ * @param request
+ * @param response
+ */
 void Controller::fetchLayoutForPersistenceLevel(
     const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
@@ -457,6 +462,52 @@ void Controller::fetchLayoutForPersistenceLevel(
   }
 }
 
+void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message.
+  }
+
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
+
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  // Get points for regression line
+  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+  int numberOfSamples = m_currentVizData->getNumberOfSamples();
+  double points[4][3];
+
+  // For each crystal
+  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); ++i) {
+    // Get layout for each crystal
+    for (unsigned int n = 0; n < layout[i].N(); ++n) {
+      for(unsigned int m = 0; m < layout[i].M(); ++m) {
+        points[n+1][m] = layout[i](m, k);
+      }
+      points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+    }
+    // TODO figure out what this is for - copied from DisplayTubes.cpp
+    for (unsigned int j = 0; j < 3; ++j) {
+      points[0][j] = points[1][j] + points[2][j] - points[1][j];
+      points[m_currentVizData->getNumberOfSamples() + 1][j] =
+          points[m_currentVizData->getNumberOfSamples()][j] +
+          points[m_currentVizData->getNumberOfSamples()][j] -
+          points[m_currentVizData->getNumberOfSamples() - 1][j];
+    }
+  }
+  std::cout << points;
+}
 /**
  * Handle the command to fetch an array of a named parameter.
  */

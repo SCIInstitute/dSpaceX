@@ -20,7 +20,7 @@ class MsGraphWindow extends React.Component {
           selectedDesigns={this.props.selectedDesigns}
           onDesignSelection={this.props.onDesignSelection}
           numberOfWindows={this.props.numberOfWindows}/>
-        <MorseSmaleWindow/>
+        <MorseSmaleWindow dataset={this.props.dataset} decomposition={this.props.decomposition}/>
       </div>
     );
   }
