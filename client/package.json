@@ -51,6 +51,7 @@
     "prop-types": "^15.6.1",
     "react": "^16.3.0",
     "react-dom": "^16.3.0",
-    "style-loader": "^0.23.1"
+    "style-loader": "^0.23.1",
+    "three": "^0.106.2"
   }
 }

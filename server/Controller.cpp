@@ -484,29 +484,38 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
   }
 
   // Get points for regression line
-  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
-  int numberOfSamples = m_currentVizData->getNumberOfSamples();
-  double points[4][3];
+  std::vector<FortranLinalg::DenseMatrix<Precision>> layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+//  double points[m_currentVizData->getNumberOfSamples()+2][3];
 
   // For each crystal
-  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); ++i) {
+  response["crystals"] = Json::Value(Json::arrayValue);
+  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
     // Get layout for each crystal
+    Json::Value crystalObject(Json::objectValue);
+    crystalObject["id"] = i;
+    crystalObject["regressionPoints"] = Json::Value(Json::arrayValue);
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
+      auto row = Json::Value(Json::arrayValue);
       for(unsigned int m = 0; m < layout[i].M(); ++m) {
-        points[n+1][m] = layout[i](m, k);
+        row.append(layout[i](m, n));
       }
-      points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+      row.append(m_currentVizData->getMeanNormalized(persistenceLevel)[i](n));
+      crystalObject["regressionPoints"].append(row);
     }
-    // TODO figure out what this is for - copied from DisplayTubes.cpp
-    for (unsigned int j = 0; j < 3; ++j) {
-      points[0][j] = points[1][j] + points[2][j] - points[1][j];
-      points[m_currentVizData->getNumberOfSamples() + 1][j] =
-          points[m_currentVizData->getNumberOfSamples()][j] +
-          points[m_currentVizData->getNumberOfSamples()][j] -
-          points[m_currentVizData->getNumberOfSamples() - 1][j];
-    }
+
+
+    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
+//    auto row = Json::Value(Json::arrayValue);
+//    for (unsigned int j = 0; j < 3; ++j) {
+//      points[0][j] = points[1][j] + points[2][j] - points[1][j];
+//      points[m_currentVizData->getNumberOfSamples() + 1][j] =
+//          points[m_currentVizData->getNumberOfSamples()][j] +
+//          points[m_currentVizData->getNumberOfSamples()][j] -
+//          points[m_currentVizData->getNumberOfSamples() - 1][j];
+//    }
+
+    response["crystals"].append(crystalObject);
   }
-  std::cout << points;
 }
 /**
  * Handle the command to fetch an array of a named parameter.

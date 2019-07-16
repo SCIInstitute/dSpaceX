@@ -1,8 +1,6 @@
-import { createShaderProgram, webGLErrorCheck } from './glUtils';
-import LineFragmentShaderSource from '../shaders/line.frag';
-import LineVertexShaderSource from '../shaders/line.vert';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
+import * as THREE from 'three';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -20,44 +18,49 @@ class MorseSmaleWindow extends React.Component {
   }
 
   componentDidMount() {
-    // Create program
-    const canvas = this.refs.msCanvas;
+    let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
-    let program = createShaderProgram(gl, LineVertexShaderSource, LineFragmentShaderSource);
 
-    // Provide data to program
-    let positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
-
-    let positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-
-    let positions = [0, 0, 0.45, 0, 0.45, 0, 0.45, 0.45, 0.45, 0.45, 0, 0.45];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(program);
-
-    gl.enableVertexAttribArray(positionAttributeLocation);
-    let size = 2;
-    let type = gl.FLOAT;
-    let normalize = false;
-    let stride = 0;
-    let offset = 0;
-    gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
-
-    let primitiveType = gl.LINES;
-    gl.drawArrays(primitiveType, 0, (positions.length / size));
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(75, canvas.clientWidth/canvas.clientHeight, 0.1, 1000);
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   }
 
   componentDidUpdate(prevProps, prevState, prevContext) {
-    if (this.props.decomposition !== null) {
+    if (this.props.decomposition === null) {
+      return;
+    }
+
+    if (prevProps.decomposition === null
+      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((r) => {
-        console.log(r);
+        r.crystals.forEach((c) => {
+          let rPoints = [];
+          c.regressionPoints.forEach((rp) => {
+            rPoints.push(new THREE.Vector3(rp[0], rp[1], rp[2]));
+          });
+          console.log(rPoints); // TODO tomorrow draw the curve :)
+        });
       });
     }
+  }
+
+  /**
+   * If any of the decomposition settings have changed returns true
+   * for new decomposition
+   * @param {object} prevDecomposition - the previous decomposition
+   * @param {object} currentDecomposition - the current decomposition
+   * @return {boolean} true if any of the decomposition settings have changed.
+   */
+  isNewDecomposition(prevDecomposition, currentDecomposition) {
+    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
+      || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
+      || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+      || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
+      || prevDecomposition.k !== currentDecomposition.k
+      || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
   }
 
   /**
