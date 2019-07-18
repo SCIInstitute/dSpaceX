@@ -673,7 +673,7 @@ void Controller::maybeProcessData(int k) {
         m_currentDistanceMatrix,
         m_currentDataset->getQoiVector(0),
         m_currentK  /* knn */,
-        25        /* samples */,
+        50        /* samples */,
         20        /* persistence */,
         true      /* random */,
         0.25      /* sigma */,

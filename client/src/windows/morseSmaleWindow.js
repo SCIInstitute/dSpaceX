@@ -1,6 +1,6 @@
+import * as THREE from 'three';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
-import * as THREE from 'three';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -15,16 +15,32 @@ class MorseSmaleWindow extends React.Component {
     super(props);
 
     this.client = this.props.dsxContext.client;
+    this.animate = this.animate.bind(this);
   }
 
   componentDidMount() {
+    // Create renderer, camera, and scene
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
+    console.log('Initial Renderer.');
+    console.log(this.renderer);
+    this.renderer.setSize( canvas.clientWidth, canvas.clientHeight );
+
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
+    let sx = 1;
+    let sy = 1;
+    if (width > height) {
+      sx = width/height;
+    } else {
+      sy = height/width;
+    }
+    this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
+    this.camera.position.z = 1;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(75, canvas.clientWidth/canvas.clientHeight, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.scene.add(this.camera);
   }
 
   componentDidUpdate(prevProps, prevState, prevContext) {
@@ -34,17 +50,64 @@ class MorseSmaleWindow extends React.Component {
 
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
-      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((r) => {
-        r.crystals.forEach((c) => {
-          let rPoints = [];
-          c.regressionPoints.forEach((rp) => {
-            rPoints.push(new THREE.Vector3(rp[0], rp[1], rp[2]));
+      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((response) => {
+        response.crystals.forEach((crystal) => {
+          let curvePoints = [];
+          crystal.regressionPoints.forEach((regressionPoint) => {
+            curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
           });
-          console.log(rPoints); // TODO tomorrow draw the curve :)
+          // Create curve
+          let curve = new THREE.CatmullRomCurve3(curvePoints);
+          let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .01, 50, false);
+          let curveMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              color1: {
+                value: new THREE.Color('green'),
+              },
+              color2: {
+                value: new THREE.Color('red'),
+              },
+              bboxMin: {
+                value: 1,
+              },
+              bboxMax: {
+                value: 100,
+              },
+            },
+            vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);}`,
+            fragmentShader: `
+        uniform vec3 color1;
+        uniform vec3 color2;
+
+        varying vec2 vUv;
+
+        void main() {
+          gl_FragColor = vec4(mix(color1, color2, vUv.x), 1.0);}`,
+            wireframe: false,
+          });
+          let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
+          curveMesh.scale.set(4, 4, 4);
+          curveMesh.rotateY(45);
+          curveMesh.rotateZ(20);
+          this.scene.add(curveMesh);
+
+          // Render geometry and material to screen
+          this.animate();
         });
       });
     }
+  }
+
+  animate() {
+    requestAnimationFrame(this.animate);
+    this.renderer.render(this.scene, this.camera);
   }
 
   /**
