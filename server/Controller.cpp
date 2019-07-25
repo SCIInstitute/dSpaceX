@@ -485,35 +485,40 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
 
   // Get points for regression line
   std::vector<FortranLinalg::DenseMatrix<Precision>> layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
-//  double points[m_currentVizData->getNumberOfSamples()+2][3];
+  int rows = m_currentVizData->getNumberOfSamples() + 2;
+  double points[rows][3];
 
   // For each crystal
   response["crystals"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
+
+    // Get all the points
+    for (unsigned int n = 0; n < layout[i].N(); ++n) {
+      for(unsigned int m = 0; m < layout[i].M(); ++m) {
+        points[n+1][m] = layout[i](m, n);
+      }
+      points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+    }
+    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
+    for (unsigned int j = 0; j < 3; ++j) {
+      points[0][j] = points[1][j] + points[2][j] - points[1][j];
+      points[m_currentVizData->getNumberOfSamples() + 1][j] =
+          points[m_currentVizData->getNumberOfSamples()][j] +
+          points[m_currentVizData->getNumberOfSamples()][j] -
+          points[m_currentVizData->getNumberOfSamples() - 1][j];
+    }
+
     // Get layout for each crystal
     Json::Value crystalObject(Json::objectValue);
     crystalObject["id"] = i;
     crystalObject["regressionPoints"] = Json::Value(Json::arrayValue);
-    for (unsigned int n = 0; n < layout[i].N(); ++n) {
+    for (unsigned int n = 0; n < rows; ++n) {
       auto row = Json::Value(Json::arrayValue);
-      for(unsigned int m = 0; m < layout[i].M(); ++m) {
-        row.append(layout[i](m, n));
+      for (unsigned int m = 0; m < 3; ++m) {
+        row.append(points[n][m]);
       }
-      row.append(m_currentVizData->getMeanNormalized(persistenceLevel)[i](n));
       crystalObject["regressionPoints"].append(row);
     }
-
-
-    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
-//    auto row = Json::Value(Json::arrayValue);
-//    for (unsigned int j = 0; j < 3; ++j) {
-//      points[0][j] = points[1][j] + points[2][j] - points[1][j];
-//      points[m_currentVizData->getNumberOfSamples() + 1][j] =
-//          points[m_currentVizData->getNumberOfSamples()][j] +
-//          points[m_currentVizData->getNumberOfSamples()][j] -
-//          points[m_currentVizData->getNumberOfSamples() - 1][j];
-//    }
-
     response["crystals"].append(crystalObject);
   }
 }

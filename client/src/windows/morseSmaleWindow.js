@@ -39,8 +39,11 @@ class MorseSmaleWindow extends React.Component {
     this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
     this.camera.position.z = 1;
 
+    let light = new THREE.AmbientLight( 0x404040 ); // soft white light
+
     this.scene = new THREE.Scene();
     this.scene.add(this.camera);
+    this.scene.add(light);
   }
 
   componentDidUpdate(prevProps, prevState, prevContext) {
@@ -50,9 +53,13 @@ class MorseSmaleWindow extends React.Component {
 
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
-
+      // Clear scene
+      while (this.scene.children.length > 0) {
+        this.scene.remove(this.scene.children[0]);
+      }
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((response) => {
+        console.log(response);
         response.crystals.forEach((crystal) => {
           let curvePoints = [];
           crystal.regressionPoints.forEach((regressionPoint) => {
@@ -60,7 +67,7 @@ class MorseSmaleWindow extends React.Component {
           });
           // Create curve
           let curve = new THREE.CatmullRomCurve3(curvePoints);
-          let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .01, 50, false);
+          let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
           let curveMaterial = new THREE.ShaderMaterial({
             uniforms: {
               color1: {
@@ -93,9 +100,9 @@ class MorseSmaleWindow extends React.Component {
             wireframe: false,
           });
           let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
-          curveMesh.scale.set(4, 4, 4);
-          curveMesh.rotateY(45);
-          curveMesh.rotateZ(20);
+          // curveMesh.scale.set(2, 2, 2);
+          curveMesh.translateZ(5);
+          curveMesh.rotateX(-90);
           this.scene.add(curveMesh);
 
           // Render geometry and material to screen
