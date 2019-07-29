@@ -353,7 +353,7 @@ class Application extends React.Component {
           let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
           let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
           visibleQois.forEach((value) => {
-            let index = qois.findIndex((v) => v === value);
+            let index = filteredQois.findIndex((v) => v === value);
             activeDesigns.add(index);
           });
         }

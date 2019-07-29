@@ -51,17 +51,17 @@ class TableWindow extends React.Component {
     let parameters = [];
     let data = [];
 
-    for (let i=0; i < parameterNames.length; i++) {
+    for (let i = 0; i < parameterNames.length; i++) {
       let parameterName = parameterNames[i];
       let { parameter } =
-          await this.client.fetchParameter(datasetId, parameterName);
+        await this.client.fetchParameter(datasetId, parameterName);
       parameters.push(parameter);
     }
 
     let sampleCount = parameters[0] ? parameters[0].length : 0;
-    for (let i=0; i < sampleCount; i++) {
+    for (let i = 0; i < sampleCount; i++) {
       let row = {};
-      for (let j=0; j < parameterNames.length; j++) {
+      for (let j = 0; j < parameterNames.length; j++) {
         row[parameterNames[j]] = parameters[j][i];
       }
       data.push(row);
@@ -79,18 +79,18 @@ class TableWindow extends React.Component {
     let qois = [];
     let data = [];
 
-    for (let i=0; i < qoiNames.length; i++) {
+    for (let i = 0; i < qoiNames.length; i++) {
       let qoiName = qoiNames[i];
       let { qoi } =
-          await this.client.fetchQoi(datasetId, qoiName);
+        await this.client.fetchQoi(datasetId, qoiName);
       qois.push(qoi);
     }
 
     let sampleCount = qois[0].length;
 
-    for (let i=0; i < sampleCount; i++) {
+    for (let i = 0; i < sampleCount; i++) {
       let row = {};
-      for (let j=0; j < qoiNames.length; j++) {
+      for (let j = 0; j < qoiNames.length; j++) {
         row[qoiNames[j]] = qois[j][i];
       }
       data.push(row);
@@ -131,7 +131,7 @@ class TableWindow extends React.Component {
    */
   componentDidUpdate(prevProps) {
     if (this.props.dataset !== prevProps.dataset ||
-        this.props.attributeGroup !== prevProps.attributeGroup) {
+      this.props.attributeGroup !== prevProps.attributeGroup) {
       switch (this.props.attributeGroup) {
         case 'parameters':
           this.getParameters().then((data) => {
@@ -162,7 +162,7 @@ class TableWindow extends React.Component {
    * @return {Object} class name
    */
   getClassName(id) {
-    const { classes, selectedDesigns, activeDesigns } = this.props;
+    const {classes, selectedDesigns, activeDesigns} = this.props;
     if (selectedDesigns.has(id)) {
       return classes.selected;
     } else if (activeDesigns.has(id)) {
@@ -188,13 +188,15 @@ class TableWindow extends React.Component {
     return (
       <Paper className={classes.root}>
         <Table className={classes.table}>
-          <TableHead>
+          <TableHead style={{ borderBottom:'1px solid black' }}>
             <TableRow>
-              {columnNames.length > 0 && <TableCell numeric padding='dense'>id</TableCell>}
+              {columnNames.length > 0 && <TableCell
+                style={{ fontWeight:'bold', fontSize:'medium' }} numeric padding='dense'>id</TableCell>}
               {
                 columnNames.map((n) => {
                   return (
-                    <TableCell key={n} numeric padding='dense'>{n}</TableCell>
+                    <TableCell
+                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} numeric padding='dense'>{n}</TableCell>
                   );
                 })
               }
