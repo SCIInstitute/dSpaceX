@@ -162,10 +162,15 @@ class TableWindow extends React.Component {
    * @return {Object} class name
    */
   getClassName(id) {
-    const {classes, selectedDesigns, activeDesigns} = this.props;
+    const { classes, selectedDesigns, activeDesigns } = this.props;
+    const { numberOfSamples } = this.props.dataset;
     if (selectedDesigns.has(id)) {
       return classes.selected;
     } else if (activeDesigns.has(id)) {
+      console.log(activeDesigns.size);
+      if (activeDesigns.size === numberOfSamples) {
+        return classes.row;
+      }
       return classes.active;
     }
     return classes.row;
