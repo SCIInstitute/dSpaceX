@@ -31,18 +31,28 @@ class WindowPanel extends React.Component {
       decomposition: null,
       embeddingAlgorithm: this.props.config.embeddingAlgorithm,
       visualizationQoi: null,
+      xAttributeGroup: this.props.config.xAttributeGroup,
+      xAttribute: this.props.config.xAttribute,
+      yAttributeGroup: this.props.config.yAttributeGroup,
+      yAttribute: this.props.config.yAttribute,
+      markerAttributeGroup: this.props.config.markerAttributeGroup,
+      markerAttribute: this.props.config.markerAttribute,
     };
 
-    this.handleDataViewTypeChange =
-        this.handleDataViewTypeChange.bind(this);
-    this.handleTableAttributeGroup =
-        this.handleTableAttributeGroup.bind(this);
-    this.handleEmbeddingAlgorithmChange =
-        this.handleEmbeddingAlgorithmChange.bind(this);
+    this.handleDataViewTypeChange = this.handleDataViewTypeChange.bind(this);
+    this.handleTableAttributeGroup = this.handleTableAttributeGroup.bind(this);
+    this.handleXAttributeGroup = this.handleXAttributeGroup.bind(this);
+    this.handleXAttribute = this.handleXAttribute.bind(this);
+    this.handleYAttributeGroup = this.handleYAttributeGroup.bind(this);
+    this.handleYAttribute = this.handleYAttribute.bind(this);
+    this.handleMarkerAttributeGroup = this.handleMarkerAttributeGroup.bind(this);
+    this.handleMarkerAttribute = this.handleMarkerAttribute.bind(this);
+    this.handleEmbeddingAlgorithmChange = this.handleEmbeddingAlgorithmChange.bind(this);
     this.handleDecompositionChange = this.handleDecompositionChange.bind(this);
 
     this.getTableOptions = this.getTableOptions.bind(this);
     this.getGraphOptions = this.getGraphOptions.bind(this);
+    this.getScatterPlotOptions = this.getScatterPlotOptions.bind(this);
   }
 
   /**
@@ -80,6 +90,39 @@ class WindowPanel extends React.Component {
     });
   }
 
+  handleXAttributeGroup(event) {
+    let xAttributeGroup = event.target.value;
+    let xAttribute = undefined;
+    this.setState({ xAttributeGroup, xAttribute });
+  }
+
+  handleXAttribute(event) {
+    let xAttribute = event.target.value;
+    this.setState({ xAttribute });
+  }
+
+  handleYAttributeGroup(event) {
+    let yAttributeGroup = event.target.value;
+    let yAttribute = undefined;
+    this.setState({ yAttributeGroup, yAttribute });
+  }
+
+  handleYAttribute(event) {
+    let yAttribute = event.target.value;
+    this.setState({ yAttribute });
+  }
+
+  handleMarkerAttributeGroup(event) {
+    let markerAttributeGroup = event.target.value;
+    let markerAttribute = undefined;
+    this.setState({ markerAttributeGroup, markerAttribute });
+  }
+
+  handleMarkerAttribute(event) {
+    let markerAttribute = event.target.value;
+    this.setState({ markerAttribute });
+  }
+
   /**
    * Handle the embedding algorithm changing.
    * @param {object} event
@@ -109,7 +152,7 @@ class WindowPanel extends React.Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
-        { /* Table Attribute Group Dropdown */ }
+        {/* Table Attribute Group Dropdown */}
         <FormControl className={classes.formControl}
           disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='tablegroup-input'>Attribute Group</InputLabel>
@@ -141,34 +184,7 @@ class WindowPanel extends React.Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
-        { /* Metric Dropdown */ }
-        <FormControl className={classes.formControl}
-          disabled={!this.props.enabled}>
-          <InputLabel htmlFor='metric-field'>Metric</InputLabel>
-          <Select ref="metricCombo"
-            value="precomputed"
-            inputProps={{
-              name: 'metric',
-              id: 'metric-field',
-            }}>
-            <MenuItem value='precomputed'>
-              <em>Precomputed</em>
-            </MenuItem>
-          </Select>
-        </FormControl>
-
-        { /* Neighborhood (k) */ }
-        <TextField
-          id="neighborhood"
-          label="Neighborhood Size"
-          type="number"
-          defaultValue="15"
-          disabled={true}
-          InputLabelProps={{
-            shrink: true,
-          }}/>
-
-        { /* Embedding Algorithm Dropdown */ }
+        {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
           disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='algorithm-input'>Embedding Algorithm</InputLabel>
@@ -193,7 +209,41 @@ class WindowPanel extends React.Component {
           </Select>
         </FormControl>
 
-        <div style={{ height:'8px' }}></div>
+        {/* Metric Dropdown */}
+        <FormControl className={classes.formControl}
+          disabled={!this.props.enabled}>
+          <InputLabel htmlFor='metric-field'>Metric</InputLabel>
+          <Select ref="metricCombo"
+            value="precomputed"
+            inputProps={{
+              name: 'metric',
+              id: 'metric-field',
+            }}>
+            <MenuItem value='precomputed'>
+              <em>Precomputed</em>
+            </MenuItem>
+            <MenuItem value='l2' disabled={true}>
+              <em>L2</em>
+            </MenuItem>
+            <MenuItem value='l1' disabled={true}>
+              <em>L1</em>
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Neighborhood (k) */}
+        <TextField
+          id="neighborhood"
+          label="Neighborhood Size"
+          type="number"
+          defaultValue="15"
+          disabled={true}
+          InputLabelProps={{
+            shrink: true,
+          }}/>
+
+        {/* Decomposition Panel */}
+        <div style={{ height:'8px' }}/>
         <DecompositionPanel
           enabled={true}
           dataset={this.props.dataset}
@@ -203,9 +253,154 @@ class WindowPanel extends React.Component {
     );
   }
 
+  getAttributeNames(attributeGroup) {
+    if (attributeGroup === 'parameters') {
+      return this.props.dataset.parameterNames;
+    } else if (attributeGroup === 'qois') {
+      return this.props.dataset.qoiNames;
+    }
+  };
+
+  getScatterPlotOptions() {
+    const { classes } = this.props;
+    return (
+      <ExpansionPanel disabled={!this.props.enabled || !this.props.dataset}
+        defaultExpanded={true} style={{ paddingLeft:'0px', margin:'1px' }}>
+        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
+        <ExpansionPanelDetails style={{
+          paddingLeft: '15px',
+          paddingRight: '10px', margin: '1px', width: '100%',
+          boxSizing: 'border-box',
+        }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            width: '100%', boxSizing: 'border-box',
+          }}>
+            {/* x axis */}
+            <Typography>x-axis</Typography>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}
+              style={{ width: '100%',
+                boxSizing: 'border-box',
+                paddingRight: '10px' }}>
+              <InputLabel htmlFor='x-group-input'>
+                Attribute Group</InputLabel>
+              <Select ref="xGroupCombo"
+                value={this.state.xAttributeGroup || ''}
+                onChange={this.handleXAttributeGroup} inputProps={{
+                  name: 'xGroup',
+                  id: 'x-group-input',
+                }}>
+                <MenuItem value="parameters"
+                  disabled={!this.props.dataset.parameterNames.length}>
+                  <em>Parameters</em>
+                </MenuItem>
+                <MenuItem value="qois"
+                  disabled={!this.props.dataset.qoiNames.length}>
+                  <em>Qois</em>
+                </MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='x-attribute-input'>
+                Attribute</InputLabel>
+              <Select ref="xAttributeCombo"
+                value={this.state.xAttribute || ''}
+                onChange={this.handleXAttribute} inputProps={{
+                  name: 'xAttribute',
+                  id: 'x-attribute-input',
+                }}>
+                {this.state.xAttributeGroup
+                && this.getAttributeNames(this.state.xAttributeGroup).map((attributeName, i) =>
+                  <MenuItem key={i} value={attributeName.trim()}>{attributeName}</MenuItem>)}
+              </Select>
+            </FormControl>
+            {/* y axis */}
+            <div style={{ height:'10px' }}/>
+            <Typography>y-axis</Typography>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='y-group-input'>
+                Attribute Group</InputLabel>
+              <Select ref="yGroupCombo"
+                value={this.state.yAttributeGroup || ''}
+                onChange={this.handleYAttributeGroup} inputProps={{
+                  name: 'yGroup',
+                  id: 'y-group-input',
+                }}>
+                <MenuItem value="parameters"
+                  disabled={!this.props.dataset.parameterNames.length}>
+                  <em>Parameters</em>
+                </MenuItem>
+                <MenuItem value="qois"
+                  disabled={!this.props.dataset.qoiNames.length}>
+                  <em>Qois</em>
+                </MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='y-attribute-input'>
+                Attribute</InputLabel>
+              <Select ref="yAttributeCombo"
+                value={this.state.yAttribute || ''}
+                onChange={this.handleYAttribute} inputProps={{
+                  name: 'yAttribute',
+                  id: 'y-attribute-input',
+                }}>
+                {this.state.yAttributeGroup &&
+                this.getAttributeNames(this.state.yAttributeGroup).map((attributeName, i) =>
+                  <MenuItem key={i} value={attributeName.trim()}>{attributeName}</MenuItem>)}
+              </Select>
+            </FormControl>
+            {/* marker area */}
+            <div style={{ height:'10px' }}/>
+            <Typography>Marker Area</Typography>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='marker-group-input'>
+                Attribute Group</InputLabel>
+              <Select ref="markerGroupCombo"
+                value={this.state.markerAttributeGroup || ''}
+                onChange={this.handleMarkerAttributeGroup} inputProps={{
+                  name: 'markerGroup',
+                  id: 'marker-group-input',
+                }}>
+                <MenuItem value="parameters"
+                  disabled={!this.props.dataset.parameterNames.length}>
+                  <em>Parameters</em>
+                </MenuItem>
+                <MenuItem value="qois"
+                  disabled={!this.props.dataset.qoiNames.length}>
+                  <em>Qois</em>
+                </MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='marker-attribute-input'>
+                Attribute</InputLabel>
+              <Select ref="markerAttributeCombo"
+                value={this.state.markerAttribute || ''}
+                onChange={this.handleMarkerAttribute} inputProps={{
+                  name: 'markerAttribute',
+                  id: 'marker-attribute-input',
+                }}>
+                {this.state.markerAttributeGroup &&
+                this.getAttributeNames(this.state.markerAttributeGroup).map((attributeName, i) =>
+                  <MenuItem key={i} value={attributeName.trim()}>{attributeName}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </div>
+        </ExpansionPanelDetails>
+      </ExpansionPanel>
+    );
+  };
+
   /**
    * Renders the component to HTML.
-   * @return {HTML}
+   * @return {JSX}
    */
   render() {
     const { classes } = this.props;
@@ -213,18 +408,22 @@ class WindowPanel extends React.Component {
       <ExpansionPanel
         disabled={!this.props.enabled} defaultExpanded={true}
         style={{ paddingLeft:'0px', margin:'1px', paddingTop:'0px' }}>
-        <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
+        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
           <Typography>
-            { 'Window # ' + (this.props.windowIndex + 1)}
+            {'Window # ' + (this.props.windowIndex + 1)}
           </Typography>
         </ExpansionPanelSummary>
-        <ExpansionPanelDetails style={{ paddingLeft: '15px', paddingTop: '0px',
+        <ExpansionPanelDetails style={{
+          paddingLeft: '15px', paddingTop: '0px',
           paddingRight: '10px', marginLeft: '1px', marginRight: '1px',
-          width: '100%', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', flexDirection: 'column',
-            width: '100%', boxSizing: 'border-box' }}>
+          width: '100%', boxSizing: 'border-box',
+        }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            width: '100%', boxSizing: 'border-box',
+          }}>
 
-            { /* DataView Type Dropdown */ }
+            {/* DataView Type Dropdown */}
             <FormControl className={classes.formControl}
               disabled={!this.props.enabled || !this.props.dataset}>
               <InputLabel htmlFor='dataview-input'>Data View Type</InputLabel>
@@ -234,15 +433,20 @@ class WindowPanel extends React.Component {
                   name: 'dataview',
                   id: 'dataview-input',
                 }}>
-                <MenuItem value="table">
-                  <em>Table</em>
+                <MenuItem value="gallery">
+                  <em>Gallery</em>
                 </MenuItem>
                 <MenuItem value="graph">
                   <em>Graph</em>
                 </MenuItem>
+                <MenuItem value="scatter_plot">
+                  <em>Scatter Plot</em>
+                </MenuItem>
+                <MenuItem value="table">
+                  <em>Table</em>
+                </MenuItem>
               </Select>
             </FormControl>
-
             {
               /* Render the Appropriate Fields for the DataView Type */
               (() => {
@@ -251,9 +455,11 @@ class WindowPanel extends React.Component {
                     return this.getTableOptions();
                   case 'graph':
                     return this.getGraphOptions();
+                  case 'scatter_plot':
+                    return this.getScatterPlotOptions();
                   default:
                     return null;
-                };
+                }
               })()
             }
 
@@ -262,7 +468,7 @@ class WindowPanel extends React.Component {
       </ExpansionPanel>
     );
   }
-};
+}
 
 // Enforce that Application receives styling.
 WindowPanel.propTypes = {

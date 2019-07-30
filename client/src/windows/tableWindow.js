@@ -12,16 +12,17 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = (theme) => ({
   root: {
     overflowX: 'auto',
+    border: '1px solid gray',
   },
   table: {},
   tableWrapper: {},
-});
-
-const CustomTableRow = withStyles((theme) => ({
   selected: {
-    backgroundColor: 'rgb(201, 220, 252)',
+    backgroundColor: '#c5cae8',
   },
-}))(TableRow);
+  active: {
+    backgroundColor: '#D3D3D3',
+  },
+});
 
 /**
  * A Window Component for displaying tabular data.
@@ -50,17 +51,17 @@ class TableWindow extends React.Component {
     let parameters = [];
     let data = [];
 
-    for (let i=0; i < parameterNames.length; i++) {
+    for (let i = 0; i < parameterNames.length; i++) {
       let parameterName = parameterNames[i];
       let { parameter } =
-          await this.client.fetchParameter(datasetId, parameterName);
+        await this.client.fetchParameter(datasetId, parameterName);
       parameters.push(parameter);
     }
 
     let sampleCount = parameters[0] ? parameters[0].length : 0;
-    for (let i=0; i < sampleCount; i++) {
+    for (let i = 0; i < sampleCount; i++) {
       let row = {};
-      for (let j=0; j < parameterNames.length; j++) {
+      for (let j = 0; j < parameterNames.length; j++) {
         row[parameterNames[j]] = parameters[j][i];
       }
       data.push(row);
@@ -78,18 +79,18 @@ class TableWindow extends React.Component {
     let qois = [];
     let data = [];
 
-    for (let i=0; i < qoiNames.length; i++) {
+    for (let i = 0; i < qoiNames.length; i++) {
       let qoiName = qoiNames[i];
       let { qoi } =
-          await this.client.fetchQoi(datasetId, qoiName);
+        await this.client.fetchQoi(datasetId, qoiName);
       qois.push(qoi);
     }
 
     let sampleCount = qois[0].length;
 
-    for (let i=0; i < sampleCount; i++) {
+    for (let i = 0; i < sampleCount; i++) {
       let row = {};
-      for (let j=0; j < qoiNames.length; j++) {
+      for (let j = 0; j < qoiNames.length; j++) {
         row[qoiNames[j]] = qois[j][i];
       }
       data.push(row);
@@ -130,7 +131,7 @@ class TableWindow extends React.Component {
    */
   componentDidUpdate(prevProps) {
     if (this.props.dataset !== prevProps.dataset ||
-        this.props.attributeGroup !== prevProps.attributeGroup) {
+      this.props.attributeGroup !== prevProps.attributeGroup) {
       switch (this.props.attributeGroup) {
         case 'parameters':
           this.getParameters().then((data) => {
@@ -156,6 +157,26 @@ class TableWindow extends React.Component {
   }
 
   /**
+   * Get the right class name for the table row
+   * @param {number} id
+   * @return {Object} class name
+   */
+  getClassName(id) {
+    const { classes, selectedDesigns, activeDesigns } = this.props;
+    const { numberOfSamples } = this.props.dataset;
+    if (selectedDesigns.has(id)) {
+      return classes.selected;
+    } else if (activeDesigns.has(id)) {
+      console.log(activeDesigns.size);
+      if (activeDesigns.size === numberOfSamples) {
+        return classes.row;
+      }
+      return classes.active;
+    }
+    return classes.row;
+  }
+
+  /**
    * Renders the component to HTML.
    * @return {HTML}
    */
@@ -172,13 +193,15 @@ class TableWindow extends React.Component {
     return (
       <Paper className={classes.root}>
         <Table className={classes.table}>
-          <TableHead>
+          <TableHead style={{ borderBottom:'1px solid black' }}>
             <TableRow>
-              <TableCell numeric padding='dense'>id</TableCell>
+              {columnNames.length > 0 && <TableCell
+                style={{ fontWeight:'bold', fontSize:'medium' }} numeric padding='dense'>id</TableCell>}
               {
                 columnNames.map((n) => {
                   return (
-                    <TableCell key={n} numeric padding='dense'>{n}</TableCell>
+                    <TableCell
+                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} numeric padding='dense'>{n}</TableCell>
                   );
                 })
               }
@@ -189,8 +212,10 @@ class TableWindow extends React.Component {
               this.state.fields ?
                 this.state.fields.map((n, i) => {
                   return (
-                    <CustomTableRow hover className={classes.row} key={i}
-                      selected={this.props.focusRow == i}>
+                    <TableRow
+                      key={i}
+                      className={this.getClassName(i)}
+                      onClick={(e) => this.props.onDesignSelection(e, i)}>
                       <TableCell numeric padding='dense'>{i}</TableCell>
                       {
                         columnNames.map((p) => {
@@ -202,7 +227,7 @@ class TableWindow extends React.Component {
                           );
                         })
                       }
-                    </CustomTableRow>
+                    </TableRow>
                   );
                 }) : []
             }

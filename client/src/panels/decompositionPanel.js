@@ -47,7 +47,7 @@ class DecompositionPanel extends React.Component {
 
     this.state = {
       decompositionMode: 'Morse-Smale',
-      decompositionCategory: null,
+      decompositionCategory: 'qoi',
       decompositionField: null,
       persistenceLevel: '',
       minPersistence: null,
@@ -347,11 +347,16 @@ class DecompositionPanel extends React.Component {
                   name: 'mode',
                   id: 'mode-field',
                 }}>
+                {/* This code change was for the demo only - morse smale did not make sense because we were not doing
+                morse smales*/}
                 <MenuItem value='Morse-Smale'>
+                  <em>Color Encoding (QOI)</em>
+                </MenuItem>
+                <MenuItem value='Morse-Smale2' disabled={true}>
                   <em>Morse-Smale</em>
                 </MenuItem>
-                <MenuItem value='Shape-Odds'>
-                  <em>Shape-Odds</em>
+                <MenuItem value='Shape-Odds' disabled={true}>
+                  <em>Infinite Shape-Odds</em>
                 </MenuItem>
               </Select>
             </FormControl>
@@ -369,19 +374,16 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={
-                  !(this.props.dataset &&
-                    this.props.dataset.parameterNames.length > 0)
-                }>
+                <MenuItem value="parameter" disabled={true}>
                   <em>Parameter</em>
                 </MenuItem>
-                <MenuItem value="geometry">
+                <MenuItem value="geometry" disabled={true}>
                   <em>Geometry</em>
                 </MenuItem>
                 <MenuItem value="qoi">
                   <em>QoI</em>
                 </MenuItem>
-                <MenuItem value="precomputed">
+                <MenuItem value="precomputed" disabled={true}>
                   <em>Precomputed</em>
                 </MenuItem>
               </Select>
@@ -411,7 +413,7 @@ class DecompositionPanel extends React.Component {
             {
               persistenceLevels.length > 0 ? [
                 <Histogram key="histogram" size={[190, 100]}
-                  data={this.state.complexSizes} />,
+                  data={this.state.complexSizes} brushEnabled={false}/>,
                 <input key="slider" type="range" step={1} id="myRange"
                   min={this.state.minPersistence}
                   max={this.state.maxPersistence}

@@ -1,14 +1,19 @@
+import * as d3 from 'd3';
 import Button from '@material-ui/core/Button';
-import Client from './client.js';
+import Client from './data/client.js';
 import ConnectionDialog from './connectionDialog.js';
 import { DSXProvider } from './dsxContext.js';
+import DataHelper from './data/dataHelper.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
+import FilterPanel from './panels/filterPanel';
+import GalleryWindow from './windows/galleryWindow';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
 import React from 'react';
+import ScatterPlotWindow from './windows/scatterPlotWindow';
 import TableWindow from './windows/tableWindow.js';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
@@ -61,8 +66,13 @@ class Application extends React.Component {
       connected: false,
       networkActive: false,
       currentDataset: null,
+      displayFilterDrawer: false,
       datasets: [],
       windows: [],
+      filters: [],
+      selectedDesigns: new Set(),
+      parameters: [],
+      qois: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -73,6 +83,12 @@ class Application extends React.Component {
     this.onDatasetChange = this.onDatasetChange.bind(this);
     this.addWindow = this.addWindow.bind(this);
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
+    this.onDesignSelection = this.onDesignSelection.bind(this);
+    this.onDesignLasso = this.onDesignLasso.bind(this);
+    this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
+    this.onAddFilter = this.onAddFilter.bind(this);
+    this.onUpdateFilter = this.onUpdateFilter.bind(this);
+    this.onRemoveFilter = this.onRemoveFilter.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -81,6 +97,12 @@ class Application extends React.Component {
     this.client.addEventListener('networkInactive', this.onNetworkActivityEnd);
     // export client for debugging
     window.client = this.client;
+
+    // TODO Fix this! This is a hack to get d3-lasso working in the scatterPlotWindow
+    window.d3=d3;
+
+    // TODO finish data helper so data is managed in one place
+    this.dataHelper = new DataHelper(this.client);
   }
 
   /**
@@ -128,7 +150,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Handles whent he applications starts communicating with the server.
+   * Handles when the applications starts communicating with the server.
    */
   onNetworkActivityStart() {
     this.setState({
@@ -150,8 +172,20 @@ class Application extends React.Component {
    * @param {object} dataset
    */
   onDatasetChange(dataset) {
-    this.setState({
-      currentDataset: dataset,
+    const { datasetId, parameterNames, qoiNames } = dataset;
+    Promise.all([
+      this.getParameters(datasetId, parameterNames),
+      this.getQois(datasetId, qoiNames),
+    ]).then((results) => {
+      const [parameters, qois] = results;
+      this.setState({
+        currentDataset: dataset,
+        windows: [],
+        selectedDesigns: new Set(),
+        filters: [],
+        parameters: parameters,
+        qois: qois,
+      });
     });
   }
 
@@ -182,19 +216,171 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles selection of a design from any window
+   * @param { object } event
+   * @param { number } id
+   */
+  onDesignSelection(event, id) {
+    event.stopPropagation();
+    if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
+      let selectedDesigns = new Set(this.state.selectedDesigns);
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    } else {
+      let selectedDesigns = new Set();
+      selectedDesigns.add(id);
+      this.setState({ selectedDesigns });
+    }
+  }
+
+  /**
+   * Handles lasso of design from ScatterPlotWindow
+   * @param {Array<object>} selection selected designs
+   */
+  onDesignLasso(selection) {
+    let selectedDesigns = new Set();
+    selection.each((s) => { selectedDesigns.add(s.id); });
+    this.setState({ selectedDesigns });
+  }
+
+  /**
+   * Open and closes filter drawer when 'Filter' button is clicked
+   */
+  onDisplayFilterDrawer() {
+    this.setState({
+      displayFilterDrawer: !this.state.displayFilterDrawer,
+    });
+  }
+
+  /**
+   * Handles when a new filter is added by selecting the '+' icon
+   * @param {int} id
+   */
+  onAddFilter(id) {
+    let filters = [...this.state.filters];
+    const filter = {
+      'id': id,
+      'enabled': false,
+      'min': 0,
+      'max': Infinity,
+      'attributeGroup': '',
+      'attribute': '',
+      'numberOfBins': 10,
+    };
+    filters.push(filter);
+    this.setState({ filters });
+  }
+
+  /**
+   * Updates the filter in the filters array
+   * @param {object} filterConfig
+   */
+  onUpdateFilter(filterConfig) {
+    let filters = [...this.state.filters];
+    let index = filters.findIndex((f) => f.id === filterConfig.id);
+    filters[index] = filterConfig;
+    this.setState({ filters });
+  }
+
+  /**
+   * Removes the filter from the filters array
+   * @param {int} id
+   */
+  onRemoveFilter(id) {
+    let filters = [...this.state.filters];
+    filters = filters.filter((f) => f.id !== id);
+    this.setState({ filters });
+  }
+
+  /**
+   * Gets the parameters for the current data set
+   * @param {string} datasetId
+   * @param {Array<string>} parameterNames
+   * @return {Promise<Array>}
+   */
+  async getParameters(datasetId, parameterNames) {
+    let parameters = [];
+    parameterNames.forEach(async (parameterName) => {
+      let parameter =
+          await this.client.fetchParameter(datasetId, parameterName);
+      parameters.push(parameter);
+    });
+    return parameters;
+  }
+
+  /**
+   * Gets the qois for the current data set
+   * @param {string} datasetId
+   * @param {Array<string>} qoiNames
+   * @return {Promise<Array>}
+   */
+  async getQois(datasetId, qoiNames) {
+    let qois = [];
+    qoiNames.forEach(async (qoiName) => {
+      let qoi =
+          await this.client.fetchQoi(datasetId, qoiName);
+      qois.push(qoi);
+    });
+    return qois;
+  }
+
+  /**
+   * Gets the images that should be displayed after the filters
+   * are applied
+   * @return {Set} indexes of images that should be visible
+   */
+  getActiveDesigns() {
+    if (this.state.currentDataset === null) {
+      return new Set();
+    }
+
+    const { numberOfSamples } = this.state.currentDataset;
+    const { filters, parameters, qois } = this.state;
+    if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
+      return new Set([...Array(numberOfSamples).keys()]);
+    } else {
+      let activeDesigns = new Set();
+      const enabledFilters = filters.filter((f) => f.enabled);
+      enabledFilters.forEach((f) => {
+        if (f.attributeGroup === 'parameters') {
+          let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+          visibleParams.forEach((value) => {
+            let index = params.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        } else if (f.attributeGroup === 'qois') {
+          let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+          let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
+          visibleQois.forEach((value) => {
+            let index = filteredQois.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        }
+      });
+      return activeDesigns;
+    }
+  }
+
+  /**
    * Renders the component to HTML.
-   * @return {HTML}
+   * @return {JSX}
    */
   render() {
     const { classes } = this.props;
+    const activeDesigns = this.getActiveDesigns();
     let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
     return (
       <DSXProvider value={{ client:this.client }}>
         <div className={classes.root}>
           <ConnectionDialog ref='connectiondialog' client={this.client}/>
           <Toolbar connectedToServer={this.state.connected}
+            dataset={this.state.currentDataset}
             onConnectClick={this.connectButtonClicked}
-            networkActive={this.state.networkActive} />
+            networkActive={this.state.networkActive}
+            onDisplayFilterDrawer={this.onDisplayFilterDrawer}
+            displayFilterDrawer={this.state.displayFilterDrawer}
+            filtersEnabled={this.state.filters.filter((f) => f.enabled).length > 0}/>
           <Drawer PaperProps={{ elevation:6 }} variant='permanent'
             classes={{ paper:classes.drawerPaper }}>
             { /* Add div to account for menu bar */ }
@@ -227,11 +413,17 @@ class Application extends React.Component {
               backgroundColor: drawerMarginColor,
               height: '100%',
               width: '100%',
-            }}></div>
+            }}/>
           </Drawer>
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
             <div className={classes.toolbar}/>
+            {this.state.displayFilterDrawer && <FilterPanel parameters={this.state.parameters}
+              qois={this.state.qois}
+              filters={this.state.filters}
+              addFilter={this.onAddFilter}
+              updateFilter={this.onUpdateFilter}
+              removeFilter={this.onRemoveFilter}/>}
             <div className={classes.workspace} style={
               (() => {
                 switch (this.state.windows.length) {
@@ -251,26 +443,48 @@ class Application extends React.Component {
                       gridTemplateColumns: '1fr 1fr',
                       gridTemplateRows: '1fr 1fr',
                     };
-                };
+                }
               })()
             }>
               {
                 !!this.state.currentDataset ?
                   this.state.windows.map((windowConfig, i) => {
-                    if (windowConfig.dataViewType == 'table') {
+                    if (windowConfig.dataViewType === 'table') {
                       return (
                         <TableWindow key={i}
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
-                          focusRow={this.state.sampleFocusIndex}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}
+                          activeDesigns={activeDesigns}/>
                       );
-                    } else if (windowConfig.dataViewType == 'graph') {
+                    } else if (windowConfig.dataViewType === 'graph') {
                       return (
                         <GraphGLWindow key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
-                          onNodeHover={this.onSampleFocus}/>
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}
+                          numberOfWindows={this.state.windows.length}
+                          activeDesigns={activeDesigns}/>
                       );
+                    } else if (windowConfig.dataViewType === 'scatter_plot') {
+                      return (
+                        <ScatterPlotWindow key={i}
+                          config={windowConfig}
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}
+                          onDesignLasso={this.onDesignLasso}
+                          activeDesigns={activeDesigns}/>
+                      );
+                    } else if (windowConfig.dataViewType === 'gallery') {
+                      return (
+                        <GalleryWindow key={i}
+                          dataset={this.state.currentDataset}
+                          selectedDesigns={this.state.selectedDesigns}
+                          onDesignSelection={this.onDesignSelection}
+                          activeDesigns={activeDesigns}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>

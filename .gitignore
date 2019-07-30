@@ -4,8 +4,8 @@ build.darwin
 build.linux
 CMakeLists.txt.user
 .DS_Store
-/data
 *.vs
 *.orig
 .idea/
 cmake-build-debug/
+node_modules/

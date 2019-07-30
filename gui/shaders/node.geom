@@ -30,8 +30,8 @@ void main() {
   EmitVertex();
 
   gl_Position = gl_in[0].gl_Position + vec4( 1 * radius,  1 * radius, 0.0, 0.0);
-  gl_Position = projectionMatrix * gl_Position;"
-  Vertex_UV = vec2(1.0, 1.0);"
+  gl_Position = projectionMatrix * gl_Position;
+  Vertex_UV = vec2(1.0, 1.0);
   geom_color = color[0];
   EmitVertex();
 

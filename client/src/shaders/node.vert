@@ -1,10 +1,12 @@
 attribute vec3 coordinates;
 attribute vec3 vertexColor;
 attribute float sampleIndex;
+attribute float vertexOpacity;
 uniform mat4 uProjectionMatrix;
 varying vec2 vertexUV;
 varying vec3 geomColor;
 varying float index;
+varying float opacity;
 
 void main(void) {
   int UVindex = int(coordinates.z);
@@ -19,5 +21,6 @@ void main(void) {
   }
   geomColor = vertexColor;
   index = sampleIndex;
+  opacity = vertexOpacity;
   gl_Position = uProjectionMatrix * vec4(coordinates.xy, 0.0, 1.0);
 }

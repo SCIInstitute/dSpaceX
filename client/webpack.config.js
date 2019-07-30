@@ -25,6 +25,10 @@ let config = {
         test: /\.(frag|vert)$/,
         use: 'raw-loader',
       },
+      {
+        test: /\.css$/,
+        loader: 'style-loader!css-loader',
+      },
     ],
   },
 };

@@ -60,6 +60,7 @@ void Controller::configureCommandHandlers() {
 /**
  * Construct list of available datasets.
  */
+
 void Controller::configureAvailableDatasets(const std::string &path) {
 
   boost::filesystem::path rootPath(path);
@@ -414,7 +415,7 @@ void Controller::fetchLayoutForPersistenceLevel(
     auto embedding = m_currentDataset->getEmbeddingMatrix(0);
     auto name = m_currentDataset->getEmbeddingNames()[0];
 
-    // TOD: Factor out a normalizing routine.
+    // TODO: Factor out a normalizing routine.
     float minX = embedding(0,0);
     float maxX = embedding(0,0);
     float minY = embedding(0,1);

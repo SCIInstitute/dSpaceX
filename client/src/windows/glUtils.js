@@ -5,8 +5,7 @@
  * @param {string} fragmentShaderSource
  * @return {reference}
  */
-export function createShaderProgram(
-  gl, vertexShaderSource, fragmentShaderSource) {
+export function createShaderProgram(gl, vertexShaderSource, fragmentShaderSource) {
   let vertexShader = gl.createShader(gl.VERTEX_SHADER);
   gl.shaderSource(vertexShader, vertexShaderSource);
   gl.compileShader(vertexShader);

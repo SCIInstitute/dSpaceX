@@ -1,7 +1,6 @@
 import * as d3 from 'd3';
 import React from 'react';
 
-
 /**
  * A component to render histograms.
  */
@@ -13,7 +12,9 @@ class Histogram extends React.Component {
   constructor(props) {
     super(props);
 
+
     this.createBarChart = this.createBarChart.bind(this);
+    this.drawBrush = this.drawBrush.bind(this);
   }
 
   /**
@@ -21,13 +22,38 @@ class Histogram extends React.Component {
    */
   componentDidMount() {
     this.createBarChart();
+    this.drawBrush();
   }
 
   /**
    * Callback invoked immediately after the component is updated.
+   * @param {object} prevProps
+   * @param {object} prevState
+   * @param {object} prevContext
    */
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState, prevContext) {
     this.createBarChart();
+
+    // Need to see if filter is removed so brush draws correctly
+    if (prevProps.filterCount > this.props.filterCount) {
+      this.drawBrush();
+    }
+  }
+
+  /**
+   * Makes sure that if a brush was already applied to histogram
+   * this it is redrawn after the component mounts
+   */
+  drawBrush() {
+    const { brushEnabled } = this.props;
+    if (brushEnabled) {
+      const { selectionMin, selectionMax } = this.props.filterConfig;
+      if (selectionMin !== undefined && selectionMax !== undefined) {
+        d3.select(this.refs.svgRoot)
+          .select('g.brush')
+          .call(this.brush.move, [this.xScale(selectionMin), this.xScale(selectionMax)]);
+      }
+    }
   }
 
   /**
@@ -36,22 +62,31 @@ class Histogram extends React.Component {
   createBarChart() {
     const svg = this.refs.svgRoot;
     const dataMax = Math.max(...this.props.data);
-    const yScale = d3.scaleLinear()
+    this.yScale = d3.scaleLinear()
       .domain([0, dataMax])
       .range([0, this.props.size[1]]);
 
     d3.select(svg)
+      .selectAll('g.histogram')
+      .data([0])
+      .enter()
+      .append('g')
+      .attr('class', 'histogram');
+
+    d3.select(svg)
+      .select('g.histogram')
       .selectAll('rect')
       .data(this.props.data)
       .enter()
       .append('rect');
 
-    let xRange = d3.scaleLinear()
+    this.xScale = d3.scaleLinear()
       .domain([0, this.props.data.length])
       .range([0, this.props.size[0]]);
-    let xAxis = d3.axisBottom(xRange).ticks(0);
+    let xAxis = d3.axisBottom(this.xScale).ticks(0);
 
     d3.select(svg)
+      .select('g.histogram')
       .selectAll('rect')
       .data(this.props.data)
       .exit()
@@ -65,15 +100,33 @@ class Histogram extends React.Component {
     let barWidth = this.props.size[0] / this.props.data.length;
 
     d3.select(svg)
+      .select('g.histogram')
       .selectAll('rect')
       .data(this.props.data)
       .style('fill', '#3f51b5')
       .style('stroke-width', '1')
       .style('stroke', 'rgb(255,255,255)')
       .attr('x', (d, i) => i * barWidth)
-      .attr('y', (d) => this.props.size[1] - yScale(d))
-      .attr('height', (d) => yScale(d))
+      .attr('y', (d) => this.props.size[1] - this.yScale(d))
+      .attr('height', (d) => this.yScale(d))
       .attr('width', barWidth);
+
+    // Add brushing capability - if enabled
+    if (this.props.brushEnabled) {
+      const { onBrush } = this.props;
+      d3.select(svg)
+        .selectAll('g.brush')
+        .data([0])
+        .enter()
+        .append('g')
+        .attr('class', 'brush');
+      this.brush = d3.brushX()
+        .on('brush', () => onBrush(this.xScale.invert(d3.event.selection[0]),
+          this.xScale.invert(d3.event.selection[1])));
+      d3.select(svg)
+        .select('g.brush')
+        .call(this.brush);
+    }
   }
 
   /**

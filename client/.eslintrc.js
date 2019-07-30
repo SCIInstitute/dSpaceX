@@ -10,6 +10,11 @@ module.exports = {
     "object-curly-spacing" : [
       "error", "always", {
         "arraysInObjects": false
+      },
+    ],
+    "max-len":["error",
+      {
+        "code":120
       }
     ],
     "key-spacing": [

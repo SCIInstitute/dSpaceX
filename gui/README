@@ -9,7 +9,7 @@ IEEE Transactions on Visualization and Computer Graphics to appear, Proceedings 
 The software consist of two binaries
 1. HDVizProcessing
 2. HDViz
-The first is for processing a given data set for visualization and the seconf
+The first is for processing a given data set for visualization and the second
 for the actual visualization.
 
 
@@ -19,8 +19,8 @@ Usage of HDVizProcessing:
 HDVizProcessing -h will type a help message
 
 The input to HDVizProcessing is a matrix X which represents the samples of the
-domain and a corresponding vector which represnets the function values f(X) of
-each sample. The other parameters are requireed for Morse-Smale and regression
+domain and a corresponding vector which represents the function values f(X) of
+each sample. The other parameters are required for Morse-Smale and regression
 curve computations.
 
 HDVizProcessing will write a number of files that encode the visualization for
@@ -32,10 +32,10 @@ Usage of HDViz:
 ---------------
 
 HDViz is for the actual visualization. It needs to be started in the same folder
-as HDVizPorcessing was run and it will read the files in these folders for
+as HDVizProcessing was run and it will read the files in these folders for
 visualization.
 
-HDViz tries to find a defualt font (DejaVuSans.ttf) if it can't find it you can
+HDViz tries to find a default font (DejaVuSans.ttf) if it can't find it you can
 supply your own font with -f <path-to-font> (for best results use
     DejaVuSans.ttf).
 
@@ -45,11 +45,11 @@ per line. If not available it will use x_1, ..., x_n as labels.
 
 A typical usage
 ---------------
-The directopry examples contains a number of examples.
+The directory examples contains a number of examples.
 
 cd examples/gaussian2d
 HDVizProcessing -x Geom.data.hdr -f Function.data.hdr -k 25 -s 0.25 -p 10 -n 50
-#This generates the fiels for the gaussain2d for 10 persistence level with 50
+#This generates the fields for the gaussain2d for 10 persistence level with 50
 #samples per curve in each crystal and uses 25 nearest-neighbors for the
 #MS-computation.
 HDViz -c
@@ -71,15 +71,15 @@ DataFile: X.data
 
 First line is the type of matrix (no others than DenseMatrix are required for
     this application)
-Second line is the matriz size
+Second line is the matrix size
 Third line is the element size, this application requires doubles (8 bytes)
-  unless compilled with the precision set to float.
+  unless compiled with the precision set to float.
 Fourth line wether the binary data is stored in row or column major format (0 =
     ColumnMajor otherwise RowMajor, default is ColumMajor for ease of
     interaction with lapack)
 Fifth line is a reference to the binary file.
 
-The file format for vectors is in the same fashionL:
+The file format for vectors is in the same fashio:
 
 DenseVector
 Size: 1030

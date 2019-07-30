@@ -10,8 +10,8 @@ import NodeVertexShaderSource from '../shaders/node.vert';
 import Paper from '@material-ui/core/Paper';
 import PickingFragmentShaderSource from '../shaders/picking.frag';
 import PickingVertexShaderSource from '../shaders/picking.vert';
-import PreviewTexturVertexeShaderSource from '../shaders/previewTexture.vert';
 import PreviewTextureFragmentShaderSource from '../shaders/previewTexture.frag';
+import PreviewTextureVertexShaderSource from '../shaders/previewTexture.vert';
 import React from 'react';
 import ThumbnailFragmentShaderSource from '../shaders/thumbnail.frag';
 import ThumbnailVertexShaderSource from '../shaders/thumbnail.vert';
@@ -36,6 +36,7 @@ class GraphGLWindow extends GLWindow {
    */
   constructor(props) {
     super(props);
+
     this.state = {
       hoverX: null,
       hoverY: null,
@@ -59,6 +60,7 @@ class GraphGLWindow extends GLWindow {
     this.vertices = null;
     this.vertColors = null;
     this.sampleIndexes = null;
+    this.vertOpacity = null;
     this.nodes = null;
     this.edges = null;
     this.edgeVerts = null;
@@ -66,7 +68,6 @@ class GraphGLWindow extends GLWindow {
     this.edgeVerts_buffer = null;
 
     this.projectionMatrix = mat4.create();
-    this.bDrawEdgesAsQuads = null;
 
     this.scale = 1;
     this.xOffset = 0;
@@ -104,7 +105,7 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Event Handling for scroll wheel
+   * Event Handling for scroll wheel; zoom in and out of graph
    * @param {Event} event
    */
   handleScrollEvent(event) {
@@ -136,6 +137,15 @@ class GraphGLWindow extends GLWindow {
    * @param {Event} event
    */
   handleMouseRelease(event) {
+    // Handle left click release
+    if (event.button == 0) {
+      let x = event.offsetX;
+      let y = event.offsetY;
+      let id = this.getDesignUnderCursor(x, y);
+      this.props.onDesignSelection(event, id);
+    }
+
+    // Handle right click release
     if (event.button == 2) {
       this.rightMouseDown = false;
     }
@@ -162,16 +172,16 @@ class GraphGLWindow extends GLWindow {
 
     this.previousX = x;
     this.previousY = y;
-    this.pickGeometryUnderCursor(x, y);
+    this.setHoverUnderCursor(x, y);
   }
 
   /**
-   * Looks up the texture value at the coordinate cooordinate to determine
-   * what geometry is currently under the cursor.
+   * Looks up the texture value at the coordinate  to determine
+   * what geometry is currently under the cursor and sets the state for hover.
    * @param {number} x
    * @param {number} y
    */
-  pickGeometryUnderCursor(x, y) {
+  setHoverUnderCursor(x, y) {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
@@ -203,6 +213,37 @@ class GraphGLWindow extends GLWindow {
         hoverShow: false,
       });
     }
+  }
+
+  /**
+   * Looks up the texture value at the coordinate to determine
+   * what design is currently under the cursor for left click to select.
+   * @param {number} x
+   * @param {number} y
+   * @return {number} index of design
+   */
+  getDesignUnderCursor(x, y) {
+    const canvas = this.refs.canvas;
+    let gl = canvas.getContext('webgl');
+
+    // Read one pixel
+    let readout = new Uint8Array(4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.readPixels(x, canvas.height-y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    let range = 255*255;
+    let n = 1000;
+    let r = readout[0];
+    let g = readout[1];
+    let b = readout[2];
+
+    let baseIndex = null;
+    if (r != 255) {
+      let mappedIndex = 255*g + b;
+      baseIndex = Math.floor(mappedIndex / Math.floor(range/n));
+    }
+    return baseIndex;
   }
 
   /**
@@ -306,8 +347,10 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
+    // Clear the canvas
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     gl.depthMask(false);
@@ -317,7 +360,7 @@ class GraphGLWindow extends GLWindow {
 
     this.createShaders(gl);
     this.createBuffers(gl);
-    this.createFrameBuffers(gl);
+    this.createSelectionFrameBuffer(gl);
 
     webGLErrorCheck(gl);
 
@@ -328,6 +371,7 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Set up an orthographic projection.
+   * This is used to position the graph correctly in space.
    */
   setupOrtho() {
     const canvas = this.refs.canvas;
@@ -364,22 +408,6 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Return x,y pixel coords in gl coords
-   * @param {array} XY
-   * @return {array}
-   */
-  convertToGLCoords(XY) {
-    let canvas = this.refs.canvas;
-    let resolution = [canvas.clientWidth, canvas.clientHeight];
-    let zeroToOne = [XY[0] / resolution[0], XY[1] / resolution[1]];
-    let zeroToTwo = [zeroToOne[0] * 2, zeroToOne[1] * 2];
-    let clipSpace = [zeroToTwo[0] - 1, zeroToTwo[1] - 1];
-    let returnXY = [clipSpace[0], -clipSpace[1]];
-    return returnXY;
-  }
-
-
-  /**
    * Creates the geometry to be rendered.
    * TODO: Refactor this routine for maintainability and readablity.
    * @param {array} array2DVertsForNodes
@@ -388,12 +416,13 @@ class GraphGLWindow extends GLWindow {
    * @param {number} quadWidth
    * @param {bool} drawEdgesAsQuads
    */
-  createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges,
-    quadHeight = 0.1, quadWidth = 0.1, drawEdgesAsQuads = true) {
+  createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges, quadHeight = 0.1, quadWidth = 0.1) {
     this.sampleIndexes = [];
     this.vertColors = [];
-    this.bDrawEdgesAsQuads = drawEdgesAsQuads;
+    this.vertOpacity = [];
+    // this.bDrawEdgesAsQuads = true;
 
+    // Graph Vertex Geometry
     let arrLength = array2DVertsForNodes.length;
     this.nodes = new Array(arrLength);
     this.vertices = new Array(this.nodes.length * 18);
@@ -404,7 +433,6 @@ class GraphGLWindow extends GLWindow {
         array2DVertsForNodes[i][1],
         quadWidth, quadHeight);
       let vertCount = quad.vertices.length;
-
       for (let j = 0; j < vertCount; j++) {
         this.vertices[i*vertCount + j] = quad.vertices[j];
       }
@@ -415,6 +443,7 @@ class GraphGLWindow extends GLWindow {
       this.nodes[i] = quad;
     }
 
+    // Graph Edge Geometry
     arrLength = arrayBeginEndIndicesForEdges.length;
     this.edges = new Array(arrLength);
     this.edgeVerts = new Array(this.edges.length * 18);
@@ -426,22 +455,11 @@ class GraphGLWindow extends GLWindow {
       let node1 = this.nodes[index1];
       let node2 = this.nodes[index2];
 
-      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y,
-        defaultEdgeThickness);
+      let edge = new Edge(node1.X, node1.Y, node2.X, node2.Y, defaultEdgeThickness);
 
       this.edges[i] = edge;
-      if (this.bDrawEdgesAsQuads) {
-        for (let j = 0; j < 18; j++) {
-          this.edgeVerts[i*18+j] = edge.vertices[j];
-        }
-      } else {
-        // push back xy1, uv1, xy2, uv2
-        this.edgeVerts[i * 6] = edge.x1;
-        this.edgeVerts[i * 6 + 1] = edge.y1;
-        this.edgeVerts[i * 6 + 2] = 0.0;
-        this.edgeVerts[i * 6 + 3] = edge.x2;
-        this.edgeVerts[i * 6 + 4] = edge.y2;
-        this.edgeVerts[i * 6 + 5] = 1.0;
+      for (let j = 0; j < 18; j++) {
+        this.edgeVerts[i*18+j] = edge.vertices[j];
       }
     }
   }
@@ -460,26 +478,34 @@ class GraphGLWindow extends GLWindow {
     }
   }
 
+  /**
+   * Adds opacity to go with the nodes
+   * @param {array} arrayOpacity
+   */
+  addVertexOpacity(arrayOpacity) {
+    this.vertOpacity = [];
+    for (let i = 0; i < arrayOpacity.length; ++i) {
+      for (let j = 0; j < 6; ++j) {
+        this.vertOpacity.push(arrayOpacity[i]);
+      }
+    }
+  }
 
   /**
    * Compiles vertex and fragment shader programs.
    * @param {object} gl The OpenGL context.
    */
   createShaders(gl) {
-    this.nodeShaderProgram = createShaderProgram(gl,
-      NodeVertexShaderSource, NodeFragmentShaderSource);
+    this.nodeShaderProgram = createShaderProgram(gl, NodeVertexShaderSource, NodeFragmentShaderSource);
 
-    this.edgeShaderProgram = createShaderProgram(gl,
-      EdgeVertexShaderSource, EdgeFragmentShaderSource);
+    this.edgeShaderProgram = createShaderProgram(gl, EdgeVertexShaderSource, EdgeFragmentShaderSource);
 
-    this.thumbnailShaderProgram = createShaderProgram(gl,
-      ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
+    this.thumbnailShaderProgram = createShaderProgram(gl, ThumbnailVertexShaderSource, ThumbnailFragmentShaderSource);
 
-    this.pickingShaderProgram = createShaderProgram(gl,
-      PickingVertexShaderSource, PickingFragmentShaderSource);
+    this.pickingShaderProgram = createShaderProgram(gl, PickingVertexShaderSource, PickingFragmentShaderSource);
 
     this.previewTextureShader = createShaderProgram(gl,
-      PreviewTexturVertexeShaderSource, PreviewTextureFragmentShaderSource);
+      PreviewTextureVertexShaderSource, PreviewTextureFragmentShaderSource);
 
     this.activeNodeShader = this.nodeShaderProgram;
   }
@@ -508,14 +534,13 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    // TODO: Refactor to support thumbnails of various/heterogenous sizes.
+    // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
     let width = this.thumbnails[0].width;
     let height = this.thumbnails[0].height;
     const MAX_TEXTURE_SIZE = 2048;
     const THUMBNAIL_WIDTH = 80;
     const THUMBNAIL_HEIGHT = 40;
-    let thumbnailsPerTextureRow =
-      Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
+    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 
     for (let i=0; i < this.thumbnails.length; i++) {
@@ -554,15 +579,19 @@ class GraphGLWindow extends GLWindow {
 
   /**
    * Creates render frame buffer and associated texture.
+   * The picking shader program is drawn to this framebuffer and
+   * used when hovering over or selecting designs.
    * @param {object} gl The OpenGL context.
    */
-  createFrameBuffers(gl) {
+  createSelectionFrameBuffer(gl) {
+    // Create FrameBuffer
     let canvas = this.refs.canvas;
     this.frameBuffer = gl.createFramebuffer();
     this.frameBuffer.width = canvas.clientWidth;
     this.frameBuffer.height = canvas.clientHeight;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
 
+    // TODO better comment than -> Create Texture - empty by default, this is the target of a render.
     this.renderTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.renderTexture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -618,7 +647,7 @@ class GraphGLWindow extends GLWindow {
    * Recreates render frame buffer and associated texture with new sizes.
    * @param {object} gl The OpenGL context.
    */
-  resizeFrameBuffers(gl) {
+  resizeSelectionFrameBuffer(gl) {
     // TODO: Tear down existing frame buffer and create new one with current
     //       size. Otherwise, node picking may not work after window resize.
   }
@@ -649,6 +678,14 @@ class GraphGLWindow extends GLWindow {
     this.sampleIndex_array = new Uint16Array(this.sampleIndexes);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.sampleIndex_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
+    // vertex opacity buffer
+    this.vertOpacity_buffer = gl.createBuffer();
+    this.vertOpacity_array = new Float32Array(this.vertOpacity);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
@@ -700,6 +737,12 @@ class GraphGLWindow extends GLWindow {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
+    this.vertOpacity_array = new Float32Array(this.vertOpacity);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
@@ -717,7 +760,7 @@ class GraphGLWindow extends GLWindow {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
 
-    this.resizeFrameBuffers();
+    this.resizeSelectionFrameBuffer();
     this.setupOrtho();
     requestAnimationFrame(this.renderGL);
   }
@@ -726,6 +769,7 @@ class GraphGLWindow extends GLWindow {
    * Callback invoked before the React Component is rendered.
    */
   componentWillMount() {
+    const { selectedDesigns, activeDesigns } = this.props;
     if (!this.props.decomposition) {
       return;
     }
@@ -744,23 +788,47 @@ class GraphGLWindow extends GLWindow {
             let max = Math.max(...this.props.qoi);
             let color = d3.scaleLinear()
               .domain([min, 0.5*(min+max), max])
-              .range(['blue', 'white', 'red']);
+              .range(['white', '#b53f51']);
             let colorsArray = [];
+            let opacityArray = [];
             for (let i = 0; i < this.props.qoi.length; i++) {
-              let colorString = color(this.props.qoi[i]);
-              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
-              colorTriplet[0] /= 255;
-              colorTriplet[1] /= 255;
-              colorTriplet[2] /= 255;
-              colorsArray.push(...colorTriplet);
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                let colorString = color(this.props.qoi[i]);
+                let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+                colorTriplet[0] /= 255;
+                colorTriplet[1] /= 255;
+                colorTriplet[2] /= 255;
+                colorsArray.push(...colorTriplet);
+              }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           } else {
             let colorsArray = [];
+            let opacityArray = [];
             for (let i=0; i < layout.length; i++) {
-              colorsArray.push(1.0, 1.0, 1.0);
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                colorsArray.push(1.0, 1.0, 1.0);
+              }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           }
         } else {
           if (this.props.decomposition) {
@@ -814,73 +882,170 @@ class GraphGLWindow extends GLWindow {
    * @param {object} nextProps
    */
   componentWillReceiveProps(nextProps) {
+    // Make sure canvas is re-sized so hover and selection work
+    this.resizeCanvas();
+
     // TODO:  Simplify and remove code duplication.
     if (!nextProps.decomposition) {
       return;
     }
-    let { datasetId, k, persistenceLevel } = nextProps.decomposition;
-    let qoi = nextProps.decomposition.decompositionField;
+    const { selectedDesigns, activeDesigns } = nextProps;
+    const { datasetId, k, persistenceLevel } = nextProps.decomposition;
+    const qoiName = nextProps.decomposition.decompositionField;
 
     if (this.props.decomposition &&
-        datasetId == this.props.decomposition.datasetId &&
-        k == this.props.decomposition.k &&
-        persistenceLevel == this.props.decomposition.persistenceLevel &&
-        qoi == this.props.decomposition.decompositionField) {
+        datasetId === this.props.decomposition.datasetId &&
+        k === this.props.decomposition.k &&
+        persistenceLevel === this.props.decomposition.persistenceLevel &&
+        qoiName === this.props.decomposition.decompositionField &&
+        selectedDesigns === this.props.selectedDesigns) {
       return;
-    }
-
-    let qoiName = nextProps.decomposition.decompositionField;
-
-    Promise.all([
-      this.client.fetchLayoutForPersistenceLevel(
-        datasetId, k, persistenceLevel),
-      this.client.fetchQoi(datasetId, qoiName),
-    ]).then((results) => {
-      const [result, qoiResult] = results;
-      const qoi = qoiResult.qoi;
-      if (result.embedding && result.embedding.layout) {
-        // let layout = [].concat(...result.embedding.layout);
-        let layout = result.embedding.layout;
-        let adjacency = result.embedding.adjacency;
-        this.createGeometry(layout, adjacency, 0.02, 0.02);
-
-        if (qoi) {
-          let min = Math.min(...qoi);
-          let max = Math.max(...qoi);
+    } else if (this.props.decomposition &&
+        datasetId === this.props.decomposition.datasetId &&
+        k === this.props.decomposition.k &&
+        persistenceLevel === this.props.decomposition.persistenceLevel &&
+        qoiName === this.props.decomposition.decompositionField &&
+        (selectedDesigns !== this.props.selectedDesigns ||
+        activeDesigns !== this.props.activeDesigns)) {
+      if (this.layout && this.adjacency) {
+        this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
+        if (this.qoi) {
+          let min = Math.min(...this.qoi);
+          let max = Math.max(...this.qoi);
           let color = d3.scaleLinear()
             .domain([min, 0.5*(min+max), max])
-            .range(['blue', 'white', 'red']);
+            .range(['white', '#b53f51']);
           let colorsArray = [];
-          for (let i = 0; i < qoi.length; i++) {
-            let colorString = color(qoi[i]);
-            let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
-            colorTriplet[0] /= 255;
-            colorTriplet[1] /= 255;
-            colorTriplet[2] /= 255;
-            colorsArray.push(...colorTriplet);
+          let opacityArray = [];
+          for (let i = 0; i < this.qoi.length; i++) {
+            if (selectedDesigns.has(i)) {
+              colorsArray.push((63/255), (81/255), (181/255));
+            } else {
+              let colorString = color(this.qoi[i]);
+              let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+              colorTriplet[0] /= 255;
+              colorTriplet[1] /= 255;
+              colorTriplet[2] /= 255;
+              colorsArray.push(...colorTriplet);
+            }
+
+            if (activeDesigns.has(i)) {
+              opacityArray.push(1.0);
+            } else {
+              opacityArray.push(0.5);
+            }
           }
           this.addVertexColors(colorsArray);
+          this.addVertexOpacity(opacityArray);
         } else {
           let colorsArray = [];
-          for (let i=0; i < layout.length; i++) {
-            colorsArray.push(1.0, 1.0, 1.0);
+          let opacityArray = [];
+          for (let i=0; i < this.layout.length; i++) {
+            if (selectedDesigns.has(i)) {
+              colorsArray.push((63/255), (81/255), (181/255));
+            } else {
+              colorsArray.push(1.0, 1.0, 1.0);
+            }
+
+            if (activeDesigns.has(i)) {
+              opacityArray.push(1.0);
+            } else {
+              opacityArray.push(0.5);
+            }
           }
           this.addVertexColors(colorsArray);
-        }
-      } else {
-        if (nextProps.decomposition) {
-          let errorMessage = 'No decomposition layout provided.';
-          this.refs.errorDialog.reportError(errorMessage);
-        } else {
-          let errorMessage = 'No decomposition provided.';
-          this.refs.errorDialog.reportError(errorMessage);
+          this.addVertexOpacity(opacityArray);
         }
       }
       this.updateBuffers();
       requestAnimationFrame(this.renderGL);
-    });
+    } else {
+      Promise.all([
+        this.client.fetchLayoutForPersistenceLevel(
+          datasetId, k, persistenceLevel),
+        this.client.fetchQoi(datasetId, qoiName),
+      ]).then((results) => {
+        const [result, qoiResult] = results;
+        this.qoi = qoiResult.qoi;
+        if (result.embedding && result.embedding.layout) {
+          // let layout = [].concat(...result.embedding.layout);
+          this.layout = result.embedding.layout;
+          this.adjacency = result.embedding.adjacency;
+          this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
+
+          if (this.qoi) {
+            let min = Math.min(...this.qoi);
+            let max = Math.max(...this.qoi);
+            let color = d3.scaleLinear()
+              .domain([min, 0.5*(min+max), max])
+              .range(['white', '#b53f51']);
+            let colorsArray = [];
+            let opacityArray = [];
+            for (let i = 0; i < this.qoi.length; i++) {
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                let colorString = color(this.qoi[i]);
+                let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
+                colorTriplet[0] /= 255;
+                colorTriplet[1] /= 255;
+                colorTriplet[2] /= 255;
+                colorsArray.push(...colorTriplet);
+              }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
+            }
+            this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
+          } else {
+            let colorsArray = [];
+            let opacityArray = [];
+            for (let i=0; i < this.layout.length; i++) {
+              if (selectedDesigns.has(i)) {
+                colorsArray.push((63/255), (81/255), (181/255));
+              } else {
+                colorsArray.push(1.0, 1.0, 1.0);
+              }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
+            }
+            this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
+          }
+        } else {
+          if (nextProps.decomposition) {
+            let errorMessage = 'No decomposition layout provided.';
+            this.refs.errorDialog.reportError(errorMessage);
+          } else {
+            let errorMessage = 'No decomposition provided.';
+            this.refs.errorDialog.reportError(errorMessage);
+          }
+        }
+        this.updateBuffers();
+        requestAnimationFrame(this.renderGL);
+      });
+    }
   }
 
+  /**
+   * React lifecycle method run after componenet updates
+   * @param {object} prevProps previous props
+   * @param {object} prevState previous state
+   * @param {object} prevContext previous context
+   */
+  componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
+      this.resizeCanvas();
+    }
+  }
 
   /**
    * Draw PreviewBox. Useful for debugging and
@@ -922,34 +1087,36 @@ class GraphGLWindow extends GLWindow {
 
     if (this.vertColors && this.vertColors.length == this.vertices.length) {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.vertColor_buffer);
-      let vertexColorAttribute =
-        gl.getAttribLocation(shader, 'vertexColor');
+      let vertexColorAttribute = gl.getAttribLocation(shader, 'vertexColor');
       if (vertexColorAttribute > 0) {
-        gl.vertexAttribPointer(vertexColorAttribute,
-          3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(vertexColorAttribute);
       }
     }
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.sampleIndex_buffer);
-    let sampleIndexAttribute =
-      gl.getAttribLocation(shader, 'sampleIndex');
+    let sampleIndexAttribute = gl.getAttribLocation(shader, 'sampleIndex');
     if (sampleIndexAttribute > 0) {
-      gl.vertexAttribPointer(
-        sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
+      gl.vertexAttribPointer(sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
       gl.enableVertexAttribArray(sampleIndexAttribute);
     }
 
-    let nodeOutlineLocation =
-        gl.getUniformLocation(shader, 'nodeOutline');
+    if (this.vertOpacity && this.vertOpacity.length === (this.vertices.length / 3)) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+      let vertexOpacityAttribute = gl.getAttribLocation(shader, 'vertexOpacity');
+      if (vertexOpacityAttribute > 0) {
+        gl.vertexAttribPointer(vertexOpacityAttribute, 1, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vertexOpacityAttribute);
+      }
+    }
+
+    let nodeOutlineLocation = gl.getUniformLocation(shader, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
-    let nodeSmoothnessLocation =
-        gl.getUniformLocation(shader, 'nodeSmoothness');
+    let nodeSmoothnessLocation = gl.getUniformLocation(shader, 'nodeSmoothness');
     gl.uniform1f(nodeSmoothnessLocation, this.nodeSmoothness);
 
-    let projectionMatrixLocation =
-        gl.getUniformLocation(shader, 'uProjectionMatrix');
+    let projectionMatrixLocation = gl.getUniformLocation(shader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
@@ -981,11 +1148,8 @@ class GraphGLWindow extends GLWindow {
     gl.vertexAttribPointer(coordinateAttrib, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(coordinateAttrib);
 
-    if (this.bDrawEdgesAsQuads) {
-      gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
-    } else {
-      gl.drawArrays(gl.LINES, 0, this.edgeVerts.length / 3);
-    }
+    gl.drawArrays(gl.TRIANGLES, 0, this.edgeVerts.length / 3);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
   }
@@ -997,7 +1161,7 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    // draw scene offscreen for picking
+    // draw scene offscreen for picking (selection)
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
     gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
@@ -1040,8 +1204,8 @@ class GraphGLWindow extends GLWindow {
     let style = {
       width: '100%',
       height: '100%',
-      borderRight: '1px dashed gray',
       boxSizing: 'border-box',
+      position: 'absolute',
     };
 
     let imageBase64 = null;
@@ -1055,7 +1219,7 @@ class GraphGLWindow extends GLWindow {
 
     return (
       <React.Fragment>
-        <div style={{ position:'relative' }}>
+        <Paper style={{ position:'relative', border:'1px solid gray' }}>
           <canvas ref='canvas' className='glCanvas' style={style} />
           {
             this.state.hoverNode ? (<Paper style={{
@@ -1088,7 +1252,7 @@ class GraphGLWindow extends GLWindow {
               []
           }
           <ErrorDialog ref='errorDialog' />
-        </div>
+        </Paper>
       </React.Fragment>
     );
   }
