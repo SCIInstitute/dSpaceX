@@ -68,7 +68,6 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-      //HDProcess::loadCSVMatrix("examples/truss/tsne_layout.csv"); // Used when running from CLion
         HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
   
   m_currentLevel = persistenceLevel;
@@ -338,7 +337,6 @@ void DisplayGraph::initTextures() {
   glGenTextures(atlasCount, imageTextureID);
 
   buildTextureAtlas(textureAtlas, "../../examples/truss/images/");
-  //buildTextureAtlas(textureAtlas, "examples/truss/images/"); // Used when running in CLion
   createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);
 }
 
