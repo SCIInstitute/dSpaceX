@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrthographicTrackballControls } from 'three/examples/jsm/controls/OrthographicTrackballControls';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
 import { withDSXContext } from '../dsxContext';
@@ -15,18 +16,57 @@ class MorseSmaleWindow extends React.Component {
     super(props);
 
     this.client = this.props.dsxContext.client;
+
+    this.init = this.init.bind(this);
+    this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
+    this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
+    this.clearScene = this.clearScene.bind(this);
   }
 
   componentDidMount() {
-    // Create renderer, camera, and scene
-    let canvas = this.refs.msCanvas;
-    let gl = canvas.getContext('webgl');
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    console.log('Initial Renderer.');
-    console.log(this.renderer);
-    this.renderer.setSize( canvas.clientWidth, canvas.clientHeight );
+    this.init();
+    this.animate();
+  }
 
+  componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.decomposition === null) {
+      return;
+    }
+
+    if (prevProps.decomposition === null
+      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+      this.clearScene();
+      const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((response) => {
+        this.addRegressionCurvesToScene(response.crystals);
+        this.renderScene();
+      });
+    }
+  }
+
+  /**
+   * If any of the decomposition settings have changed returns true
+   * for new decomposition
+   * @param {object} prevDecomposition - the previous decomposition
+   * @param {object} currentDecomposition - the current decomposition
+   * @return {boolean} true if any of the decomposition settings have changed.
+   */
+  isNewDecomposition(prevDecomposition, currentDecomposition) {
+    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
+        || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
+        || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+        || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
+        || prevDecomposition.k !== currentDecomposition.k
+        || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
+  }
+
+  init() {
+    // canvas
+    let canvas = this.msCanvas;
+    let gl = canvas.getContext('webgl');
+
+    // camera
     let width = canvas.clientWidth;
     let height = canvas.clientHeight;
     let sx = 1;
@@ -39,57 +79,70 @@ class MorseSmaleWindow extends React.Component {
     this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
     this.camera.position.z = 1;
 
-    let light = new THREE.AmbientLight( 0x404040 ); // soft white light
+    // light
+    let ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    let directionalLight1 = new THREE.DirectionalLight(0xffffff);
+    directionalLight1.position.set(1, 1, 1);
+    let directionalLight2 = new THREE.DirectionalLight(0x002288)
+    directionalLight2.position.set(-1, -1, -1);
 
+    // world
     this.scene = new THREE.Scene();
     this.scene.add(this.camera);
-    this.scene.add(light);
+    this.scene.add(ambientLight);
+    this.scene.add(directionalLight1);
+    this.scene.add(directionalLight2);
+
+    // renderer
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
+    this.renderer.setSize( canvas.clientWidth, canvas.clientHeight );
+
+    // controls
+    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement );
+    this.controls.rotateSpeed = 0.5;
+    this.controls.zoomSpeed = 0.1;
+    this.controls.panSpeed = 0.5;
+    this.controls.noZoom = false;
+    this.controls.noPan = false;
+    this.controls.staticMoving = true;
+    this.controls.dynamicDampingFactor = 0.3;
+    this.controls.keys = [65, 83, 68];
+    this.controls.addEventListener( 'change', this.renderScene );
+
+    this.renderScene();
   }
 
-  componentDidUpdate(prevProps, prevState, prevContext) {
-    if (this.props.decomposition === null) {
-      return;
-    }
-
-    if (prevProps.decomposition === null
-      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
-      // Clear scene
-      while (this.scene.children.length > 0) {
-        this.scene.remove(this.scene.children[0]);
-      }
-      const { datasetId, k, persistenceLevel } = this.props.decomposition;
-      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((response) => {
-        console.log(response);
-        response.crystals.forEach((crystal) => {
-          let curvePoints = [];
-          crystal.regressionPoints.forEach((regressionPoint) => {
-            curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
-          });
-          // Create curve
-          let curve = new THREE.CatmullRomCurve3(curvePoints);
-          let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
-          let curveMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-              color1: {
-                value: new THREE.Color('green'),
-              },
-              color2: {
-                value: new THREE.Color('red'),
-              },
-              bboxMin: {
-                value: 1,
-              },
-              bboxMax: {
-                value: 100,
-              },
-            },
-            vertexShader: `
+  addRegressionCurvesToScene(crystals) {
+    crystals.forEach((crystal) => {
+      let curvePoints = [];
+      crystal.regressionPoints.forEach((regressionPoint) => {
+        curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
+      });
+      // Create curve
+      let curve = new THREE.CatmullRomCurve3(curvePoints);
+      let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
+      let curveMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          color1: {
+            value: new THREE.Color('green'),
+          },
+          color2: {
+            value: new THREE.Color('red'),
+          },
+          bboxMin: {
+            value: 1,
+          },
+          bboxMax: {
+            value: 100,
+          },
+        },
+        vertexShader: `
         varying vec2 vUv;
 
         void main() {
           vUv = uv;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);}`,
-            fragmentShader: `
+        fragmentShader: `
         uniform vec3 color1;
         uniform vec3 color2;
 
@@ -97,40 +150,28 @@ class MorseSmaleWindow extends React.Component {
 
         void main() {
           gl_FragColor = vec4(mix(color1, color2, vUv.x), 1.0);}`,
-            wireframe: false,
-          });
-          let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
-          // curveMesh.scale.set(2, 2, 2);
-          curveMesh.translateZ(5);
-          curveMesh.rotateX(-90);
-          this.scene.add(curveMesh);
-
-          // Render geometry and material to screen
-          this.animate();
-        });
+        wireframe: false,
+        depthTest: true,
       });
-    }
+      let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
+      curveMesh.rotateX(-90);
+      this.scene.add(curveMesh);
+    });
+  }
+
+  renderScene() {
+    this.renderer.render(this.scene, this.camera);
   }
 
   animate() {
     requestAnimationFrame(this.animate);
-    this.renderer.render(this.scene, this.camera);
+    this.controls.update();
   }
 
-  /**
-   * If any of the decomposition settings have changed returns true
-   * for new decomposition
-   * @param {object} prevDecomposition - the previous decomposition
-   * @param {object} currentDecomposition - the current decomposition
-   * @return {boolean} true if any of the decomposition settings have changed.
-   */
-  isNewDecomposition(prevDecomposition, currentDecomposition) {
-    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
-      || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
-      || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
-      || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
-      || prevDecomposition.k !== currentDecomposition.k
-      || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
+  clearScene() {
+    while (this.scene.children.length > 0) {
+      this.scene.remove(this.scene.children[0]);
+    }
   }
 
   /**
@@ -153,7 +194,7 @@ class MorseSmaleWindow extends React.Component {
 
     return (
       <Paper style={ paperStyle }>
-        <canvas ref='msCanvas' className='msCanvas' style={canvasStyle} />
+        <canvas ref={(ref)=> (this.msCanvas = ref)} style={canvasStyle} />
       </Paper>
     );
   }
