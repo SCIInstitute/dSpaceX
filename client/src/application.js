@@ -8,6 +8,7 @@ import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
+import FilterPanel from './panels/filterPanel';
 import GalleryWindow from './windows/galleryWindow';
 import GraphGLWindow from './windows/graphGLWindow.js';
 import PropTypes from 'prop-types';
@@ -66,9 +67,13 @@ class Application extends React.Component {
       connected: false,
       networkActive: false,
       currentDataset: null,
+      displayFilterDrawer: false,
       datasets: [],
       windows: [],
+      filters: [],
       selectedDesigns: new Set(),
+      parameters: [],
+      qois: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -81,6 +86,10 @@ class Application extends React.Component {
     this.onWindowConfigChange = this.onWindowConfigChange.bind(this);
     this.onDesignSelection = this.onDesignSelection.bind(this);
     this.onDesignLasso = this.onDesignLasso.bind(this);
+    this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
+    this.onAddFilter = this.onAddFilter.bind(this);
+    this.onUpdateFilter = this.onUpdateFilter.bind(this);
+    this.onRemoveFilter = this.onRemoveFilter.bind(this);
 
     this.client = new Client();
     this.client.addEventListener('connected', this.onConnect);
@@ -164,10 +173,20 @@ class Application extends React.Component {
    * @param {object} dataset
    */
   onDatasetChange(dataset) {
-    this.setState({
-      currentDataset: dataset,
-      windows: [],
-      selectedDesigns: new Set(),
+    const { datasetId, parameterNames, qoiNames } = dataset;
+    Promise.all([
+      this.getParameters(datasetId, parameterNames),
+      this.getQois(datasetId, qoiNames),
+    ]).then((results) => {
+      const [parameters, qois] = results;
+      this.setState({
+        currentDataset: dataset,
+        windows: [],
+        selectedDesigns: new Set(),
+        filters: [],
+        parameters: parameters,
+        qois: qois,
+      });
     });
   }
 
@@ -226,19 +245,143 @@ class Application extends React.Component {
   }
 
   /**
+   * Open and closes filter drawer when 'Filter' button is clicked
+   */
+  onDisplayFilterDrawer() {
+    this.setState({
+      displayFilterDrawer: !this.state.displayFilterDrawer,
+    });
+  }
+
+  /**
+   * Handles when a new filter is added by selecting the '+' icon
+   * @param {int} id
+   */
+  onAddFilter(id) {
+    let filters = [...this.state.filters];
+    const filter = {
+      'id': id,
+      'enabled': false,
+      'min': 0,
+      'max': Infinity,
+      'attributeGroup': '',
+      'attribute': '',
+      'numberOfBins': 10,
+    };
+    filters.push(filter);
+    this.setState({ filters });
+  }
+
+  /**
+   * Updates the filter in the filters array
+   * @param {object} filterConfig
+   */
+  onUpdateFilter(filterConfig) {
+    let filters = [...this.state.filters];
+    let index = filters.findIndex((f) => f.id === filterConfig.id);
+    filters[index] = filterConfig;
+    this.setState({ filters });
+  }
+
+  /**
+   * Removes the filter from the filters array
+   * @param {int} id
+   */
+  onRemoveFilter(id) {
+    let filters = [...this.state.filters];
+    filters = filters.filter((f) => f.id !== id);
+    this.setState({ filters });
+  }
+
+  /**
+   * Gets the parameters for the current data set
+   * @param {string} datasetId
+   * @param {Array<string>} parameterNames
+   * @return {Promise<Array>}
+   */
+  async getParameters(datasetId, parameterNames) {
+    let parameters = [];
+    parameterNames.forEach(async (parameterName) => {
+      let parameter =
+          await this.client.fetchParameter(datasetId, parameterName);
+      parameters.push(parameter);
+    });
+    return parameters;
+  }
+
+  /**
+   * Gets the qois for the current data set
+   * @param {string} datasetId
+   * @param {Array<string>} qoiNames
+   * @return {Promise<Array>}
+   */
+  async getQois(datasetId, qoiNames) {
+    let qois = [];
+    qoiNames.forEach(async (qoiName) => {
+      let qoi =
+          await this.client.fetchQoi(datasetId, qoiName);
+      qois.push(qoi);
+    });
+    return qois;
+  }
+
+  /**
+   * Gets the images that should be displayed after the filters
+   * are applied
+   * @return {Set} indexes of images that should be visible
+   */
+  getActiveDesigns() {
+    if (this.state.currentDataset === null) {
+      return new Set();
+    }
+
+    const { numberOfSamples } = this.state.currentDataset;
+    const { filters, parameters, qois } = this.state;
+    if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
+      return new Set([...Array(numberOfSamples).keys()]);
+    } else {
+      let activeDesigns = new Set();
+      const enabledFilters = filters.filter((f) => f.enabled);
+      enabledFilters.forEach((f) => {
+        if (f.attributeGroup === 'parameters') {
+          let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+          visibleParams.forEach((value) => {
+            let index = params.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        } else if (f.attributeGroup === 'qois') {
+          let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+          let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
+          visibleQois.forEach((value) => {
+            let index = filteredQois.findIndex((v) => v === value);
+            activeDesigns.add(index);
+          });
+        }
+      });
+      return activeDesigns;
+    }
+  }
+
+  /**
    * Renders the component to HTML.
-   * @return {HTML}
+   * @return {JSX}
    */
   render() {
     const { classes } = this.props;
+    const activeDesigns = this.getActiveDesigns();
     let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
     return (
       <DSXProvider value={{ client:this.client }}>
         <div className={classes.root}>
           <ConnectionDialog ref='connectiondialog' client={this.client}/>
           <Toolbar connectedToServer={this.state.connected}
+            dataset={this.state.currentDataset}
             onConnectClick={this.connectButtonClicked}
-            networkActive={this.state.networkActive} />
+            networkActive={this.state.networkActive}
+            onDisplayFilterDrawer={this.onDisplayFilterDrawer}
+            displayFilterDrawer={this.state.displayFilterDrawer}
+            filtersEnabled={this.state.filters.filter((f) => f.enabled).length > 0}/>
           <Drawer PaperProps={{ elevation:6 }} variant='permanent'
             classes={{ paper:classes.drawerPaper }}>
             { /* Add div to account for menu bar */ }
@@ -276,6 +419,12 @@ class Application extends React.Component {
           <Workspace className={classes.content}>
             { /* Add div to account for menu bar */ }
             <div className={classes.toolbar}/>
+            {this.state.displayFilterDrawer && <FilterPanel parameters={this.state.parameters}
+              qois={this.state.qois}
+              filters={this.state.filters}
+              addFilter={this.onAddFilter}
+              updateFilter={this.onUpdateFilter}
+              removeFilter={this.onRemoveFilter}/>}
             <div className={classes.workspace} style={
               (() => {
                 switch (this.state.windows.length) {
@@ -307,7 +456,8 @@ class Application extends React.Component {
                           attributeGroup={windowConfig.tableAttributeGroup}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}/>
+                          onDesignSelection={this.onDesignSelection}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
@@ -317,7 +467,8 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          numberOfWindows={this.state.windows.length}/>
+                          numberOfWindows={this.state.windows.length}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
@@ -326,14 +477,16 @@ class Application extends React.Component {
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
-                          onDesignLasso={this.onDesignLasso}/>
+                          onDesignLasso={this.onDesignLasso}
+                          activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (
                         <GalleryWindow key={i}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}/>);
+                          onDesignSelection={this.onDesignSelection}
+                          activeDesigns={activeDesigns}/>);
                     } else {
                       return (
                         <EmptyWindow key={i} id={i}/>

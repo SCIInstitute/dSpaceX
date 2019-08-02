@@ -60,6 +60,7 @@ class GraphGLWindow extends GLWindow {
     this.vertices = null;
     this.vertColors = null;
     this.sampleIndexes = null;
+    this.vertOpacity = null;
     this.nodes = null;
     this.edges = null;
     this.edgeVerts = null;
@@ -418,6 +419,7 @@ class GraphGLWindow extends GLWindow {
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges, quadHeight = 0.1, quadWidth = 0.1) {
     this.sampleIndexes = [];
     this.vertColors = [];
+    this.vertOpacity = [];
     // this.bDrawEdgesAsQuads = true;
 
     // Graph Vertex Geometry
@@ -472,6 +474,19 @@ class GraphGLWindow extends GLWindow {
       for (let j = 0; j < 6; j++) {
         this.vertColors.push(arrayRGBColors[i], arrayRGBColors[i+1],
           arrayRGBColors[i+2]);
+      }
+    }
+  }
+
+  /**
+   * Adds opacity to go with the nodes
+   * @param {array} arrayOpacity
+   */
+  addVertexOpacity(arrayOpacity) {
+    this.vertOpacity = [];
+    for (let i = 0; i < arrayOpacity.length; ++i) {
+      for (let j = 0; j < 6; ++j) {
+        this.vertOpacity.push(arrayOpacity[i]);
       }
     }
   }
@@ -666,6 +681,14 @@ class GraphGLWindow extends GLWindow {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
+    // vertex opacity buffer
+    this.vertOpacity_buffer = gl.createBuffer();
+    this.vertOpacity_array = new Float32Array(this.vertOpacity);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
     // Edge buffer
     this.edgeVerts_buffer = gl.createBuffer();
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
@@ -714,6 +737,12 @@ class GraphGLWindow extends GLWindow {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
+    this.vertOpacity_array = new Float32Array(this.vertOpacity);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    webGLErrorCheck(gl);
+
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
@@ -740,7 +769,7 @@ class GraphGLWindow extends GLWindow {
    * Callback invoked before the React Component is rendered.
    */
   componentWillMount() {
-    const { selectedDesigns } = this.props;
+    const { selectedDesigns, activeDesigns } = this.props;
     if (!this.props.decomposition) {
       return;
     }
@@ -761,6 +790,7 @@ class GraphGLWindow extends GLWindow {
               .domain([min, 0.5*(min+max), max])
               .range(['white', '#b53f51']);
             let colorsArray = [];
+            let opacityArray = [];
             for (let i = 0; i < this.props.qoi.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
@@ -772,18 +802,33 @@ class GraphGLWindow extends GLWindow {
                 colorTriplet[2] /= 255;
                 colorsArray.push(...colorTriplet);
               }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           } else {
             let colorsArray = [];
+            let opacityArray = [];
             for (let i=0; i < layout.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
               } else {
                 colorsArray.push(1.0, 1.0, 1.0);
               }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           }
         } else {
           if (this.props.decomposition) {
@@ -844,7 +889,7 @@ class GraphGLWindow extends GLWindow {
     if (!nextProps.decomposition) {
       return;
     }
-    const { selectedDesigns } = nextProps;
+    const { selectedDesigns, activeDesigns } = nextProps;
     const { datasetId, k, persistenceLevel } = nextProps.decomposition;
     const qoiName = nextProps.decomposition.decompositionField;
 
@@ -860,7 +905,8 @@ class GraphGLWindow extends GLWindow {
         k === this.props.decomposition.k &&
         persistenceLevel === this.props.decomposition.persistenceLevel &&
         qoiName === this.props.decomposition.decompositionField &&
-        selectedDesigns !== this.props.selectedDesigns) {
+        (selectedDesigns !== this.props.selectedDesigns ||
+        activeDesigns !== this.props.activeDesigns)) {
       if (this.layout && this.adjacency) {
         this.createGeometry(this.layout, this.adjacency, 0.02, 0.02);
         if (this.qoi) {
@@ -870,6 +916,7 @@ class GraphGLWindow extends GLWindow {
             .domain([min, 0.5*(min+max), max])
             .range(['white', '#b53f51']);
           let colorsArray = [];
+          let opacityArray = [];
           for (let i = 0; i < this.qoi.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
@@ -881,18 +928,33 @@ class GraphGLWindow extends GLWindow {
               colorTriplet[2] /= 255;
               colorsArray.push(...colorTriplet);
             }
+
+            if (activeDesigns.has(i)) {
+              opacityArray.push(1.0);
+            } else {
+              opacityArray.push(0.5);
+            }
           }
           this.addVertexColors(colorsArray);
+          this.addVertexOpacity(opacityArray);
         } else {
           let colorsArray = [];
+          let opacityArray = [];
           for (let i=0; i < this.layout.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
             } else {
               colorsArray.push(1.0, 1.0, 1.0);
             }
+
+            if (activeDesigns.has(i)) {
+              opacityArray.push(1.0);
+            } else {
+              opacityArray.push(0.5);
+            }
           }
           this.addVertexColors(colorsArray);
+          this.addVertexOpacity(opacityArray);
         }
       }
       this.updateBuffers();
@@ -918,6 +980,7 @@ class GraphGLWindow extends GLWindow {
               .domain([min, 0.5*(min+max), max])
               .range(['white', '#b53f51']);
             let colorsArray = [];
+            let opacityArray = [];
             for (let i = 0; i < this.qoi.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
@@ -929,18 +992,33 @@ class GraphGLWindow extends GLWindow {
                 colorTriplet[2] /= 255;
                 colorsArray.push(...colorTriplet);
               }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           } else {
             let colorsArray = [];
+            let opacityArray = [];
             for (let i=0; i < this.layout.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
               } else {
                 colorsArray.push(1.0, 1.0, 1.0);
               }
+
+              if (activeDesigns.has(i)) {
+                opacityArray.push(1.0);
+              } else {
+                opacityArray.push(0.5);
+              }
             }
             this.addVertexColors(colorsArray);
+            this.addVertexOpacity(opacityArray);
           }
         } else {
           if (nextProps.decomposition) {
@@ -1021,6 +1099,15 @@ class GraphGLWindow extends GLWindow {
     if (sampleIndexAttribute > 0) {
       gl.vertexAttribPointer(sampleIndexAttribute, 1, gl.UNSIGNED_SHORT, false, 0, 0);
       gl.enableVertexAttribArray(sampleIndexAttribute);
+    }
+
+    if (this.vertOpacity && this.vertOpacity.length === (this.vertices.length / 3)) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
+      let vertexOpacityAttribute = gl.getAttribLocation(shader, 'vertexOpacity');
+      if (vertexOpacityAttribute > 0) {
+        gl.vertexAttribPointer(vertexOpacityAttribute, 1, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(vertexOpacityAttribute);
+      }
     }
 
     let nodeOutlineLocation = gl.getUniformLocation(shader, 'nodeOutline');
