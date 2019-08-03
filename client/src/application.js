@@ -87,6 +87,7 @@ class Application extends React.Component {
     this.onDesignSelection = this.onDesignSelection.bind(this);
     this.onDesignLasso = this.onDesignLasso.bind(this);
     this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
+    this.changeFilterOperation = this.changeFilterOperation.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
     this.onRemoveFilter = this.onRemoveFilter.bind(this);
@@ -183,6 +184,7 @@ class Application extends React.Component {
         currentDataset: dataset,
         windows: [],
         selectedDesigns: new Set(),
+        union: true,
         filters: [],
         parameters: parameters,
         qois: qois,
@@ -250,6 +252,16 @@ class Application extends React.Component {
   onDisplayFilterDrawer() {
     this.setState({
       displayFilterDrawer: !this.state.displayFilterDrawer,
+    });
+  }
+
+  /**
+   * Change filter operation from union to intersection
+   * and vice versa.
+   */
+  changeFilterOperation() {
+    this.setState({
+      union: !this.state.union,
     });
   }
 
@@ -336,31 +348,73 @@ class Application extends React.Component {
     }
 
     const { numberOfSamples } = this.state.currentDataset;
-    const { filters, parameters, qois } = this.state;
+    const { filters, union } = this.state;
     if (filters === undefined || filters.filter((f) => f.enabled) < 1) {
       return new Set([...Array(numberOfSamples).keys()]);
+    } else if (union) {
+      return this.getUnion();
     } else {
-      let activeDesigns = new Set();
-      const enabledFilters = filters.filter((f) => f.enabled);
-      enabledFilters.forEach((f) => {
-        if (f.attributeGroup === 'parameters') {
-          let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
-          let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
-          visibleParams.forEach((value) => {
-            let index = params.findIndex((v) => v === value);
-            activeDesigns.add(index);
-          });
-        } else if (f.attributeGroup === 'qois') {
-          let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
-          let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
-          visibleQois.forEach((value) => {
-            let index = filteredQois.findIndex((v) => v === value);
-            activeDesigns.add(index);
-          });
-        }
-      });
-      return activeDesigns;
+      return this.getIntersection();
     }
+  }
+
+  /**
+   * Get union of designs from filter
+   * @return {Set<any>}
+   */
+  getUnion() {
+    const { filters, parameters, qois } = this.state;
+    let activeDesigns = new Set();
+    const enabledFilters = filters.filter((f) => f.enabled);
+    enabledFilters.forEach((f) => {
+      if (f.attributeGroup === 'parameters') {
+        let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+        let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+        visibleParams.forEach((value) => {
+          let index = params.findIndex((v) => v === value);
+          activeDesigns.add(index);
+        });
+      } else if (f.attributeGroup === 'qois') {
+        let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+        let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
+        visibleQois.forEach((value) => {
+          let index = filteredQois.findIndex((v) => v === value);
+          activeDesigns.add(index);
+        });
+      }
+    });
+    return activeDesigns;
+  }
+
+  /**
+   * Get intersection of design from filters.
+   * @return {Set<any>}
+   */
+  getIntersection() {
+    const { filters, parameters, qois } = this.state;
+    const { numberOfSamples } = this.state.currentDataset;
+    let activeDesigns = new Set([...Array(numberOfSamples).keys()]);
+    const enabledFilters = filters.filter((f) => f.enabled);
+    enabledFilters.forEach((f) => {
+      if (f.attributeGroup === 'parameters') {
+        let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
+        let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
+        let newSet = new Set();
+        visibleParams.forEach((value) => {
+          newSet.add(params.findIndex((v) => v === value));
+        });
+        activeDesigns = new Set([...activeDesigns].filter((x) => newSet.has(x)));
+      } else if (f.attributeGroup === 'qois') {
+        let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
+        let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
+        let newSet = new Set();
+        visibleQois.forEach((value) => {
+          newSet.add(filteredQois.findIndex((v) => v === value));
+        });
+        activeDesigns = new Set([...activeDesigns.filter((x) => newSet.has(x))]);
+      }
+    });
+    return activeDesigns;
   }
 
   /**
@@ -421,6 +475,8 @@ class Application extends React.Component {
             <div className={classes.toolbar}/>
             {this.state.displayFilterDrawer && <FilterPanel parameters={this.state.parameters}
               qois={this.state.qois}
+              union={this.state.union}
+              changeFilterOperation={this.changeFilterOperation}
               filters={this.state.filters}
               addFilter={this.onAddFilter}
               updateFilter={this.onUpdateFilter}
