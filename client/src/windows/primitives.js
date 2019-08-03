@@ -15,6 +15,8 @@ export class Quad {
     this.Y = centerY;
     this.width = width;
     this.height = height;
+    this.initWidth = width;
+    this.initHeight = height;
 
     this.updateVertices();
   }
@@ -41,6 +43,17 @@ export class Quad {
   decreaseRadius(scalar) {
     this.width = Math.max(0.002, this.width / scalar);
     this.height = Math.max(0.002, this.height / scalar);
+
+    this.updateVertices();
+  }
+
+  /**
+   * Resets radius to initial radius
+   */
+  resetRadius() {
+    console.log('resetRadius Called');
+    this.width = this.initWidth;
+    this.height = this.initHeight;
 
     this.updateVertices();
   }

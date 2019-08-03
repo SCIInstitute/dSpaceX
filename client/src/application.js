@@ -10,7 +10,7 @@ import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
 import FilterPanel from './panels/filterPanel';
 import GalleryWindow from './windows/galleryWindow';
-import GraphGLWindow from './windows/graphGLWindow.js';
+import MsGraphWindow from './windows/msGraphWindow';
 import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
@@ -19,7 +19,7 @@ import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
 import { withStyles } from '@material-ui/core/styles';
-import MsGraphWindow from "./windows/msGraphWindow";
+
 
 const drawerWidth = 260;
 const styles = (theme) => ({
