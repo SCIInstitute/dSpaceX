@@ -386,6 +386,23 @@ class Application extends React.Component {
     return activeDesigns;
   }
 
+  colorEncodeScatter() {
+    const { windows } = this.state;
+    let graphWindows = windows.filter((w) => w.dataViewType ==='graph')
+    if (graphWindows.length <= 0) {
+      return false;
+    }
+
+    graphWindows.forEach((w) => {
+      if (!w.decomposition) {
+        console.log('No Decomposition set.');
+        return false;
+      }
+    });
+
+    return true;
+  }
+
   /**
    * Get intersection of design from filters.
    * @return {Set<any>}
@@ -422,6 +439,7 @@ class Application extends React.Component {
    * @return {JSX}
    */
   render() {
+    this.colorEncodeScatter();
     const { classes } = this.props;
     const activeDesigns = this.getActiveDesigns();
     let drawerMarginColor = this.state.connected ? '#fff' : '#ddd';
@@ -534,7 +552,9 @@ class Application extends React.Component {
                           selectedDesigns={this.state.selectedDesigns}
                           onDesignSelection={this.onDesignSelection}
                           onDesignLasso={this.onDesignLasso}
-                          activeDesigns={activeDesigns}/>
+                          activeDesigns={activeDesigns}
+                          graphWindowOpen={this.colorEncodeScatter()}
+                        />
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (
