@@ -9,7 +9,7 @@ parameters:
 
 qois:
   format: csv
-  file: supershapes_asym_nonunit_design_params.csv
+  file: supershapes_asym_nonunit_QoIs.csv
 
 thumbnails:
   format: png
@@ -17,13 +17,13 @@ thumbnails:
   padZeroes: false
   offset: 1
 
-#distances:
-#  format: csv
-#  file: distances.csv
-#  metric: euclidean
+distances:
+  format: csv
+  file: distances.csv
+  metric: euclidean
 
-#embeddings:
-#- name: tsne
-#  format: csv
-#  file: tsne_layout.csv
+embeddings:
+- name: tsne
+  format: csv
+  file: tsne_layout.csv
 
