@@ -371,15 +371,15 @@ class Application extends React.Component {
         let params = parameters.filter((p) => p.parameterName === f.attribute)[0].parameter;
         let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
         visibleParams.forEach((value) => {
-          let index = params.findIndex((v) => v === value);
-          activeDesigns.add(index);
+          let indexes = this.findAllIndexes(params, value);
+          indexes.forEach((index) => activeDesigns.add(index));
         });
       } else if (f.attributeGroup === 'qois') {
         let filteredQois = qois.filter((q) => q.qoiName === f.attribute)[0].qoi;
         let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
         visibleQois.forEach((value) => {
-          let index = filteredQois.findIndex((v) => v === value);
-          activeDesigns.add(index);
+          let indexes = this.findAllIndexes(filteredQois, value);
+          indexes.forEach((index) => activeDesigns.add(index));
         });
       }
     });
@@ -401,7 +401,8 @@ class Application extends React.Component {
         let visibleParams = params.filter((p) => p >= f.min && p <= f.max);
         let newSet = new Set();
         visibleParams.forEach((value) => {
-          newSet.add(params.findIndex((v) => v === value));
+          let indexes = this.findAllIndexes(params, value);
+          indexes.forEach((index) => newSet.add(index));
         });
         activeDesigns = new Set([...activeDesigns].filter((x) => newSet.has(x)));
       } else if (f.attributeGroup === 'qois') {
@@ -409,12 +410,22 @@ class Application extends React.Component {
         let visibleQois = filteredQois.filter((q) => q >= f.min && q <= f.max);
         let newSet = new Set();
         visibleQois.forEach((value) => {
-          newSet.add(filteredQois.findIndex((v) => v === value));
+          let indexes = this.findAllIndexes(filteredQois, value);
+          indexes.forEach((index) => newSet.add(index));
         });
         activeDesigns = new Set([...activeDesigns.filter((x) => newSet.has(x))]);
       }
     });
     return activeDesigns;
+  }
+
+  findAllIndexes(array, value) {
+    let indexes = [];
+    let i = -1;
+    while ((i = array.indexOf(value, i+1)) !== -1) {
+      indexes.push(i);
+    }
+    return indexes;
   }
 
   /**
