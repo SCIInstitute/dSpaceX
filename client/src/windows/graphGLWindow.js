@@ -1207,6 +1207,7 @@ class GraphGLWindow extends GLWindow {
             flexDirection: 'column',
             top: (this.state.hoverY - 10) + 'px',
             left: (this.state.hoverX + 10) + 'px',
+            opacity: '0.75',
           }}>
             <Typography>
               { 'Sample: ' + this.state.hoverNode }
