@@ -989,6 +989,8 @@ class GraphGLWindow extends GLWindow {
         this.client.fetchThumbnails(this.props.dataset.datasetId)
           .then((result) => {
             this.thumbnails = result.thumbnails;
+            this.createTextureAtlas();
+            requestAnimationFrame(this.renderGL);
           });
       }
     }
