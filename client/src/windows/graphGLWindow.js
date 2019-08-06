@@ -984,6 +984,15 @@ class GraphGLWindow extends GLWindow {
    * @param {object} prevContext previous context
    */
   componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.decomposition && !prevProps.decomposition) {
+      if (!this.thumbnails) {
+        this.client.fetchThumbnails(this.props.dataset.datasetId)
+          .then((result) => {
+            this.thumbnails = result.thumbnails;
+          });
+      }
+    }
+
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
       this.resizeCanvas();
     }
@@ -1178,11 +1187,12 @@ class GraphGLWindow extends GLWindow {
 
     let imageBase64 = null;
     let qoi = null;
-    if (this.state.hoverNode && this.props.qoi) {
-      qoi = (this.props.qoi[this.state.hoverNode]).toExponential(5);
-      if (this.thumbnails) {
-        imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
-      }
+    if (this.state.hoverNode && this.qoi) {
+      qoi = (this.qoi[this.state.hoverNode]).toExponential(5);
+    }
+
+    if (this.state.hoverNode && this.thumbnails) {
+      imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
     }
 
     return (
