@@ -413,7 +413,7 @@ class Application extends React.Component {
           let indexes = this.findAllIndexes(filteredQois, value);
           indexes.forEach((index) => newSet.add(index));
         });
-        activeDesigns = new Set([...activeDesigns.filter((x) => newSet.has(x))]);
+        activeDesigns = new Set([...activeDesigns].filter((x) => newSet.has(x)));
       }
     });
     return activeDesigns;
