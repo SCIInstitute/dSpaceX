@@ -55,6 +55,8 @@ class GraphGLWindow extends GLWindow {
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.pickingShaderProgram = null;
+    this.thumbnailHeight = 1;
+    this.thumbnailWidth = 1;
     this.thumbnailShaderProgram = null;
     this.activeNodeShader = null;
     this.vertices = null;
@@ -528,12 +530,10 @@ class GraphGLWindow extends GLWindow {
     let gl = canvas.getContext('webgl');
 
     // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
-    let width = this.thumbnails[0].width;
-    let height = this.thumbnails[0].height;
+    this.thumbnailWidth = this.thumbnails[0].width;
+    this.thumbnailHeight = this.thumbnails[0].height;
     const MAX_TEXTURE_SIZE = 2048;
-    const THUMBNAIL_WIDTH = 80;
-    const THUMBNAIL_HEIGHT = 40;
-    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
+    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / this.thumbnailWidth);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 
     for (let i=0; i < this.thumbnails.length; i++) {
@@ -542,12 +542,12 @@ class GraphGLWindow extends GLWindow {
       // copy the thumbnail into the atlas.
       let atlasOffsetY = Math.floor(i / thumbnailsPerTextureRow);
       let atlasOffsetX = i % thumbnailsPerTextureRow;
-      let y = (atlasOffsetY * THUMBNAIL_HEIGHT);
-      let x = (atlasOffsetX * THUMBNAIL_WIDTH);
+      let y = (atlasOffsetY * this.thumbnailHeight);
+      let x = (atlasOffsetX * this.thumbnailWidth);
 
-      for (let h=0; h < height; h++) {
-        for (let w=0; w < width; w++) {
-          let sourceIndex = (width*h + w);
+      for (let h=0; h < this.thumbnailHeight; h++) {
+        for (let w=0; w < this.thumbnailWidth; w++) {
+          let sourceIndex = (this.thumbnailWidth*h + w);
           let targetIndex = ((y+h)*MAX_TEXTURE_SIZE) + x + w;
           atlasBuffer[4*targetIndex + 0] = data[4*sourceIndex + 0];
           atlasBuffer[4*targetIndex + 1] = data[4*sourceIndex + 1];
@@ -1074,6 +1074,12 @@ class GraphGLWindow extends GLWindow {
 
     let projectionMatrixLocation = gl.getUniformLocation(shader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
+
+    let thumbnailWidthLocation = gl.getUniformLocation(shader, 'thumbnailWidth');
+    gl.uniform1f(thumbnailWidthLocation, this.thumbnailWidth);
+
+    let thumbnailHeightLocation = gl.getUniformLocation(shader, 'thumbnailHeight');
+    gl.uniform1f(thumbnailHeightLocation, this.thumbnailHeight);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);

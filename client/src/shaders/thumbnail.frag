@@ -2,6 +2,8 @@ precision mediump float;
 uniform float nodeOutline;
 uniform float nodeSmoothness;
 uniform sampler2D imageTex;
+uniform float thumbnailWidth;
+uniform float thumbnailHeight;
 varying vec2 vertexUV;
 varying vec3 geomColor;
 varying float index;
@@ -15,8 +17,8 @@ float modi(float a,float b) {
 void main(void) {
   vec2 uv = vertexUV.xy;
   float MAX_TEXTURE_SIZE = 2048.0;
-  float THUMBNAIL_WIDTH = 80.0;
-  float THUMBNAIL_HEIGHT = 40.0;
+  float THUMBNAIL_WIDTH = thumbnailWidth;
+  float THUMBNAIL_HEIGHT = thumbnailHeight;
   float thumbnailsPerTextureRow = floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
 
   float aspect_ratio = THUMBNAIL_HEIGHT / THUMBNAIL_WIDTH;
