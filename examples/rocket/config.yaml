@@ -1,15 +1,15 @@
 name: Rocket
 
 samples:
-  count: 11000
+  count: 1000
 
 parameters:
   format: csv
-  file: supershapes_asym_nonunit_design_params.csv
+  file: rocket_supershapes_design_parameters.csv
 
 qois:
   format: csv
-  file: supershapes_asym_nonunit_QoIs.csv
+  file: rocket_supershapes_QoIs.csv
 
 thumbnails:
   format: png
@@ -19,11 +19,11 @@ thumbnails:
 
 distances:
   format: csv
-  file: distances.csv
+  file: rocket_supershapes_distance_matrix.csv
   metric: euclidean
 
 embeddings:
 - name: tsne
   format: csv
-  file: tsne_layout.csv
+  file: rocket_tsne_layout.csv
 

@@ -3,10 +3,13 @@ name: Colorado (Truss)
 samples:
   count: 1000
 
+parameters:
+  format: csv
+  file: CantileverBeam_design_parameters.csv
+
 qois:
-  - name: max stress
-    format: csv
-    file: max_stress.csv
+  format: csv
+  file: CantileverBeam_QoIs.csv
 
 thumbnails:
    format: png
@@ -16,10 +19,10 @@ thumbnails:
 
 distances:
      format: csv
-     file: distances.csv
+     file: CantileverBeam_distance_matrix.csv
      metric: euclidean
 
 embeddings:
   - name: tsne
     format: csv
-    file: tsne-layout.csv
+    file: CantileverBeam_tsne_layout.csv
