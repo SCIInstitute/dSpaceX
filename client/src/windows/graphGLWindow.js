@@ -55,8 +55,8 @@ class GraphGLWindow extends GLWindow {
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.pickingShaderProgram = null;
-    this.thumbnailHeight = 1;
-    this.thumbnailWidth = 1;
+    this.thumbnailHeight = 0;
+    this.thumbnailWidth = 0;
     this.thumbnailShaderProgram = null;
     this.activeNodeShader = null;
     this.vertices = null;
@@ -532,7 +532,7 @@ class GraphGLWindow extends GLWindow {
     // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
     this.thumbnailWidth = this.thumbnails[0].width;
     this.thumbnailHeight = this.thumbnails[0].height;
-    const MAX_TEXTURE_SIZE = 2048;
+    const MAX_TEXTURE_SIZE = 8192;
     let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / this.thumbnailWidth);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 

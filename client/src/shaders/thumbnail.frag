@@ -16,7 +16,7 @@ float modi(float a,float b) {
 
 void main(void) {
   vec2 uv = vertexUV.xy;
-  float MAX_TEXTURE_SIZE = 2048.0;
+  float MAX_TEXTURE_SIZE = 8192.0;
   float THUMBNAIL_WIDTH = thumbnailWidth;
   float THUMBNAIL_HEIGHT = thumbnailHeight;
   float thumbnailsPerTextureRow = floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
