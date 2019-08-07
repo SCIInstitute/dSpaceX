@@ -1212,7 +1212,7 @@ class GraphGLWindow extends GLWindow {
             opacity: '0.75',
           }}>
             <Typography>
-              { 'Sample: ' + this.state.hoverNode }
+              { 'Sample: ' + (this.state.hoverNode + 1) }
             </Typography>
             { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
             { imageBase64 ?
