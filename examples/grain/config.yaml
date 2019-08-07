@@ -16,11 +16,10 @@ thumbnails:
 
 distances:
   format: csv
-  file: NewdistanceMatrix_400.csv
+  file: NewdistanceMatrix_aug7.csv
   metric: euclidean
 
 embeddings:
 - name: tsne
   format: csv
-  file: New_tsne_layout_400.csv
-
+  file: tsne_layout_aug7.csv
