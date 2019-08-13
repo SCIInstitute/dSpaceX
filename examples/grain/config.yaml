@@ -1,0 +1,25 @@
+name: Additive Manufacturing
+
+samples:
+  count: 400
+
+qois:
+  - name: Percent Fractured
+    format: csv
+    file: QOI_400.csv
+
+thumbnails:
+  format: png
+  files: images/?.png
+  padZeroes: false
+  offset: 1
+
+distances:
+  format: csv
+  file: NewdistanceMatrix_aug7.csv
+  metric: euclidean
+
+embeddings:
+- name: tsne
+  format: csv
+  file: tsne_layout_aug7.csv

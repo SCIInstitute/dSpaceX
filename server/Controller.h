@@ -4,7 +4,7 @@
 #include "hdprocess/HDProcessResult.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
-#include <jsoncpp/json.h>
+#include <jsoncpp/json/json.h>
 
 #include <map>
 #include <functional>
@@ -32,6 +32,7 @@ class Controller {
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);

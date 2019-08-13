@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 import Drawer from '@material-ui/core/Drawer';
 import FilterOptions from '../filterOptions';
+import Grid from '@material-ui/core/Grid';
+import Switch from '@material-ui/core/Switch';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
 const drawerWidth = 230;
@@ -18,14 +21,6 @@ const styles = (theme) => ({
  * to filter the Gallery View of the thumbnails for a design
  */
 class FilterPanel extends Component {
-  /**
-   * Constructs the FilterPanel object
-   * @param {object} props
-   */
-  constructor(props) {
-    super(props);
-  };
-
   /**
    * Need to make sure that a unique id is assigned
    * to each filter
@@ -49,12 +44,27 @@ class FilterPanel extends Component {
    * @return {jsx}
    */
   render() {
-    const { classes, filters, addFilter, updateFilter, removeFilter, qois, parameters } = this.props;
+    const { classes, union, changeFilterOperation,
+      filters, addFilter, updateFilter, removeFilter, qois, parameters } = this.props;
     return (
       <Drawer open={true} PaperProps={{ elevation:6 }} variant='persistent'
         classes={{ paper:classes.drawerPaper }} anchor='right'>
         { /* Add div to account for menu bar */ }
         <div className={classes.toolbar} />
+        <Typography component="div" style={{ marginLeft:'25px', marginTop:'5px' }}>
+          <Grid component="label" container alignItems="center" spacing={0}>
+            <Grid item>INTERSECT</Grid>
+            <Grid item>
+              <Switch
+                color="primary"
+                checked={union}
+                onChange={changeFilterOperation}
+                value="union"
+              />
+            </Grid>
+            <Grid item>UNION</Grid>
+          </Grid>
+        </Typography>
         <Button color="primary" className={classes.button}
           onClick={() => addFilter(this.getId())}>
           Add Filter

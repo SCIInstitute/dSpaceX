@@ -5,8 +5,8 @@
 #include "hdprocess/util/csv/loaders.h"
 #include "metrics/EuclideanMetric.h"
 #include "precision/Precision.h"
-#include <png.h>
 
+#include <png.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -67,8 +67,8 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
   FortranLinalg::DenseMatrix<Precision> tSneLayout = 
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-  //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-  HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
+      //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
+        HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
   
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;
@@ -300,7 +300,7 @@ void DisplayGraph::init(){
 }
 
 void DisplayGraph::initTextures() {  
-  int thumbnailCount = 1000;
+  int thumbnailCount = 100;
 
   const int MAX_TEXTURE_SIZE = 2048;
   const int THUMBNAIL_WIDTH = 80;
@@ -334,7 +334,7 @@ void DisplayGraph::initTextures() {
       textureAtlas[4*(MAX_TEXTURE_SIZE*j + i) + 3] = 255;
     }
   }
-  glGenTextures(atlasCount, imageTextureID);  
+  glGenTextures(atlasCount, imageTextureID);
 
   buildTextureAtlas(textureAtlas, "../../examples/truss/images/");
   createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);

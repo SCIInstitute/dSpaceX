@@ -249,7 +249,7 @@ class Client {
    * @param {array} crystalIds
    * @return {Promise}
    */
-  fetchMoreSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
+  fetchMorseSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
     let command = {
       name: 'fetchMorseSmaleCrystals',
       datasetId: datasetId,
@@ -273,7 +273,7 @@ class Client {
   }
 
   /**
-   * Grab the 2d embedding for the specified persistence level.
+   * Grab the graph embedding for the specified persistence level.
    * @param {string} datasetId
    * @param {number} k
    * @param {number} persistenceLevel
@@ -282,6 +282,23 @@ class Client {
   fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel) {
     let command = {
       name: 'fetchLayoutForPersistenceLevel',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Fetch the Morse-Smale embedding for the specified persistence level
+   * @param {string} datasetId
+   * @param {number} k nearest neighbors
+   * @param {number} persistenceLevel
+   * @return {Promise}
+   */
+  fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel) {
+    let command = {
+      name: 'fetchMorseSmaleLayoutForPersistenceLevel',
       datasetId: datasetId,
       k: k,
       persistenceLevel: persistenceLevel,

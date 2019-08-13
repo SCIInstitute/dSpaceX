@@ -42,7 +42,7 @@ template<typename TPrecision>
 void DisplayTubes<TPrecision>::reshape(int w, int h){
   width = w;
   height = h;
-  glViewport(0, 0, w, h);       
+  glViewport(0, 0, w, h);
   glMatrixMode(GL_PROJECTION);  
   glLoadIdentity();
   setupOrtho(w, h);
@@ -72,8 +72,6 @@ void DisplayTubes<TPrecision>::init(){
   glLightfv(GL_LIGHT0, GL_SPECULAR, white_light);
   //glLightf(GL_LIGHT0, GL_SPECULAR, 1);
   glEnable(GL_LIGHT0);
-
-
 
   glClearColor(1, 1, 1, 0);
   glClearStencil(0x0);
@@ -126,7 +124,7 @@ void DisplayTubes<TPrecision>::printHelp(){
 };
 
 template<typename TPrecision>
-void DisplayTubes<TPrecision>::display(void){
+void DisplayTubes<TPrecision>::display(){
   unsigned int crystalCount = topoData->getComplex(state->currentLevel)->getCrystals().size();
   // unsigned int crystalCount = (int)data->getCrystals(state->currentLevel).N();
   if(crystalCount != oldN){
@@ -146,8 +144,7 @@ void DisplayTubes<TPrecision>::display(void){
   glTranslatef(tx,ty, 5); 
   glRotatef(rotation[0], 1, 0, 0); 
   glRotatef(rotation[1], 0, 1, 0); 
-  glRotatef(rotation[2], 0, 0, 1); 
-  glTranslatef(0,0, 0.5); 
+  glRotatef(rotation[2], 0, 0, 1);
 
   renderMS();
 
@@ -355,7 +352,7 @@ void DisplayTubes<TPrecision>::display(void){
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_LIGHTING); 
 
-  glutSwapBuffers();
+  glutSwapBuffers(); // Used for animation
 };
 
 
@@ -367,7 +364,6 @@ void DisplayTubes<TPrecision>::keyboard(unsigned char key, int x, int y) {
     case 'q':
     case 'Q':
       exit(0);
-      break;
     case 'h':
     case 'H':
       printHelp();
@@ -519,8 +515,8 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
       }
       else{
         // translate
-        tx -= dx*0.01;
-        ty += dy*0.01;  
+        tx += dx*0.01;
+        ty -= dy*0.01;
       }
       break;
 
@@ -729,7 +725,7 @@ void DisplayTubes<TPrecision>::doPick() {
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
   glutPostRedisplay();
-};
+}
 
 
 template<typename TPrecision>
@@ -749,7 +745,7 @@ void DisplayTubes<TPrecision>::setupOrtho(int w, int h) {
 
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
-  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32);
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
   gleDouble points[data->getNumberOfSamples()+2][3];
   float colors[data->getNumberOfSamples()+2][4];
   gleDouble radii[data->getNumberOfSamples()+2];
@@ -1252,13 +1248,12 @@ void DisplayTubes<TPrecision>::renderExtrema() {
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::renderMS() {
   //draw color tubes and extremal points
-  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 2);
-
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 2.0);
   renderTubes();
 
   //transparent widths
   if (extremaOnly) {
-    renderExtrema(); 
+    renderExtrema();
   } else {
     renderWidths();
   }
@@ -1316,7 +1311,7 @@ void DisplayTubes<TPrecision>::renderMS() {
     }
     glePolyCone_c4f(4, points, nullptr, radii);      
   }
-};
+}
 
 
 template<typename TPrecision>

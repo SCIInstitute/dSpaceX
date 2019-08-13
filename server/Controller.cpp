@@ -10,7 +10,7 @@
 #include "hdprocess/LegacyTopologyDataImpl.h"
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
-#include <jsoncpp/json.h>
+#include <jsoncpp/json/json.h>
 #include "precision/Precision.h"
 #include "serverlib/wst.h"
 #include "util/DenseVectorSample.h"
@@ -51,6 +51,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleLayoutForPersistenceLevel", std::bind(&Controller::fetchMorseSmaleLayoutForPersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -62,7 +63,6 @@ void Controller::configureCommandHandlers() {
  */
 
 void Controller::configureAvailableDatasets(const std::string &path) {
-
   boost::filesystem::path rootPath(path);
   if (!boost::filesystem::is_directory(rootPath)) {
     std::cout << "Data path " << rootPath.string() << " is not a valid directory." << std::endl;
@@ -141,8 +141,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
 /**
  * Handle the command to fetch list of available datasets.
  */
-void Controller::fetchDatasetList(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchDatasetList(const Json::Value &request, Json::Value &response) {
   response["datasets"] = Json::Value(Json::arrayValue);
 
   for (size_t i=0; i < m_availableDatasets.size(); i++) {
@@ -156,8 +155,7 @@ void Controller::fetchDatasetList(
 /**
  * Handle the command to load and fetch details of a dataset.
  */
-void Controller::fetchDataset(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchDataset(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -195,8 +193,7 @@ void Controller::fetchKNeighbors(
   int n = m_currentDataset->getDistanceMatrix().N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
-  Distance<Precision>::findKNN(
-      m_currentDataset->getDistanceMatrix(), KNN, KNND);
+  Distance<Precision>::findKNN(m_currentDataset->getDistanceMatrix(), KNN, KNND);
 
   response["datasetId"] = datasetId;
   response["k"] = k;
@@ -247,8 +244,7 @@ void Controller::fetchMorseSmalePersistence(
 /**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
-void Controller::fetchMorseSmalePersistenceLevel(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -293,8 +289,7 @@ void Controller::fetchMorseSmalePersistenceLevel(
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
-void Controller::fetchMorseSmaleCrystal(
-    const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -387,6 +382,11 @@ void Controller::fetchMorseSmaleDecomposition(
   }
 }
 
+/**
+ * This fetches the graph embedding layout for a given persistence level
+ * @param request
+ * @param response
+ */
 void Controller::fetchLayoutForPersistenceLevel(
     const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
@@ -462,6 +462,66 @@ void Controller::fetchLayoutForPersistenceLevel(
   }
 }
 
+void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int k = request["k"].asInt();
+  if (k < 0) {
+    // TODO: Send back an error message.
+  }
+
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k);
+
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  // Get points for regression line
+  std::vector<FortranLinalg::DenseMatrix<Precision>> layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+  int rows = m_currentVizData->getNumberOfSamples() + 2;
+  double points[rows][3];
+
+  // For each crystal
+  response["crystals"] = Json::Value(Json::arrayValue);
+  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
+
+    // Get all the points
+    for (unsigned int n = 0; n < layout[i].N(); ++n) {
+      for(unsigned int m = 0; m < layout[i].M(); ++m) {
+        points[n+1][m] = layout[i](m, n);
+      }
+      points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+    }
+    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
+    for (unsigned int j = 0; j < 3; ++j) {
+      points[0][j] = points[1][j] + points[2][j] - points[1][j];
+      points[m_currentVizData->getNumberOfSamples() + 1][j] =
+          points[m_currentVizData->getNumberOfSamples()][j] +
+          points[m_currentVizData->getNumberOfSamples()][j] -
+          points[m_currentVizData->getNumberOfSamples() - 1][j];
+    }
+
+    // Get layout for each crystal
+    Json::Value crystalObject(Json::objectValue);
+    crystalObject["id"] = i;
+    crystalObject["regressionPoints"] = Json::Value(Json::arrayValue);
+    for (unsigned int n = 0; n < rows; ++n) {
+      auto row = Json::Value(Json::arrayValue);
+      for (unsigned int m = 0; m < 3; ++m) {
+        row.append(points[n][m]);
+      }
+      crystalObject["regressionPoints"].append(row);
+    }
+    response["crystals"].append(crystalObject);
+  }
+}
 /**
  * Handle the command to fetch an array of a named parameter.
  */
@@ -618,7 +678,7 @@ void Controller::maybeProcessData(int k) {
         m_currentDistanceMatrix,
         m_currentDataset->getQoiVector(0),
         m_currentK  /* knn */,
-        25        /* samples */,
+        50        /* samples */,
         20        /* persistence */,
         true      /* random */,
         0.25      /* sigma */,

@@ -86,7 +86,7 @@ class GalleryWindow extends Component {
           && this.state.thumbnails.map((thumbnail, i) =>
             activeDesigns.has(i) && <Grid key={i} item>
               <Paper
-                style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? '#3f51b5' : '#D3D3D3' }}>
+                style={{ backgroundColor:selectedDesigns.has(thumbnail.id) ? 'orange' : '#D3D3D3' }}>
                 <img alt={'Image:' + i} onClick={(e) => this.props.onDesignSelection(e, thumbnail.id)} height='75'
                   style={{ margin:'5px 5px 5px 5px' }}
                   src={'data:image/png;base64, ' + thumbnail.img.rawData}/>

@@ -1,15 +1,15 @@
 name: Bracket
 
 samples:
-  count: 2000
+  count: 1000
 
 parameters:
   format: csv
-  file: parameters.csv
+  file: LBracket_design_parameters.csv
 
 qois:
   format: csv
-  file: qois.csv
+  file: LBracket_QoIs.csv
 
 thumbnails:
   format: png
@@ -19,10 +19,10 @@ thumbnails:
 
 distances:
   format: csv
-  file: distances.csv
+  file: LBracket_distance_matrix.csv
   metric: euclidean
 
 embeddings:
 - name: tsne
   format: csv
-  file: tsne_layout.csv
+  file: lbracket_tsne_layout.csv

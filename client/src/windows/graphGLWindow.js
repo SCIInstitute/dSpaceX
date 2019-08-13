@@ -55,12 +55,13 @@ class GraphGLWindow extends GLWindow {
     this.nodeShaderProgram = null;
     this.edgeShaderProgram = null;
     this.pickingShaderProgram = null;
+    this.thumbnailHeight = 0;
+    this.thumbnailWidth = 0;
     this.thumbnailShaderProgram = null;
     this.activeNodeShader = null;
     this.vertices = null;
     this.vertColors = null;
     this.sampleIndexes = null;
-    this.vertOpacity = null;
     this.nodes = null;
     this.edges = null;
     this.edgeVerts = null;
@@ -333,8 +334,16 @@ class GraphGLWindow extends GLWindow {
           this.activeNodeShader = this.thumbnailShaderProgram;
         } else {
           console.log('Switching to default node shader.');
+          for (let i = 0; i < this.nodes.length; i++) {
+            this.nodes[i].resetRadius();
+            let count = this.nodes[i].vertices.length;
+            for (let j = 0; j < count; j++) {
+              this.vertices[i*count+j] = this.nodes[i].vertices[j];
+            }
+          }
           this.activeNodeShader = this.nodeShaderProgram;
         }
+        this.updateBuffers();
         break;
     }
     requestAnimationFrame(this.renderGL);
@@ -419,7 +428,6 @@ class GraphGLWindow extends GLWindow {
   createGeometry(array2DVertsForNodes, arrayBeginEndIndicesForEdges, quadHeight = 0.1, quadWidth = 0.1) {
     this.sampleIndexes = [];
     this.vertColors = [];
-    this.vertOpacity = [];
     // this.bDrawEdgesAsQuads = true;
 
     // Graph Vertex Geometry
@@ -479,19 +487,6 @@ class GraphGLWindow extends GLWindow {
   }
 
   /**
-   * Adds opacity to go with the nodes
-   * @param {array} arrayOpacity
-   */
-  addVertexOpacity(arrayOpacity) {
-    this.vertOpacity = [];
-    for (let i = 0; i < arrayOpacity.length; ++i) {
-      for (let j = 0; j < 6; ++j) {
-        this.vertOpacity.push(arrayOpacity[i]);
-      }
-    }
-  }
-
-  /**
    * Compiles vertex and fragment shader programs.
    * @param {object} gl The OpenGL context.
    */
@@ -535,12 +530,10 @@ class GraphGLWindow extends GLWindow {
     let gl = canvas.getContext('webgl');
 
     // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
-    let width = this.thumbnails[0].width;
-    let height = this.thumbnails[0].height;
-    const MAX_TEXTURE_SIZE = 2048;
-    const THUMBNAIL_WIDTH = 80;
-    const THUMBNAIL_HEIGHT = 40;
-    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / THUMBNAIL_WIDTH);
+    this.thumbnailWidth = this.thumbnails[0].width;
+    this.thumbnailHeight = this.thumbnails[0].height;
+    const MAX_TEXTURE_SIZE = 8192;
+    let thumbnailsPerTextureRow = Math.floor(MAX_TEXTURE_SIZE / this.thumbnailWidth);
     let atlasBuffer = new Uint8Array(4*MAX_TEXTURE_SIZE*MAX_TEXTURE_SIZE);
 
     for (let i=0; i < this.thumbnails.length; i++) {
@@ -549,12 +542,12 @@ class GraphGLWindow extends GLWindow {
       // copy the thumbnail into the atlas.
       let atlasOffsetY = Math.floor(i / thumbnailsPerTextureRow);
       let atlasOffsetX = i % thumbnailsPerTextureRow;
-      let y = (atlasOffsetY * THUMBNAIL_HEIGHT);
-      let x = (atlasOffsetX * THUMBNAIL_WIDTH);
+      let y = (atlasOffsetY * this.thumbnailHeight);
+      let x = (atlasOffsetX * this.thumbnailWidth);
 
-      for (let h=0; h < height; h++) {
-        for (let w=0; w < width; w++) {
-          let sourceIndex = (width*h + w);
+      for (let h=0; h < this.thumbnailHeight; h++) {
+        for (let w=0; w < this.thumbnailWidth; w++) {
+          let sourceIndex = (this.thumbnailWidth*h + w);
           let targetIndex = ((y+h)*MAX_TEXTURE_SIZE) + x + w;
           atlasBuffer[4*targetIndex + 0] = data[4*sourceIndex + 0];
           atlasBuffer[4*targetIndex + 1] = data[4*sourceIndex + 1];
@@ -681,14 +674,6 @@ class GraphGLWindow extends GLWindow {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
-    // vertex opacity buffer
-    this.vertOpacity_buffer = gl.createBuffer();
-    this.vertOpacity_array = new Float32Array(this.vertOpacity);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    webGLErrorCheck(gl);
-
     // Edge buffer
     this.edgeVerts_buffer = gl.createBuffer();
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
@@ -737,12 +722,6 @@ class GraphGLWindow extends GLWindow {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     webGLErrorCheck(gl);
 
-    this.vertOpacity_array = new Float32Array(this.vertOpacity);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, this.vertOpacity_array, gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    webGLErrorCheck(gl);
-
     this.edgeVerts_array = new Float32Array(this.edgeVerts);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.edgeVerts_buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.edgeVerts_array, gl.STATIC_DRAW);
@@ -778,7 +757,6 @@ class GraphGLWindow extends GLWindow {
       .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
       .then(function(result) {
         if (result.embedding && result.embedding.layout) {
-          // let layout = [].concat(...result.embedding.layout);
           let layout = result.embedding.layout;
           let adjacency = result.embedding.adjacency;
           this.createGeometry(layout, adjacency, 0.02, 0.02);
@@ -790,45 +768,33 @@ class GraphGLWindow extends GLWindow {
               .domain([min, 0.5*(min+max), max])
               .range(['white', '#b53f51']);
             let colorsArray = [];
-            let opacityArray = [];
             for (let i = 0; i < this.props.qoi.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
-              } else {
+              } else if (activeDesigns.has(i)) {
                 let colorString = color(this.props.qoi[i]);
                 let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
                 colorTriplet[0] /= 255;
                 colorTriplet[1] /= 255;
                 colorTriplet[2] /= 255;
                 colorsArray.push(...colorTriplet);
-              }
-
-              if (activeDesigns.has(i)) {
-                opacityArray.push(1.0);
               } else {
-                opacityArray.push(0.5);
+                colorsArray.push((211/255), (211/255), (211/255));
               }
             }
             this.addVertexColors(colorsArray);
-            this.addVertexOpacity(opacityArray);
           } else {
             let colorsArray = [];
-            let opacityArray = [];
             for (let i=0; i < layout.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
-              } else {
+              } else if (activeDesigns.has(i)) {
                 colorsArray.push(1.0, 1.0, 1.0);
-              }
-
-              if (activeDesigns.has(i)) {
-                opacityArray.push(1.0);
               } else {
-                opacityArray.push(0.5);
+                colorsArray.push((211/255), (211/255), (211/255));
               }
             }
             this.addVertexColors(colorsArray);
-            this.addVertexOpacity(opacityArray);
           }
         } else {
           if (this.props.decomposition) {
@@ -916,49 +882,35 @@ class GraphGLWindow extends GLWindow {
             .domain([min, 0.5*(min+max), max])
             .range(['white', '#b53f51']);
           let colorsArray = [];
-          let opacityArray = [];
           for (let i = 0; i < this.qoi.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
-            } else {
+            } else if (activeDesigns.has(i)) {
               let colorString = color(this.qoi[i]);
               let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
               colorTriplet[0] /= 255;
               colorTriplet[1] /= 255;
               colorTriplet[2] /= 255;
               colorsArray.push(...colorTriplet);
-            }
-
-            if (activeDesigns.has(i)) {
-              opacityArray.push(1.0);
             } else {
-              opacityArray.push(0.5);
+              colorsArray.push((211/255), (211/255), (211/255));
             }
           }
           this.addVertexColors(colorsArray);
-          this.addVertexOpacity(opacityArray);
         } else {
           let colorsArray = [];
-          let opacityArray = [];
           for (let i=0; i < this.layout.length; i++) {
             if (selectedDesigns.has(i)) {
               colorsArray.push((63/255), (81/255), (181/255));
-            } else {
+            } else if (activeDesigns.has(i)) {
               colorsArray.push(1.0, 1.0, 1.0);
-            }
-
-            if (activeDesigns.has(i)) {
-              opacityArray.push(1.0);
             } else {
-              opacityArray.push(0.5);
+              colorsArray.push((211/255), (211/255), (211/255));
             }
           }
           this.addVertexColors(colorsArray);
-          this.addVertexOpacity(opacityArray);
         }
       }
-      this.updateBuffers();
-      requestAnimationFrame(this.renderGL);
     } else {
       Promise.all([
         this.client.fetchLayoutForPersistenceLevel(
@@ -980,45 +932,33 @@ class GraphGLWindow extends GLWindow {
               .domain([min, 0.5*(min+max), max])
               .range(['white', '#b53f51']);
             let colorsArray = [];
-            let opacityArray = [];
             for (let i = 0; i < this.qoi.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
-              } else {
+              } else if (activeDesigns.has(i)) {
                 let colorString = color(this.qoi[i]);
                 let colorTriplet = colorString.match(/([0-9]+\.?[0-9]*)/g);
                 colorTriplet[0] /= 255;
                 colorTriplet[1] /= 255;
                 colorTriplet[2] /= 255;
                 colorsArray.push(...colorTriplet);
-              }
-
-              if (activeDesigns.has(i)) {
-                opacityArray.push(1.0);
               } else {
-                opacityArray.push(0.5);
+                colorsArray.push((211/255), (211/255), (211/255));
               }
             }
             this.addVertexColors(colorsArray);
-            this.addVertexOpacity(opacityArray);
           } else {
             let colorsArray = [];
-            let opacityArray = [];
             for (let i=0; i < this.layout.length; i++) {
               if (selectedDesigns.has(i)) {
                 colorsArray.push((63/255), (81/255), (181/255));
-              } else {
+              } else if (activeDesigns.has(i)) {
                 colorsArray.push(1.0, 1.0, 1.0);
-              }
-
-              if (activeDesigns.has(i)) {
-                opacityArray.push(1.0);
               } else {
-                opacityArray.push(0.5);
+                colorsArray.push((211/255), (211/255), (211/255));
               }
             }
             this.addVertexColors(colorsArray);
-            this.addVertexOpacity(opacityArray);
           }
         } else {
           if (nextProps.decomposition) {
@@ -1033,6 +973,8 @@ class GraphGLWindow extends GLWindow {
         requestAnimationFrame(this.renderGL);
       });
     }
+    this.updateBuffers();
+    requestAnimationFrame(this.renderGL);
   }
 
   /**
@@ -1042,9 +984,43 @@ class GraphGLWindow extends GLWindow {
    * @param {object} prevContext previous context
    */
   componentDidUpdate(prevProps, prevState, prevContext) {
+    if (this.props.decomposition && !prevProps.decomposition) {
+      if (!this.thumbnails) {
+        this.client.fetchThumbnails(this.props.dataset.datasetId)
+          .then((result) => {
+            this.thumbnails = result.thumbnails;
+            this.createTextureAtlas();
+            requestAnimationFrame(this.renderGL);
+          });
+      }
+    }
+
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
       this.resizeCanvas();
     }
+
+    if (!this.setsAreEqual(this.props.activeDesigns, prevProps.activeDesigns)) {
+      this.renderGL();
+    }
+  }
+
+  /**
+   * Compares two array for equality
+   * @param {array} first
+   * @param {array} second
+   * @return {boolean}
+   */
+  setsAreEqual(first, second) {
+    if (first.size !== second.size) {
+      return false;
+    }
+
+    first.forEach( (i) => {
+      if (!second.has(i)) {
+        return false;
+      }
+    });
+    return true;
   }
 
   /**
@@ -1101,15 +1077,6 @@ class GraphGLWindow extends GLWindow {
       gl.enableVertexAttribArray(sampleIndexAttribute);
     }
 
-    if (this.vertOpacity && this.vertOpacity.length === (this.vertices.length / 3)) {
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.vertOpacity_buffer);
-      let vertexOpacityAttribute = gl.getAttribLocation(shader, 'vertexOpacity');
-      if (vertexOpacityAttribute > 0) {
-        gl.vertexAttribPointer(vertexOpacityAttribute, 1, gl.FLOAT, false, 0, 0);
-        gl.enableVertexAttribArray(vertexOpacityAttribute);
-      }
-    }
-
     let nodeOutlineLocation = gl.getUniformLocation(shader, 'nodeOutline');
     gl.uniform1f(nodeOutlineLocation, this.nodeOutline);
 
@@ -1118,6 +1085,12 @@ class GraphGLWindow extends GLWindow {
 
     let projectionMatrixLocation = gl.getUniformLocation(shader, 'uProjectionMatrix');
     gl.uniformMatrix4fv(projectionMatrixLocation, false, this.projectionMatrix);
+
+    let thumbnailWidthLocation = gl.getUniformLocation(shader, 'thumbnailWidth');
+    gl.uniform1f(thumbnailWidthLocation, this.thumbnailWidth);
+
+    let thumbnailHeightLocation = gl.getUniformLocation(shader, 'thumbnailHeight');
+    gl.uniform1f(thumbnailHeightLocation, this.thumbnailHeight);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertices.length / 3);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -1201,7 +1174,13 @@ class GraphGLWindow extends GLWindow {
    * @return {HTML}
    */
   render() {
-    let style = {
+    let paperStyle = {
+      position: 'relative',
+      border: '1px solid gray',
+      flexBasis: '50%',
+    };
+
+    let canvasStyle = {
       width: '100%',
       height: '100%',
       boxSizing: 'border-box',
@@ -1210,50 +1189,50 @@ class GraphGLWindow extends GLWindow {
 
     let imageBase64 = null;
     let qoi = null;
-    if (this.state.hoverNode && this.props.qoi) {
-      qoi = (this.props.qoi[this.state.hoverNode]).toExponential(5);
-      if (this.thumbnails) {
-        imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
-      }
+    if (this.state.hoverNode && this.qoi) {
+      qoi = (this.qoi[this.state.hoverNode]).toExponential(5);
+    }
+
+    if (this.state.hoverNode && this.thumbnails) {
+      imageBase64 = this.thumbnails[this.state.hoverNode].rawData;
     }
 
     return (
-      <React.Fragment>
-        <Paper style={{ position:'relative', border:'1px solid gray' }}>
-          <canvas ref='canvas' className='glCanvas' style={style} />
-          {
-            this.state.hoverNode ? (<Paper style={{
-              position: 'absolute',
-              width: '120px',
-              padding: '8px',
-              display: 'flex',
-              flexDirection: 'column',
-              top: (this.state.hoverY - 10) + 'px',
-              left: (this.state.hoverX + 10) + 'px',
-            }}>
-              <Typography>
-                { 'Sample: ' + this.state.hoverNode }
-              </Typography>
-              { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
-              { imageBase64 ?
-                <img src={'data:image/png;base64, ' + imageBase64}
-                  style = {{
-                    display: 'block',
-                    borderColor: '#ddd',
-                    borderSize: '1px',
-                    borderStyle: 'solid',
-                    maxWidth: '115px',
-                    width: 'auto',
-                    height: 'auto',
-                  }} /> :
-                []
-              }
-            </Paper>) :
+      <Paper style={paperStyle}>
+        <canvas ref='canvas' className='glCanvas' style={canvasStyle} />
+        {
+          this.state.hoverNode ? (<Paper style={{
+            position: 'absolute',
+            width: '120px',
+            padding: '8px',
+            display: 'flex',
+            flexDirection: 'column',
+            top: (this.state.hoverY - 10) + 'px',
+            left: (this.state.hoverX + 10) + 'px',
+            opacity: '0.75',
+          }}>
+            <Typography>
+              { 'Sample: ' + (this.state.hoverNode + 1) }
+            </Typography>
+            { qoi ? <Typography> { 'Qoi: ' + qoi } </Typography> : [] }
+            { imageBase64 ?
+              <img src={'data:image/png;base64, ' + imageBase64}
+                style = {{
+                  display: 'block',
+                  borderColor: '#ddd',
+                  borderSize: '1px',
+                  borderStyle: 'solid',
+                  maxWidth: '115px',
+                  width: 'auto',
+                  height: 'auto',
+                }} /> :
               []
-          }
-          <ErrorDialog ref='errorDialog' />
-        </Paper>
-      </React.Fragment>
+            }
+          </Paper>) :
+            []
+        }
+        <ErrorDialog ref='errorDialog' />
+      </Paper>
     );
   }
 }

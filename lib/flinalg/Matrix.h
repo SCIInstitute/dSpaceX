@@ -9,7 +9,7 @@ class Matrix{
 
   public:
     virtual ~Matrix(){};
-    virtual TPrecision &operator()(unsigned int i, unsigned int j) = 0;
+    virtual TPrecision &operator()(unsigned int row_index, unsigned int column_index) = 0;
     virtual unsigned int M() = 0;    
     virtual unsigned int N() = 0;    
     virtual void deallocate() = 0;
