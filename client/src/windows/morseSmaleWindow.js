@@ -38,8 +38,13 @@ class MorseSmaleWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.clearScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
-      this.client.fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel).then((response) => {
-        this.addRegressionCurvesToScene(response.crystals);
+      Promise.all([
+        this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
+      ]).then((response) => {
+        const [regression, extrema] = response;
+        console.log(extrema);
+        this.addRegressionCurvesToScene(regression.crystals);
         this.renderScene();
       });
     }

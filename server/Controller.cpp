@@ -51,7 +51,8 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
-  m_commandMap.insert({"fetchMorseSmaleLayoutForPersistenceLevel", std::bind(&Controller::fetchMorseSmaleLayoutForPersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -462,7 +463,7 @@ void Controller::fetchLayoutForPersistenceLevel(
   }
 }
 
-void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -484,7 +485,7 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
   }
 
   // Get points for regression line
-  std::vector<FortranLinalg::DenseMatrix<Precision>> layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
   int rows = m_currentVizData->getNumberOfSamples() + 2;
   double points[rows][3];
 
@@ -522,6 +523,43 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
     response["crystals"].append(crystalObject);
   }
 }
+
+void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response) {
+    int datasetId = request["datasetId"].asInt();
+    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+        // TODO: Send back an error message.
+    }
+    int k = request["k"].asInt();
+    if (k < 0) {
+        // TODO: Send back an error message.
+    }
+
+    maybeLoadDataset(datasetId);
+    maybeProcessData(k);
+
+    unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+    unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+    int persistenceLevel = request["persistenceLevel"].asInt();
+    if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+        // TODO: Send back an error message. Invalid persistenceLevel.
+    }
+
+    auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
+    auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
+    auto extremaWidth = m_currentVizData->getExtremaWidthsScaled(persistenceLevel);
+
+    response["extrema"] = Json::Value(Json::arrayValue);
+    for (unsigned int i = 0; i < extremaLayout.N(); ++i) {
+        Json::Value extremaObject(Json::objectValue);
+        extremaObject["x"] = extremaLayout(0, i);
+        extremaObject["y"] = extremaLayout(1, i);
+        extremaObject["z"] = extremaNormalized(i);
+        extremaObject["width"] = extremaWidth(i);
+        response["extrema"].append(extremaObject);
+    }
+}
+
 /**
  * Handle the command to fetch an array of a named parameter.
  */
@@ -549,6 +587,7 @@ void Controller::fetchParameter(const Json::Value &request, Json::Value &respons
   }
 }
 
+
 /**
  * Handle the command to fetch an array of a named QoI
  */
@@ -575,7 +614,6 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
     response["qoi"].append(qoiVector(i));
   }
 }
-
 
 /**
  * Handle the command to fetch sample image thumbnails if available.

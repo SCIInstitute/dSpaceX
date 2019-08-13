@@ -32,7 +32,8 @@ class Controller {
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response);
-  void fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
+  void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
