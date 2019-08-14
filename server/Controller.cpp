@@ -490,7 +490,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
   double points[rows][3];
 
   // For each crystal
-  response["crystals"] = Json::Value(Json::arrayValue);
+  response["curves"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
 
     // Get all the points
@@ -510,17 +510,17 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
     }
 
     // Get layout for each crystal
-    Json::Value crystalObject(Json::objectValue);
-    crystalObject["id"] = i;
-    crystalObject["regressionPoints"] = Json::Value(Json::arrayValue);
+    Json::Value regressionObject(Json::objectValue);
+      regressionObject["id"] = i;
+      regressionObject["points"] = Json::Value(Json::arrayValue);
     for (unsigned int n = 0; n < rows; ++n) {
       auto row = Json::Value(Json::arrayValue);
       for (unsigned int m = 0; m < 3; ++m) {
         row.append(points[n][m]);
       }
-      crystalObject["regressionPoints"].append(row);
+      regressionObject["points"].append(row);
     }
-    response["crystals"].append(crystalObject);
+    response["curves"].append(regressionObject);
   }
 }
 
@@ -547,7 +547,6 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
 
     auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
     auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
-    auto extremaWidth = m_currentVizData->getExtremaWidthsScaled(persistenceLevel);
 
     response["extrema"] = Json::Value(Json::arrayValue);
     for (unsigned int i = 0; i < extremaLayout.N(); ++i) {
@@ -555,7 +554,6 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
         extremaObject["x"] = extremaLayout(0, i);
         extremaObject["y"] = extremaLayout(1, i);
         extremaObject["z"] = extremaNormalized(i);
-        extremaObject["width"] = extremaWidth(i);
         response["extrema"].append(extremaObject);
     }
 }

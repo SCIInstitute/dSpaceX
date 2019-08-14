@@ -19,6 +19,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.init = this.init.bind(this);
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
+    this.addExtremaToScene = this.addExtremaToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
     this.clearScene = this.clearScene.bind(this);
@@ -42,9 +43,9 @@ class MorseSmaleWindow extends React.Component {
         this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
         this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
       ]).then((response) => {
-        const [regression, extrema] = response;
-        console.log(extrema);
-        this.addRegressionCurvesToScene(regression.crystals);
+        const [regressionResponse, extremaResponse] = response;
+        this.addRegressionCurvesToScene(regressionResponse.curves);
+        this.addExtremaToScene(extremaResponse.extrema);
         this.renderScene();
       });
     }
@@ -117,16 +118,50 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene();
   }
 
-  addRegressionCurvesToScene(crystals) {
-    crystals.forEach((crystal) => {
+  addRegressionCurvesToScene(regressionCurves) {
+    regressionCurves.forEach((regressionCurve) => {
       let curvePoints = [];
-      crystal.regressionPoints.forEach((regressionPoint) => {
+      regressionCurve.points.forEach((regressionPoint) => {
         curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
       });
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
       let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
       let curveMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          color1: {
+            value: new THREE.Color('green'),
+          },
+          color2: {
+            value: new THREE.Color('red'),
+          },
+        },
+        vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);}`,
+        fragmentShader: `
+        uniform vec3 color1;
+        uniform vec3 color2;
+
+        varying vec2 vUv;
+
+        void main() {
+          gl_FragColor = vec4(mix(color1, color2, vUv.x), 1.0);}`,
+        wireframe: false,
+      });
+      let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
+      curveMesh.rotateX(-90);
+      this.scene.add(curveMesh);
+    });
+  }
+
+  addExtremaToScene(extrema) {
+    extrema.forEach((extreme) => {
+      let extremaGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
+      let extremaMaterial = new THREE.ShaderMaterial({
         uniforms: {
           color1: {
             value: new THREE.Color('green'),
@@ -154,13 +189,15 @@ class MorseSmaleWindow extends React.Component {
         varying vec2 vUv;
 
         void main() {
-          gl_FragColor = vec4(mix(color1, color2, vUv.x), 1.0);}`,
+          gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);}`,
         wireframe: false,
-        depthTest: true,
       });
-      let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
-      curveMesh.rotateX(-90);
-      this.scene.add(curveMesh);
+      let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
+      extremaMesh.rotateX(-90);
+      extremaMesh.translateX(extreme.x);
+      extremaMesh.translateY(extreme.y);
+      extremaMesh.translateZ(extreme.z);
+      this.scene.add(extremaMesh);
     });
   }
 
