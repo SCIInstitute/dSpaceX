@@ -547,13 +547,24 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
 
     auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
     auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
+    auto extremaValues = m_currentVizData->getExtremaValues(persistenceLevel);
 
     response["extrema"] = Json::Value(Json::arrayValue);
     for (unsigned int i = 0; i < extremaLayout.N(); ++i) {
+        // Position
         Json::Value extremaObject(Json::objectValue);
-        extremaObject["x"] = extremaLayout(0, i);
-        extremaObject["y"] = extremaLayout(1, i);
-        extremaObject["z"] = extremaNormalized(i);
+        extremaObject["position"] = Json::Value(Json::arrayValue);
+        extremaObject["position"].append(extremaLayout(0, i));
+        extremaObject["position"].append(extremaLayout(1, i));
+        extremaObject["position"].append(extremaNormalized(i));
+
+        // Color
+        auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(extremaValues(i));
+        extremaObject["color"] = Json::Value(Json::arrayValue);
+        extremaObject["color"].append(color[0]);
+        extremaObject["color"].append(color[1]);
+        extremaObject["color"].append(color[2]);
+
         response["extrema"].append(extremaObject);
     }
 }

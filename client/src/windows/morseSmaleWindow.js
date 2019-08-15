@@ -88,8 +88,8 @@ class MorseSmaleWindow extends React.Component {
     // light
     let ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
     let directionalLight1 = new THREE.DirectionalLight(0xffffff);
-    directionalLight1.position.set(1, 1, 1);
-    let directionalLight2 = new THREE.DirectionalLight(0x002288)
+    directionalLight1.position.set(1, 1, 2);
+    let directionalLight2 = new THREE.DirectionalLight(0x002288);
     directionalLight2.position.set(-1, -1, -1);
 
     // world
@@ -161,42 +161,13 @@ class MorseSmaleWindow extends React.Component {
   addExtremaToScene(extrema) {
     extrema.forEach((extreme) => {
       let extremaGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
-      let extremaMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          color1: {
-            value: new THREE.Color('green'),
-          },
-          color2: {
-            value: new THREE.Color('red'),
-          },
-          bboxMin: {
-            value: 1,
-          },
-          bboxMax: {
-            value: 100,
-          },
-        },
-        vertexShader: `
-        varying vec2 vUv;
-
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);}`,
-        fragmentShader: `
-        uniform vec3 color1;
-        uniform vec3 color2;
-
-        varying vec2 vUv;
-
-        void main() {
-          gl_FragColor = vec4(mix(color1, color2, vUv.y), 1.0);}`,
-        wireframe: false,
-      });
+      let color = new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]);
+      let extremaMaterial = new THREE.MeshBasicMaterial({ color:color });
       let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
       extremaMesh.rotateX(-90);
-      extremaMesh.translateX(extreme.x);
-      extremaMesh.translateY(extreme.y);
-      extremaMesh.translateZ(extreme.z);
+      extremaMesh.translateX(extreme.position[0]);
+      extremaMesh.translateY(extreme.position[1]);
+      extremaMesh.translateZ(extreme.position[2]);
       this.scene.add(extremaMesh);
     });
   }
