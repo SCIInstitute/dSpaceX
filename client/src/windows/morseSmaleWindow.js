@@ -22,7 +22,7 @@ class MorseSmaleWindow extends React.Component {
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
-    this.clearScene = this.clearScene.bind(this);
+    this.resetScene = this.resetScene.bind(this);
   }
 
   componentDidMount() {
@@ -37,14 +37,14 @@ class MorseSmaleWindow extends React.Component {
 
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
-      this.clearScene();
+      this.resetScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       Promise.all([
         this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
         this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
-        this.addRegressionCurvesToScene(regressionResponse.curves);
+        this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
         this.renderScene();
       });
@@ -86,18 +86,14 @@ class MorseSmaleWindow extends React.Component {
     this.camera.position.z = 1;
 
     // light
-    let ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-    let directionalLight1 = new THREE.DirectionalLight(0xffffff);
-    directionalLight1.position.set(1, 1, 2);
-    let directionalLight2 = new THREE.DirectionalLight(0x002288);
-    directionalLight2.position.set(-1, -1, -1);
+    this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    this.directionalLight = new THREE.DirectionalLight(0xffffff);
+    this.directionalLight.position.set(0, 5, 5);
 
     // world
     this.scene = new THREE.Scene();
-    this.scene.add(this.camera);
-    this.scene.add(ambientLight);
-    this.scene.add(directionalLight1);
-    this.scene.add(directionalLight2);
+    this.scene.add(this.ambientLight);
+    this.scene.add(this.directionalLight);
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
@@ -118,8 +114,8 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene();
   }
 
-  addRegressionCurvesToScene(regressionCurves) {
-    regressionCurves.forEach((regressionCurve) => {
+  addRegressionCurvesToScene(regressionData) {
+    regressionData.curves.forEach((regressionCurve) => {
       let curvePoints = [];
       regressionCurve.points.forEach((regressionPoint) => {
         curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
@@ -127,31 +123,18 @@ class MorseSmaleWindow extends React.Component {
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
       let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
-      let curveMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          color1: {
-            value: new THREE.Color('green'),
-          },
-          color2: {
-            value: new THREE.Color('red'),
-          },
-        },
-        vertexShader: `
-        varying vec2 vUv;
-
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);}`,
-        fragmentShader: `
-        uniform vec3 color1;
-        uniform vec3 color2;
-
-        varying vec2 vUv;
-
-        void main() {
-          gl_FragColor = vec4(mix(color1, color2, vUv.x), 1.0);}`,
-        wireframe: false,
-      });
+      let count = curveGeometry.attributes.position.count;
+      curveGeometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      let colors = regressionCurve.colors;
+      let colorAttribute = curveGeometry.attributes.color;
+      let color = new THREE.Color();
+      for (let i = 0; i < 52; ++i) {
+        color.setRGB(colors[i][0], colors[i][1], colors[i][2]);
+        for (let j = 0; j < 50; ++j) {
+          colorAttribute.setXYZ(i*50+j, color.r, color.g, color.b);
+        }
+      }
+      let curveMaterial = new THREE.MeshLambertMaterial({ color:0xffffff, flatShading:true, vertexColors:THREE.VertexColors });
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.rotateX(-90);
       this.scene.add(curveMesh);
@@ -162,7 +145,7 @@ class MorseSmaleWindow extends React.Component {
     extrema.forEach((extreme) => {
       let extremaGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
       let color = new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]);
-      let extremaMaterial = new THREE.MeshBasicMaterial({ color:color });
+      let extremaMaterial = new THREE.MeshLambertMaterial({ color:color });
       let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
       extremaMesh.rotateX(-90);
       extremaMesh.translateX(extreme.position[0]);
@@ -181,10 +164,12 @@ class MorseSmaleWindow extends React.Component {
     this.controls.update();
   }
 
-  clearScene() {
+  resetScene() {
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
     }
+    this.scene.add(this.ambientLight);
+    this.scene.add(this.directionalLight);
   }
 
   /**
