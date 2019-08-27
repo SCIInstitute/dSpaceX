@@ -488,19 +488,25 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
   auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
   int rows = m_currentVizData->getNumberOfSamples() + 2;
   double points[rows][3];
+  double colors[rows][3];
 
   // For each crystal
   response["curves"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
 
-    // Get all the points
+    // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
+        auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(m_currentVizData->getMean(persistenceLevel)[i](n));
+        colors[n+1][0] = color[0];
+        colors[n+1][1] = color[1];
+        colors[n+1][2] = color[2];
+
       for(unsigned int m = 0; m < layout[i].M(); ++m) {
         points[n+1][m] = layout[i](m, n);
       }
       points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
     }
-    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
+
     for (unsigned int j = 0; j < 3; ++j) {
       points[0][j] = points[1][j] + points[2][j] - points[1][j];
       points[m_currentVizData->getNumberOfSamples() + 1][j] =
@@ -509,16 +515,26 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
           points[m_currentVizData->getNumberOfSamples() - 1][j];
     }
 
+    for (unsigned int j = 0; j < 3; ++j) {
+        colors[0][j] = colors[1][j];
+        colors[m_currentVizData->getNumberOfSamples() + 1][j] = colors[m_currentVizData-> getNumberOfSamples()][j];
+    }
+
+
     // Get layout for each crystal
     Json::Value regressionObject(Json::objectValue);
       regressionObject["id"] = i;
       regressionObject["points"] = Json::Value(Json::arrayValue);
+      regressionObject["colors"] = Json::Value(Json::arrayValue);
     for (unsigned int n = 0; n < rows; ++n) {
-      auto row = Json::Value(Json::arrayValue);
+      auto regressionRow = Json::Value(Json::arrayValue);
+      auto colorRow = Json::Value(Json::arrayValue);
       for (unsigned int m = 0; m < 3; ++m) {
-        row.append(points[n][m]);
+        regressionRow.append(points[n][m]);
+        colorRow.append(colors[n][m]);
       }
-      regressionObject["points"].append(row);
+      regressionObject["points"].append(regressionRow);
+      regressionObject["colors"].append(colorRow);
     }
     response["curves"].append(regressionObject);
   }
