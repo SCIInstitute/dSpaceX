@@ -26,12 +26,24 @@ class MorseSmaleWindow extends React.Component {
     this.resetScene = this.resetScene.bind(this);
   }
 
+  /**
+   * Called by react when this component mounts.
+   * Initializes Three.js for drawing and adds event listeners.
+   */
   componentDidMount() {
     this.init();
     this.animate();
     window.addEventListener('resize', this.resizeCanvas);
   }
 
+  /**
+   * Called by react when this component receives new props or context or
+   * when the state changes.
+   * The data needed to draw the Morse-Smale decomposition it located here.
+   * @param {object} prevProps
+   * @param {object} prevState
+   * @param {object} prevContext
+   */
   componentDidUpdate(prevProps, prevState, prevContext) {
     if (this.props.decomposition === null) {
       return;
@@ -57,6 +69,9 @@ class MorseSmaleWindow extends React.Component {
     }
   }
 
+  /**
+   * Called by React when this component is removed from the DOM.
+   */
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas);
   }
@@ -77,6 +92,9 @@ class MorseSmaleWindow extends React.Component {
         || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
   }
 
+  /**
+   * Initializes the renderer, camera, and scene for Three.js.
+   */
   init() {
     // canvas
     let canvas = this.refs.msCanvas;
@@ -126,6 +144,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene();
   }
 
+  /**
+   * Called when the canvas is resized.
+   * This can happen on a window resize or when another window is added to dSpaceX.
+   */
   resizeCanvas() {
     let width = this.refs.msCanvas.clientWidth;
     let height = this.refs.msCanvas.clientHeight;
@@ -165,6 +187,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene();
   }
 
+  /**
+   * Adds the regression curves to the scene
+   * @param {object} regressionData
+   */
   addRegressionCurvesToScene(regressionData) {
     regressionData.curves.forEach((regressionCurve) => {
       let curvePoints = [];
@@ -195,6 +221,10 @@ class MorseSmaleWindow extends React.Component {
     });
   }
 
+  /**
+   * Adds the extrema to the scene.
+   * @param {object} extrema
+   */
   addExtremaToScene(extrema) {
     extrema.forEach((extreme) => {
       let extremaGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
@@ -209,15 +239,26 @@ class MorseSmaleWindow extends React.Component {
     });
   }
 
+  /**
+   * Draws the scene to the canvas.
+   */
   renderScene() {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /**
+   * Animates the scene.
+   * This is necessary for the Trackball Controls or any other interactivity.
+   */
   animate() {
     requestAnimationFrame(this.animate);
     this.controls.update();
   }
 
+  /**
+   * Resets the scene when there is new data by removing
+   * the old scene children and adding back the lights.
+   */
   resetScene() {
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
