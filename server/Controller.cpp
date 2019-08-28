@@ -51,7 +51,8 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
-  m_commandMap.insert({"fetchMorseSmaleLayoutForPersistenceLevel", std::bind(&Controller::fetchMorseSmaleLayoutForPersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
+  m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -462,7 +463,7 @@ void Controller::fetchLayoutForPersistenceLevel(
   }
 }
 
-void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -484,22 +485,28 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
   }
 
   // Get points for regression line
-  std::vector<FortranLinalg::DenseMatrix<Precision>> layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
   int rows = m_currentVizData->getNumberOfSamples() + 2;
   double points[rows][3];
+  double colors[rows][3];
 
   // For each crystal
-  response["crystals"] = Json::Value(Json::arrayValue);
+  response["curves"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
 
-    // Get all the points
+    // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
+        auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(m_currentVizData->getMean(persistenceLevel)[i](n));
+        colors[n+1][0] = color[0];
+        colors[n+1][1] = color[1];
+        colors[n+1][2] = color[2];
+
       for(unsigned int m = 0; m < layout[i].M(); ++m) {
         points[n+1][m] = layout[i](m, n);
       }
       points[n+1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
     }
-    // TODO figure out what this is for - copied from DisplayTubes.cpp I am not sure we need it
+
     for (unsigned int j = 0; j < 3; ++j) {
       points[0][j] = points[1][j] + points[2][j] - points[1][j];
       points[m_currentVizData->getNumberOfSamples() + 1][j] =
@@ -508,20 +515,76 @@ void Controller::fetchMorseSmaleLayoutForPersistenceLevel(const Json::Value &req
           points[m_currentVizData->getNumberOfSamples() - 1][j];
     }
 
-    // Get layout for each crystal
-    Json::Value crystalObject(Json::objectValue);
-    crystalObject["id"] = i;
-    crystalObject["regressionPoints"] = Json::Value(Json::arrayValue);
-    for (unsigned int n = 0; n < rows; ++n) {
-      auto row = Json::Value(Json::arrayValue);
-      for (unsigned int m = 0; m < 3; ++m) {
-        row.append(points[n][m]);
-      }
-      crystalObject["regressionPoints"].append(row);
+    for (unsigned int j = 0; j < 3; ++j) {
+        colors[0][j] = colors[1][j];
+        colors[m_currentVizData->getNumberOfSamples() + 1][j] = colors[m_currentVizData-> getNumberOfSamples()][j];
     }
-    response["crystals"].append(crystalObject);
+
+
+    // Get layout for each crystal
+    Json::Value regressionObject(Json::objectValue);
+      regressionObject["id"] = i;
+      regressionObject["points"] = Json::Value(Json::arrayValue);
+      regressionObject["colors"] = Json::Value(Json::arrayValue);
+    for (unsigned int n = 0; n < rows; ++n) {
+      auto regressionRow = Json::Value(Json::arrayValue);
+      auto colorRow = Json::Value(Json::arrayValue);
+      for (unsigned int m = 0; m < 3; ++m) {
+        regressionRow.append(points[n][m]);
+        colorRow.append(colors[n][m]);
+      }
+      regressionObject["points"].append(regressionRow);
+      regressionObject["colors"].append(colorRow);
+    }
+    response["curves"].append(regressionObject);
   }
 }
+
+void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response) {
+    int datasetId = request["datasetId"].asInt();
+    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+        // TODO: Send back an error message.
+    }
+    int k = request["k"].asInt();
+    if (k < 0) {
+        // TODO: Send back an error message.
+    }
+
+    maybeLoadDataset(datasetId);
+    maybeProcessData(k);
+
+    unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+    unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+    int persistenceLevel = request["persistenceLevel"].asInt();
+    if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+        // TODO: Send back an error message. Invalid persistenceLevel.
+    }
+
+    auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
+    auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
+    auto extremaValues = m_currentVizData->getExtremaValues(persistenceLevel);
+
+    response["extrema"] = Json::Value(Json::arrayValue);
+    for (unsigned int i = 0; i < extremaLayout.N(); ++i) {
+        // Position
+        Json::Value extremaObject(Json::objectValue);
+        extremaObject["position"] = Json::Value(Json::arrayValue);
+        extremaObject["position"].append(extremaLayout(0, i));
+        extremaObject["position"].append(extremaLayout(1, i));
+        extremaObject["position"].append(extremaNormalized(i));
+
+        // Color
+        auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(extremaValues(i));
+        extremaObject["color"] = Json::Value(Json::arrayValue);
+        extremaObject["color"].append(color[0]);
+        extremaObject["color"].append(color[1]);
+        extremaObject["color"].append(color[2]);
+
+        response["extrema"].append(extremaObject);
+    }
+}
+
 /**
  * Handle the command to fetch an array of a named parameter.
  */
@@ -549,6 +612,7 @@ void Controller::fetchParameter(const Json::Value &request, Json::Value &respons
   }
 }
 
+
 /**
  * Handle the command to fetch an array of a named QoI
  */
@@ -575,7 +639,6 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
     response["qoi"].append(qoiVector(i));
   }
 }
-
 
 /**
  * Handle the command to fetch sample image thumbnails if available.
