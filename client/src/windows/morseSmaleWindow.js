@@ -17,6 +17,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.client = this.props.dsxContext.client;
 
+    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.init = this.init.bind(this);
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
@@ -28,11 +29,16 @@ class MorseSmaleWindow extends React.Component {
   componentDidMount() {
     this.init();
     this.animate();
+    window.addEventListener('resize', this.resizeCanvas);
   }
 
   componentDidUpdate(prevProps, prevState, prevContext) {
     if (this.props.decomposition === null) {
       return;
+    }
+
+    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
+      this.resizeCanvas();
     }
 
     if (prevProps.decomposition === null
@@ -49,6 +55,10 @@ class MorseSmaleWindow extends React.Component {
         this.renderScene();
       });
     }
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.resizeCanvas);
   }
 
   /**
@@ -69,7 +79,7 @@ class MorseSmaleWindow extends React.Component {
 
   init() {
     // canvas
-    let canvas = this.msCanvas;
+    let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
 
     // camera
@@ -87,30 +97,71 @@ class MorseSmaleWindow extends React.Component {
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
-    this.directionalLight = new THREE.DirectionalLight(0xffffff);
-    this.directionalLight.position.set(0, 5, 5);
+    this.frontDirectionalLight = new THREE.DirectionalLight(0xffffff);
+    this.frontDirectionalLight.position.set(0, 5, 5);
+    this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    this.backDirectionalLight.position.set(0, -5, -5);
 
     // world
     this.scene = new THREE.Scene();
     this.scene.add(this.ambientLight);
-    this.scene.add(this.directionalLight);
+    this.scene.add(this.frontDirectionalLight);
+    this.scene.add(this.backDirectionalLight);
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    this.renderer.setSize( canvas.clientWidth, canvas.clientHeight );
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false );
 
     // controls
-    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement );
-    this.controls.rotateSpeed = 0.5;
+    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
+    this.controls.rotateSpeed = 0.75;
     this.controls.zoomSpeed = 0.1;
     this.controls.panSpeed = 0.5;
     this.controls.noZoom = false;
     this.controls.noPan = false;
     this.controls.staticMoving = true;
-    this.controls.dynamicDampingFactor = 0.3;
     this.controls.keys = [65, 83, 68];
     this.controls.addEventListener( 'change', this.renderScene );
 
+    this.renderScene();
+  }
+
+  resizeCanvas() {
+    let width = this.refs.msCanvas.clientWidth;
+    let height = this.refs.msCanvas.clientHeight;
+
+    this.refs.msCanvas.width = width;
+    this.refs.msCanvas.height = height;
+
+    // Resize renderer
+    this.renderer.setSize(width, height, false );
+
+    // Resize Camera
+    let sx = 1;
+    let sy = 1;
+    if (width > height) {
+      sx = width/height;
+    } else {
+      sy = height/width;
+    }
+    this.camera.left = -4*sx;
+    this.camera.right = 4*sx;
+    this.camera.top = 4*sy;
+    this.camera.bottom = -4*sy;
+    this.camera.updateProjectionMatrix();
+
+    // Update controls
+    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
+    this.controls.rotateSpeed = 0.75;
+    this.controls.zoomSpeed = 0.1;
+    this.controls.panSpeed = 0.5;
+    this.controls.noZoom = false;
+    this.controls.noPan = false;
+    this.controls.staticMoving = true;
+    this.controls.keys = [65, 83, 68];
+    this.controls.addEventListener( 'change', this.renderScene );
+
+    // Redraw scene with updates
     this.renderScene();
   }
 
@@ -134,7 +185,10 @@ class MorseSmaleWindow extends React.Component {
           colorAttribute.setXYZ(i*50+j, color.r, color.g, color.b);
         }
       }
-      let curveMaterial = new THREE.MeshLambertMaterial({ color:0xffffff, flatShading:true, vertexColors:THREE.VertexColors });
+      let curveMaterial = new THREE.MeshLambertMaterial({
+        color: 0xffffff,
+        flatShading: true,
+        vertexColors: THREE.VertexColors });
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.rotateX(-90);
       this.scene.add(curveMesh);
@@ -169,7 +223,8 @@ class MorseSmaleWindow extends React.Component {
       this.scene.remove(this.scene.children[0]);
     }
     this.scene.add(this.ambientLight);
-    this.scene.add(this.directionalLight);
+    this.scene.add(this.frontDirectionalLight);
+    this.scene.add(this.backDirectionalLight);
   }
 
   /**
@@ -192,7 +247,7 @@ class MorseSmaleWindow extends React.Component {
 
     return (
       <Paper style={ paperStyle }>
-        <canvas ref={(ref)=> (this.msCanvas = ref)} style={canvasStyle} />
+        <canvas ref='msCanvas' style={canvasStyle} />
       </Paper>
     );
   }

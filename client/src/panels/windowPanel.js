@@ -433,11 +433,11 @@ class WindowPanel extends React.Component {
                   name: 'dataview',
                   id: 'dataview-input',
                 }}>
+                <MenuItem value="graph">
+                  <em>Embedding/Decomposition</em>
+                </MenuItem>
                 <MenuItem value="gallery">
                   <em>Gallery</em>
-                </MenuItem>
-                <MenuItem value="graph">
-                  <em>Graph</em>
                 </MenuItem>
                 <MenuItem value="scatter_plot">
                   <em>Scatter Plot</em>
