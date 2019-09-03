@@ -290,15 +290,32 @@ class Client {
   }
 
   /**
-   * Fetch the Morse-Smale embedding for the specified persistence level
+   * Fetch the Morse-Smale regression points for the specified persistence level
    * @param {string} datasetId
    * @param {number} k nearest neighbors
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmaleLayoutForPersistenceLevel(datasetId, k, persistenceLevel) {
+  fetchMorseSmaleRegression(datasetId, k, persistenceLevel) {
     let command = {
-      name: 'fetchMorseSmaleLayoutForPersistenceLevel',
+      name: 'fetchMorseSmaleRegression',
+      datasetId: datasetId,
+      k: k,
+      persistenceLevel: persistenceLevel,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Fetch the Morse-Smale extrema points for the specified persistence level
+   * @param {string} datasetId
+   * @param {number} k
+   * @param {number} persistenceLevel
+   * @return {Promise}
+   */
+  fetchMorseSmaleExtrema(datasetId, k, persistenceLevel) {
+    let command = {
+      name: 'fetchMorseSmaleExtrema',
       datasetId: datasetId,
       k: k,
       persistenceLevel: persistenceLevel,
