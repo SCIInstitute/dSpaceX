@@ -45,16 +45,24 @@ model = train_scigplvm_v2(Y,rank,'ard');
 
 %% predicting all y and U (latent) given y1 (fast approach)
 model2 = sgplvm_invGp_v1(model,1,y1(idTe,:));
-model2.uNew
-model2.yNew
+model2.u_star
+model2.y_star
 
 %% predicting all y and U (latent) given y2. (improved approach)
-model3 = train_scigplvm_dpp_infere_v2(model,2,y2(idTe,:));
+% model3 = train_scigplvm_dpp_infere_v2(model,2,y2(idTe,:));
+% model3 = train_scigplvm_infere_v2(model,2,y2(idTe,:));
+% model3 = train_scigplvm_infere_v3(model,2,y2(idTe,:));
 % model3 = sgplvm_invGp_v1(model,2,y2(idTe,:));
-model3.uNew
-model3.yNew
+model3 = scigplvm_infere_v3(model,2,y2(idTe,:));
+model3.u_star;
+model3.y_star;
 
 %% predicting all y given U (latent)
-model4 = sgplvm_pred(model,model3.uNew)
+model4 = sgplvm_pred(model,model3.u_star);
 model4.yNew 
+
+%%
+rank = 5; %latent dimension
+model_dpp = train_scigplvm_dpp_v2(Y,rank,'ard');
+model_dpp2 = train_scigplvm_dpp_infere_v4(model_dpp,2,y2(idTe,:));
 

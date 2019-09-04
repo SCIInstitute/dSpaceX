@@ -65,8 +65,11 @@ for i = 1:length(yTr)
         yNew{i} = Knn{i}*(Sigma{i}\yTr{i});  
     end
     
-    model.uNew = Unew;
-    model.yNew = yNew;
+%     model.uNew = Unew;
+%     model.yNew = yNew;
+    
+    model.y_star = yNew;
+    model.u_star = Unew;
     
 end
 

@@ -1,8 +1,8 @@
-function model = train_scigplvm_infere_v2(model,k,yi_star)
-% share conditional independent gplvm
+function model = train_scigplvm_dpp_infere_v2(model,k,yi_star)%not finish
+% share conditional independent gplvm with dpp for z
 % yTr must be cell. each contain n x di matrix 
 % logg:
-% v2: using existing model log_evidence. no dpp
+% v2: using existing model log_evidence.  dpp version
 rng(1)
 a0 = 1e-3; b0 = 1e-3;
 N = size(model.U,1);
@@ -64,15 +64,15 @@ end
 %     fastDerivativeCheck(@(params) log_evidence_share_more(params,kerType, a0, b0, rank, yTr, N_all,model), params)
     fastDerivativeCheck(@(params)  log_evidence_share_miss(params,kerType, a0, b0, rank, yTr, N_all), params)
     
-    nIte = 100;
+    nIte = 40;
     opt = [];
-    opt.MaxIter = 100;
+    opt.MaxIter = 5;
     opt.MaxFunEvals = 10000;
     
     new_params = minFunc(@(params) log_evidence_share_miss(params,kerType, a0, b0, rank, yTr, N_all), params, opt);
     params = new_params;
-        
-    fastDerivativeCheck(@(params)  log_evidence_share_miss(params,kerType, a0, b0, rank, yTr, N_all), params)
+    
+
 %%
     U_all = reshape(params(1:N_all*rank), N_all, rank);
     U_star = U_all(N+1:N+N_star,:);
@@ -130,10 +130,74 @@ function [f, df] = log_evidence_share_miss(params,kerType, a0, b0, rank, yTr, N_
         idx = idx+3+rank;
     end
 
-
+    %dpp
+%     idx = 0;
+%     U = reshape(params(idx+1:idx+N_all*rank), N_all, rank);
+%     
+%     k = 1;
+%     logL = -0.5*model.dp_lam(k)*  norm((U - model.stat.dp_phi{k}*model.stat.eta_mean{k}),'fro')^2;
+%     dU = -model.dp_lam(k)* (U - model.stat.dp_phi{k}*model.stat.eta_mean{k});
+%     
+%     f_i = f_i - logL;
+%     df_i(1:N_all*rank) = df_i(1:N_all*rank) - dU(:);
 end
 
 
 
-
+%%
+% function model = E_step(model,U, nIte)
+% 
+%     %fix model
+%     nmod = 1;
+% %     nIte = 5;
+% %     U = model.U;
+%     nvec = size(U{1},1);
+% 
+%     for iter = 1:nIte
+%         %update q(eta), the cluster centers sampled from base measure
+%         for k=1:nmod    
+%             model.stat.eta_cov{k} = 1./(1 + model.dp_lam(k)*sum(model.stat.dp_phi{k},1));
+%             model.stat.eta_mean{k} = model.stat.dp_phi{k}'*U{k}./(1/model.dp_lam(k) + repmat(sum(model.stat.dp_phi{k},1)',1,size(U{k},2)) );
+%             model.stat.eta_var{k} = model.dim*model.stat.eta_cov{k} + sum(model.stat.eta_mean{k}.^2,2)';
+%         end
+% 
+%         %update q(Z), indicators sampled from stick-breaking process
+%         for k=1:nmod
+%             trunc_no = model.T(k);
+%             sum_t = zeros(1,trunc_no);
+%             ex_logv2 = model.stat.ex_logv{k}(:,2);
+%             for t=2:trunc_no
+%                 sum_t(t) = sum_t(t-1) + ex_logv2(t-1);
+%             end
+%             for n=1:nvec(k)
+%                 model.dp_logphi{k}(n,:) = model.stat.ex_logv{k}(:,1)' + sum_t - 0.5*model.dp_lam(k)*model.stat.eta_var{k} ...
+%                     + model.dp_lam(k)*U{k}(n,:)*model.stat.eta_mean{k}';
+%                 model.stat.dp_phi{k}(n,:) = exp_sum_dist(model.dp_logphi{k}(n,:));
+%             end
+%         end
+% 
+%         %update q(V), for stick-breaking process construction
+%         for k=1:nmod
+%             trunc_no = model.T(k);
+%             model.dp_ga{k}(:,1) = 1 + sum(model.stat.dp_phi{k}, 1)';    
+%             for t=1:trunc_no
+%                 model.dp_ga{k}(t,2) = model.dp_alpha + sum(sum(model.stat.dp_phi{k}(:,t+1:end), 1));
+%             end
+%             disum = psi(sum(model.dp_ga{k},2));
+%             model.stat.ex_logv{k} = [psi(model.dp_ga{k}(:,1)) - disum, psi(model.dp_ga{k}(:,2)) - disum];    
+%         end
+% 
+%         %update q(lam), for inverse variance of DP generating latent factors
+%         if model.update_inv_cov
+%             for k=1:nmod
+%                 model.dp_lam_a(k) = model.dp_lam_a0(k) + 0.5*nvec(k)*model.dim;
+%                 model.dp_lam_b(k) = model.dp_lam_b0(k) + 0.5*(trace(U{k}*U{k}') + sum(model.stat.dp_phi{k}*model.stat.eta_var{k}')) ...
+%                                     - sum(sum(model.stat.eta_mean{k}*U{k}'.*model.stat.dp_phi{k}'));
+%                 model.dp_lam(k) = model.dp_lam_a(k)/model.dp_lam_b(k);                
+%             end
+%         end
+% 
+%     end
+%     
+% end
 
