@@ -5,11 +5,14 @@
 
 clear 
 
-addpath(genpath('./L-BFGS-B-C'))
-addpath(genpath('./lightspeed'))
-addpath(genpath('./minFunc_2012'))
-addpath(genpath('./util'))
-addpath(genpath('./ISOMAPS'))
+% Gaussian Process Latent Variable Model c++ library is probably what we want for *all* this.
+
+addpath(genpath('./L-BFGS-B-C'))   % Another optimization of computations... 
+addpath(genpath('./lightspeed'))   % helpful functions that might also be in a c++ library
+addpath(genpath('./minFunc_2012')) % an optimization minFunc, likely not even used here
+addpath(genpath('./util'))         % kernels (but no Gaussian kernels)
+addpath(genpath('./ISOMAPS'))      % used to initialize data, but we don't have to use this but can instead use random
+addpath(genpath('./emgm'))      % used to initialize data, but we don't have to use this but can instead use random
 %% prepare data
 load('xs.mat')
 
@@ -29,7 +32,7 @@ y3 = y3(ifUse,:);
 
 nTr = 20;
 nTe = 100;
-idAll = randperm(size(y4,1));
+idAll = randperm(size(y4,1));  % randomly shuffle training indices so that each time this app is run it gives different result
 
 idTr = idAll(1:nTr);
 idTe = idAll(size(y4,1):-1:size(y4,1)+1-nTe);
@@ -41,7 +44,7 @@ Y{4} = y4(idTr,:);
 
 %% train model with training data
 rank = 5; %latent dimension
-model = train_scigplvm_v2(Y,rank,'ard');
+model = train_scigplvm_v2(Y,rank,'ard');  % ard is kernel type, trains the model
 
 %% predicting all y and U (latent) given y1 (fast approach)
 model2 = sgplvm_invGp_v1(model,1,y1(idTe,:));
