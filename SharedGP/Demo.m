@@ -14,7 +14,7 @@ addpath(genpath('./util'))         % kernels (but no Gaussian kernels)
 addpath(genpath('./ISOMAPS'))      % used to initialize data, but we don't have to use this but can instead use random
 addpath(genpath('./emgm'))      % used to initialize data, but we don't have to use this but can instead use random
 %% prepare data
-load('xs.mat')
+load('xs.mat')   % copy the data from /usr/sci/projects/dSpaceX
 
 IMG_SIZE1 = 60;
 IMG_SIZE2 = 60;
