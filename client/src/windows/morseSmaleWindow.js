@@ -17,8 +17,13 @@ class MorseSmaleWindow extends React.Component {
 
     this.client = this.props.dsxContext.client;
 
-    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.init = this.init.bind(this);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
+    this.mouseRelease = this.mouseRelease.bind(this);
+    this.getCanvasPosition = this.getCanvasPosition.bind(this);
+    this.getPickPosition = this.getPickPosition.bind(this);
+    this.pick = this.pick.bind(this);
+    this.getIndexOfNearestNeighbor = this.getIndexOfNearestNeighbor.bind(this);
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
@@ -34,6 +39,7 @@ class MorseSmaleWindow extends React.Component {
     this.init();
     this.animate();
     window.addEventListener('resize', this.resizeCanvas);
+    this.refs.msCanvas.addEventListener('mousedown', this.mouseRelease, { passive:true });
   }
 
   /**
@@ -62,6 +68,7 @@ class MorseSmaleWindow extends React.Component {
         this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
+        this.regressionCurves = regressionResponse;
         this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
         this.renderScene();
@@ -74,6 +81,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas);
+    this.refs.msCanvas.removeEventListener('mousedown', this.mouseRelease);
   }
 
   /**
@@ -111,14 +119,17 @@ class MorseSmaleWindow extends React.Component {
       sy = height/width;
     }
     this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
-    this.camera.position.z = 1;
+    this.camera.position.set(0, -1, 0);
+    this.camera.up.set(0, 0, 1);
+    this.camera.zoom = 2;
+
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
     this.frontDirectionalLight = new THREE.DirectionalLight(0xffffff);
-    this.frontDirectionalLight.position.set(0, 5, 5);
+    this.frontDirectionalLight.position.set(5, -1, 5);
     this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    this.backDirectionalLight.position.set(0, -5, -5);
+    this.backDirectionalLight.position.set(-5, -1, -5);
 
     // world
     this.scene = new THREE.Scene();
@@ -140,6 +151,9 @@ class MorseSmaleWindow extends React.Component {
     this.controls.staticMoving = true;
     this.controls.keys = [65, 83, 68];
     this.controls.addEventListener( 'change', this.renderScene );
+
+    // picking
+    this.raycaster = new THREE.Raycaster();
 
     this.renderScene();
   }
@@ -188,11 +202,98 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * Event handling for mouse click release
+   * @param {Event} event
+   */
+  mouseRelease(event) {
+    // Handle left click release
+    if (event.button === 0) {
+      const position = this.getPickPosition(event);
+      this.pick(position);
+    }
+  }
+
+  /**
+   * Gets the click coordinates on the canvass
+   * @param {Event} event
+   * @return {{x: number, y: number}}
+   */
+  getCanvasPosition(event) {
+    const rect = this.refs.msCanvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
+  }
+
+  /**
+    * Converts pick position to clip space
+    * @param {Event} event
+    * @return {{x: number, y: number}}
+    */
+  getPickPosition(event) {
+    const pos = this.getCanvasPosition(event);
+    const canvas = this.refs.msCanvas;
+    return {
+      x: (pos.x / canvas.clientWidth) * 2 - 1,
+      y: (pos.y / canvas.clientHeight) * -2 + 1,
+    };
+  }
+
+  /**
+   * Pick level set of decomposition
+   * @param {object} normalizedPosition
+   */
+  pick(normalizedPosition) {
+    this.raycaster.setFromCamera(normalizedPosition, this.camera);
+    let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
+    intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
+    if (intersectedObjects.length) {
+      let cell = intersectedObjects[0].object.name;
+      let point = this.getIndexOfNearestNeighbor(intersectedObjects[0]);
+    }
+  }
+
+  /**
+   * Finds the index of the nearest neighbor to point
+   * @param {object} mesh
+   * @return {number} index of nearest neighbor
+   */
+  getIndexOfNearestNeighbor(mesh) {
+    const regressionPoints = [...this.regressionCurves.curves[mesh.object.name].points];
+    // Remove first and last elements from array - these are for drawing the regression lines
+    regressionPoints.shift();
+    regressionPoints.pop();
+    let smallestDistance = Infinity;
+    let nearestIndex = Infinity;
+    regressionPoints.forEach((regPoint, index) => {
+      let euclidDistance = this.euclideanDistance(mesh.point, regPoint);
+      if (euclidDistance < smallestDistance) {
+        smallestDistance = euclidDistance;
+        nearestIndex = index;
+      }
+    });
+    return nearestIndex;
+  }
+
+  /**
+   * Calculates the euclidean distance between two points.
+   * @param {object} meshPoint
+   * @param {array<number>}regPoint
+   * @return {number} euclidean distance between two points
+   */
+  euclideanDistance(meshPoint, regPoint) {
+    let x = meshPoint.x - regPoint[0];
+    let y = meshPoint.y - regPoint[1];
+    let z = meshPoint.z - regPoint[2];
+    return Math.sqrt(x**2 + y**2 + z**2);
+  }
+  /**
    * Adds the regression curves to the scene
    * @param {object} regressionData
    */
   addRegressionCurvesToScene(regressionData) {
-    regressionData.curves.forEach((regressionCurve) => {
+    regressionData.curves.forEach((regressionCurve, index) => {
       let curvePoints = [];
       regressionCurve.points.forEach((regressionPoint) => {
         curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
@@ -216,7 +317,7 @@ class MorseSmaleWindow extends React.Component {
         flatShading: true,
         vertexColors: THREE.VertexColors });
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
-      curveMesh.rotateX(-90);
+      curveMesh.name = index;
       this.scene.add(curveMesh);
     });
   }
@@ -231,7 +332,7 @@ class MorseSmaleWindow extends React.Component {
       let color = new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]);
       let extremaMaterial = new THREE.MeshLambertMaterial({ color:color });
       let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
-      extremaMesh.rotateX(-90);
+      // extremaMesh.rotateX(-90);
       extremaMesh.translateX(extreme.position[0]);
       extremaMesh.translateY(extreme.position[1]);
       extremaMesh.translateZ(extreme.position[2]);
