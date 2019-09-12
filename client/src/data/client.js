@@ -197,6 +197,7 @@ class Client {
    * @return {Promise}
    */
   fetchMorseSmalePersistence(datasetId, k) {
+    console.log('creating promise to call fetchMorseSmalePersistence');
     let command = {
       name: 'fetchMorseSmalePersistence',
       datasetId: datasetId,
@@ -285,6 +286,31 @@ class Client {
       datasetId: datasetId,
       k: k,
       persistenceLevel: persistenceLevel,
+    };
+    return this._createCommandPromise(command);
+  }
+
+    //
+    // NEW API for GaussianGP latent_space function should get passed: datasetId
+    // - it loaded the dataset separately, so the id is enough
+    // - it will return a new LatentSpace object
+    // - this object can give us data to display (the 2d data shown in Wei's paper) the latent space at some point therein (could be an 8-dimensional coordinate)
+    // - it also provides methods to generate new (virtual) data (domain params, shape, and QOI) based on a *desired* coordinate in the latent_space (start w/ 2d, but could go up to 8d)
+    // - at a higher level, we will want to be able to combine or mute this "virtual" data produced by the latent space
+    // - not certain, but the latent space returns a distribution so it quantifies the uncertainty in its guesses and so it might not return the exact points (D, S, Q) as it learned from
+    // - for our visualizations of this data, we need some way to show the confidence of the guesses in the latent space
+    // - the current application can pass D,S,Q to the library, and the lib can print out its results. Same things can be compared using the matlab and the new library 
+  /**
+   * Fetch the Shared Latent Space (SharedGP) (for the specified QOI of the current dataset?)
+   * @param {string} datasetId
+   * @param {string} QOI
+   * @return {Promise}
+   */
+  fetchSharedLatentSpace(datasetId, qoi) {
+    let command = {
+      name: 'fetchSharedLatentSpace',
+      datasetId: datasetId,
+      qoi: qoi,
     };
     return this._createCommandPromise(command);
   }

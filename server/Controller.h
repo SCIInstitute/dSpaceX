@@ -38,6 +38,9 @@ class Controller {
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
 
+  // TODO: create this to use the new GaussianGP generator (ported from Wei's code)
+  void fetchSharedLatentSpace(const Json::Value &request, Json::Value &response);
+
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
 

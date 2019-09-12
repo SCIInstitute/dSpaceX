@@ -12,7 +12,7 @@ class MsGraphWindow extends React.Component {
       display: 'flex',
       flexDirection: 'row',
     };
-    return (
+    return (  // here is where the React props comes from for getting the decomposition composed of {datasetId, k, persistenceLevel} used by componentDidUpdate in morseSmaleWindow.js
       <div style={container}>
         <GraphGLWindow
           dataset={this.props.dataset}

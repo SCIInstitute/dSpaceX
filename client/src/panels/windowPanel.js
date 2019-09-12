@@ -60,9 +60,9 @@ class WindowPanel extends React.Component {
    * @param {prevState} prevState
    * @param {object} snapshot
    */
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(prevProps, prevState, snapshot) {  //implicitly called by setState (internal to React)
     if (prevState != this.state) {
-      if (this.props.onConfigChange) {
+	if (this.props.onConfigChange) {  //this somehow knows to call application's onWindowConfigChange (set at line 466 in application.js)
         this.props.onConfigChange(this.state);
       }
     }
@@ -138,7 +138,7 @@ class WindowPanel extends React.Component {
    * Handle the decomposition changing.
    * @param {object} decomposition
    */
-  handleDecompositionChange(decomposition) {
+  handleDecompositionChange(decomposition) {  //here's that window panel, which somehow is gonna call onWindowConfigChange in application.js when the state changes. This function is called by render in thsi class
     this.setState({
       decomposition: decomposition,
     });

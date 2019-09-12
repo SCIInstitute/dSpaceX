@@ -56,6 +56,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
+  m_commandMap.insert({"fetchSharedLatentSpace", std::bind(&Controller::fetchSharedLatentSpace, this, _1, _2)});
 }
 
 
@@ -666,6 +667,24 @@ void Controller::fetchThumbnails(
             image.getRawData().size());
     response["thumbnails"].append(imageObject);
   }
+}
+
+/**
+ * This fetches the shared latent space produced by the SharedGP library.
+ */
+void Controller::fetchSharedLatentSpace(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  int qoi = request["qoi"].asInt();
+  std::cout << "fetchSharedLatentSpace: datasetId is "<<datasetId<<", qoi is "<<qoi<<std::endl;
+  if (qoi < 0) {
+    // TODO: Send back an error message.
+  }
+
+  std::cout << "TODO: return something :-)\n";
+  response["msg"] = std::string("need to return an actual shared_gp space");
 }
 
 /**
