@@ -1,5 +1,5 @@
-ADD_DEFINITIONS(-DTEST_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/test/data/\\"")
-ADD_DEFINITIONS(-DEXAMPLE_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/examples/\\"")
+ADD_DEFINITIONS(-DTEST_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/test/data\\"")
+ADD_DEFINITIONS(-DEXAMPLE_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/examples\\"")
 
 include_directories(../../server)
 
