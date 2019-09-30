@@ -50,7 +50,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
-  m_commandMap.insert({"fetchLayoutForPersistenceLevel", std::bind(&Controller::fetchLayoutForPersistenceLevel, this, _1, _2)});
+  m_commandMap.insert({"fetchGraphEmbedding", std::bind(&Controller::fetchGraphEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
@@ -388,12 +388,13 @@ void Controller::fetchMorseSmaleDecomposition(
  * @param request
  * @param response
  */
-void Controller::fetchLayoutForPersistenceLevel(
+void Controller::fetchGraphEmbedding(
     const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
+
   int k = request["k"].asInt();
   if (k < 0) {
     // TODO: Send back an error message.
@@ -401,14 +402,6 @@ void Controller::fetchLayoutForPersistenceLevel(
 
   maybeLoadDataset(datasetId);
   maybeProcessData(k);
-
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
 
   // TODO:  Modify logic to return layout based on chosen layout type.
   //        For now, only send back embeddings provided with the dataset.

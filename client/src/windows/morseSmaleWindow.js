@@ -9,7 +9,7 @@ import { withDSXContext } from '../dsxContext';
  */
 class MorseSmaleWindow extends React.Component {
   /**
-   * Create Morse-Smale window object
+   * Creates Morse-Smale window object
    * @param {object} props
    */
   constructor(props) {
@@ -45,7 +45,7 @@ class MorseSmaleWindow extends React.Component {
   /**
    * Called by react when this component receives new props or context or
    * when the state changes.
-   * The data needed to draw the Morse-Smale decomposition it located here.
+   * The data needed to draw the Morse-Smale decomposition it fetched here.
    * @param {object} prevProps
    * @param {object} prevState
    * @param {object} prevContext
@@ -123,7 +123,6 @@ class MorseSmaleWindow extends React.Component {
     this.camera.up.set(0, 0, 1);
     this.camera.zoom = 2;
 
-
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
     this.frontDirectionalLight = new THREE.DirectionalLight(0xffffff);
@@ -139,7 +138,7 @@ class MorseSmaleWindow extends React.Component {
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false );
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
     // controls
     this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
@@ -214,7 +213,7 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Gets the click coordinates on the canvass
+   * Gets the click coordinates on the canvas - used for picking
    * @param {Event} event
    * @return {{x: number, y: number}}
    */
@@ -300,16 +299,17 @@ class MorseSmaleWindow extends React.Component {
       });
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, 50, .02, 50, false);
+      let tubularSegments = 50;
+      let curveGeometry = new THREE.TubeBufferGeometry(curve, tubularSegments, .02, 50, false);
       let count = curveGeometry.attributes.position.count;
       curveGeometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
       let colors = regressionCurve.colors;
       let colorAttribute = curveGeometry.attributes.color;
       let color = new THREE.Color();
-      for (let i = 0; i < 52; ++i) {
+      for (let i = 0; i < curvePoints.length; ++i) {
         color.setRGB(colors[i][0], colors[i][1], colors[i][2]);
-        for (let j = 0; j < 50; ++j) {
-          colorAttribute.setXYZ(i*50+j, color.r, color.g, color.b);
+        for (let j = 0; j < tubularSegments; ++j) {
+          colorAttribute.setXYZ(i*tubularSegments+j, color.r, color.g, color.b);
         }
       }
       let curveMaterial = new THREE.MeshLambertMaterial({
@@ -388,7 +388,7 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-      <Paper style={ paperStyle }>
+      <Paper style={paperStyle}>
         <canvas ref='msCanvas' style={canvasStyle} />
       </Paper>
     );

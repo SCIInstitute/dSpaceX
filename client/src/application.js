@@ -6,11 +6,11 @@ import { DSXProvider } from './dsxContext.js';
 import DataHelper from './data/dataHelper.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
+import EmbeddingMorseSmaleWindow from './windows/embeddingMorseSmaleWindow';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
 import FilterPanel from './panels/filterPanel';
 import GalleryWindow from './windows/galleryWindow';
-import MsGraphWindow from './windows/msGraphWindow';
 import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
@@ -419,6 +419,12 @@ class Application extends React.Component {
     return activeDesigns;
   }
 
+  /**
+   * Finds all indexes that match a given value
+   * @param {array} array
+   * @param {number} value
+   * @return {array} of indexes
+   */
   findAllIndexes(array, value) {
     let indexes = [];
     let i = -1;
@@ -528,7 +534,7 @@ class Application extends React.Component {
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
-                        <MsGraphWindow
+                        <EmbeddingMorseSmaleWindow
                           key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}

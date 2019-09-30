@@ -752,9 +752,9 @@ class GraphGLWindow extends GLWindow {
     if (!this.props.decomposition) {
       return;
     }
-    let { datasetId, k, persistenceLevel } = this.props.decomposition;
+    let { datasetId, k } = this.props.decomposition;
     this.client
-      .fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel)
+      .fetchGraphEmbedding(datasetId, k)
       .then(function(result) {
         if (result.embedding && result.embedding.layout) {
           let layout = result.embedding.layout;
@@ -913,8 +913,7 @@ class GraphGLWindow extends GLWindow {
       }
     } else {
       Promise.all([
-        this.client.fetchLayoutForPersistenceLevel(
-          datasetId, k, persistenceLevel),
+        this.client.fetchGraphEmbedding(datasetId, k),
         this.client.fetchQoi(datasetId, qoiName),
       ]).then((results) => {
         const [result, qoiResult] = results;

@@ -261,30 +261,16 @@ class Client {
   }
 
   /**
-   * Grab the 2d graph embedding of the specified crystals.
+   * Grab the graph embedding.
    * @param {string} datasetId
    * @param {number} k
-   * @param {number} persistenceLevel
-   * @param {Array} crystalIds
-   * @param {string} layoutStrategy
-   */
-  fetchGraphLayout(datasetId, k, persistenceLevel, crystalIds, layoutStrategy) {
-
-  }
-
-  /**
-   * Grab the graph embedding for the specified persistence level.
-   * @param {string} datasetId
-   * @param {number} k
-   * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchLayoutForPersistenceLevel(datasetId, k, persistenceLevel) {
+  fetchGraphEmbedding(datasetId, k) {
     let command = {
-      name: 'fetchLayoutForPersistenceLevel',
+      name: 'fetchGraphEmbedding',
       datasetId: datasetId,
       k: k,
-      persistenceLevel: persistenceLevel,
     };
     return this._createCommandPromise(command);
   }
