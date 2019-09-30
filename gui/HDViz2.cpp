@@ -77,17 +77,17 @@ int main(int argc, char **argv) {
 
   TCLAP::SwitchArg randArg("r" /* flag */, "random" /* name */, 
       "Adds 0.0001 * range(f) uniform random noise to f, " 
-      "in case of 0 gradients due to equivivalent values" /* description */, 
+      "in case of 0 gradients due to equivalent values" /* description */,
       false /* required */); 
   cmd.add(randArg);
 
   TCLAP::ValueArg<double> smoothArg("" /* flag */, "smooth" /* name */, 
-      "Smooth function values to nearest nieghbor averages" /* description */, 
+      "Smooth function values to nearest neighbor averages" /* description */,
       false /* required */, 0 /* default */, "double" /* type */); 
   cmd.add(smoothArg);
 
   TCLAP::ValueArg<Precision> sigmaArg("s" /* flag */, "sigma" /* name */,
-      "Kernel regression bandwith (sigma for Gaussian)" /* description */, 
+      "Kernel regression bandwidth (sigma for Gaussian)" /* description */,
       false /* required */, 0.5 /* default */, "float" /* type */);
   cmd.add(sigmaArg);  
   
@@ -107,13 +107,13 @@ int main(int argc, char **argv) {
   
   // Build Sample Vector from Input Data
   std::vector<DenseVectorSample*> samples;
-  for (int j=0; j < x.N(); j++) {
-    FortranLinalg::DenseVector<Precision> vector(x.M());
+  for (int j=0; j < x.N(); j++) { // for each sample
+    FortranLinalg::DenseVector<Precision> vector(x.M()); // create a vector of size M - feature size
     for (int i=0; i < x.M(); i++) {
-      vector(i) = x(i, j);
+      vector(i) = x(i, j); // copy every value from matrix to vector for sample j
     }
-    DenseVectorSample *sample = new DenseVectorSample(vector);
-    samples.push_back(sample);
+    DenseVectorSample *sample = new DenseVectorSample(vector); // change to DenseVectorSample - why?
+    samples.push_back(sample); // add to list of samples
   }
 
   // Load temporary CSV dataset.

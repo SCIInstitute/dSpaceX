@@ -1,4 +1,4 @@
-//Morse-Smale complex computation as described in:
+// Morse-Smale complex computation as described in:
 // Gerber S, Bremer PT, Pascucci V, Whitaker R (2010). 
 // “Visual Exploration of High Dimensional Scalar Functions.” 
 // IEEE Transactions on Visualization and Computer Graphics, 16(6), 1271–1280.
@@ -25,16 +25,16 @@
 template<typename TPrecision>
 class NNMSComplex {
   private:
-    typedef std::map< std::pair<int, int>, int> map_pi_i;
+    typedef std::map<std::pair<int, int>, int> map_pi_i;
     typedef map_pi_i::iterator map_pi_i_it;
 
-    typedef std::multimap< int, std::pair<int, int> > mmap_i_pi;
+    typedef std::multimap<int, std::pair<int, int>> mmap_i_pi;
     typedef mmap_i_pi::iterator mmap_i_pi_it;
     
-    typedef typename std::map< std::pair<int, int>, TPrecision > map_pi_f;
+    typedef typename std::map<std::pair<int, int>, TPrecision> map_pi_f;
     typedef typename map_pi_f::iterator map_pi_f_it;
     
-    typedef typename std::map< TPrecision, std::pair<int, int>, std::less<TPrecision>  > map_f_pi;
+    typedef typename std::map<TPrecision, std::pair<int, int>, std::less<TPrecision>> map_f_pi;
     typedef typename map_f_pi::iterator map_f_pi_it;
 
 
