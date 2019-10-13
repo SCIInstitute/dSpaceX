@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
   FortranLinalg::DenseMatrix<Precision> md =
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist3.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/dist-f.csv");
-      HDProcess::loadCSVMatrix("../../examples/truss/distances.csv");
+      HDProcess::loadCSVMatrix("../../examples/truss/CantileverBeam_distance_matrix.csv");
 
   std::cout << "Truss data contains " << md.N() << " samples." << std::endl;
 

@@ -36,6 +36,7 @@ ADD_SUBDIRECTORY(lib/imageutils)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/tinyply)
 ADD_SUBDIRECTORY(lib/yaml-cpp)
+ADD_SUBDIRECTORY(lib/export)
 
 
 if(BUILD_SERVER_LIB)

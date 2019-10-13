@@ -307,7 +307,7 @@ class NNMSComplex {
     };
 
 private:
-    void runMS(bool smooth, double sigma2){
+    void runMS(bool smooth, double sigma2) {
       int knn = KNN.M();
 
       FortranLinalg::DenseVector<TPrecision> ys;
@@ -344,12 +344,6 @@ private:
           double d = sqrt(KNND(k, i));
           double g = ys(j) - ys(i);
           if (d == 0 ) {
-            /*if(g > 0){
-              g = std::numeric_limits<double>::max(); 
-            }
-            else{
-              g = std::numeric_limits<double>::min(); 
-            }*/
             g = 0;
           } else {
             g = g / d; 
@@ -455,6 +449,7 @@ private:
 
 
       // Setup crystals for zero peristence level
+      //TODO Put samples belonging to crystal here? - Ask Kyli
       int crystalID = 0;
       for(unsigned int i=0; i<extrema.N(); i++){
         std::pair<int, int> id(extrema(0, i), extrema(1, i));

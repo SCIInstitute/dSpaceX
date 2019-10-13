@@ -1,14 +1,5 @@
 #include "HDProcessor.h"
 
-#include "utils/Random.h"
-
-#include <list>
-#include <set>
-#include <iostream>
-#include <string>
-#include <algorithm>
-#include <iterator>
-
 Precision MAX = std::numeric_limits<Precision>::max();
 
 //coordinate center
@@ -16,7 +7,7 @@ int globalMin = -1;
 
 using namespace FortranLinalg;
 
-HDProcessor::HDProcessor() {}
+HDProcessor::HDProcessor() = default;
 
 
 /**
@@ -46,7 +37,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   std::cout << "knn = " << knn << std::endl;
   // make copy of distances so embedder won't trash data.
   auto dd = Linalg<Precision>::Copy(d);
-  Xall = mds.embed(dd, 3);
+  Xall = mds.embed(dd, 3); // TODO why 3?
   yall = qoi;
   
   // Add noise to yall in case of equivalent values 
@@ -99,7 +90,7 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   // Save number of requested regression samples
   DenseVector<int> regressionSampleCount(1);
-  regressionSampleCount(1) = nSamples;
+  regressionSampleCount(1) = nSamples; // TODO why placed at index 1 and not 0 also why put it in a vector at all?
   m_result->regressionSampleCount = Linalg<int>::Copy(regressionSampleCount);
 
   // Store Min Level (Starting Level)
@@ -132,6 +123,9 @@ HDProcessResult* HDProcessor::processOnMetric(
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
     computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
+
+  // Used to export crystal partitions for shape odds
+  // DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/home/sci/kyli.nmb/Desktop/crystalpartitions_truss_maxStress.csv");
 
   // detach and return processed result
   HDProcessResult *result = m_result;
@@ -506,11 +500,14 @@ void HDProcessor::computeRegressionForCrystal(
   // Extract samples and function values from crystalIDs
   DenseMatrix<Precision> X(Xall.M(), Xi[crystalIndex].size());
   DenseMatrix<Precision> y(1, X.N());
+  std::vector<unsigned int> indexes;
   for (unsigned int i=0; i< X.N(); i++){
     unsigned int index = Xi[crystalIndex][i];
+    indexes.push_back(index);
     Linalg<Precision>::SetColumn(X, i, Xall, index);  
     y(0, i) = yci[crystalIndex][i];
-  }  
+  }
+
   
   // Compute Rgeression curve
   std::cout << "Computing regression curve for crystalID " << crystalIndex << std::endl;
