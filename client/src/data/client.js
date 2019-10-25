@@ -264,13 +264,17 @@ class Client {
    * Grab the graph embedding.
    * @param {string} datasetId
    * @param {number} k
+   * @param {number} persistenceLevel
+   * @param {string} qoiName
    * @return {Promise}
    */
-  fetchGraphEmbedding(datasetId, k) {
+  fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName) {
     let command = {
       name: 'fetchGraphEmbedding',
       datasetId: datasetId,
       k: k,
+      persistenceLevel: persistenceLevel,
+      qoiName: qoiName,
     };
     return this._createCommandPromise(command);
   }

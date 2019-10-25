@@ -1,5 +1,5 @@
-// import EmbeddingWindow from './embeddingWindow';
-import GraphGLWindow from './graphGLWindow';
+import EmbeddingWindow from './embeddingWindow';
+// import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 
@@ -27,20 +27,20 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     };
     return (
       <div style={container}>
-        {/* <EmbeddingWindow*/}
-        {/*  dataset={this.props.dataset}*/}
-        {/*  decomposition={this.props.decomposition}*/}
-        {/*  selectedDesigns={this.props.selectedDesigns}*/}
-        {/*  onDesignSelection={this.props.onDesignSelection}*/}
-        {/*  activeDesigns={this.props.activeDesigns}*/}
-        {/*  numberOfWindows={this.props.numberOfWindows}/>*/}
-        <GraphGLWindow
+        <EmbeddingWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
           selectedDesigns={this.props.selectedDesigns}
           onDesignSelection={this.props.onDesignSelection}
           activeDesigns={this.props.activeDesigns}
           numberOfWindows={this.props.numberOfWindows}/>
+        {/* <GraphGLWindow*/}
+        {/*  dataset={this.props.dataset}*/}
+        {/*  decomposition={this.props.decomposition}*/}
+        {/*  selectedDesigns={this.props.selectedDesigns}*/}
+        {/*  onDesignSelection={this.props.onDesignSelection}*/}
+        {/*  activeDesigns={this.props.activeDesigns}*/}
+        {/*  numberOfWindows={this.props.numberOfWindows}/>*/}
         <MorseSmaleWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}

@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
-import { withDSXContext } from '../dsxContext'
-import {breakStatement} from "@babel/types";
+import { withDSXContext } from '../dsxContext';
 
 /**
  * Create Graph Window
@@ -15,11 +14,14 @@ class EmbeddingWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.state = { renderEdges:false };
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.addNodesToScene = this.addNodesToScene.bind(this);
+    this.addEdgesToScene = this.addEdgesToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
   }
@@ -56,14 +58,13 @@ class EmbeddingWindow extends React.Component {
 
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
-      const { datasetId, k } = this.props.decomposition;
+      const { datasetId, k, persistenceLevel } = this.props.decomposition;
       const qoiName = this.props.decomposition.decompositionField;
-      Promise.all([
-        this.client.fetchGraphEmbedding(datasetId, k),
-        this.client.fetchQoi(datasetId, qoiName),
-      ]).then((results) => {
-        const [embeddingResult, qoiResult] = results;
-        this.addNodesToScene(embeddingResult.embedding.layout);
+      this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName).then((result) => {
+        if (this.state.renderEdges) {
+          this.addEdgesToScene(result.embedding.adjacency, result.embedding.layout);
+        }
+        this.addNodesToScene(result.embedding.layout, result.colors);
         this.renderScene();
       });
     }
@@ -160,19 +161,36 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
+   * Add graph edges to scene
+   * @param {array} adjacencyMatrix - sample indexes with edges between them
+   * @param {array} sampleCoordinates - sample coordinates
+   */
+  addEdgesToScene(adjacencyMatrix, sampleCoordinates) {
+    adjacencyMatrix.forEach((edge) => {
+      let endPoint1 = sampleCoordinates[edge[0]];
+      let endPoint2 = sampleCoordinates[edge[1]];
+
+      let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
+      let lineGeometry = new THREE.Geometry();
+      lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 0));
+      lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 0));
+      let line = new THREE.Line(lineGeometry, lineMaterial);
+      this.scene.add(line);
+    });
+  }
+
+  /**
    * Add the sample nodes to the scene
    * @param {array} nodeCoordinates
+   * @param {array} nodeColors
    */
-  addNodesToScene(nodeCoordinates) {
-    // console.log('Add Node to Scene Called');
-    // let geometry = new THREE.CircleGeometry(100, 32);
-    // let material = new THREE.MeshBasicMaterial({ color:0x44aa88 });
-    // let mesh = new THREE.Mesh(geometry, material);
-    // this.scene.add(mesh);
+  addNodesToScene(nodeCoordinates, nodeColors) {
     nodeCoordinates.forEach((coord, index) => {
       // Add Circle
-      let nodeGeometry = new THREE.CircleGeometry(0.01, 32);
-      let nodeMaterial = new THREE.MeshBasicMaterial({ color:0x44aa88 });
+      let nodeGeometry = new THREE.CircleGeometry(0.012, 32);
+      let color = new THREE.Color();
+      color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
+      let nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
       let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
       nodeMesh.translateX(coord[0]);
       nodeMesh.translateY(coord[1]);
@@ -180,7 +198,7 @@ class EmbeddingWindow extends React.Component {
 
       // Outline Circle
       let edges = new THREE.EdgesGeometry(nodeGeometry);
-      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0xffffff }));
+      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
       line.translateX(coord[0]);
       line.translateY(coord[1]);
 
