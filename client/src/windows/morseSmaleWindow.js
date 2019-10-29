@@ -18,6 +18,7 @@ class MorseSmaleWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
+    this.initControls = this.initControls.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.mouseRelease = this.mouseRelease.bind(this);
     this.getCanvasPosition = this.getCanvasPosition.bind(this);
@@ -141,6 +142,18 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
     // controls
+    this.initControls();
+
+    // picking
+    this.raycaster = new THREE.Raycaster();
+
+    this.renderScene();
+  }
+
+  /**
+   * Initializes the controls.
+   */
+  initControls() {
     this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
     this.controls.rotateSpeed = 0.75;
     this.controls.zoomSpeed = 0.1;
@@ -148,13 +161,7 @@ class MorseSmaleWindow extends React.Component {
     this.controls.noZoom = false;
     this.controls.noPan = false;
     this.controls.staticMoving = true;
-    this.controls.keys = [65, 83, 68];
     this.controls.addEventListener( 'change', this.renderScene );
-
-    // picking
-    this.raycaster = new THREE.Raycaster();
-
-    this.renderScene();
   }
 
   /**
@@ -186,15 +193,7 @@ class MorseSmaleWindow extends React.Component {
     this.camera.updateProjectionMatrix();
 
     // Update controls
-    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
-    this.controls.rotateSpeed = 0.75;
-    this.controls.zoomSpeed = 0.1;
-    this.controls.panSpeed = 0.5;
-    this.controls.noZoom = false;
-    this.controls.noPan = false;
-    this.controls.staticMoving = true;
-    this.controls.keys = [65, 83, 68];
-    this.controls.addEventListener( 'change', this.renderScene );
+    this.initControls();
 
     // Redraw scene with updates
     this.renderScene();

@@ -14,16 +14,21 @@ class EmbeddingWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { renderEdges:false };
+    this.state = { renderEdges:true };
 
+    this.maxScale = 10;
+    this.zoomRate = 1.1;
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.addNodesToScene = this.addNodesToScene.bind(this);
     this.addEdgesToScene = this.addEdgesToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
+    this.resetScene = this.resetScene.bind(this);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
+    this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
+    this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
   }
 
   /**
@@ -33,6 +38,8 @@ class EmbeddingWindow extends React.Component {
     this.init();
     this.animate();
     window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
   }
 
   /**
@@ -58,13 +65,16 @@ class EmbeddingWindow extends React.Component {
 
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+      this.resetScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       const qoiName = this.props.decomposition.decompositionField;
       this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName).then((result) => {
-        if (this.state.renderEdges) {
-          this.addEdgesToScene(result.embedding.adjacency, result.embedding.layout);
-        }
-        this.addNodesToScene(result.embedding.layout, result.colors);
+        this.adjacency = result.embedding.adjacency;
+        this.layout = result.embedding.layout;
+        this.colors = result.colors;
+        this.addEdgesToScene(this.adjacency, this.layout);
+
+        this.addNodesToScene(this.layout, this.colors);
         this.renderScene();
       });
     }
@@ -75,6 +85,8 @@ class EmbeddingWindow extends React.Component {
    */
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeCanvas);
+    window.removeEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.embeddingCanvas.removeEventListener('wheel', this.handleMouseScrollEvent);
   }
 
   /**
@@ -114,17 +126,90 @@ class EmbeddingWindow extends React.Component {
     this.camera = new THREE.OrthographicCamera(-1*sx, 1*sx, 1*sy, -1*sy, -1, 1);
     this.camera.position.set(0, 0, -1);
 
-    // light
-    // TODO add light once you have basic idea working - if it needs light you will also have to change the mesh type
-
     // world
     this.scene = new THREE.Scene();
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    this.renderer.sortObjects = false;
 
     this.renderScene();
+  }
+
+  /**
+   * Add graph edges to scene
+   * @param {array} adjacencyMatrix - sample indexes with edges between them
+   * @param {array} sampleCoordinates - sample coordinates
+   */
+  addEdgesToScene(adjacencyMatrix, sampleCoordinates) {
+    if (this.state.renderEdges) {
+      adjacencyMatrix.forEach((edge) => {
+        let endPoint1 = sampleCoordinates[edge[0]];
+        let endPoint2 = sampleCoordinates[edge[1]];
+
+        let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
+        let lineGeometry = new THREE.Geometry();
+        lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 0));
+        lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 0));
+        let line = new THREE.Line(lineGeometry, lineMaterial);
+        this.scene.add(line);
+      });
+    }
+  }
+
+  /**
+   * Add the sample nodes to the scene
+   * @param {array} nodeCoordinates
+   * @param {array} nodeColors
+   */
+  addNodesToScene(nodeCoordinates, nodeColors) {
+    nodeCoordinates.forEach((coord, index) => {
+      // Add Circle
+      let nodeGeometry = new THREE.CircleGeometry(0.01, 32);
+      let color = new THREE.Color();
+      color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
+      let nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
+      let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      nodeMesh.translateX(coord[0]);
+      nodeMesh.translateY(coord[1]);
+      nodeMesh.name = index;
+
+      // Outline Circle
+      let edges = new THREE.EdgesGeometry(nodeGeometry);
+      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
+      line.translateX(coord[0]);
+      line.translateY(coord[1]);
+      line.name = 'line'+index;
+
+      this.scene.add(line);
+      this.scene.add(nodeMesh);
+    });
+  }
+
+  /**
+   * Draw the scene to the canvas
+   */
+  renderScene() {
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Animated the scene.
+   * This is necessary for interactivity.
+   */
+  animate() {
+    requestAnimationFrame(this.animate);
+  }
+
+  /**
+   * Resets the scene when there is new data by removing
+   * the old scene children.
+   */
+  resetScene() {
+    while (this.scene.children.length > 0) {
+      this.scene.remove(this.scene.children[0]);
+    }
   }
 
   /**
@@ -142,7 +227,7 @@ class EmbeddingWindow extends React.Component {
     this.renderer.setSize(width, height, false);
 
     // Resize camera
-    this.sizeCamera(width, height);
+    // this.sizeCamera(width, height);
     let sx = 1;
     let sy = 1;
     if (width > height) {
@@ -161,65 +246,34 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
-   * Add graph edges to scene
-   * @param {array} adjacencyMatrix - sample indexes with edges between them
-   * @param {array} sampleCoordinates - sample coordinates
+   * Handles when the mouse is scrolled for increasing and decreasing
+   * the embedding
+   * @param {object} event
    */
-  addEdgesToScene(adjacencyMatrix, sampleCoordinates) {
-    adjacencyMatrix.forEach((edge) => {
-      let endPoint1 = sampleCoordinates[edge[0]];
-      let endPoint2 = sampleCoordinates[edge[1]];
-
-      let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
-      let lineGeometry = new THREE.Geometry();
-      lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 0));
-      lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 0));
-      let line = new THREE.Line(lineGeometry, lineMaterial);
-      this.scene.add(line);
-    });
+  handleMouseScrollEvent(event) {
+    if (event.deltaY < 0 && this.camera.zoom > -this.maxScale) {
+      this.camera.zoom = this.camera.zoom / this.zoomRate;
+    }
+    if (event.deltaY > 0 && this.camera.zoom < this.maxScale) {
+      this.camera.zoom = this.camera.zoom * this.zoomRate;
+    }
+    this.camera.updateProjectionMatrix();
+    this.renderScene();
   }
 
   /**
-   * Add the sample nodes to the scene
-   * @param {array} nodeCoordinates
-   * @param {array} nodeColors
+   * Handles hotkey events.
+   * @param {object} event
    */
-  addNodesToScene(nodeCoordinates, nodeColors) {
-    nodeCoordinates.forEach((coord, index) => {
-      // Add Circle
-      let nodeGeometry = new THREE.CircleGeometry(0.012, 32);
-      let color = new THREE.Color();
-      color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
-      let nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
-      let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      nodeMesh.translateX(coord[0]);
-      nodeMesh.translateY(coord[1]);
-      nodeMesh.name = index;
-
-      // Outline Circle
-      let edges = new THREE.EdgesGeometry(nodeGeometry);
-      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
-      line.translateX(coord[0]);
-      line.translateY(coord[1]);
-
-      this.scene.add(nodeMesh);
-      this.scene.add(line);
-    });
-  }
-
-  /**
-   * Draw the scene to the canvas
-   */
-  renderScene() {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  /**
-   * Animated the scene.
-   * This is necessary for interactivity.
-   */
-  animate() {
-    requestAnimationFrame(this.animate);
+  handleKeyDownEvent(event) {
+    switch (event.key) {
+      case 'e':
+        this.setState({ renderEdges:!this.state.renderEdges });
+        this.resetScene();
+        this.addEdgesToScene(this.adjacency, this.layout);
+        this.addNodesToScene(this.layout, this.colors);
+    }
+    this.renderScene();
   }
 
   /**
