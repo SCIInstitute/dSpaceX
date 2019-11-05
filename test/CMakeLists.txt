@@ -1,6 +1,5 @@
-include(ExternalProject)
+include(ExternalProjectCommon)
 
-set(EXTERNAL_DIR "${CMAKE_BINARY_DIR}/externals")
 set(GTEST_INSTALL_DIR "${EXTERNAL_DIR}/googletest")
 IF(WIN32)
   set(GTEST_SHARED_ARG ON)
