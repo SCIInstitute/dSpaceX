@@ -68,7 +68,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-        HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
+        HDProcess::loadCSVMatrix("../../examples/truss/CantileverBeam_tsne_layout.csv");
   
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;

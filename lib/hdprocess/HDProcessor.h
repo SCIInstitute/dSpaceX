@@ -11,7 +11,12 @@
 #include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
 #include "precision/Precision.h"
+#include "utils/Random.h"
+#include "export/DataExport.h"
 
+#include <list>
+#include <iostream>
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>

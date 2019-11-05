@@ -51,6 +51,7 @@ TARGET_LINK_LIBRARIES (HDViz2
     blas
     lapack
     imageutils
+    export
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  

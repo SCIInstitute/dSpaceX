@@ -50,17 +50,7 @@ class FirstOrderKernelRegression {
        sol.deallocate();
       
      };
-     
 
-     void evaluate(FortranLinalg::DenseVector<TPrecision> &x, FortranLinalg::DenseVector<TPrecision> &out, TPrecision *sse=NULL){
-       FortranLinalg::DenseMatrix<TPrecision> sol = ls(x, sse);
-       for(unsigned int i=0; i<Y.M(); i++){
-         out(i) = sol(0, i);
-       }
-       sol.deallocate();
-     };
- 
- 
       void evaluate( FortranLinalg::DenseVector<TPrecision> &x, FortranLinalg::Vector<TPrecision> &out,
 FortranLinalg::Matrix<TPrecision> &J, double *sse=NULL){
         FortranLinalg::DenseMatrix<TPrecision> sol = ls(x, sse);
@@ -99,10 +89,10 @@ FortranLinalg::Matrix<TPrecision> &J, double *sse=NULL){
         TPrecision w = kernel.f(knnDist(i));
         A(i, 0) = w;
         for(unsigned int j=0; j< X.M(); j++){
-          A(i, j+1) = (X(j, nn)-x(j)) * w;
+          A(i, j+1) = (X(j, nn)-x(j)) * w; // Essentially get knnDist again and multiplying by w
         }
 
-        for(unsigned int m = 0; m<Y.M(); m++){
+        for(unsigned int m = 0; m < Y.M(); m++){
           b(i, m) = Y(m, nn) *w;
         }
         wsum += w*w;
