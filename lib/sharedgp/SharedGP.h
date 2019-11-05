@@ -14,6 +14,6 @@ private:
   int do_something_quietly(int y);
 
   Eigen::MatrixXd my_V_matrix;
-  Eigen::MatrixXd my_F_matrix;
+  Eigen::MatrixXi my_F_matrix;
 
 };

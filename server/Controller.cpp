@@ -36,7 +36,7 @@ const int MAX_DATASET_DEPTH = 3;
 
 Controller::Controller() {
   configureCommandHandlers();
-  configureAvailableDatasets();
+  configureAvailableDatasets("/Users/cam/data/dSpaceX/DATA");
 }
 
 /**
