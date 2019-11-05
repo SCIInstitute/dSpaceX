@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   }
 
   try {
-    controller = new Controller();    
+    controller = new Controller();     //TODO: add parameter to specific dataset location(s) (defaults to ../../examples)
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
     return 1;
