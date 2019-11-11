@@ -33,6 +33,8 @@ TARGET_LINK_LIBRARIES (dSpaceX
   hdprocess
   imageutils
   jsoncpp
+  shapeodds
+  igl::core
   libwsserver
   lapack
   pthread

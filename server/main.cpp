@@ -5,6 +5,7 @@
 #include <exception>
 #include <thread>
 
+#include "shapeodds/ShapeOdds.h"
 
 const int kDefaultPort = 7681;
 Controller *controller = nullptr;
@@ -19,6 +20,9 @@ extern "C" void browserText(void *wsi, char *text, int lena) {
 
 int main(int argc, char *argv[])
 {
+  // test ShapeOdds matrix stuff
+  Shapeodds::ShapeOdds s;
+
   if (argc > 2) {
     printf("\n Usage: dSpaceX [port]\n\n");
     return 1;

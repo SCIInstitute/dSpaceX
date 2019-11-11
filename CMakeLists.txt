@@ -48,6 +48,12 @@ ADD_SUBDIRECTORY(lib/tinyply)
 ADD_SUBDIRECTORY(lib/yaml-cpp)
 ADD_SUBDIRECTORY(lib/export)
 if(1)
+  # libigl
+  set(LIBIGL_EIGEN_VERSION 3.3.7 CACHE STRING "Eigen version")
+  set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
+  find_package(LIBIGL REQUIRED QUIET)
+
+  ADD_SUBDIRECTORY(lib/shapeodds)
   ADD_SUBDIRECTORY(lib/sharedgp)
 endif()
 

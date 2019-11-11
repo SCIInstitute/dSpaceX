@@ -4,6 +4,7 @@
 #include "flinalg/LinalgIO.h"
 #include "precision/Precision.h"
 #include "imageutils/Image.h"
+#include "shapeodds/ShapeOdds.h"
 
 #include <vector>
 
@@ -105,6 +106,11 @@ class Dataset {
       m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
+    Builder& withMSModel(std::string name, Shapeodds::MSModelContainer &ms_model) {
+      m_dataset->m_msModelFields.push_back(name);
+      m_dataset->m_msModels.push_back(ms_model);
+      return (*this);
+    }
     Builder& withName(std::string name) {
       m_dataset->m_name = name;
       return (*this);
@@ -133,6 +139,8 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
+  std::vector<Shapeodds::MSModelContainer> m_msModels;  // Shapeodds models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
+  std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;
 

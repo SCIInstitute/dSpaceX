@@ -8,6 +8,56 @@
 #include <sstream>
 #include <vector>
 
+struct InputFormat
+{
+  enum Type { CSV, JSON, LINALG_DENSEMATRIX, LINALG_DENSEVECTOR };
+  Type type;
+
+  InputFormat() : type(CSV)
+  {}
+  InputFormat(const std::string &str)
+  {
+    if (!str.compare("csv"))                  type = CSV;                return;
+    if (!str.compare("json"))                 type = JSON;               return;
+    if (!str.compare("Linalg.DenseMatrix"))   type = LINALG_DENSEMATRIX; return;
+    if (!str.compare("Linalg.DenseVector"))   type = LINALG_DENSEVECTOR; return;
+    throw std::runtime_error("Invalid input format specified: " + str);
+  }
+
+  friend std::ostream& operator<<(std::ostream &out, const InputFormat &c); 
+};
+
+std::ostream& operator<<(std::ostream &out, const InputFormat &f) 
+{ 
+  switch (f.type)
+  {
+    case InputFormat::CSV:                out << "csv";                break;
+    case InputFormat::JSON:               out << "json";               break;
+    case InputFormat::LINALG_DENSEMATRIX: out << "Linalg.DenseMatrix"; break;
+    case InputFormat::LINALG_DENSEVECTOR: out << "Linalg.DenseVector"; break;
+    default:
+      throw std::runtime_error("Invalid InputFormat type: " + (int)f.type);
+  }
+
+  return out; 
+} 
+
+// returns a string containing index padded with zeros up to width characters
+std::string paddedIndexString(unsigned index, unsigned width)
+{
+  std::stringstream paddedIndex;
+  paddedIndex << std::setfill('0') << std::setw(width) << index;
+  return paddedIndex.str();
+}
+
+// returns the minimum string with necessary to represent num
+unsigned paddedStringWidth(unsigned num)
+{
+  std::stringstream digitCounter;
+  digitCounter << num;
+  return digitCounter.str().size();
+}
+
 std::string basePathOf(const std::string &filePath) {
   size_t found = filePath.find_last_of("/\\");
   std::string path = filePath.substr(0,found);
@@ -60,6 +110,13 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
     auto embeddings = DatasetLoader::parseEmbeddings(config, filePath);
     for (auto embedding : embeddings) {
       builder.withEmbedding(embedding.first, embedding.second);
+    }
+  }
+
+  if (config["models"]) {
+    auto ms_models = DatasetLoader::parseMSModels(config, filePath);
+    for (auto ms_model : ms_models) {
+      builder.withMSModel(ms_model.first, ms_model.second);
     }
   }
 
@@ -336,6 +393,203 @@ EmbeddingPair DatasetLoader::parseEmbedding(
   return EmbeddingPair(name, embedding);
 }
 
+// There is a model for each crystal of each persistence level of a M-S complex... maybe too
+// much to read all at once, so only read them on demand? Anyway, for now just read them all.
+//
+// This was the addition to the config.yaml for the dataset:
+//
+// models:  # seems a little tedious to write out list of models, or even a list of persistences. The latter can be determined from the CrystalPartitions csv, which can also indicate how many crystals each level contains (0-based in this file, but 1-based in each model's crystalIds.csv)
+//   - fieldname: maxStress
+//     type: shapeodds                                            # could be shapeodds or sharedgp
+//     root: shapeodds_models_maxStress                           # directory of models for this field
+//     persistences: persistence-?                                # persistence files
+//     crystals: crystal-?                                        # in each persistence dir are its crystals
+//     padZeroes: false                                           # for both persistence and crystal dirs/files
+//     #format: csv   (just use extension of most files to determine format) # lots of csv files in each crystal: Z, crystalIds, W, wo
+//     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
+//     embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
+//
+std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
+{
+  std::vector<MSModelPair> ms_models;
+
+  if (!config["models"]) {
+    throw std::runtime_error("Dataset config missing 'models' field.");
+  }
+  const YAML::Node &modelsNode = config["models"];
+
+  if (modelsNode.IsSequence()) {
+    // Parse Models one field at a time if in list form:
+    std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
+    for (std::size_t i = 0; i < modelsNode.size(); i++) {
+      const YAML::Node &modelNode = modelsNode[i];
+      MSModelPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
+      ms_models.push_back(ms_model);
+    }
+  } else {
+    throw std::runtime_error("Config 'models' field is not a list.");
+  }
+
+  return ms_models;
+}
+
+MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+{
+  using namespace Shapeodds;
+
+  if (!modelNode["fieldname"]) {
+    throw std::runtime_error("Model missing 'fieldname' field.");
+  }
+  std::string fieldname = modelNode["fieldname"].as<std::string>();
+
+  if (!modelNode["type"]) {
+    throw std::runtime_error("Model missing 'type' field.");
+  }
+  std::string modelsType = modelNode["type"].as<std::string>();
+  std::cout << "Reading '" << modelsType << "' models for '" << fieldname << "' field." << std::endl;
+
+  if (!modelNode["partitions"]) {
+     throw std::runtime_error("Model missing 'partitions' field (specifyies samples for the crystals at each persistence level) .");
+  }
+  std::string partitions = modelNode["partitions"].as<std::string>();
+  std::string partitions_suffix = partitions.substr(partitions.rfind('.')+1);
+  InputFormat partitions_format = InputFormat(partitions_suffix);
+  std::cout << "Partitions file format: " << partitions_format << std::endl;
+
+  if (!modelNode["embeddings"]) {
+     throw std::runtime_error("Missing 'embeddings' field (name of global embeddings for each persistence level's models).");
+  }
+  std::string embeddings = modelNode["embeddings"].as<std::string>();
+  std::string embeddings_suffix = embeddings.substr(embeddings.rfind('.')+1);
+  InputFormat embeddings_format = InputFormat(embeddings_suffix);
+  std::cout << "Global embeddings for each persistence level file format: " << embeddings_format << std::endl;
+
+  if (!modelNode["root"]) {
+    throw std::runtime_error("Model missing 'root' field.");
+  }
+  std::string modelsBasePath = basePathOf(filePath) + modelNode["root"].as<std::string>();
+
+  if (!modelNode["persistences"]) {
+    throw std::runtime_error("Model missing 'persistences' field specifying base filename for persistence levels.");
+  }
+  std::string persistencesBase = modelNode["persistences"].as<std::string>();
+  int persistenceNameLoc = persistencesBase.find('?');
+  std::string persistencesBasePath = modelsBasePath + '/' + persistencesBase.substr(0, persistenceNameLoc);
+
+  if (!modelNode["crystals"]) {
+    throw std::runtime_error("Model missing 'crystals' field specifying base filename for the crystals at each level.");
+  }
+  std::string crystalsBasename = modelNode["crystals"].as<std::string>();
+  int crystalIndexLoc = crystalsBasename.find('?');
+  crystalsBasename = crystalsBasename.substr(0, crystalIndexLoc);
+
+  bool shouldPadZeroes = false;
+  if (modelNode["padZeroes"]) {
+    std::string padZeroes = modelNode["padZeroes"].as<std::string>();
+    if (padZeroes == "true") {
+      shouldPadZeroes = true;
+    } else if (padZeroes != "false") {
+      throw std::runtime_error("Model's padZeroes contains invalid value: " + padZeroes);
+    }
+  }
+
+  // Read crystals, an array of P persistence levels x N samples per level
+  // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
+  FortranLinalg::DenseMatrix<Precision> crystalPartitions;
+  if (partitions_format.type == InputFormat::CSV)
+    crystalPartitions = HDProcess::loadCSVMatrix(basePathOf(filePath) + '/' + partitions);
+  else
+  {
+    std::stringstream out("Crystal partitions file should be a csv, but it's a ");
+    out << partitions_format;
+    throw std::runtime_error(out.str());
+  }
+  unsigned npersistences = crystalPartitions.M();
+  unsigned nsamples = crystalPartitions.N();
+  std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
+            << nsamples << " samples." << std::endl;
+
+  // create matrix of crystalPartitions
+  Eigen::Map<Eigen::MatrixXd> crystalPartitions_eigen(crystalPartitions.data(), npersistences, nsamples);
+  // std::cout << "CrystalPartitions for persistence 0\n: " << crystalPartitions_eigen.row(0) << std::endl;
+  // std::cout << "Num crystals at persistence 0: " << crystalPartitions_eigen.row(0).maxCoeff()+1 << std::endl;
+  
+  // Now read all the models
+  MSModelContainer ms_of_models(fieldname, nsamples);
+  for (unsigned persistence = 0; persistence < npersistences; persistence++)
+  {
+    // <test> this is just to make sure these were read correctly, so it walks the array and prints the values (confirmed, and same as eigen row above)
+    // std::cout << "Persistence level " << persistence << " crystal allocation:" << std::endl;
+    // for (unsigned sample = 0; sample < nsamples; sample++)
+    // {
+    //   std::cout << crystalPartitions(persistence, sample) << ", ";
+    // }
+    // std::cout << std::endl;
+    // </test>
+
+    ms_of_models.addPersistenceLevel();  // <ctc> I don't like that index of the newly added persistence level is implicit here...
+    PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence);
+
+    // compute ncrystals for this persistence level using crystalPartitions
+    unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
+    std::cout << "There are " << ncrystals << " in persistence level " << persistence << std::endl;
+
+    // compute padding if necessary
+    unsigned persistenceIndexPadding = 0;
+    unsigned crystalIndexPadding = 0;
+    if (shouldPadZeroes)
+    {
+      persistenceIndexPadding = paddedStringWidth(npersistences);
+      crystalIndexPadding = paddedStringWidth(ncrystals);
+    }
+
+    // read global embeddings for the set of models (one per crystal) at this persistence level
+    std::string persistenceIndexStr(shouldPadZeroes ? paddedIndexString(persistence, persistenceIndexPadding) : std::to_string(persistence));
+    std::string persistencePath(persistencesBasePath + persistenceIndexStr);
+    P.setGlobalEmbeddings(HDProcess::loadCSVMatrix(persistencePath + '/' + embeddings));
+    
+    // read the model for each crystal at this persistence level
+    std::string modelPath;
+    for (unsigned crystal = 0; crystal < ncrystals; crystal++)
+    {
+      std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
+      std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
+      P.addCrystal(Crystal(parseModel(crystalPath)));
+
+      modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
+    }
+
+    // read crystalIds (same for every model at this plevel, so only need to read/set them once)
+    FortranLinalg::DenseVector<Precision> crystal_ids = HDProcess::loadCSVColumn(modelPath + "/crystalID.csv" );
+  
+    // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
+    {
+      Precision *data = crystal_ids.data();
+      for (unsigned i = 0; i < crystal_ids.N(); i++)
+        data[i]--;
+    }
+      
+    // set group of samples for each model at this persistence level
+    P.setCrystalSamples(crystal_ids);
+  }
+
+  return MSModelPair(fieldname, ms_of_models);
+}
+
+// read the components of each model (Z, W, w0) from their respective csv files
+Shapeodds::Model DatasetLoader::parseModel(const std::string &modelPath)
+{
+  // read latent space Z
+  auto Z = HDProcess::loadCSVMatrix(modelPath + "/Z.csv");
+
+  // read W
+  auto W = HDProcess::loadCSVMatrix(modelPath + "/W.csv");
+
+  // read w0
+  auto w0 = HDProcess::loadCSVMatrix(modelPath + "/w0.csv");
+
+  return Shapeodds::Model(Z, W, w0);
+}
 
 FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseGeometry(
     const YAML::Node &config, const std::string &filePath) {
@@ -409,13 +663,12 @@ std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath,
   std::string imageName = std::to_string(index);
 
   if (padZeroes) {
-    std::stringstream digitCounter;
-    digitCounter << thumbnailCount;
-    unsigned int digitCount = digitCounter.str().size() + indexOffset;
+    // std::stringstream digitCounter;
+    // digitCounter << thumbnailCount;
+    // unsigned int digitCount = digitCounter.str().size() + indexOffset;  // <ctc> I think this was a bug, since indexOffset represents number of first image name (ex: group of 500 images starting with 525 requires 4-chars, but this code would only say it needs 3-chars for images 0-475). 
 
-    std::stringstream paddedName;
-    paddedName << std::setfill('0') << std::setw(digitCount) << index;
-    imageName = paddedName.str();
+    unsigned digitCount = paddedStringWidth(indexOffset + thumbnailCount);
+    imageName = paddedIndexString(index, digitCount);
   }
 
   std::string path = imageBasePath + imageName + imageSuffix;
