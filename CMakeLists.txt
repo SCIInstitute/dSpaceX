@@ -53,6 +53,7 @@ if(1)
   set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
   find_package(LIBIGL REQUIRED QUIET)
 
+  ADD_SUBDIRECTORY(lib/lodepng)
   ADD_SUBDIRECTORY(lib/shapeodds)
   ADD_SUBDIRECTORY(lib/sharedgp)
 endif()

@@ -1,12 +1,15 @@
 #include "ShapeOdds.h"
 #include "imageutils/ImageLoader.h"
+#include "lodepng.h"
 
 namespace Shapeodds {
 
 ShapeOdds::ShapeOdds()
 {
+  using namespace Eigen;
+  
   // Inline mesh of a cube
-  my_V_matrix = (Eigen::MatrixXd(8,3)<<
+  my_V_matrix = (MatrixXd(8,3)<<
                  0.0,0.0,0.0,
                  0.0,0.0,1.0,
                  0.0,1.0,0.0,
@@ -15,7 +18,7 @@ ShapeOdds::ShapeOdds()
                  1.0,0.0,1.0,
                  1.0,1.0,0.0,
                  1.0,1.0,1.0).finished();
-  my_F_matrix = (Eigen::MatrixXi(12,3)<<
+  my_F_matrix = (MatrixXi(12,3)<<
                  1,7,5,
                  1,3,7,
                  1,4,3,
@@ -37,8 +40,8 @@ ShapeOdds::ShapeOdds()
   const std::string sidata("1,2,4,8");
   const std::string sfdata("1.234,2.468,4.816,8.1624");
   
-  // same as: Eigen::Map<Eigen::Matrix2i> imat(idata);
-  Eigen::Map<Eigen::MatrixXi> imat(idata,2,2);
+  // same as: Map<Matrix2i> imat(idata);
+  Map<MatrixXi> imat(idata,2,2);
   std::cout << "imat (map of idata):\n" << imat << std::endl;
   std::cout << "imat.row(0):\n" << imat.row(0) << std::endl;
   std::cout << "imat.col(0):\n" << imat.col(0) << std::endl;
@@ -47,7 +50,7 @@ ShapeOdds::ShapeOdds()
   std::cout << "imat.maxCoeff():\n" << imat.maxCoeff() << std::endl;
   std::cout << "imat.colwise().maxCoeff():\n" << imat.colwise().maxCoeff() << std::endl;
   
-  Eigen::Map<Eigen::MatrixXf> fmat(fdata,2,2);
+  Map<MatrixXf> fmat(fdata,2,2);
   std::cout << "fmat (map of fdata):\n" << fmat << std::endl;
   fmat.array() *= -1.0;
   std::cout << "fmat * -1.0:\n" << fmat << std::endl;
@@ -57,6 +60,30 @@ ShapeOdds::ShapeOdds()
   std::cout << "fmat + 1.0:\n" << fmat << std::endl;
   fmat = fmat.array().inverse();
   std::cout << "1.0/fmat:\n" << fmat << std::endl;
+
+  Map<RowVectorXf> fvec_of_fmat(fmat.data(), fmat.size());
+  std::cout << "vec of fmat:\n" << fvec_of_fmat << std::endl;
+  Matrix<float, Dynamic, Dynamic, RowMajor> fmat_rm(fmat);
+  Map<RowVectorXf> fvec_of_fmat_rm(fmat_rm.data(), fmat_rm.size());
+  std::cout << "row major vec of fmat:\n" << fvec_of_fmat_rm << std::endl;
+  
+  //colmajor column to rowmajor image (just like I below)
+  int imgdata[] = {1,2,4,8,16,32};
+  Map<MatrixXi> imat_61(imgdata, 6, 1);
+  std::cout << "col major 6 x 1 imat_61:\n" << imat_61 << std::endl;
+  typedef Matrix<int,Dynamic,Dynamic,RowMajor> rowmaj_image;
+  Map<rowmaj_image> imat_23_rowmaj(imat_61.data(), 2, 3);
+  std::cout << "row major 2 x 3 image imat_61:\n" << imat_23_rowmaj << std::endl;
+  typedef Matrix<int,Dynamic,Dynamic,ColMajor> colmaj_image;
+  Map<colmaj_image> imat_32_colmaj(imat_61.data(), 3, 2);
+  std::cout << "col major 3 x 2 image imat_61:\n" << imat_32_colmaj << std::endl;
+
+  MatrixXf M1(2,6);    // Column-major storage
+  M1 << 1, 2, 3,  4,  5,  6,
+        7, 8, 9, 10, 11, 12;
+  std::cout << "M1:" << std::endl << M1 << std::endl;
+  Map<MatrixXf> M2(M1.data(), 6,2);
+  std::cout << "M2:" << std::endl << M2 << std::endl;
 }
 
 ShapeOdds::~ShapeOdds()
@@ -80,7 +107,7 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
-#if 1
+
   // create Eigen matrices of the three components of the model
   Eigen::Map<Eigen::MatrixXd> _Z(model.Z.data(),model.Z.M(),model.Z.N());
   std::cout << "Z:\n" << _Z << std::endl;
@@ -106,19 +133,69 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   std::cout << "I * 255:\n" << I << std::endl;
 
   // write this to an image
-  //todo Load the image of the first sample and simply compare pixels to start with
+
+  //todo Load the image of the first sample and simply compare pixels to start with (list of samples is stored in the model's Crystal)
   ImageLoader imageLoader;
   std::string path("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/images/1.png");
+  std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/1.png");
+  unsigned w,h;
   Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
+
+  // just use lodepng since it's super simple
+  {
+    std::vector<unsigned char> image;
+    std::vector<unsigned char> buffer;
+    lodepng::State state;
+    unsigned error;
+
+    state.decoder.color_convert = 0;
+    state.decoder.remember_unknown_chunks = 1; //make it reproduce even unknown chunks in the saved image
+
+    lodepng::load_file(buffer, path.c_str());
+    error = lodepng::decode(image, w, h, state, buffer);
+    if(error) {
+      std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+      return 0;
+    }
+
+    buffer.clear();
+
+    state.encoder.text_compression = 1;
+
+    error = lodepng::encode(buffer, image, w, h, state);
+    if(error) {
+      std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+      return 0;
+    }
+
+    lodepng::save_file(buffer, outpath);
+  }
+  
   // samples of p0-c0: <manually get 'em>
   //  - not sure if order matters...
+  //   [] just compute them all to compare images for each Z
+  //     - still leaves some samples out though since there are fewer Zs than samples...)
   //  - there are fewer Z rows than samples, so...
   //  - how do I pick the z coordinate corresponding to a sample?
-  
-  //ImageIO<Image>::saveImage(target, "init.mhd");
-#endif
+
+  //saveImage
+  {
+    Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);
+    unsigned char image[I.size()];
+    std::vector<unsigned char> buffer;
+    unsigned error;
+
+    //image
+    for (unsigned y = 0; y < I_image.rows(); y++)
+      for (unsigned x = 0; x < I_image.cols(); x++)
+        image[y*I_image.cols() + x] = (unsigned char)std::round(I_image(y,x));  // swap x and y
+    error = lodepng::encode(buffer, image, I_image.cols(), I_image.rows(), LCT_GREY, 8);
+    if(error) {
+      std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+      return 0;
+    }
+    lodepng::save_file(buffer, outpath.c_str());
+  }
 }
-
-
 
 } // end namespace Shapeodds
