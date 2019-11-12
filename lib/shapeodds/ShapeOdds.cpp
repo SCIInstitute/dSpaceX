@@ -1,4 +1,5 @@
 #include "ShapeOdds.h"
+#include "imageutils/ImageLoader.h"
 
 namespace Shapeodds {
 
@@ -101,9 +102,14 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   phi.array() += 1.0;
   Eigen::MatrixXd I(phi.array().inverse());
   std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
+  I.array() *= 255.0;
+  std::cout << "I * 255:\n" << I << std::endl;
 
   // write this to an image
   //todo Load the image of the first sample and simply compare pixels to start with
+  ImageLoader imageLoader;
+  std::string path("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/images/1.png");
+  Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
   // samples of p0-c0: <manually get 'em>
   //  - not sure if order matters...
   //  - there are fewer Z rows than samples, so...
