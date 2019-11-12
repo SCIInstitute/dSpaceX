@@ -558,7 +558,10 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      P.addCrystal(Crystal(parseModel(crystalPath)));
+      Crystal C(parseModel(crystalPath));
+      C.getModel().setCrystal(&C);
+      P.addCrystal(C);
+      // <ctc> oops... time to fix the copy ctors, etc. This crystal isn't actually part of the model and just gets copied then deleted, lol
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
     }
@@ -569,11 +572,8 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
     {
       Precision *data = crystal_ids.data();
-      // for (unsigned i = 0; i < crystal_ids.N(); i++)
-      //   data[i]--;
       Eigen::Map<Eigen::VectorXd> _crystal_ids(data,crystal_ids.N());
       _crystal_ids.array() -= 1.0;
-      //std::cout << "crystal_ids:\n" << _crystal_ids << std::endl; // <ctc> verified!
     }
       
     // set group of samples for each model at this persistence level

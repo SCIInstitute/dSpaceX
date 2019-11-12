@@ -117,85 +117,101 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   std::cout << "w0:\n" << _w0 << std::endl;
 
   // the z_coord should just be one row
-  //quick check to test: use the first element of the model's Z
-  Eigen::VectorXd z = _Z.row(0);
-  std::cout << "latent space coord (z):\n" << z << std::endl;
-  Eigen::MatrixXd phi = _W * z + _w0;
-  std::cout << "phi = W * z + w0:\n" << phi << std::endl;
-
-  //I = 1.0 / (1 + exp(-phi));
-  phi.array() *= -1.0;
-  phi = phi.array().exp();
-  phi.array() += 1.0;
-  Eigen::MatrixXd I(phi.array().inverse());
-  std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
-  I.array() *= 255.0;
-  std::cout << "I * 255:\n" << I << std::endl;
-
-  // write this to an image
-
-  //todo Load the image of the first sample and simply compare pixels to start with (list of samples is stored in the model's Crystal)
-  ImageLoader imageLoader;
-  std::string path("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/images/1.png");
-  std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/1.png");
-  unsigned w,h;
-  Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
-
-  // just use lodepng since it's super simple
+  //to test we'll create images using the elements of this model's Z
+  for (unsigned zidx = 0; zidx < model.Z.M(); zidx++)
   {
-    std::vector<unsigned char> image;
-    std::vector<unsigned char> buffer;
-    lodepng::State state;
-    unsigned error;
+    Eigen::VectorXd z = _Z.row(zidx);
+    std::cout << "latent space coord (z):\n" << z << std::endl;
+    Eigen::MatrixXd phi = _W * z + _w0;
+    std::cout << "phi = W * z + w0:\n" << phi << std::endl;
 
-    state.decoder.color_convert = 0;
-    state.decoder.remember_unknown_chunks = 1; //make it reproduce even unknown chunks in the saved image
+    //I = 1.0 / (1 + exp(-phi));
+    phi.array() *= -1.0;
+    phi = phi.array().exp();
+    phi.array() += 1.0;
+    Eigen::MatrixXd I(phi.array().inverse());
+    std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
+    I.array() *= 255.0;
+    std::cout << "I * 255:\n" << I << std::endl;
 
-    lodepng::load_file(buffer, path.c_str());
-    error = lodepng::decode(image, w, h, state, buffer);
-    if(error) {
-      std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-      return 0;
+    // write this to an image
+    {
+      unsigned w=80,h=40; // TODO: are these stored anywhere within the M-S complex or its models?
+      if (I.size() != w * h)
+        throw std::runtime_error("Sample image size is " + std::to_string(w) + " x " + std::to_string(h)
+                                 + ", but output array is of size " + std::to_string(I.size()));
+
+      Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);  // column major ordering
+      unsigned char image[I.size()];
+      std::vector<unsigned char> buffer;
+      unsigned error;
+
+      // copy image into row-order array
+      for (unsigned c = 0; c < w; c++)    // for every column...
+        for (unsigned r = 0; r < h; r++)  // read all the rows
+          image[r * w + c] = (unsigned char)std::round(I_image(r,c));
+
+      error = lodepng::encode(buffer, image, w, h, LCT_GREY, 8);
+      if(error) {
+        std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        return 0;
+      }
+      //TODO: need to pass persistence and crystal if we want to model to know what to save... but probably it should just return an image anyay.
+      std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/p0-c0-z" + std::to_string(zidx) + ".png");
+      lodepng::save_file(buffer, outpath.c_str());
     }
-
-    buffer.clear();
-
-    state.encoder.text_compression = 1;
-
-    error = lodepng::encode(buffer, image, w, h, state);
-    if(error) {
-      std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-      return 0;
-    }
-
-    lodepng::save_file(buffer, outpath);
   }
   
+#if 0 // not sure how to figure out which image goes with which row of Z...
+  //test by loading the images for each element (are they correlated? there aren't the same number...)
+  //and compare pixels to start with (list of samples is stored in the model's Crystal)
+  //
   // samples of p0-c0: <manually get 'em>
   //  - not sure if order matters...
   //   [] just compute them all to compare images for each Z
   //     - still leaves some samples out though since there are fewer Zs than samples...)
   //  - there are fewer Z rows than samples, so...
   //  - how do I pick the z coordinate corresponding to a sample?
-
-  //saveImage
+  //
+  const std::set<unsigned> &sample_indices = model.getCrystal().getSamples();
+  for (unsigned sample_idx : sample_indices)
   {
-    Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);
-    unsigned char image[I.size()];
-    std::vector<unsigned char> buffer;
-    unsigned error;
+    std::string path("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/images/1.png");
+    std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/1.png");
+    unsigned w,h;
+    Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
 
-    //image
-    for (unsigned y = 0; y < I_image.rows(); y++)
-      for (unsigned x = 0; x < I_image.cols(); x++)
-        image[y*I_image.cols() + x] = (unsigned char)std::round(I_image(y,x));  // swap x and y
-    error = lodepng::encode(buffer, image, I_image.cols(), I_image.rows(), LCT_GREY, 8);
-    if(error) {
-      std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-      return 0;
+    // just use lodepng since it's super simple
+    {
+      std::vector<unsigned char> image;
+      std::vector<unsigned char> buffer;
+      lodepng::State state;
+      unsigned error;
+
+      state.decoder.color_convert = 0;
+      state.decoder.remember_unknown_chunks = 1; //make it reproduce even unknown chunks in the saved image
+
+      lodepng::load_file(buffer, path.c_str());
+      error = lodepng::decode(image, w, h, state, buffer);
+      if(error) {
+        std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        return 0;
+      }
+
+      buffer.clear();
+
+      state.encoder.text_compression = 1;
+
+      error = lodepng::encode(buffer, image, w, h, state);
+      if(error) {
+        std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+        return 0;
+      }
+
+      lodepng::save_file(buffer, outpath);
     }
-    lodepng::save_file(buffer, outpath.c_str());
   }
+#endif
 }
 
 } // end namespace Shapeodds

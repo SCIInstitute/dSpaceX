@@ -13,6 +13,9 @@
 
 namespace Shapeodds {
 
+class Crystal;
+class ShapeOdds;
+
 // There is a model for each crystal at each persistence level for a given M-S topology. It is
 // constructed from a given number of input images (samples), and consists of L necessary
 // values that make the model able to compute new images for a given point, z, in the latent
@@ -21,13 +24,18 @@ class Model
 {
 public:
   Model(FortranLinalg::DenseMatrix<Precision> _Z, FortranLinalg::DenseMatrix<Precision> _W, FortranLinalg::DenseMatrix<Precision> _w0)
-    : Z(_Z), W(_W), w0(_w0)
+    : Z(_Z), W(_W), w0(_w0), crystal(NULL)
   {}
   ~Model()
   {}
+
+  void setCrystal(const Crystal *c)
+  {
+    crystal = c;
+  }
   
   // since models may get large, keep track of when they're copyied so this step can be optimized (probably passing vectors around by value is copying their contents). C++11 should use move semantics (see https://mbevin.wordpress.com/2012/11/20/move-semantics/), so this is just to verify that's being done.
-  Model(const Model &model) : Z(model.Z), W(model.W), w0(model.w0)
+  Model(const Model &model) : crystal(model.crystal), Z(model.Z), W(model.W), w0(model.w0)
   {
     std::cout << "Shapeodds::Model copy ctor (&model = " << &model << ")." << std::endl;
   }
@@ -43,8 +51,16 @@ public:
   FortranLinalg::DenseMatrix<Precision> W;
   FortranLinalg::DenseMatrix<Precision> w0;
 
-  friend class ShapeOdds;
+  const Crystal *crystal;     // the Crystal to which this model is associated (a circular reference, thus the pointer, but handy)
+
+  friend class ShapeOdds;  //<ctc> why isn't this working???
 };
+
+
+// class ShapeOddsModel : public Model
+// TODO
+//  - in order to provide common interface for SharedGP models
+
 
 //
 // A set of Shapeodds models are computed for elements of a Morse-Smale complex, with one model
@@ -78,13 +94,18 @@ public:
     return samples.size();
   }
 
+  const std::set<unsigned>& getSamples() const
+  {
+    return samples;
+  }
+
   Model& getModel()
   {
     return model;
   }
 
 private:
-  std::set<unsigned> samples;
+  std::set<unsigned> samples;  //TODO: change name to sample_indices, along with associated functions
   Model model;
 };
 
