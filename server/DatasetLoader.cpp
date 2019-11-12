@@ -430,6 +430,10 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     throw std::runtime_error("Config 'models' field is not a list.");
   }
 
+  // <ctc> just to test, let's try creating an image right here:
+  Shapeodds::Model &model(ms_models[0].second.getPersistenceLevel(0).getCrystal(0).getModel());
+  Shapeodds::ShapeOdds::evaluateModel(model, model.Z);
+
   return ms_models;
 }
 
@@ -532,7 +536,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
-    std::cout << "There are " << ncrystals << " in persistence level " << persistence << std::endl;
+    std::cout << "There are " << ncrystals << " crystals in persistence level " << persistence << std::endl;
 
     // compute padding if necessary
     unsigned persistenceIndexPadding = 0;
@@ -565,12 +569,18 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
     {
       Precision *data = crystal_ids.data();
-      for (unsigned i = 0; i < crystal_ids.N(); i++)
-        data[i]--;
+      // for (unsigned i = 0; i < crystal_ids.N(); i++)
+      //   data[i]--;
+      Eigen::Map<Eigen::VectorXd> _crystal_ids(data,crystal_ids.N());
+      _crystal_ids.array() -= 1.0;
+      //std::cout << "crystal_ids:\n" << _crystal_ids << std::endl; // <ctc> verified!
     }
       
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
+
+
+    break; // <ctc> hack so we can quickly read the first persistence level and test applying the model
   }
 
   return MSModelPair(fieldname, ms_of_models);

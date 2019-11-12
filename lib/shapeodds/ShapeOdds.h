@@ -37,11 +37,13 @@ public:
     return Model(m);
   }
   
-private:
+  //private:
   // Shapeodds model 
   FortranLinalg::DenseMatrix<Precision> Z;
   FortranLinalg::DenseMatrix<Precision> W;
   FortranLinalg::DenseMatrix<Precision> w0;
+
+  friend class ShapeOdds;
 };
 
 //
@@ -168,6 +170,10 @@ public:
   {
     return persistence_levels[i];
   }
+
+  //<ctc> maybe add a helper to get the model from a specific crystal of a specific persistence level all in one query
+  //      then we can check for errors at the top level, since it'll be tedious to make users of this class do it every time.
+
 
   typedef std::pair<std::string, Model&> ModelPair;
   std::vector<ModelPair> getAllModels()
