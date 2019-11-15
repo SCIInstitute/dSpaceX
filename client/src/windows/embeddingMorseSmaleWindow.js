@@ -2,6 +2,7 @@ import EmbeddingWindow from './embeddingWindow';
 // import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
+import ResponsiveDrawer from '../components/responsiveDrawer';
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -46,6 +47,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           decomposition={this.props.decomposition}
           numberOfWindows={this.props.numberOfWindows}
           onCrystalSelection={this.props.onCrystalSelection}/>
+        <ResponsiveDrawer/>
       </div>
     );
   }
