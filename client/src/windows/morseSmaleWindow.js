@@ -243,12 +243,15 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} normalizedPosition
    */
   pick(normalizedPosition) {
+    const { datasetId, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
-      let cell = intersectedObjects[0].object.name;
-      let point = this.getIndexOfNearestNeighbor(intersectedObjects[0]);
+      let crystalID = intersectedObjects[0].object.name;
+      this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
+        this.props.onCrystalSelection(result.crystalSamples);
+      });
     }
   }
 

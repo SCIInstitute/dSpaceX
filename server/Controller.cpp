@@ -46,16 +46,14 @@ void Controller::configureCommandHandlers() {
     m_commandMap.insert({"fetchDatasetList", std::bind(&Controller::fetchDatasetList, this, _1, _2)});
     m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
     m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
-    m_commandMap.insert(
-            {"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
-    m_commandMap.insert(
-            {"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
-    m_commandMap.insert(
-            {"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
+    m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
+    m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
+    m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
     m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
     m_commandMap.insert({"fetchGraphEmbedding", std::bind(&Controller::fetchGraphEmbedding, this, _1, _2)});
     m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
     m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
+    m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
     m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
     m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
     m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -607,6 +605,32 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
         extremaObject["color"].append(color[2]);
 
         response["extrema"].append(extremaObject);
+    }
+}
+
+void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &response) {
+    int datasetId = request["datasetId"].asInt();
+    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+        // TODO: Send back an error message.
+    }
+
+    unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+    unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+    int persistenceLevel = request["persistenceLevel"].asInt();
+    if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+        // TODO: Send back an error message. Invalid persistenceLevel.
+    }
+
+    int crystalID = request["crystalID"].asInt();
+
+    auto crystal_partition = m_currentProcessResult->crystalPartitions[persistenceLevel];
+
+    response["crystalSamples"] = Json::Value(Json::arrayValue);
+    for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
+        if(crystal_partition(i) == crystalID) {
+            response["crystalSamples"].append(i);
+        }
     }
 }
 

@@ -59,10 +59,12 @@ class EmbeddingWindow extends React.Component {
       return;
     }
 
+    // New window has been added to application
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
       this.resizeCanvas();
     }
 
+    // Decomposition is loaded for the first time
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
@@ -77,6 +79,14 @@ class EmbeddingWindow extends React.Component {
         this.addNodesToScene(this.layout, this.colors);
         this.renderScene();
       });
+    }
+
+    // Selected designs changed
+    if (prevProps.selectedDesigns !== this.props.selectedDesigns) {
+      this.resetScene();
+      this.addEdgesToScene(this.adjacency, this.layout);
+      this.addNodesToScene(this.layout, this.colors);
+      this.renderScene();
     }
   }
 
@@ -167,9 +177,17 @@ class EmbeddingWindow extends React.Component {
     nodeCoordinates.forEach((coord, index) => {
       // Add Circle
       let nodeGeometry = new THREE.CircleGeometry(0.01, 32);
-      let color = new THREE.Color();
-      color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
-      let nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
+
+      // If design is selected color, else grey
+      let nodeMaterial;
+      if (this.props.selectedDesigns.size === 0 || this.props.selectedDesigns.has(index)) {
+        let color = new THREE.Color();
+        color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
+        nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
+      } else {
+        nodeMaterial = new THREE.MeshBasicMaterial({ color:0xE9E9E9 });
+      }
+
       let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
       nodeMesh.translateX(coord[0]);
       nodeMesh.translateY(coord[1]);
@@ -218,10 +236,10 @@ class EmbeddingWindow extends React.Component {
    */
   resizeCanvas() {
     let width = this.refs.embeddingCanvas.clientWidth;
-    let height = this.ref.embeddingCanvas.clientHeight;
+    let height = this.refs.embeddingCanvas.clientHeight;
 
     this.refs.embeddingCanvas.width = width;
-    this.refs.embeddingCanvs.height = height;
+    this.refs.embeddingCanvas.height = height;
 
     // Resize renderer
     this.renderer.setSize(width, height, false);

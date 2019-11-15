@@ -44,7 +44,8 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <MorseSmaleWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
-          numberOfWindows={this.props.numberOfWindows}/>
+          numberOfWindows={this.props.numberOfWindows}
+          onCrystalSelection={this.props.onCrystalSelection}/>
       </div>
     );
   }

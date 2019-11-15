@@ -313,6 +313,16 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchCrystalPartition(datasetId, persistenceLevel, crystalID) {
+    let command = {
+      name: 'fetchCrystalPartition',
+      datasetId: datasetId,
+      persistenceLevel: persistenceLevel,
+      crystalID: crystalID,
+    };
+    return this._createCommandPromise(command);
+  }
+
   /**
    * Grab the parameter values for the given parameter
    * @param {string} datasetId
