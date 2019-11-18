@@ -2,6 +2,8 @@
 #include "hdprocess/util/csv/loaders.h"
 #include "imageutils/ImageLoader.h"
 #include "yaml-cpp/yaml.h"
+#include "utils/StringUtils.h"
+#include "utils/IO.h"
 
 #include <memory>
 #include <iomanip>
@@ -41,22 +43,6 @@ std::ostream& operator<<(std::ostream &out, const InputFormat &f)
 
   return out; 
 } 
-
-// returns a string containing index padded with zeros up to width characters
-std::string paddedIndexString(unsigned index, unsigned width)
-{
-  std::stringstream paddedIndex;
-  paddedIndex << std::setfill('0') << std::setw(width) << index;
-  return paddedIndex.str();
-}
-
-// returns the minimum string with necessary to represent num
-unsigned paddedStringWidth(unsigned num)
-{
-  std::stringstream digitCounter;
-  digitCounter << num;
-  return digitCounter.str().size();
-}
 
 std::string basePathOf(const std::string &filePath) {
   size_t found = filePath.find_last_of("/\\");
@@ -431,7 +417,7 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
   }
 
   // <ctc> just to test, let's try creating an image right here:
-  Shapeodds::Model &model(ms_models[0].second.getPersistenceLevel(0).getCrystal(0).getModel());
+  Shapeodds::Model &model(ms_models[0].second.getPersistenceLevel(15).getCrystal(6).getModel());
   Shapeodds::ShapeOdds::evaluateModel(model, model.Z);
 
   return ms_models;
@@ -499,43 +485,33 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 
   // Read crystals, an array of P persistence levels x N samples per level
   // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
-  FortranLinalg::DenseMatrix<Precision> crystalPartitions;
+  Eigen::MatrixXi crystalPartitions_eigen;
   if (partitions_format.type == InputFormat::CSV)
-    crystalPartitions = HDProcess::loadCSVMatrix(basePathOf(filePath) + '/' + partitions);
+    crystalPartitions_eigen = IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions);
   else
   {
     std::stringstream out("Crystal partitions file should be a csv, but it's a ");
     out << partitions_format;
     throw std::runtime_error(out.str());
   }
-  unsigned npersistences = crystalPartitions.M();
-  unsigned nsamples = crystalPartitions.N();
+  unsigned npersistences = crystalPartitions_eigen.rows();
+  unsigned nsamples = crystalPartitions_eigen.cols();
   std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
             << nsamples << " samples." << std::endl;
 
   // create matrix of crystalPartitions
-  Eigen::Map<Eigen::MatrixXd> crystalPartitions_eigen(crystalPartitions.data(), npersistences, nsamples);
-  // std::cout << "CrystalPartitions for persistence 0\n: " << crystalPartitions_eigen.row(0) << std::endl;
-  // std::cout << "Num crystals at persistence 0: " << crystalPartitions_eigen.row(0).maxCoeff()+1 << std::endl;
+  std::cout << "CrystalPartitions for persistence 0\n: " << crystalPartitions_eigen.row(0) << std::endl;
+  std::cout << "Num crystals at persistence 0: " << crystalPartitions_eigen.row(0).maxCoeff()+1 << std::endl;
   
   // Now read all the models
-  MSModelContainer ms_of_models(fieldname, nsamples);
-  for (unsigned persistence = 0; persistence < npersistences; persistence++)
+  MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
+  for (unsigned persistence = 15; persistence < npersistences; persistence++) //<ctc> starting at 15 as a hack to test
   {
-    // <test> this is just to make sure these were read correctly, so it walks the array and prints the values (confirmed, and same as eigen row above)
-    // std::cout << "Persistence level " << persistence << " crystal allocation:" << std::endl;
-    // for (unsigned sample = 0; sample < nsamples; sample++)
-    // {
-    //   std::cout << crystalPartitions(persistence, sample) << ", ";
-    // }
-    // std::cout << std::endl;
-    // </test>
-
-    ms_of_models.addPersistenceLevel();  // <ctc> I don't like that index of the newly added persistence level is implicit here...
     PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence);
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
+    P.setNumCrystals(ncrystals);
     std::cout << "There are " << ncrystals << " crystals in persistence level " << persistence << std::endl;
 
     // compute padding if necessary
@@ -550,7 +526,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     // read global embeddings for the set of models (one per crystal) at this persistence level
     std::string persistenceIndexStr(shouldPadZeroes ? paddedIndexString(persistence, persistenceIndexPadding) : std::to_string(persistence));
     std::string persistencePath(persistencesBasePath + persistenceIndexStr);
-    P.setGlobalEmbeddings(HDProcess::loadCSVMatrix(persistencePath + '/' + embeddings));
+    P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
     
     // read the model for each crystal at this persistence level
     std::string modelPath;
@@ -558,47 +534,41 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      Crystal C(parseModel(crystalPath));
-      C.getModel().setCrystal(&C);
-      P.addCrystal(C);
-      // <ctc> oops... time to fix the copy ctors, etc. This crystal isn't actually part of the model and just gets copied then deleted, lol
+      Crystal &c = P.getCrystal(crystal);
+      parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
     }
 
     // read crystalIds (same for every model at this plevel, so only need to read/set them once)
-    FortranLinalg::DenseVector<Precision> crystal_ids = HDProcess::loadCSVColumn(modelPath + "/crystalID.csv" );
+    Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
   
     // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
-    {
-      Precision *data = crystal_ids.data();
-      Eigen::Map<Eigen::VectorXd> _crystal_ids(data,crystal_ids.N());
-      _crystal_ids.array() -= 1.0;
-    }
+    crystal_ids.array() -= 1.0;
       
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
 
 
-    break; // <ctc> hack so we can quickly read the first persistence level and test applying the model
+    break; // <ctc> hack so we can quickly read the 15th first persistence level and test applying the model
   }
 
   return MSModelPair(fieldname, ms_of_models);
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-Shapeodds::Model DatasetLoader::parseModel(const std::string &modelPath)
+void DatasetLoader::parseModel(const std::string &modelPath, Shapeodds::Model &m)
 {
-  // read latent space Z
-  auto Z = HDProcess::loadCSVMatrix(modelPath + "/Z.csv");
-
   // read W
-  auto W = HDProcess::loadCSVMatrix(modelPath + "/W.csv");
+  auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");
 
   // read w0
-  auto w0 = HDProcess::loadCSVMatrix(modelPath + "/w0.csv");
+  auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
 
-  return Shapeodds::Model(Z, W, w0);
+  // read latent space Z
+  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
+
+  m.setModel(W, w0, Z);
 }
 
 FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseGeometry(

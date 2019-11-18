@@ -102,27 +102,23 @@ int ShapeOdds::do_something_quietly(int y)
 
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
-bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision> &z_coord)
+bool ShapeOdds::evaluateModel(Model &model, Eigen::MatrixXd &z_coord)
 {
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
 
-  // create Eigen matrices of the three components of the model
-  Eigen::Map<Eigen::MatrixXd> _Z(model.Z.data(),model.Z.M(),model.Z.N());
-  std::cout << "Z:\n" << _Z << std::endl;
-  Eigen::Map<Eigen::MatrixXd> _W(model.W.data(),model.W.M(),model.W.N());
-  std::cout << "W:\n" << _W << std::endl;
-  Eigen::Map<Eigen::MatrixXd> _w0(model.w0.data(),model.w0.M(),model.w0.N());
-  std::cout << "w0:\n" << _w0 << std::endl;
+  std::cout << "model.Z:\n" << model.Z << std::endl;
+  std::cout << "model.W:\n" << model.W << std::endl;
+  std::cout << "model.w0:\n" << model.w0 << std::endl;
 
   // the z_coord should just be one row
-  //to test we'll create images using the elements of this model's Z
-  for (unsigned zidx = 0; zidx < model.Z.M(); zidx++)
+  //to test we'll create images using the elements of this model's Z (actually using all the Zs, not just this model's, which are its sample_indices)
+  for (unsigned zidx = 0; zidx < model.Z.rows(); zidx++)
   {
-    Eigen::VectorXd z = _Z.row(zidx);
+    Eigen::VectorXd z = model.Z.row(zidx);
     std::cout << "latent space coord (z):\n" << z << std::endl;
-    Eigen::MatrixXd phi = _W * z + _w0;
+    Eigen::MatrixXd phi = model.W * z + model.w0;
     std::cout << "phi = W * z + w0:\n" << phi << std::endl;
 
     //I = 1.0 / (1 + exp(-phi));
@@ -163,6 +159,8 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   }
   
 #if 0 // not sure how to figure out which image goes with which row of Z...
+  // -> the sample indices are the key: each sample corresponds to one of the 1000 z's for this model
+  // -> also, while technically the z's don't have to be saved, it's very useful to store them
   //test by loading the images for each element (are they correlated? there aren't the same number...)
   //and compare pixels to start with (list of samples is stored in the model's Crystal)
   //
@@ -213,5 +211,31 @@ bool ShapeOdds::evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision
   }
 #endif
 }
+
+ModelPair MSModelContainer::getModel(unsigned p, unsigned c)
+{
+  if (p < persistence_levels.size() || c < persistence_levels[p].numCrystals())
+    throw std::runtime_error("Requested model persistence / crystal index is out of range");
+      
+  return ModelPair(modelName(p, c), persistence_levels[p].getCrystal(c).getModel());
+}
+
+std::vector<ModelPair> MSModelContainer::getAllModels()
+{
+  unsigned persistence_padding = paddedStringWidth(persistence_levels.size());
+
+  std::vector<ModelPair> models;  
+  for (unsigned p = 0; p < persistence_levels.size(); p++)
+  {
+    unsigned crystals_padding = persistence_levels[p].numCrystals();
+    for (unsigned c = 0; c < persistence_levels[p].numCrystals(); c++)
+    {
+      models.push_back(ModelPair(modelName(p,c,persistence_padding,crystals_padding),
+                                 persistence_levels[p].getCrystal(c).getModel()));
+    }
+  }
+  return models;
+}
+
 
 } // end namespace Shapeodds

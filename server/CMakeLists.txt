@@ -34,6 +34,7 @@ TARGET_LINK_LIBRARIES (dSpaceX
   imageutils
   jsoncpp
   shapeodds
+  dspacex_utils
   igl::core
   libwsserver
   lapack

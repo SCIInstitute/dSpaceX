@@ -56,7 +56,7 @@ private:
   static MSModelPair parseMSModelsForField(
       const YAML::Node &config, const std::string &filePath);
 
-  static Shapeodds::Model parseModel(const std::string &modelPath);
+  static void parseModel(const std::string &modelPath, Shapeodds::Model &m);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

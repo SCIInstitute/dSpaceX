@@ -4,17 +4,13 @@
 #include <iostream>
 #include <vector>
 #include <set>
-#include "flinalg/Linalg.h"
 #include "precision/Precision.h"
+#include "utils/StringUtils.h"
 
-//std::pair<std::string, Shapeodds::Model&> ModelPair;  // moving foward this could be a ShapeOdds model or a SharedGP model
+namespace Shapeodds {  //<ctc> What is a more generic name for ShapeOdds, InfShapeOdds, GP, SharedGP, etc?
 
-//<ctc> TODO: replace 'unsigned' indices with 'size_type'
-
-namespace Shapeodds {
-
-class Crystal;
-class ShapeOdds;
+class Model;
+typedef std::pair<std::string, Model&> ModelPair;  // moving foward this could be a ShapeOdds model or a SharedGP model
 
 // There is a model for each crystal at each persistence level for a given M-S topology. It is
 // constructed from a given number of input images (samples), and consists of L necessary
@@ -23,37 +19,53 @@ class ShapeOdds;
 class Model
 {
 public:
-  Model(FortranLinalg::DenseMatrix<Precision> _Z, FortranLinalg::DenseMatrix<Precision> _W, FortranLinalg::DenseMatrix<Precision> _w0)
-    : Z(_Z), W(_W), w0(_w0), crystal(NULL)
+  Model()
   {}
   ~Model()
   {}
 
-  void setCrystal(const Crystal *c)
-  {
-    crystal = c;
-  }
-  
   // since models may get large, keep track of when they're copyied so this step can be optimized (probably passing vectors around by value is copying their contents). C++11 should use move semantics (see https://mbevin.wordpress.com/2012/11/20/move-semantics/), so this is just to verify that's being done.
-  Model(const Model &model) : crystal(model.crystal), Z(model.Z), W(model.W), w0(model.w0)
+  Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
   {
-    std::cout << "Shapeodds::Model copy ctor (&model = " << &model << ")." << std::endl;
+    std::cout << "Shapeodds::Model copy ctor (&m = " << &m << ")." << std::endl;
   }
   Model operator=(const Model &m)
   {
-    std::cout << "Shapeodds::Model assignment operator (&model = " << &m << ")." << std::endl;
+    std::cout << "Shapeodds::Model assignment operator (&m = " << &m << ")." << std::endl;
     return Model(m);
   }
   
-  //private:
+  void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
+  {
+    W  = _W;
+    w0 = _w0;
+    Z  = _Z;
+  }
+
+  void addSample(unsigned n)
+  {
+    sample_indices.insert(n);
+  }
+
+  unsigned numSamples() const
+  {
+    return sample_indices.size();
+  }
+
+  const std::set<unsigned>& getSampleIndices() const
+  {
+    return sample_indices;
+  }
+
+
+  //private:         //<ctc> TODO: uncomment me, "friend" DatasetLoader::parseMSModels needs access for testing
   // Shapeodds model 
-  FortranLinalg::DenseMatrix<Precision> Z;
-  FortranLinalg::DenseMatrix<Precision> W;
-  FortranLinalg::DenseMatrix<Precision> w0;
+  std::set<unsigned> sample_indices;        // indices of images used to construct this model
+  Eigen::MatrixXd Z;  
+  Eigen::MatrixXd W;
+  Eigen::MatrixXd w0;
 
-  const Crystal *crystal;     // the Crystal to which this model is associated (a circular reference, thus the pointer, but handy)
-
-  friend class ShapeOdds;  //<ctc> why isn't this working???
+  friend class ShapeOdds;
 };
 
 
@@ -68,9 +80,9 @@ public:
 // (latent space) for evaulation in a common space for all of its crystals.  While a Model can
 // exist independently, these structures help organize the group of models for a given M-S:
 //
-//  MSModelContainer knows the total number of samples for this M-S, contains set of Persistence levels
-//   - Persistences contains set of Crystals and their global embeddings (latent space)
-//     - Crystal contains indices of its samples and local embedding (latent space)
+//  MSModelContainer knows the total number of samples for this M-S, contains its set of Persistence levels
+//   - Persistences contains set of Crystals and their global embeddings (common 2d latent space for all crystals at that level)
+//     - Crystal contains its model, which contains indices of its samples and its local embedding (latent space), along with W and w0.
 //
 // Note a vector of ModelPairs for all models of the MSModelContainer can be retrieved using
 // its getAllModels function.
@@ -79,24 +91,34 @@ public:
 class Crystal
 {
 public:
-  Crystal(Model m) : model(m)
+  Crystal()
   {}
   ~Crystal()
   {}
 
+  Crystal(const Crystal &m) : model(m.model)
+  {
+    std::cout << "Shapeodds::Crystal copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  Crystal operator=(const Crystal &m)
+  {
+    std::cout << "Shapeodds::Crystal assignment operator (&m = " << &m << ")." << std::endl;
+    return Crystal(m);
+  }
+  
   void addSample(unsigned n)
   {
-    samples.insert(n);
+    model.addSample(n);
   }
 
   unsigned numSamples() const
   {
-    return samples.size();
+    return model.numSamples();
   }
 
-  const std::set<unsigned>& getSamples() const
+  const std::set<unsigned>& getSampleIndices() const
   {
-    return samples;
+    return model.getSampleIndices();
   }
 
   Model& getModel()
@@ -105,7 +127,6 @@ public:
   }
 
 private:
-  std::set<unsigned> samples;  //TODO: change name to sample_indices, along with associated functions
   Model model;
 };
 
@@ -117,14 +138,24 @@ public:
   ~PersistenceLevel()
   {}
 
+  PersistenceLevel(const PersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
+  {
+    std::cout << "Shapeodds::PersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  PersistenceLevel operator=(const PersistenceLevel &m)
+  {
+    std::cout << "Shapeodds::PersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
+    return PersistenceLevel(m);
+  }
+  
+  void setNumCrystals(unsigned nCrystals)
+  {
+    crystals.resize(nCrystals);
+  }
+
   unsigned numCrystals() const
   {
     return crystals.size();
-  }
-
-  void addCrystal(Crystal c)
-  {
-    crystals.push_back(c);
   }
 
   Crystal& getCrystal(unsigned i)
@@ -132,16 +163,17 @@ public:
     return crystals[i];
   }
   
-  void setGlobalEmbeddings(FortranLinalg::DenseMatrix<Precision> embeddings)
+  void setGlobalEmbeddings(const Eigen::MatrixXd &embeddings)
   {
     global_embeddings = embeddings;
   }
 
   // each crystal is composed of a non-intersecting set of samples, read from this vector
-  void setCrystalSamples(FortranLinalg::DenseVector<Precision> crystal_ids)
+  void setCrystalSamples(Eigen::MatrixXi &crystal_ids)
   {
-    // NOTE: all crytals must have been added or these crystal ids will be out of range
-    for (unsigned n = 0; n < crystal_ids.N(); n++)
+    // NOTE: all crystals must have been added or these crystal ids will be out of range      
+
+    for (unsigned n = 0; n < crystal_ids.cols(); n++)
     {
       crystals[crystal_ids(n)].addSample(n);
     }
@@ -149,18 +181,29 @@ public:
 
 private:
   std::vector<Crystal> crystals;
-  FortranLinalg::DenseMatrix<Precision> global_embeddings;
+  Eigen::MatrixXd global_embeddings;
 };
 
 // Morse-Smale model container
 class MSModelContainer
 {
 public:
-  MSModelContainer(std::string &field, unsigned nSamples) : fieldname(field), num_samples(nSamples)
+  MSModelContainer(std::string &field, unsigned nSamples, unsigned nPersistences)
+    : fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
   {}
   ~MSModelContainer()
   {}
 
+  MSModelContainer(const MSModelContainer &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
+  {
+    std::cout << "Shapeodds::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  MSModelContainer operator=(const MSModelContainer &m)
+  {
+    std::cout << "Shapeodds::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
+    return MSModelContainer(m);
+  }
+  
   std::string getFieldname() const
   {
     return fieldname;
@@ -176,42 +219,20 @@ public:
     return persistence_levels.size();
   }
 
-  void addPersistenceLevel(PersistenceLevel &l)
-  {
-    persistence_levels.push_back(l);
-  }
-
-  void addPersistenceLevel()
-  {
-    PersistenceLevel plvl;
-    persistence_levels.push_back(plvl);
-  }
-
   PersistenceLevel& getPersistenceLevel(unsigned i)
   {
     return persistence_levels[i];
   }
 
-  //<ctc> maybe add a helper to get the model from a specific crystal of a specific persistence level all in one query
-  //      then we can check for errors at the top level, since it'll be tedious to make users of this class do it every time.
-
-
-  typedef std::pair<std::string, Model&> ModelPair;
-  std::vector<ModelPair> getAllModels()
-  {
-    std::vector<ModelPair> models;  
-    for (unsigned p = 0; p < persistence_levels.size(); p++)
-    {
-      for (unsigned c = 0; c < persistence_levels[p].numCrystals(); c++)
-      {
-        std::string modelName("p"+std::to_string(p)+"-c"+std::to_string(c));
-        models.push_back(ModelPair(modelName, persistence_levels[p].getCrystal(c).getModel()));
-      }
-    }
-    return models;
-  }
+  ModelPair getModel(unsigned p, unsigned c);
+  std::vector<ModelPair> getAllModels();
   
 private:
+  static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
+  {
+    return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
+  }
+
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S
   std::vector<PersistenceLevel> persistence_levels;
@@ -227,7 +248,7 @@ public:
   ShapeOdds();
   ~ShapeOdds();
 
-  static bool evaluateModel(Model &model, FortranLinalg::DenseMatrix<Precision> &z_coord);
+  static bool evaluateModel(Model &model, Eigen::MatrixXd &z_coord);
 
   int doSomething(int x=42);
   
@@ -238,7 +259,6 @@ private:
   Eigen::MatrixXi my_F_matrix;
 
   std::vector<Model> models;
-
 };
 
 }

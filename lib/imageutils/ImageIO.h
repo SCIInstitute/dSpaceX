@@ -107,7 +107,7 @@ class ImageIO{
   static FortranLinalg::DenseMatrix<Precision> readDataMatrix(ImageVectorConverter<Image> &converter, 
                                     std::string imageFileList) {
       std::vector<std::string> files =
-        IO<Precision>::readStringList(imageFileList);
+        IO::readStringList(imageFileList);
       return readDataMatrix(converter, files);
   };
 
