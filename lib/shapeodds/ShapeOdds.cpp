@@ -8,6 +8,7 @@ ShapeOdds::ShapeOdds()
 {
   using namespace Eigen;
   
+#if 0  // was just learning how to use the Eigen library
   // Inline mesh of a cube
   my_V_matrix = (MatrixXd(8,3)<<
                  0.0,0.0,0.0,
@@ -84,6 +85,7 @@ ShapeOdds::ShapeOdds()
   std::cout << "M1:" << std::endl << M1 << std::endl;
   Map<MatrixXf> M2(M1.data(), 6,2);
   std::cout << "M2:" << std::endl << M2 << std::endl;
+#endif
 }
 
 ShapeOdds::~ShapeOdds()
@@ -100,43 +102,43 @@ int ShapeOdds::do_something_quietly(int y)
   return y*y;
 }
 
+// TODO if helpful; e.g., if we want to write [8|16|32|64]-bit greyscale this fcn could take care of resampling appropriately)
+// void writeImage(const Eigen::MatrixXd &column_order_image, std::string path, unsigned w, unsigned h)
+// {
+// }
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
-Eigen::MatrixXd ShapeOdds::evaluateModel(Model &model, const Eigen::VectorXd &z_coord)
+// write evaluated model to disk if requested (if w * h != I.size(), then write I.rows() x I.cols() image)
+Eigen::MatrixXd ShapeOdds::evaluateModel(Model &model, const Eigen::VectorXd &z_coord,
+                                         const bool writeToDisk, const std::string outpath, unsigned w, unsigned h)
 {
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
 
   // the z_coord should just be one row
-  std::cout << "latent space coord (z):\n" << z_coord << std::endl;
+  //std::cout << "latent space coord (z):\n" << z_coord << std::endl;
   Eigen::MatrixXd phi = model.W * z_coord + model.w0;
-  std::cout << "phi = W * z + w0:\n" << phi << std::endl;
+  //std::cout << "phi = W * z + w0:\n" << phi << std::endl;
 
   //I = 1.0 / (1 + exp(-phi));
   phi.array() *= -1.0;
   phi = phi.array().exp();
   phi.array() += 1.0;
   Eigen::MatrixXd I(phi.array().inverse());
-  std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
+  //std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
   
-  return I;
-}
-
-// handy way to verify evaluated model and how closely it corresponds to sample at that idx
-// return measured difference between generated sample and original
-float ShapeOdds::testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx)
-{
-  Eigen::MatrixXd I(evaluateModel(model, z_coord));
-  I.array() *= 255.0;
-  std::cout << "I * 255:\n" << I << std::endl;
-
-  // write this to an image  (<ctc> hardcoded dims)
+  if (writeToDisk)
   {
-    unsigned w=80,h=40; // TODO: are these stored anywhere within the M-S complex or its models?
+    I.array() *= 255.0;
+    //std::cout << "I * 255:\n" << I << std::endl;
+
     if (I.size() != w * h)
-      throw std::runtime_error("Sample image size is " + std::to_string(w) + " x " + std::to_string(h)
-                               + ", but output array is of size " + std::to_string(I.size()));
+    { 
+      std::cout << "Warning: w * h (" << w << " * " << h << ") != computed image size (" << I.size() << ")\n";
+      w = I.rows();
+      h = I.cols();
+    }
 
     Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);  // column major ordering
     unsigned char buffer[I.size()];
@@ -146,18 +148,27 @@ float ShapeOdds::testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, 
     // copy image into row-order array
     for (unsigned c = 0; c < w; c++)    // for every column...
       for (unsigned r = 0; r < h; r++)  // read all the rows
-        buffer[r * w + c] = (unsigned char)std::round(I_image(r,c));
+        buffer[r * w + c] = (unsigned char)std::round(I_image(r, c));
 
     error = lodepng::encode(image, buffer, w, h, LCT_GREY, 8);
     if (error) {
       throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
     }
 
-    std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/p" +
-                        std::to_string(p) + "-c" + std::to_string(c) +"-z" + std::to_string(z_idx) + ".png");
     lodepng::save_file(image, outpath.c_str());
   }
-  
+      
+  return I;
+}
+
+// verify evaluated model and how closely it corresponds to sample at that idx
+// return measured difference between generated sample and original
+float ShapeOdds::testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx,
+                                   const bool writeToDisk, const std::string basePath, const unsigned w, const unsigned h)
+{
+  std::string outpath(basePath + "/p" + std::to_string(p) + "-c" + std::to_string(c) +"-z" + std::to_string(z_idx) + ".png");
+
+  Eigen::MatrixXd I(evaluateModel(model, z_coord, writeToDisk, outpath, w, h));
 
 #if 0  //<ctc> moved this here since evaluateModel doesn't need to know model's persistence, crystalid, or index of z_coord
 

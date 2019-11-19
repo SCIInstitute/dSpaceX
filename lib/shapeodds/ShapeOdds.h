@@ -248,8 +248,11 @@ public:
   ShapeOdds();
   ~ShapeOdds();
 
-  static Eigen::MatrixXd evaluateModel(Model &model, const Eigen::VectorXd &z_coord);
-  static float testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx);
+  static Eigen::MatrixXd evaluateModel(Model &model, const Eigen::VectorXd &z_coord, const bool writeToDisk = false,
+                                       const std::string outpath = "", unsigned w = 0, unsigned h = 0);
+  
+  static float testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx,
+                                 const bool writeToDisk = false, const std::string path = "", const unsigned w = 0, const unsigned h = 0);
 
   int doSomething(int x=42);
   

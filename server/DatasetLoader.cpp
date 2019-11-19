@@ -416,16 +416,28 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     throw std::runtime_error("Config 'models' field is not a list.");
   }
 
-  // <ctc> just to test, let's try creating an image right here:
-  Shapeodds::ModelPair modelpair(ms_models[0].second.getModel(15, 6));
-  Shapeodds::Model &model(modelpair.second);
-  //to test we'll create images using the elements of this model's Z
-  auto sample_indices(model.getSampleIndices());
-  for (auto zidx : sample_indices)
+  // <ctc> to test we'll create images using the elements of this model's Z
   {
-    Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx);
-  }
+    unsigned persistence = 15;
+    unsigned crystal = 6;
+    Shapeodds::ModelPair modelpair(ms_models[0].second.getModel(persistence, crystal));
+    Shapeodds::Model &model(modelpair.second);
 
+    auto sample_indices(model.getSampleIndices());
+    for (auto zidx : sample_indices)
+    {
+      unsigned sampleWidth = 80, sampleHeight = 40;   // TODO: dims currently hardcoded; are these stored anywhere in the M-S complex or its models? Should they be included in config.yaml?
+
+      std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
+      float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx,
+                                                              true /*writeToDisk*/, outputBasepath, sampleWidth, sampleHeight);
+
+      // todo: is "quality" the correct term for comparison of generated image vs original?
+      std::cout << "Quality of generation of image for model at persistence level "
+                << persistence << ", crystal " << crystal << ": " << quality << std::endl;
+    }
+  }
+  
   return ms_models;
 }
 
@@ -505,10 +517,6 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
   std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
             << nsamples << " samples." << std::endl;
 
-  // create matrix of crystalPartitions
-  std::cout << "CrystalPartitions for persistence 0\n: " << crystalPartitions_eigen.row(0) << std::endl;
-  std::cout << "Num crystals at persistence 0: " << crystalPartitions_eigen.row(0).maxCoeff()+1 << std::endl;
-  
   // Now read all the models
   MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
   for (unsigned persistence = 15; persistence < npersistences; persistence++) //<ctc> starting at 15 as a hack to test
