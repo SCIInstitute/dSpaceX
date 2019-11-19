@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Drawer } from '@material-ui/core';
 import withStyles from '@material-ui/core/es/styles/withStyles';
+import Paper from "@material-ui/core/Paper";
 
 const styles = (theme) => ({
   dragger: {
@@ -70,7 +71,9 @@ class ResponsiveDrawer extends Component {
         classes={{ paper:classes.drawerPaper }}
         PaperProps={{ style:this.state.newHeight }}>
         <div id='dragger' onMouseDown={(event) => { this.handleMouseDown(event); }} className={classes.dragger}>
-          {'Can I see this in my drawer?'}
+          {this.props.images.length > 0 && <img alt={'Image:' + i} height='75'
+               style={{ margin:'5px 5px 5px 5px' }}
+               src={'data:image/png;base64, ' + thumbnail.img.rawData}/>}
         </div>
       </Drawer>
     );

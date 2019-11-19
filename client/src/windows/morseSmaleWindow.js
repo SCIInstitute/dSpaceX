@@ -249,6 +249,7 @@ class MorseSmaleWindow extends React.Component {
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
+      this.props.toCallCamsFunction(persistenceLevel, crystalID);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
