@@ -102,63 +102,66 @@ int ShapeOdds::do_something_quietly(int y)
 
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
-bool ShapeOdds::evaluateModel(Model &model, Eigen::MatrixXd &z_coord)
+Eigen::MatrixXd ShapeOdds::evaluateModel(Model &model, const Eigen::VectorXd &z_coord)
 {
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
 
-  std::cout << "model.Z:\n" << model.Z << std::endl;
-  std::cout << "model.W:\n" << model.W << std::endl;
-  std::cout << "model.w0:\n" << model.w0 << std::endl;
-
   // the z_coord should just be one row
-  //to test we'll create images using the elements of this model's Z (actually using all the Zs, not just this model's, which are its sample_indices)
-  for (unsigned zidx = 0; zidx < model.Z.rows(); zidx++)
+  std::cout << "latent space coord (z):\n" << z_coord << std::endl;
+  Eigen::MatrixXd phi = model.W * z_coord + model.w0;
+  std::cout << "phi = W * z + w0:\n" << phi << std::endl;
+
+  //I = 1.0 / (1 + exp(-phi));
+  phi.array() *= -1.0;
+  phi = phi.array().exp();
+  phi.array() += 1.0;
+  Eigen::MatrixXd I(phi.array().inverse());
+  std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
+  
+  return I;
+}
+
+// handy way to verify evaluated model and how closely it corresponds to sample at that idx
+// return measured difference between generated sample and original
+float ShapeOdds::testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx)
+{
+  Eigen::MatrixXd I(evaluateModel(model, z_coord));
+  I.array() *= 255.0;
+  std::cout << "I * 255:\n" << I << std::endl;
+
+  // write this to an image  (<ctc> hardcoded dims)
   {
-    Eigen::VectorXd z = model.Z.row(zidx);
-    std::cout << "latent space coord (z):\n" << z << std::endl;
-    Eigen::MatrixXd phi = model.W * z + model.w0;
-    std::cout << "phi = W * z + w0:\n" << phi << std::endl;
+    unsigned w=80,h=40; // TODO: are these stored anywhere within the M-S complex or its models?
+    if (I.size() != w * h)
+      throw std::runtime_error("Sample image size is " + std::to_string(w) + " x " + std::to_string(h)
+                               + ", but output array is of size " + std::to_string(I.size()));
 
-    //I = 1.0 / (1 + exp(-phi));
-    phi.array() *= -1.0;
-    phi = phi.array().exp();
-    phi.array() += 1.0;
-    Eigen::MatrixXd I(phi.array().inverse());
-    std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
-    I.array() *= 255.0;
-    std::cout << "I * 255:\n" << I << std::endl;
+    Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);  // column major ordering
+    unsigned char buffer[I.size()];
+    std::vector<unsigned char> image;
+    unsigned error;
 
-    // write this to an image
-    {
-      unsigned w=80,h=40; // TODO: are these stored anywhere within the M-S complex or its models?
-      if (I.size() != w * h)
-        throw std::runtime_error("Sample image size is " + std::to_string(w) + " x " + std::to_string(h)
-                                 + ", but output array is of size " + std::to_string(I.size()));
+    // copy image into row-order array
+    for (unsigned c = 0; c < w; c++)    // for every column...
+      for (unsigned r = 0; r < h; r++)  // read all the rows
+        buffer[r * w + c] = (unsigned char)std::round(I_image(r,c));
 
-      Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);  // column major ordering
-      unsigned char image[I.size()];
-      std::vector<unsigned char> buffer;
-      unsigned error;
-
-      // copy image into row-order array
-      for (unsigned c = 0; c < w; c++)    // for every column...
-        for (unsigned r = 0; r < h; r++)  // read all the rows
-          image[r * w + c] = (unsigned char)std::round(I_image(r,c));
-
-      error = lodepng::encode(buffer, image, w, h, LCT_GREY, 8);
-      if(error) {
-        std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-        return 0;
-      }
-      //TODO: need to pass persistence and crystal if we want to model to know what to save... but probably it should just return an image anyay.
-      std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/p0-c0-z" + std::to_string(zidx) + ".png");
-      lodepng::save_file(buffer, outpath.c_str());
+    error = lodepng::encode(image, buffer, w, h, LCT_GREY, 8);
+    if (error) {
+      throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
     }
+
+    std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/p" +
+                        std::to_string(p) + "-c" + std::to_string(c) +"-z" + std::to_string(z_idx) + ".png");
+    lodepng::save_file(image, outpath.c_str());
   }
   
-#if 0 // not sure how to figure out which image goes with which row of Z...
+
+#if 0  //<ctc> moved this here since evaluateModel doesn't need to know model's persistence, crystalid, or index of z_coord
+
+  // how to figure out which image goes with which row of Z... (this is actually done now in the code that calls this fcn)
   // -> the sample indices are the key: each sample corresponds to one of the 1000 z's for this model
   // -> also, while technically the z's don't have to be saved, it's very useful to store them
   //test by loading the images for each element (are they correlated? there aren't the same number...)
@@ -210,11 +213,13 @@ bool ShapeOdds::evaluateModel(Model &model, Eigen::MatrixXd &z_coord)
     }
   }
 #endif
+
+  return true;
 }
 
 ModelPair MSModelContainer::getModel(unsigned p, unsigned c)
 {
-  if (p < persistence_levels.size() || c < persistence_levels[p].numCrystals())
+  if (p >= persistence_levels.size() || c >= persistence_levels[p].numCrystals())
     throw std::runtime_error("Requested model persistence / crystal index is out of range");
       
   return ModelPair(modelName(p, c), persistence_levels[p].getCrystal(c).getModel());

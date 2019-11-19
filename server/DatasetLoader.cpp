@@ -417,8 +417,14 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
   }
 
   // <ctc> just to test, let's try creating an image right here:
-  Shapeodds::Model &model(ms_models[0].second.getPersistenceLevel(15).getCrystal(6).getModel());
-  Shapeodds::ShapeOdds::evaluateModel(model, model.Z);
+  Shapeodds::ModelPair modelpair(ms_models[0].second.getModel(15, 6));
+  Shapeodds::Model &model(modelpair.second);
+  //to test we'll create images using the elements of this model's Z
+  auto sample_indices(model.getSampleIndices());
+  for (auto zidx : sample_indices)
+  {
+    Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx);
+  }
 
   return ms_models;
 }

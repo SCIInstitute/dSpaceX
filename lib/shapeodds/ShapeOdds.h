@@ -173,7 +173,7 @@ public:
   {
     // NOTE: all crystals must have been added or these crystal ids will be out of range      
 
-    for (unsigned n = 0; n < crystal_ids.cols(); n++)
+    for (unsigned n = 0; n < crystal_ids.rows(); n++)
     {
       crystals[crystal_ids(n)].addSample(n);
     }
@@ -248,7 +248,8 @@ public:
   ShapeOdds();
   ~ShapeOdds();
 
-  static bool evaluateModel(Model &model, Eigen::MatrixXd &z_coord);
+  static Eigen::MatrixXd evaluateModel(Model &model, const Eigen::VectorXd &z_coord);
+  static float testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx);
 
   int doSomething(int x=42);
   
