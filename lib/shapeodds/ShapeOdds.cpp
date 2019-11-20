@@ -185,7 +185,7 @@ float ShapeOdds::testEvaluateModel(const Model &model, const Eigen::Matrix<doubl
   //std::cout << "converted sample image data: " << sampleImageMatrix << std::endl;
   
   // compare image with I
-  // take euclidean norm of difference: (A-B).norm() / (A-B).size()
+  // take average of euclidean norm of each pixel's difference: (A-B).norm() / (A-B).size()
   {
     Eigen::MatrixXd diff(sampleImageMatrix - I);
     std::cout << "diff: rng: [" << diff.minCoeff() << ", " << diff.maxCoeff() << "], avg: " << diff.mean() << ", norm: " << diff.norm() << std::endl; 
