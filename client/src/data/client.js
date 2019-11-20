@@ -305,11 +305,23 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchImageForLatentSpaceUsingShapeOdds(datasetId, qoi) {
+  fetchAllImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID) {
     let command = {
-      name: 'fetchImageForLatentSpaceUsingShapeOdds',
+      name: 'fetchAllImagesForCrystal_Shapeodds',
       datasetId: datasetId,
-      qoi: qoi,
+      persistenceLevel: persistenceLevel,
+      crystalID: crystalID,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples) {
+    let command = {
+      name: 'fetchNImagesForCrystal_Shapeodds',
+      datasetId: datasetId,
+      persistenceLevel: persistenceLevel,
+      crystalID: crystalID,
+      numSamples: numSamples,
     };
     return this._createCommandPromise(command);
   }

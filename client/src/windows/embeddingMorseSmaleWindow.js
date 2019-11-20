@@ -3,6 +3,8 @@ import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
+import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from '@material-ui/core/styles';
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -16,18 +18,54 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.client = this.props.dsxContext.client;
+
     this.state = {
       drawerImages: [],
     };
   }
 
-  camsFunctionGoesHere(persistenceLeve, crystalID) {
-    // This will call cams function to get the images we need for the drawer
-    // Cams controller function goes here to get the images
-    // this.client.fetchSomething.then (result => {
-    // set state}
-    this.setState({ drawerImages:list_of_images_here });
+  computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
+    // Ask server to compute the N new images for this crystal and add them to the drawer
+    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
+      .then((result) => {
+        const thumbnails = result.thumbnails.map((thumbnail, i) => {
+          return {
+            img: thumbnail,
+            id: i,
+          };
+        });
+        this.setState({ drawerImages: thumbnails });
+        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' image; msg: ' + result.msg);
+      });
   }
+
+// //galleryWindow.js, componentWillMount and componentDidUpdate
+//     // Get Thumbnails
+//     this.client.fetchThumbnails(datasetId)
+//       .then((result) => {
+//         const thumbnails = result.thumbnails.map((thumbnail, i) => {
+//           return {
+//             img: thumbnail,
+//             id: i,
+//           };
+//         });
+//         this.setState({ thumbnails });
+//       });
+
+//     //graphGLWindow, handleKeyDown:
+//   case 't':
+//         if (this.activeNodeShader == this.nodeShaderProgram) {
+//           console.log('Switching to thumbnail node shader.');
+//           if (!this.thumbnails) {
+//             this.client.fetchThumbnails(this.props.dataset.datasetId)
+//               .then((result) => {
+//                 this.thumbnails = result.thumbnails;
+//                 this.createTextureAtlas();
+//                 requestAnimationFrame(this.renderGL);
+//               });
+//           }
+//           this.activeNodeShader = this.thumbnailShaderProgram;
 
   /**
    * Renders EmbeddingMorseSmaleWindow to screen
@@ -59,11 +97,11 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           decomposition={this.props.decomposition}
           numberOfWindows={this.props.numberOfWindows}
           onCrystalSelection={this.props.onCrystalSelection}
-          toCallCamsFunction={this.camsFunctionGoesHere}/>
+          evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
         <ResponsiveDrawer images={this.state.drawerImages}/>
       </div>
     );
   }
 }
 
-export default EmbeddingMorseSmaleWindow;
+export default withDSXContext(withStyles({})(EmbeddingMorseSmaleWindow));

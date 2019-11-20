@@ -43,7 +43,9 @@ class Controller {
   void fetchAllForLatentSpaceUsingSharedGP(const Json::Value &request, Json::Value &response);
 
   // ShapeOdds
-  void fetchImageForLatentSpaceUsingShapeOdds(const Json::Value &request, Json::Value &response);
+  void fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;

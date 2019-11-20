@@ -59,10 +59,13 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
-  m_commandMap.insert({"fetchAllForLatentSpaceUsingSharedGP", std::bind(&Controller::fetchAllForLatentSpaceUsingSharedGP, this, _1, _2)});
-  m_commandMap.insert({"fetchImageForLatentSpaceUsingShapeOdds", std::bind(&Controller::fetchImageForLatentSpaceUsingShapeOdds, this, _1, _2)});
-}
+  //m_commandMap.insert({"fetchNewLatentSpaceCoord_ShapeOdds", std::bind(&Controller::fetchNewLatentSpaceCoord_ShapeOdds, this, _1, _2)});
+  m_commandMap.insert({"fetchImageForLatentSpaceCoord_Shapeodds", std::bind(&Controller::fetchImageForLatentSpaceCoord_Shapeodds, this, _1, _2)});
+  m_commandMap.insert({"fetchNImagesForCrystal_Shapeodds", std::bind(&Controller::fetchNImagesForCrystal_Shapeodds, this, _1, _2)});
+  m_commandMap.insert({"fetchAllImagesForCrystal_Shapeodds", std::bind(&Controller::fetchAllImagesForCrystal_Shapeodds, this, _1, _2)});
 
+  m_commandMap.insert({"fetchAllForLatentSpaceUsingSharedGP", std::bind(&Controller::fetchAllForLatentSpaceUsingSharedGP, this, _1, _2)});
+}
 
 /**
  * Construct list of available datasets.
@@ -722,13 +725,89 @@ void Controller::fetchThumbnails(
 }
 
 /**
- * This fetches the image for a given latent space produced by the ShapeOdds library.
+ * This computes a new latent space variable for the given model using:
+ * 2d coord, Mu, Theta, then Estep, etc. (<ctc> look at matlab code and review discussions w/ Shireen and Wei)
  *
  * Parameters: 
  *   datasetId - should already be loaded
- *   z
+ *   fieldname - (e.g., one of the QoIs)
+ *   persistenceId - persistence level of the M-S for this field of the dataset
+ *   crystalId - crystal of the given persistence level
+ *   ... (whatever is needed to decide how to compute the new z_coord (ex: 2d coord, Mu, Theta, ...)
  */
-void Controller::fetchImageForLatentSpaceUsingShapeOdds(const Json::Value &request, Json::Value &response) {
+// void Controller::fetchNewLatentSpaceCoord_ShapeOdds(const Json::Value &request, Json::Value &response) {
+//   int datasetId = request["datasetId"].asInt();
+  // <ctc> TODO:
+  
+/**
+ * This computes and returns a new sample (image) for the given latent space coordinate using
+ * the ShapeOdds model for the specified crystal at this persistence level
+ *
+ * Parameters: 
+ *   datasetId     - should already be loaded
+ *   fieldname     - (e.g., one of the QoIs)
+ *   persistenceId - persistence level of the M-S for this field of the dataset
+ *   crystalId     - crystal of the given persistence level
+ *   z_coord       - latent space coordinate (<ctc> todo: add fetchNewLatentSpaceCoordForShapeOddsModel function to compute z)
+ */
+void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response) {
+#if 0
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  maybeLoadDataset(datasetId);
+  // maybeLoadModel(persistence,crystal); //<ctc> if for speed we decide not to load models till their evaluation is requested
+
+  int persistence = 15; //request["persistence"].asInt();
+  int crystalid = 6; //request["crystalid"].asInt();
+  //int zidx = request["zidx"].asInt();  // <ctc> really, we want to pass a latent space variable z, which we'll also generate serverside
+  std::cout << "fetchImageForLatentSpaceCoord_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
+
+  //create images using the elements of this model's Z
+  const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+
+  Eigen::MatrixXd new_sample =  ShapeOdds::evaluateModel(model, z_coord);
+
+  ImageBase64 image = MatrixToImage(new_sample);
+
+  addImageToResponse(response, image); // <ctc> factor out common functionality as getThumbnails uses
+#endif
+  
+  response["msg"] = std::string("here's your new sample computing using ShapeOdds(tm). Have a nice day!");
+}
+
+/**
+ * This returns a set of new samples (images) computed with the given ShapeOdds model for
+ * the specified crystal at this persistence level using numZ latent space coordinates.
+ * The z_coords are created for numZ evenly-spaced values of the field covered by this crystal
+ *
+ * Parameters: 
+ *   datasetId     - should already be loaded
+ *   fieldname     - (e.g., one of the QoIs)
+ *   persistenceId - persistence level of the M-S for this field of the dataset
+ *   crystalId     - crystal of the given persistence level
+ *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
+ *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
+ */
+void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
+  // <ctc> TODO: partition level set into numZ evenly-spaced field vals and compute a z_coord for each
+  //       for now, just calling fetchAllImageForCrystal_Shapeodds
+  Controller::fetchAllImagesForCrystal_Shapeodds(request, response);
+}
+
+/**
+ * This returns a set of new samples (images) computed with the given ShapeOdds model for the
+ * specified crystal at this persistence level using thelatent space coordinates for each of
+ * the original samples of model/crystal (each sample has a z_coord).
+ *
+ * Parameters: 
+ *   datasetId - should already be loaded
+ *   fieldname     - (e.g., one of the QoIs)
+ *   persistenceId - persistence level of the M-S for this field of the dataset
+ *   crystalId     - crystal of the given persistence level
+ */
+void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -743,6 +822,7 @@ void Controller::fetchImageForLatentSpaceUsingShapeOdds(const Json::Value &reque
 
   //create images using the elements of this model's Z
   const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+  response["thumbnails"] = Json::Value(Json::arrayValue);
 
   std::cout << "Testing all latent space variables computed for samples in this model...\n";
   auto sample_indices(model.getSampleIndices());
@@ -764,10 +844,18 @@ void Controller::fetchImageForLatentSpaceUsingShapeOdds(const Json::Value &reque
     // todo: is "quality" the correct term for comparison of generated image vs original?
     std::cout << "Quality of generation of image for model at persistence level "
               << persistence << ", crystalid " << crystalid << ": " << quality << std::endl;
+
+    // add image to response
+    Json::Value imageObject = Json::Value(Json::objectValue);
+    imageObject["width"] = sample_image.getWidth();
+    imageObject["height"] = sample_image.getHeight();
+    imageObject["data"] = base64_encode(sample_image.getConstData(), 4 * sample_image.getWidth() * sample_image.getHeight());
+    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&sample_image.getConstRawData()[0]),
+                                           sample_image.getConstRawData().size());
+    response["thumbnails"].append(imageObject);
   }
 
-  std::cout << "TODO: return something :-)\n";
-  response["msg"] = std::string("need to return desired image for the given ShapeOdds latent space");
+  response["msg"] = std::string("returning sample_indices.size() images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
 }
 
 /**

@@ -71,7 +71,7 @@ class ResponsiveDrawer extends Component {
         classes={{ paper:classes.drawerPaper }}
         PaperProps={{ style:this.state.newHeight }}>
         <div id='dragger' onMouseDown={(event) => { this.handleMouseDown(event); }} className={classes.dragger}>
-          {this.props.images.length > 0 && <img alt={'Image:' + i} height='75'
+          {this.props.images.length > 0 && <img alt={'Image:' + thumbnail.id} height='50'
                style={{ margin:'5px 5px 5px 5px' }}
                src={'data:image/png;base64, ' + thumbnail.img.rawData}/>}
         </div>
