@@ -305,6 +305,15 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchImageForLatentSpaceUsingShapeOdds(datasetId, qoi) {
+    let command = {
+      name: 'fetchImageForLatentSpaceUsingShapeOdds',
+      datasetId: datasetId,
+      qoi: qoi,
+    };
+    return this._createCommandPromise(command);
+  }
+
   /**
    * Fetch the Morse-Smale regression points for the specified persistence level
    * @param {string} datasetId

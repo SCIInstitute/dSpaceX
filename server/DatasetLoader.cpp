@@ -416,27 +416,7 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     throw std::runtime_error("Config 'models' field is not a list.");
   }
 
-  // <ctc> to test we'll create images using the elements of this model's Z
-  {
-    unsigned persistence = 15;
-    unsigned crystal = 6;
-    Shapeodds::ModelPair modelpair(ms_models[0].second.getModel(persistence, crystal));
-    Shapeodds::Model &model(modelpair.second);
-
-    auto sample_indices(model.getSampleIndices());
-    for (auto zidx : sample_indices)
-    {
-      unsigned sampleWidth = 80, sampleHeight = 40;   // TODO: dims currently hardcoded; are these stored anywhere in the M-S complex or its models? Should they be included in config.yaml?
-
-      std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
-      float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx,
-                                                              true /*writeToDisk*/, outputBasepath, sampleWidth, sampleHeight);
-
-      // todo: is "quality" the correct term for comparison of generated image vs original?
-      std::cout << "Quality of generation of image for model at persistence level "
-                << persistence << ", crystal " << crystal << ": " << quality << std::endl;
-    }
-  }
+  // <ctc> testing from Controller, which makes it easier to test without class friends, etc (still go ahead and return after reading p15c6 for now
   
   return ms_models;
 }
@@ -548,7 +528,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      Crystal &c = P.getCrystal(crystal);
+      Shapeodds::Crystal &c = P.getCrystal(crystal);
       parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds

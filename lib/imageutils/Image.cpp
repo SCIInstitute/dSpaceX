@@ -14,14 +14,22 @@ std::vector<char>& Image::getRawData() {
   return m_rawData;
 }
 
-int Image::getWidth() {
+const unsigned char* Image::getConstData() const {
+  return m_data;
+}
+
+const std::vector<char>& Image::getConstRawData() const {
+  return m_rawData;
+}
+
+int Image::getWidth() const {
   return m_width;
 }
 
-int Image::getHeight() {
+int Image::getHeight() const {
   return m_height;
 }
 
-std::string Image::getFormat() {
+std::string Image::getFormat() const {
   return m_format;
 }

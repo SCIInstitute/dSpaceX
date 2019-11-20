@@ -8,7 +8,7 @@ ShapeOdds::ShapeOdds()
 {
   using namespace Eigen;
   
-#if 0  // was just learning how to use the Eigen library
+#if 0 // was just learning how to use the Eigen library
   // Inline mesh of a cube
   my_V_matrix = (MatrixXd(8,3)<<
                  0.0,0.0,0.0,
@@ -85,6 +85,15 @@ ShapeOdds::ShapeOdds()
   std::cout << "M1:" << std::endl << M1 << std::endl;
   Map<MatrixXf> M2(M1.data(), 6,2);
   std::cout << "M2:" << std::endl << M2 << std::endl;
+
+  // try casting from double to char
+  MatrixXf MD(2,6);
+  MD << 1.00012, 253.56, 39.99, 40.01, 159.499, 65.5, 97, 98, 9, 10, 11, 128;
+  Matrix<char, Dynamic, Dynamic> Mc = MD.cast<char>();
+  std::cout << "MD:" << std::endl << MD << std::endl;
+  std::cout << "...cast to char is:\n";
+  std::cout << "Mc:" << std::endl << Mc << std::endl;
+  
 #endif
 }
 
@@ -109,7 +118,7 @@ int ShapeOdds::do_something_quietly(int y)
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
 // write evaluated model to disk if requested (if w * h != I.size(), then write I.rows() x I.cols() image)
-Eigen::MatrixXd ShapeOdds::evaluateModel(Model &model, const Eigen::VectorXd &z_coord,
+Eigen::MatrixXd ShapeOdds::evaluateModel(const Model &model, const Eigen::VectorXd &z_coord,
                                          const bool writeToDisk, const std::string outpath, unsigned w, unsigned h)
 {
   // I = f(z):
@@ -130,102 +139,70 @@ Eigen::MatrixXd ShapeOdds::evaluateModel(Model &model, const Eigen::VectorXd &z_
   
   if (writeToDisk)
   {
-    I.array() *= 255.0;
-    //std::cout << "I * 255:\n" << I << std::endl;
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image = (I.array() * 255.0).cast<unsigned char>();
 
-    if (I.size() != w * h)
+    if (image.size() != w * h)
     { 
-      std::cout << "Warning: w * h (" << w << " * " << h << ") != computed image size (" << I.size() << ")\n";
-      w = I.rows();
-      h = I.cols();
+      std::cout << "Warning: w * h (" << w << " * " << h << ") != computed image size (" << image.size() << ")\n";
+      h = image.rows();
+      w = image.cols();
     }
+    image.resize(h, w);
+    image.transposeInPlace();
 
-    Eigen::Map<Eigen::MatrixXd> I_image(I.data(), h, w);  // column major ordering
-    unsigned char buffer[I.size()];
-    std::vector<unsigned char> image;
-    unsigned error;
-
-    // copy image into row-order array
-    for (unsigned c = 0; c < w; c++)    // for every column...
-      for (unsigned r = 0; r < h; r++)  // read all the rows
-        buffer[r * w + c] = (unsigned char)std::round(I_image(r, c));
-
-    error = lodepng::encode(image, buffer, w, h, LCT_GREY, 8);
+    unsigned error = lodepng::encode(outpath, image.data(), w, h, LCT_GREY, 8);
     if (error) {
       throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
-    }
-
-    lodepng::save_file(image, outpath.c_str());
+    } 
   }
-      
+
   return I;
 }
 
 // verify evaluated model and how closely it corresponds to sample at that idx
 // return measured difference between generated sample and original
-float ShapeOdds::testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx,
-                                   const bool writeToDisk, const std::string basePath, const unsigned w, const unsigned h)
+float ShapeOdds::testEvaluateModel(const Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord,
+                                   unsigned p, unsigned c, unsigned z_idx, const Image &sampleImage,
+                                   const bool writeToDisk, const std::string basePath)
 {
   std::string outpath(basePath + "/p" + std::to_string(p) + "-c" + std::to_string(c) +"-z" + std::to_string(z_idx) + ".png");
-
+  unsigned w = sampleImage.getWidth(), h = sampleImage.getHeight();
+  
   Eigen::MatrixXd I(evaluateModel(model, z_coord, writeToDisk, outpath, w, h));
+  //std::cout << "evaluated model: " << I << std::endl;
 
-#if 0  //<ctc> moved this here since evaluateModel doesn't need to know model's persistence, crystalid, or index of z_coord
+  float quality = 1.0;
 
-  // how to figure out which image goes with which row of Z... (this is actually done now in the code that calls this fcn)
-  // -> the sample indices are the key: each sample corresponds to one of the 1000 z's for this model
-  // -> also, while technically the z's don't have to be saved, it's very useful to store them
-  //test by loading the images for each element (are they correlated? there aren't the same number...)
-  //and compare pixels to start with (list of samples is stored in the model's Crystal)
-  //
-  // samples of p0-c0: <manually get 'em>
-  //  - not sure if order matters...
-  //   [] just compute them all to compare images for each Z
-  //     - still leaves some samples out though since there are fewer Zs than samples...)
-  //  - there are fewer Z rows than samples, so...
-  //  - how do I pick the z coordinate corresponding to a sample?
-  //
-  const std::set<unsigned> &sample_indices = model.getCrystal().getSamples();
-  for (unsigned sample_idx : sample_indices)
+  // Compare sampleImage (presumably image corresponding to z_idx) to the one just generated by the model.
+  Eigen::MatrixXd sampleImageMatrix(w * h, 1);
+  
+  // copy sample image into column-order Eigen::MatrixXd and rescale to [0.0, 1.0]
+  const unsigned char* imgdata = sampleImage.getConstData();
+  for (unsigned r = 0; r < h; r++)    // for every row...
+    for (unsigned c = 0; c < w; c++)  // read all the cols
+      sampleImageMatrix(r * w + c) = (double)imgdata[r * w + c] / 255.0;
+
+  //std::cout << "converted sample image data: " << sampleImageMatrix << std::endl;
+  
+  // compare image with I
+  // take euclidean norm of difference: (A-B).norm() / (A-B).size()
   {
-    std::string path("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/images/1.png");
-    std::string outpath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages/1.png");
-    unsigned w,h;
-    Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
-
-    // just use lodepng since it's super simple
-    {
-      std::vector<unsigned char> image;
-      std::vector<unsigned char> buffer;
-      lodepng::State state;
-      unsigned error;
-
-      state.decoder.color_convert = 0;
-      state.decoder.remember_unknown_chunks = 1; //make it reproduce even unknown chunks in the saved image
-
-      lodepng::load_file(buffer, path.c_str());
-      error = lodepng::decode(image, w, h, state, buffer);
-      if(error) {
-        std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-        return 0;
-      }
-
-      buffer.clear();
-
-      state.encoder.text_compression = 1;
-
-      error = lodepng::encode(buffer, image, w, h, state);
-      if(error) {
-        std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-        return 0;
-      }
-
-      lodepng::save_file(buffer, outpath);
-    }
+    Eigen::MatrixXd diff(sampleImageMatrix - I);
+    std::cout << "diff: rng: [" << diff.minCoeff() << ", " << diff.maxCoeff() << "], avg: " << diff.mean() << ", norm: " << diff.norm() << std::endl; 
+    quality = diff.norm() / diff.size();
   }
-#endif
-
-  return true;
+  
+  // produce a pixel-by-pixel differnce (A-B)
+  bool writeDiffImage = true; 
+  if (writeDiffImage)
+  {
+    Eigen::MatrixXd diff(sampleImageMatrix - I);
+    //<ctc> now we have a reason to have an independent writeImage function (see above)
+    //todo
+    // - shall we map negative values to blue, positive to red?
+  }
+  
+  return quality;
 }
 
 ModelPair MSModelContainer::getModel(unsigned p, unsigned c)

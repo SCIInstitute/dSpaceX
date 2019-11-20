@@ -38,7 +38,6 @@ const int MAX_DATASET_DEPTH = 3;
 
 Controller::Controller() {
   configureCommandHandlers();
-  //configureAvailableDatasets("/Users/cam/data/dSpaceX/DATA");
   configureAvailableDatasets("/Users/cam/data/dSpaceX/DATA");
 }
 
@@ -707,10 +706,37 @@ void Controller::fetchImageForLatentSpaceUsingShapeOdds(const Json::Value &reque
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
-  int qoi = request["qoi"].asInt();
-  std::cout << "fetchImageForLatentSpaceUsingShapeOdds: datasetId is "<<datasetId<<", qoi is "<<qoi<<std::endl;
-  if (qoi < 0) {
-    // TODO: Send back an error message.
+  maybeLoadDataset(datasetId);
+  // maybeLoadModel(persistence,crystal); //<ctc> if for speed we decide not to load models till their evaluation is requested
+
+  int persistence = 15; //request["persistence"].asInt();
+  int crystalid = 6; //request["crystalid"].asInt();
+  //int zidx = request["zidx"].asInt();  // <ctc> really, we want to pass a latent space variable z, which we'll also generate serverside
+  std::cout << "fetchImageForLatentSpaceUsingShapeOdds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
+
+  //create images using the elements of this model's Z
+  const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+
+  std::cout << "Testing all latent space variables computed for samples in this model...\n";
+  auto sample_indices(model.getSampleIndices());
+  for (auto zidx : sample_indices)
+  {
+    // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
+    extern Controller *controller;
+    if (!controller || !controller->m_currentDataset)
+      throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
+
+    const Image& sample_image = controller->m_currentDataset->getThumbnail(zidx);
+    unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
+
+    std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
+
+    float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx, sample_image,
+                                                            true /*writeToDisk*/, outputBasepath);
+
+    // todo: is "quality" the correct term for comparison of generated image vs original?
+    std::cout << "Quality of generation of image for model at persistence level "
+              << persistence << ", crystalid " << crystalid << ": " << quality << std::endl;
   }
 
   std::cout << "TODO: return something :-)\n";

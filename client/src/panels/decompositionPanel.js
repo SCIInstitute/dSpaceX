@@ -132,9 +132,9 @@ class DecompositionPanel extends React.Component {
     //just shortcutting this to really set mode to Morse-Smale even if it's Shared-GP to test calling Shared-GP functions
     let mode = event.target.value;
     let set_mode = mode;
-    if (mode == 'Shared-GP') {
-      set_mode = 'Morse-Smale';
-    }
+    // if (mode == 'Shared-GP') {
+    //   set_mode = 'Morse-Smale';
+    // }
     this.setState({
       decompositionMode: set_mode,
     });
@@ -156,7 +156,8 @@ class DecompositionPanel extends React.Component {
     } else if (mode == 'Shared-GP') {
       let k = 15;
       let datasetId = this.props.dataset.datasetId;
-      this.client.fetchSharedLatentSpace(datasetId, k*10 /*qoi*/)
+      //this.client.fetchSharedLatentSpace(datasetId, k*10 /*qoi*/)
+      this.client.fetchImageForLatentSpaceUsingShapeOdds(datasetId, k*10 /*qoi*/)
         .then(function(result) {
           console.log('returned from fetchSharedLatentSpace, msg: ' + result.msg);
         }.bind(this));

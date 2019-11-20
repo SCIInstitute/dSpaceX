@@ -71,6 +71,16 @@ class Dataset {
     return m_thumbnails;
   }
 
+  std::vector<Shapeodds::MSModelContainer>& getMSModels() {
+    return m_msModels;
+  }
+
+  const Image& getThumbnail(unsigned idx) {
+    if (idx >= m_thumbnails.size())
+      throw std::runtime_error("Tried to fetch thumbnail " + std::to_string(idx) + ", but there are only " + std::to_string(m_thumbnails.size()));
+    return m_thumbnails[idx];
+  }
+
   class Builder {
    public:
     Builder() {

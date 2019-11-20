@@ -6,6 +6,7 @@
 #include <set>
 #include "precision/Precision.h"
 #include "utils/StringUtils.h"
+#include "imageutils/Image.h"
 
 namespace Shapeodds {  //<ctc> What is a more generic name for ShapeOdds, InfShapeOdds, GP, SharedGP, etc?
 
@@ -27,11 +28,11 @@ public:
   // since models may get large, keep track of when they're copyied so this step can be optimized (probably passing vectors around by value is copying their contents). C++11 should use move semantics (see https://mbevin.wordpress.com/2012/11/20/move-semantics/), so this is just to verify that's being done.
   Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
   {
-    std::cout << "Shapeodds::Model copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::Model copy ctor (&m = " << &m << ")." << std::endl;
   }
   Model operator=(const Model &m)
   {
-    std::cout << "Shapeodds::Model assignment operator (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::Model assignment operator (&m = " << &m << ")." << std::endl;
     return Model(m);
   }
   
@@ -47,7 +48,7 @@ public:
     sample_indices.insert(n);
   }
 
-  unsigned numSamples() const
+  const unsigned numSamples() const
   {
     return sample_indices.size();
   }
@@ -98,11 +99,11 @@ public:
 
   Crystal(const Crystal &m) : model(m.model)
   {
-    std::cout << "Shapeodds::Crystal copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::Crystal copy ctor (&m = " << &m << ")." << std::endl;
   }
   Crystal operator=(const Crystal &m)
   {
-    std::cout << "Shapeodds::Crystal assignment operator (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::Crystal assignment operator (&m = " << &m << ")." << std::endl;
     return Crystal(m);
   }
   
@@ -140,11 +141,11 @@ public:
 
   PersistenceLevel(const PersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
   {
-    std::cout << "Shapeodds::PersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::PersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
   }
   PersistenceLevel operator=(const PersistenceLevel &m)
   {
-    std::cout << "Shapeodds::PersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::PersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
     return PersistenceLevel(m);
   }
   
@@ -196,11 +197,11 @@ public:
 
   MSModelContainer(const MSModelContainer &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
   {
-    std::cout << "Shapeodds::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
   }
   MSModelContainer operator=(const MSModelContainer &m)
   {
-    std::cout << "Shapeodds::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
+    //std::cout << "Shapeodds::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
     return MSModelContainer(m);
   }
   
@@ -248,11 +249,12 @@ public:
   ShapeOdds();
   ~ShapeOdds();
 
-  static Eigen::MatrixXd evaluateModel(Model &model, const Eigen::VectorXd &z_coord, const bool writeToDisk = false,
+  static Eigen::MatrixXd evaluateModel(const Model &model, const Eigen::VectorXd &z_coord, const bool writeToDisk = false,
                                        const std::string outpath = "", unsigned w = 0, unsigned h = 0);
   
-  static float testEvaluateModel(Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord, unsigned p, unsigned c, unsigned z_idx,
-                                 const bool writeToDisk = false, const std::string path = "", const unsigned w = 0, const unsigned h = 0);
+  static float testEvaluateModel(const Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord,
+                                 const unsigned p, const unsigned c, const unsigned z_idx, const Image &sampleImage,
+                                 const bool writeToDisk = false, const std::string path = "");
 
   int doSomething(int x=42);
   
