@@ -34,6 +34,7 @@ class Controller {
   void fetchGraphEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
+  void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);

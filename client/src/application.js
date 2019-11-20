@@ -87,6 +87,7 @@ class Application extends React.Component {
     this.onDesignSelection = this.onDesignSelection.bind(this);
     this.onDesignLasso = this.onDesignLasso.bind(this);
     this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
+    this.onCrystalSelection = this.onCrystalSelection.bind(this);
     this.changeFilterOperation = this.changeFilterOperation.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
@@ -249,6 +250,15 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles updating of selected samples based on crystal selection
+   * @param {Array<int>} crystalSamples
+   */
+  onCrystalSelection(crystalSamples) {
+    let selectedDesigns = new Set(crystalSamples);
+    this.setState({ selectedDesigns });
+  }
+
+  /**
    * Open and closes filter drawer when 'Filter' button is clicked
    */
   onDisplayFilterDrawer() {
@@ -340,7 +350,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Gets the images that should be displayed after the filters
+   * Gets the samples that should be displayed after the filters
    * are applied
    * @return {Set} indexes of images that should be visible
    */
@@ -541,8 +551,9 @@ class Application extends React.Component {
                           decomposition={windowConfig.decomposition}  // where the react props come from
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}
                           numberOfWindows={this.state.windows.length}
+                          onDesignSelection={this.onDesignSelection}
+                          onCrystalSelection={this.onCrystalSelection}
                           activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
