@@ -23,10 +23,13 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     this.state = {
       drawerImages: [],
     };
+
+    this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
   }
 
   computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
     // Ask server to compute the N new images for this crystal and add them to the drawer
+    console.log(this.client.fetchDatasetList());
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
@@ -104,4 +107,4 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   }
 }
 
-export default withDSXContext(withStyles({})(EmbeddingMorseSmaleWindow));
+export default withDSXContext(EmbeddingMorseSmaleWindow);
