@@ -18,6 +18,7 @@
 #include "util/utils.h"
 #include "sharedgp/SharedGP.h"
 #include "shapeodds/ShapeOdds.h"
+#include "lodepng.h"
 
 #include <cassert>
 #include <algorithm>
@@ -801,6 +802,43 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   Controller::fetchAllImagesForCrystal_Shapeodds(request, response);
 }
 
+// converts w*h x 1 matrix of doubles to w x h 2d image of unsigned char, throwing an exception if dims don't match
+// <ctc> TODO move this to utils (or somewhere) so it can be used by others
+Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h)
+{
+  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image_mat = (I.array() * 255.0).cast<unsigned char>();
+
+  if (image_mat.size() != w * h)
+  { 
+    throw std::runtime_error("Warning: w * h (" + std::to_string(w) + " * " + std::to_string(h) + ") != computed image size (" + std::to_string(image_mat.size()) + ")");
+  }
+  image_mat.resize(h, w);
+  image_mat.transposeInPlace();  // make data row-order
+
+  std::vector<unsigned char> png;
+  unsigned error = lodepng::encode(png, image_mat.data(), w, h, LCT_GREY, 8);
+  if (error) {
+    throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
+  } 
+
+  std::vector<char> char_png_vec(w * h);        //<ctc> grumble-grumble... it'll just turn around and be converted back to unsigned char*
+  std::copy(png.begin(), png.end(), char_png_vec.begin());
+  return Image(w, h, NULL, char_png_vec, "png");
+
+#if 0
+  //<ctc> this doesn't work since when the Eigen::Matrix goes out of scope it still deletes its data.
+  //  char *image_data = reinterpret_cast<char *>(std::move(image.data()));
+  // ...so instead we just copy it for now, but I put a question out there to see if Eigen's matrix can relinquish its data.
+  std::vector<char> image_data_vec(w * h);
+  char *idata = reinterpret_cast<char *>(image.data());
+  std::copy(idata, idata + w * h, image_data_vec.begin());
+  //return Image(w, h, NULL, image_data_vec, "raw");
+  unsigned char *foo = std::reinterpret_cast<unsigned char*>(idata); // why the error calling the Image constructor with this argument? -> must use static_cast!
+  //return Image(w, h, std::reinterpret_cast<unsigned char*>(idata), image_data_vec, "raw");
+  return Image(w, h, (unsigned char*)idata, image_data_vec, "raw");
+#endif
+}
+
 /**
  * This returns a set of new samples (images) computed with the given ShapeOdds model for the
  * specified crystal at this persistence level using thelatent space coordinates for each of
@@ -822,6 +860,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
 
   int persistence = request["persistenceLevel"].asInt();
   int crystalid = request["crystalID"].asInt();
+  crystalid += 1; //<ctc> fixme: client is requesting incorrect crystal
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
   //create images using the elements of this model's Z
@@ -841,7 +880,12 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
+    std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) +
+                        "-z" + std::to_string(zidx) + ".png");
+    Eigen::MatrixXd I = Shapeodds::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
+                                                            outpath, sample_image.getWidth(), sample_image.getHeight());
 
+    //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
     float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistence, crystalid, zidx, sample_image,
                                                             true /*writeToDisk*/, outputBasepath);
 
@@ -849,14 +893,13 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     std::cout << "Quality of generation of image for model at persistence level "
               << persistence << ", crystalid " << crystalid << ": " << quality << std::endl;
 
-    //<ctc>fixme: it's sending back the sample image instead of the computed one from the model
     // add image to response
+    Image image = convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
     Json::Value imageObject = Json::Value(Json::objectValue);
-    imageObject["width"] = sample_image.getWidth();
-    imageObject["height"] = sample_image.getHeight();
-    imageObject["data"] = base64_encode(sample_image.getConstData(), 4 * sample_image.getWidth() * sample_image.getHeight());
-    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&sample_image.getConstRawData()[0]),
-                                           sample_image.getConstRawData().size());
+    imageObject["width"] = image.getWidth();
+    imageObject["height"] = image.getHeight();
+    //imageObject["data"] = base64_encode(image.getConstData(), 4 * image.getWidth() * image.getHeight());  //<ctc> not used by client
+    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getConstRawData()[0]), image.getConstRawData().size());
     response["thumbnails"].append(imageObject);
   }
 
