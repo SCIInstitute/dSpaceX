@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Drawer } from '@material-ui/core';
 import withStyles from '@material-ui/core/es/styles/withStyles';
 import Paper from "@material-ui/core/Paper";
+import Grid from '@material-ui/core/Grid';
 
 const styles = (theme) => ({
   dragger: {
@@ -71,9 +72,18 @@ class ResponsiveDrawer extends Component {
         classes={{ paper:classes.drawerPaper }}
         PaperProps={{ style:this.state.newHeight }}>
         <div id='dragger' onMouseDown={(event) => { this.handleMouseDown(event); }} className={classes.dragger}>
-          {this.props.images.length > 0 && <img alt={'Image:' + thumbnail.id} height='50'
-               style={{ margin:'5px 5px 5px 5px' }}
-               src={'data:image/png;base64, ' + thumbnail.img.rawData}/>}
+        <Grid container
+          justify={'flex-end'}
+          spacing={8}
+          style={{ margin:'5px 0px 0px 0px' }}>
+        {this.props.images.length > 0 &&
+         this.props.images.map((thumbnail, i) =>
+                               <Grid key={i} item>
+                               <Paper style={{ backgroundColor:'#D3D3D3' }}>
+                               <img alt={'Image:' + thumbnail.id} height='45' style={{ margin:'5px 5px 5px 5px' }} src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
+                               </Paper>
+                               </Grid>)}
+        </Grid>
         </div>
       </Drawer>
     );

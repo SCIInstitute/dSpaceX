@@ -4,7 +4,6 @@ import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
 import { withDSXContext } from '../dsxContext.js';
-import { withStyles } from '@material-ui/core/styles';
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -28,8 +27,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   }
 
   computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
+    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+","+persistenceLevel+","+crystalID+","+numSamples+")");
+
     // Ask server to compute the N new images for this crystal and add them to the drawer
-    console.log(this.client.fetchDatasetList());
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
@@ -39,7 +39,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           };
         });
         this.setState({ drawerImages: thumbnails });
-        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' image; msg: ' + result.msg);
+        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
       });
   }
 
