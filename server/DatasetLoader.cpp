@@ -416,8 +416,6 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     throw std::runtime_error("Config 'models' field is not a list.");
   }
 
-  // <ctc> testing from Controller, which makes it easier to test without class friends, etc (still go ahead and return after reading p15c6 for now
-  
   return ms_models;
 }
 
@@ -499,9 +497,10 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 
   // Now read all the models
   MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 15; persistence < npersistences; persistence++) //<ctc> starting at 15 as a hack to test
+  for (unsigned persistence = 0; persistence < npersistences; persistence++)
   {
-    PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence);
+    unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+    PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
@@ -543,8 +542,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
 
-
-    break; // <ctc> hack so we can quickly read the 15th first persistence level and test applying the model
+    //break; // <ctc> hack so we can quickly read a single persistence level and test applying the model
   }
 
   return MSModelPair(fieldname, ms_of_models);
@@ -637,10 +635,6 @@ std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath,
   std::string imageName = std::to_string(index);
 
   if (padZeroes) {
-    // std::stringstream digitCounter;
-    // digitCounter << thumbnailCount;
-    // unsigned int digitCount = digitCounter.str().size() + indexOffset;  // <ctc> I think this was a bug, since indexOffset represents number of first image name (ex: group of 500 images starting with 525 requires 4-chars, but this code would only say it needs 3-chars for images 0-475). 
-
     unsigned digitCount = paddedStringWidth(indexOffset + thumbnailCount);
     imageName = paddedIndexString(index, digitCount);
   }

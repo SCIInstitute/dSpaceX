@@ -793,6 +793,11 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
   // <ctc> TODO: partition level set into numZ evenly-spaced field vals and compute a z_coord for each
   //       for now, just calling fetchAllImageForCrystal_Shapeodds
+  int datasetId = request["datasetId"].asInt();
+  int persistence = request["persistenceLevel"].asInt();
+  int crystalid = request["crystalID"].asInt();
+  int numZ = request["numSamples"].asInt();
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<")\n";
   Controller::fetchAllImagesForCrystal_Shapeodds(request, response);
 }
 
@@ -815,18 +820,17 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> if for speed we decide not to load models till their evaluation is requested
 
-  int persistence = 15; //request["persistence"].asInt();
-  int crystalid = 6; //request["crystalid"].asInt();
-  //int zidx = request["zidx"].asInt();  // <ctc> really, we want to pass a latent space variable z, which we'll also generate serverside
-  std::cout << "fetchImageForLatentSpaceUsingShapeOdds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
+  int persistence = request["persistenceLevel"].asInt();
+  int crystalid = request["crystalID"].asInt();
+  std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
   //create images using the elements of this model's Z
   const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
   response["thumbnails"] = Json::Value(Json::arrayValue);
 
-  std::cout << "Testing all latent space variables computed for samples in this model...\n";
   auto sample_indices(model.getSampleIndices());
-  for (auto zidx : sample_indices)
+  std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
+  for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
     extern Controller *controller;
@@ -838,13 +842,14 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
 
     std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
 
-    float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.Z.row(zidx), 15, 6, zidx, sample_image,
+    float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistence, crystalid, zidx, sample_image,
                                                             true /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
     std::cout << "Quality of generation of image for model at persistence level "
               << persistence << ", crystalid " << crystalid << ": " << quality << std::endl;
 
+    //<ctc>fixme: it's sending back the sample image instead of the computed one from the model
     // add image to response
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = sample_image.getWidth();

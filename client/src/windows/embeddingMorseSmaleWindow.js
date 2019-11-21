@@ -43,33 +43,6 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       });
   }
 
-// //galleryWindow.js, componentWillMount and componentDidUpdate
-//     // Get Thumbnails
-//     this.client.fetchThumbnails(datasetId)
-//       .then((result) => {
-//         const thumbnails = result.thumbnails.map((thumbnail, i) => {
-//           return {
-//             img: thumbnail,
-//             id: i,
-//           };
-//         });
-//         this.setState({ thumbnails });
-//       });
-
-//     //graphGLWindow, handleKeyDown:
-//   case 't':
-//         if (this.activeNodeShader == this.nodeShaderProgram) {
-//           console.log('Switching to thumbnail node shader.');
-//           if (!this.thumbnails) {
-//             this.client.fetchThumbnails(this.props.dataset.datasetId)
-//               .then((result) => {
-//                 this.thumbnails = result.thumbnails;
-//                 this.createTextureAtlas();
-//                 requestAnimationFrame(this.renderGL);
-//               });
-//           }
-//           this.activeNodeShader = this.thumbnailShaderProgram;
-
   /**
    * Renders EmbeddingMorseSmaleWindow to screen
    * @return {JSX}

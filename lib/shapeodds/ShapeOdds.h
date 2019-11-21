@@ -58,8 +58,16 @@ public:
     return sample_indices;
   }
 
+  
+  const Eigen::Matrix<double, 1, Eigen::Dynamic> getZCoord(const unsigned idx) const
+  {
+    if (idx >= numSamples())
+      throw std::runtime_error("cannot return " + std::to_string(idx) + "th z_coord because there are only " + std::to_string(numSamples()) + " samples in this model.");
+    
+    return Z.row(idx);
+  }
 
-  //private:         //<ctc> TODO: uncomment me, "friend" DatasetLoader::parseMSModels needs access for testing
+private:
   // Shapeodds model 
   std::set<unsigned> sample_indices;        // indices of images used to construct this model
   Eigen::MatrixXd Z;  
@@ -72,7 +80,7 @@ public:
 
 // class ShapeOddsModel : public Model
 // TODO
-//  - in order to provide common interface for SharedGP models
+//  - in order to provide common interface for ShapeOdds, InfiniteShapeOdds, and SharedGP models
 
 
 //
@@ -222,7 +230,8 @@ public:
 
   PersistenceLevel& getPersistenceLevel(unsigned i)
   {
-    return persistence_levels[i];
+    unsigned persistence_idx = i - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+    return persistence_levels[persistence_idx];
   }
 
   ModelPair getModel(unsigned p, unsigned c);
@@ -231,7 +240,8 @@ public:
 private:
   static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
   {
-    return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
+    unsigned actual_persistence_level = p + 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+    return std::string("p"+paddedIndexString(actual_persistence_level, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
   }
 
   std::string fieldname;            // name of field for which this M-S complex was computed

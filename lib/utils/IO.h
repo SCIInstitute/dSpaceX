@@ -137,11 +137,11 @@ class IO{
 #else
 
     // Uses super-handy rapidcsv, https://github.com/d99kris/rapidcsv, which also happens to be faster than the stringstream above.
-    rapidcsv::Document csv(filename, rapidcsv::LabelParams(-1, -1));
+    rapidcsv::Document csv(filename, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(), rapidcsv::ConverterParams(true));
 
     std::time(&t_end);
     double time_taken = double(t_end - t_start); 
-    std::cout << "Time taken by file reading: " << std::fixed << time_taken << std::setprecision(5) << std::endl;
+    //std::cout << "Time taken by file reading: " << std::fixed << time_taken << std::setprecision(5) << std::endl; //<ctc>
 
     size_t rows = csv.GetRowCount();
     size_t cols = csv.GetColumnCount();
@@ -155,7 +155,7 @@ class IO{
 
     std::time(&t_start);
     time_taken = double(t_start - t_end); 
-    std::cout << "Time taken to fill Eigen matrix: " << std::fixed << time_taken << std::setprecision(5) << std::endl;
+    //std::cout << "Time taken to fill Eigen matrix: " << std::fixed << time_taken << std::setprecision(5) << std::endl; //<ctc>
     
 #endif
 

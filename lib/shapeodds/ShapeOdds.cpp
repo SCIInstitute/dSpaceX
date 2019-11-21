@@ -207,10 +207,11 @@ float ShapeOdds::testEvaluateModel(const Model &model, const Eigen::Matrix<doubl
 
 ModelPair MSModelContainer::getModel(unsigned p, unsigned c)
 {
-  if (p >= persistence_levels.size() || c >= persistence_levels[p].numCrystals())
+  unsigned persistence_idx = p - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+  if (persistence_idx >= persistence_levels.size() || c >= persistence_levels[persistence_idx].numCrystals())
     throw std::runtime_error("Requested model persistence / crystal index is out of range");
       
-  return ModelPair(modelName(p, c), persistence_levels[p].getCrystal(c).getModel());
+  return ModelPair(modelName(p, c), persistence_levels[persistence_idx].getCrystal(c).getModel());
 }
 
 std::vector<ModelPair> MSModelContainer::getAllModels()
