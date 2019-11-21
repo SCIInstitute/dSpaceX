@@ -16,8 +16,8 @@
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
 #include "util/utils.h"
-#include "sharedgp/sharedgp.h"
-#include "shapeodds/shapeodds.h"
+#include "sharedgp/SharedGP.h"
+#include "shapeodds/ShapeOdds.h"
 
 #include <cassert>
 #include <algorithm>
@@ -855,7 +855,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     response["thumbnails"].append(imageObject);
   }
 
-  response["msg"] = std::string("returning sample_indices.size() images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
+  response["msg"] = std::string("returning " + std::to_string(sample_indices.size()) + " images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
 }
 
 /**
