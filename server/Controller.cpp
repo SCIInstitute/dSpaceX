@@ -714,9 +714,9 @@ void Controller::fetchThumbnails(
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
-    imageObject["data"] = base64_encode(
-                                        reinterpret_cast<const unsigned char *>(image.getData()),
-                                        4 * image.getWidth() * image.getHeight());
+    // imageObject["data"] = base64_encode(  // <ctc> not needed by anything, so why are we sending this?
+    //                                     reinterpret_cast<const unsigned char *>(image.getData()),
+    //                                     4 * image.getWidth() * image.getHeight());
     imageObject["rawData"] = base64_encode(
                                            reinterpret_cast<const unsigned char *>(&image.getRawData()[0]),
                                            image.getRawData().size());
