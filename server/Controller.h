@@ -12,13 +12,13 @@
 
 class Controller {
  public:
-  Controller();
+  Controller(const std::string &datapath_);
   void handleData(void *wsi, void *data);
   void handleText(void *wsi, const std::string &text);
 
  private:
   void configureCommandHandlers();
-  void configureAvailableDatasets(const std::string &rootPath = "../../examples");
+  void configureAvailableDatasets(const std::string &rootPath);
 
   void maybeLoadDataset(int datasetId);
   void maybeProcessData(int k);
@@ -58,4 +58,5 @@ class Controller {
   HDProcessResult *m_currentProcessResult = nullptr;
   HDVizData *m_currentVizData = nullptr;
   TopologyData *m_currentTopoData = nullptr;
+  std::string datapath;
 };

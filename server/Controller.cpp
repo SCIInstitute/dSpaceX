@@ -37,9 +37,9 @@ using namespace std::placeholders;
 const int MAX_DATASET_DEPTH = 3;
 
 
-Controller::Controller() {
+Controller::Controller(const std::string &datapath_) : datapath(datapath_) {
   configureCommandHandlers();
-  configureAvailableDatasets("/Users/cam/data/dSpaceX/DATA");
+  configureAvailableDatasets(datapath);
 }
 
 /**
@@ -879,7 +879,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     const Image& sample_image = controller->m_currentDataset->getThumbnail(zidx);
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
-    std::string outputBasepath("/Users/cam/data/dSpaceX/DATA/CantileverBeam_wclust_wraw/outimages");
+    std::string outputBasepath(datapath + "CantileverBeam_wclust_wraw/outimages");
     std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(zidx) + ".png");
     Eigen::MatrixXd I = Shapeodds::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
