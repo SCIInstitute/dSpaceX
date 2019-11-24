@@ -35,7 +35,6 @@ TARGET_LINK_LIBRARIES (dSpaceX
   jsoncpp
   shapeodds
   dspacex_utils
-  igl::core
   libwsserver
   lapack
   pthread

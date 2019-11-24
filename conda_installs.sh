@@ -36,7 +36,8 @@ eval "$(conda shell.bash hook)"
 conda activate dspacex
 
 #install dspacex deps
-conda install --yes -c conda-forge zlib cmake igl nodejs
+# <ctc> note: igl (from conda-forge) only installs the python lib
+conda install --yes -c conda-forge zlib cmake nodejs eigen
 conda install --yes -c anaconda libpng
 
 # maybe also...
