@@ -8,7 +8,9 @@ supported by all modern browsers.
 ## Install dependencies (OSX/Linux)
 
 We use anaconda to create a sandbox environment, which facilitates multiple applications with different dependencies. It is not a virtual environment and therefore incurs no performance penalty. Install Anaconda and the dSpaceX dependencies using:  
-`source ./conda_installs.sh`  
+```bash
+source ./conda_installs.sh
+```
 Accept the cryptography license terms and default installation path.  
 
 ## Building Native & Server Code.
