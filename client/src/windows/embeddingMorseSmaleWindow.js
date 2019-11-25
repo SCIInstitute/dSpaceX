@@ -21,14 +21,6 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     };
   }
 
-  camsFunctionGoesHere(persistenceLeve, crystalID) {
-    // This will call cams function to get the images we need for the drawer
-    // Cams controller function goes here to get the images
-    // this.client.fetchSomething.then (result => {
-    // set state}
-    this.setState({ drawerImages:list_of_images_here });
-  }
-
   /**
    * Renders EmbeddingMorseSmaleWindow to screen
    * @return {JSX}
@@ -58,8 +50,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
           numberOfWindows={this.props.numberOfWindows}
-          onCrystalSelection={this.props.onCrystalSelection}
-          toCallCamsFunction={this.camsFunctionGoesHere}/>
+          onCrystalSelection={this.props.onCrystalSelection}/>
         <ResponsiveDrawer images={this.state.drawerImages}/>
       </div>
     );
