@@ -245,7 +245,7 @@ void Controller::fetchMorseSmalePersistence(
   response["maxPersistenceLevel"] = maxLevel;
   response["complexSizes"] = Json::Value(Json::arrayValue);
   for (int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);
+    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);  // <ctc> is this where the crystal numbering bug lives?
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
   }
@@ -879,7 +879,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     const Image& sample_image = controller->m_currentDataset->getThumbnail(zidx);
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
-    std::string outputBasepath(datapath + "CantileverBeam_wclust_wraw/outimages");
+    std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
     std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(zidx) + ".png");
     Eigen::MatrixXd I = Shapeodds::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
