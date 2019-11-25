@@ -10,11 +10,11 @@ fi
 if ! command -v conda 2>/dev/null 1>&2; then
   echo "installing anaconda..."
   if [ "$(uname)" == "Darwin" ]; then
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o Miniconda3-latest-MacOSX-x86_64.sh
     bash ./Miniconda3-latest-MacOSX-x86_64.sh
     rm ./Miniconda3-latest-MacOSX-x86_64.sh
   elif [ "$(uname)" == "Linux" ]; then
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     bash ./Miniconda3-latest-Linux-x86_64.sh
     rm ./Miniconda3-latest-Linux-x86_64.sh
   else
@@ -31,9 +31,10 @@ conda update --yes -n base -c defaults conda
 conda update --yes --all
 
 #create and activate dspacex env
-conda create --yes --name dspacex
+CONDAENV=dspacex-test00
+conda create --yes --name $CONDAENV
 eval "$(conda shell.bash hook)"
-conda activate dspacex
+conda activate $CONDAENV
 
 #install dspacex deps
 # <ctc> note: igl (from conda-forge) only installs the python lib
