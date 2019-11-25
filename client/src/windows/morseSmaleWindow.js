@@ -250,8 +250,6 @@ class MorseSmaleWindow extends React.Component {
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
-        console.log(result.crystalSamples);
-
         this.props.onCrystalSelection(result.crystalSamples);
       });
     }
