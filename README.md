@@ -5,7 +5,7 @@ and client application. The Server is written in C++ and the client is
 a web application written in Javascript. It relies on HTML5 which is 
 supported by all modern browsers.
 
-## Install dependencies (OSX/Linux)
+## Install dependencies
 
 We use anaconda to create a sandbox environment, which facilitates multiple applications with different dependencies. It is not a virtual environment and therefore incurs no performance penalty. Install Anaconda and the dSpaceX dependencies using:  
 ```bash
@@ -13,8 +13,8 @@ source ./conda_installs.sh
 ```
 Accept the cryptography license terms and default installation path.  
 
-## Building Native & Server Code.
-1. Create a build directory
+## Build server
+1. Create a build directory.
 ```bash
 <.../dSpaceX>$ mkdir build
 ```
