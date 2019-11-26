@@ -19,14 +19,14 @@ Accept the cryptography license terms and default installation path.
 <.../dSpaceX>$ mkdir build
 ```
 
-2. Run cmake or ccmake to configure.
+2. Run cmake to configure.
 ```bash
 <.../dSpaceX>$ cd build
-<.../dSpaceX/build>$ ccmake -G<generator> ../
+<.../dSpaceX/build>$ cmake -G<generator> ../
 ```
 Generator can be omitted for a simple Makefile, or set to one of those [listed on the CMake page](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#command-line-build-tool-generators).
 
-3. Run make to build the targets.
+3. If a generator was specified load and build the DSPACEX project file. Otherwise, simply run make to build the targets.
 ```bash
 <../dSpaceX/build>$ make -j8
 ```
