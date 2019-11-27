@@ -14,7 +14,7 @@ class EmbeddingWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { renderEdges:true };
+    this.state = { renderEdges:false };
 
     this.maxScale = 10;
     this.zoomRate = 1.1;
@@ -65,6 +65,7 @@ class EmbeddingWindow extends React.Component {
     }
 
     // Decomposition is loaded for the first time
+    // Or has been updated
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();

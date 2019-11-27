@@ -24,7 +24,6 @@ class MorseSmaleWindow extends React.Component {
     this.getCanvasPosition = this.getCanvasPosition.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
     this.pick = this.pick.bind(this);
-    this.getIndexOfNearestNeighbor = this.getIndexOfNearestNeighbor.bind(this);
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
@@ -73,6 +72,13 @@ class MorseSmaleWindow extends React.Component {
         this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
         this.renderScene();
+
+        if (this.pickedObject) {
+          let crystalID = this.pickedObject.name;
+          this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
+            this.props.onCrystalSelection(result.crystalSamples);
+          });
+        }
       });
     }
   }
@@ -120,9 +126,9 @@ class MorseSmaleWindow extends React.Component {
       sy = height/width;
     }
     this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
+    this.camera.zoom = 2.5;
     this.camera.position.set(0, -1, 0);
     this.camera.up.set(0, 0, 1);
-    this.camera.zoom = 2;
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -145,6 +151,7 @@ class MorseSmaleWindow extends React.Component {
     this.initControls();
 
     // picking
+    this.pickedObject = undefined;
     this.raycaster = new THREE.Raycaster();
 
     this.renderScene();
@@ -243,52 +250,31 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} normalizedPosition
    */
   pick(normalizedPosition) {
+    // Get intersected object
     const { datasetId, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
-      let crystalID = intersectedObjects[0].object.name;
+      // Update opacity to signify selected crystal
+      if (this.pickedObject) {
+        // Make sure have object in current scene
+        this.pickedObject = this.scene.getObjectByName(this.pickedObject.name);
+        this.pickedObject.material.opacity = 0.75;
+        this.pickedObject = undefined;
+      }
+      this.pickedObject = intersectedObjects[0].object;
+      this.pickedObject.material.opacity = 1;
+      this.renderScene();
+
+      // Get crystal partitions
+      let crystalID = this.pickedObject.name;
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
     }
   }
 
-  /**
-   * Finds the index of the nearest neighbor to point
-   * @param {object} mesh
-   * @return {number} index of nearest neighbor
-   */
-  getIndexOfNearestNeighbor(mesh) {
-    const regressionPoints = [...this.regressionCurves.curves[mesh.object.name].points];
-    // Remove first and last elements from array - these are for drawing the regression lines
-    regressionPoints.shift();
-    regressionPoints.pop();
-    let smallestDistance = Infinity;
-    let nearestIndex = Infinity;
-    regressionPoints.forEach((regPoint, index) => {
-      let euclidDistance = this.euclideanDistance(mesh.point, regPoint);
-      if (euclidDistance < smallestDistance) {
-        smallestDistance = euclidDistance;
-        nearestIndex = index;
-      }
-    });
-    return nearestIndex;
-  }
-
-  /**
-   * Calculates the euclidean distance between two points.
-   * @param {object} meshPoint
-   * @param {array<number>}regPoint
-   * @return {number} euclidean distance between two points
-   */
-  euclideanDistance(meshPoint, regPoint) {
-    let x = meshPoint.x - regPoint[0];
-    let y = meshPoint.y - regPoint[1];
-    let z = meshPoint.z - regPoint[2];
-    return Math.sqrt(x**2 + y**2 + z**2);
-  }
   /**
    * Adds the regression curves to the scene
    * @param {object} regressionData
@@ -314,10 +300,17 @@ class MorseSmaleWindow extends React.Component {
           colorAttribute.setXYZ(i*tubularSegments+j, color.r, color.g, color.b);
         }
       }
+      let opacity = 0.75;
+      if (this.pickedObject && parseInt(this.pickedObject.name) === index) {
+        opacity = 1.00;
+      }
       let curveMaterial = new THREE.MeshLambertMaterial({
         color: 0xffffff,
         flatShading: true,
-        vertexColors: THREE.VertexColors });
+        vertexColors: THREE.VertexColors,
+        transparent: true,
+        opacity: opacity,
+      });
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
       this.scene.add(curveMesh);
