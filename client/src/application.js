@@ -6,11 +6,11 @@ import { DSXProvider } from './dsxContext.js';
 import DataHelper from './data/dataHelper.js';
 import DatasetPanel from './panels/datasetPanel.js';
 import Drawer from '@material-ui/core/Drawer';
+import EmbeddingMorseSmaleWindow from './windows/embeddingMorseSmaleWindow';
 import EmptyWindow from './windows/emptyWindow.js';
 import ErrorDialog from './errorDialog.js';
 import FilterPanel from './panels/filterPanel';
 import GalleryWindow from './windows/galleryWindow';
-import MsGraphWindow from './windows/msGraphWindow';
 import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
@@ -87,6 +87,7 @@ class Application extends React.Component {
     this.onDesignSelection = this.onDesignSelection.bind(this);
     this.onDesignLasso = this.onDesignLasso.bind(this);
     this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
+    this.onCrystalSelection = this.onCrystalSelection.bind(this);
     this.changeFilterOperation = this.changeFilterOperation.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
@@ -247,6 +248,15 @@ class Application extends React.Component {
   }
 
   /**
+   * Handles updating of selected samples based on crystal selection
+   * @param {Array<int>} crystalSamples
+   */
+  onCrystalSelection(crystalSamples) {
+    let selectedDesigns = new Set(crystalSamples);
+    this.setState({ selectedDesigns });
+  }
+
+  /**
    * Open and closes filter drawer when 'Filter' button is clicked
    */
   onDisplayFilterDrawer() {
@@ -338,7 +348,7 @@ class Application extends React.Component {
   }
 
   /**
-   * Gets the images that should be displayed after the filters
+   * Gets the samples that should be displayed after the filters
    * are applied
    * @return {Set} indexes of images that should be visible
    */
@@ -419,6 +429,12 @@ class Application extends React.Component {
     return activeDesigns;
   }
 
+  /**
+   * Finds all indexes that match a given value
+   * @param {array} array
+   * @param {number} value
+   * @return {array} of indexes
+   */
   findAllIndexes(array, value) {
     let indexes = [];
     let i = -1;
@@ -528,13 +544,14 @@ class Application extends React.Component {
                       );
                     } else if (windowConfig.dataViewType === 'graph') {
                       return (
-                        <MsGraphWindow
+                        <EmbeddingMorseSmaleWindow
                           key={i}
                           decomposition={windowConfig.decomposition}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}
                           numberOfWindows={this.state.windows.length}
+                          onDesignSelection={this.onDesignSelection}
+                          onCrystalSelection={this.onCrystalSelection}
                           activeDesigns={activeDesigns}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {

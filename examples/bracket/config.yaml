@@ -25,4 +25,4 @@ distances:
 embeddings:
 - name: tsne
   format: csv
-  file: lbracket_tsne_layout.csv
+  file: LBracket_tsne_layout.csv

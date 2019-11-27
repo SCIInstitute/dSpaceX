@@ -68,7 +68,7 @@ void DisplayGraph::setCrystal(int persistenceLevel, int crystalIndex) {
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/mukund/tsne-layout-fnorm.csv");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
       //HDProcess::loadCSVMatrix("/home/sci/bronson/collab/shireen/new/tsne_embedding.txt");
-        HDProcess::loadCSVMatrix("../../examples/truss/tsne-layout.csv");
+        HDProcess::loadCSVMatrix("../../examples/cantilever_beam/CantileverBeam_tsne_layout.csv");
   
   m_currentLevel = persistenceLevel;
   m_currentCrystal = crystalIndex;
@@ -336,7 +336,7 @@ void DisplayGraph::initTextures() {
   }
   glGenTextures(atlasCount, imageTextureID);
 
-  buildTextureAtlas(textureAtlas, "../../examples/truss/images/");
+  buildTextureAtlas(textureAtlas, "../../examples/cantilever_beam/images/");
   createGLTexture(imageTextureID[0], MAX_TEXTURE_SIZE, textureAtlas);
 }
 
