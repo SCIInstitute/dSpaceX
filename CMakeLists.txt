@@ -34,8 +34,6 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
 
 ADD_DEFINITIONS ("-w")
 
-FIND_PACKAGE(LAPACK)
-
 INCLUDE_DIRECTORIES(lib)
 INCLUDE_DIRECTORIES(lib/yaml-cpp/include)
 
@@ -50,10 +48,15 @@ ADD_SUBDIRECTORY(lib/utils)
 ADD_SUBDIRECTORY(lib/export)
 if(1)
   # libigl
-  set(LIBIGL_EIGEN_VERSION 3.3.7 CACHE STRING "Eigen version")
-  set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
-  find_package(LIBIGL REQUIRED QUIET)
-
+  # <ctc> setting these only works if we're building libigl, not for find_package
+  # set(LIBIGL_EIGEN_VERSION 3.3.7 CACHE STRING "Eigen version")
+  # set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
+  # find_package(LIBIGL REQUIRED QUIET)
+  # ...and since right now we're only using Eigen, let's postpone installing igl
+  find_package(Eigen3 3.3.7 REQUIRED)
+  message(STATUS "EIGEN3_INCLUDE_DIR outside find_package is " ${EIGEN3_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
+  
   ADD_SUBDIRECTORY(lib/lodepng)
   ADD_SUBDIRECTORY(lib/shapeodds)
   ADD_SUBDIRECTORY(lib/sharedgp)

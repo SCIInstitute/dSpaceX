@@ -3,6 +3,8 @@ PROJECT(Server)
 # For Server
 FIND_PACKAGE(Threads)
 FIND_PACKAGE(ZLIB REQUIRED)
+FIND_PACKAGE(LAPACK REQUIRED)
+FIND_PACKAGE(BLAS REQUIRED)
 
 IF (${CMAKE_VERSION} VERSION_GREATER "3.0.0")
   CMAKE_POLICY(SET CMP0042 OLD)
@@ -27,7 +29,7 @@ INCLUDE_DIRECTORIES(../lib/hdprocess)
 ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS})
 TARGET_LINK_LIBRARIES (dSpaceX
   base64
-  blas
+  ${BLAS_LIBRARIES}
   boostparts
   dl
   hdprocess
@@ -35,9 +37,8 @@ TARGET_LINK_LIBRARIES (dSpaceX
   jsoncpp
   shapeodds
   dspacex_utils
-  igl::core
   libwsserver
-  lapack
+  ${LAPACK_LIBRARIES}
   pthread
   ${ZLIB_LIBRARIES}
   yaml-cpp)
