@@ -26,6 +26,13 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
   }
 
+  /**
+   * Computes new samples using shapeodds model
+   * @param {number} datasetId
+   * @param {number} persistenceLevel
+   * @param {number} crystalID
+   * @param {number} numSamples
+   */
   computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
     // eslint-disable-next-line max-len
     console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+persistenceLevel+','+crystalID+','+numSamples+')');

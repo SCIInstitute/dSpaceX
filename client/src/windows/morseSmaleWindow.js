@@ -63,7 +63,8 @@ class MorseSmaleWindow extends React.Component {
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel } = this.props.decomposition;  // object unpacking (a javascript thing, props is inherited from the React component)
+      // object unpacking (a javascript thing, props is inherited from the React component)
+      const { datasetId, k, persistenceLevel } = this.props.decomposition;
       Promise.all([
         this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
         this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
@@ -249,7 +250,7 @@ class MorseSmaleWindow extends React.Component {
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, persistenceLevel, crystalID, 50 /*numZ*/);
+      this.props.evalShapeoddsModelForCrystal(datasetId, persistenceLevel, crystalID, 50 /* numZ*/);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
