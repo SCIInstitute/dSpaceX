@@ -26,8 +26,16 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
   }
 
+  /**
+   * Computes new samples using shapeodds model
+   * @param {number} datasetId
+   * @param {number} persistenceLevel
+   * @param {number} crystalID
+   * @param {number} numSamples
+   */
   computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
-    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+","+persistenceLevel+","+crystalID+","+numSamples+")");
+    // eslint-disable-next-line max-len
+    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+persistenceLevel+','+crystalID+','+numSamples+')');
 
     // Ask server to compute the N new images for this crystal and add them to the drawer
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
@@ -38,7 +46,8 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             id: i,
           };
         });
-        this.setState({ drawerImages: thumbnails });
+        this.setState({ drawerImages:thumbnails });
+        // eslint-disable-next-line max-len
         console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
       });
   }

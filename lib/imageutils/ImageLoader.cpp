@@ -35,7 +35,7 @@ Image ImageLoader::loadPNG(const std::string &filename) {
   }
 
   fread(header, 1, 8, fp);
-  if (png_sig_cmp((const unsigned char*)header, 0, 8)) {
+  if (png_sig_cmp((png_bytep)header, 0, 8)) {
     throw std::runtime_error("File is not recognized as a PNG file.");
   } 
 

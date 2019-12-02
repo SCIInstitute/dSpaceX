@@ -4,6 +4,7 @@ The web client for dSpaceX uses Node.js and the Webpack bundler to build the jav
 1. Install the client depedencies locally for the project  
     _NOTE:_ Requires [nodejs](https://nodejs.org/en/) (version 8.9.4 LTS or greater), which is already installed by [conda_installs.sh](../conda_installs.sh) (see main **[README.md](README.md)**).
 ```bash
+<.../dSpaceX>$ cd client
 <.../dSpaceX/client>$ npm install
 ```
     This will create a local directory under `<.../dSpaceX/client>` called `node_modules` containing all the source code for dependencies pulled in through the package manager.
