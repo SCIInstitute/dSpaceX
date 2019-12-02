@@ -31,7 +31,7 @@ conda update --yes -n base -c defaults conda
 conda update --yes --all
 
 #create and activate dspacex env
-CONDAENV=dspacex-test00
+CONDAENV=dspacex
 conda create --yes --name $CONDAENV
 eval "$(conda shell.bash hook)"
 conda activate $CONDAENV

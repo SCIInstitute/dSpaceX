@@ -30,8 +30,10 @@ IF(WIN32)
 ENDIF()
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
-    "Single output directory for building all executables.")
+  "Single output directory for building all executables.")
 
+include(DefaultBuildType)
+  
 ADD_DEFINITIONS ("-w")
 
 INCLUDE_DIRECTORIES(lib)

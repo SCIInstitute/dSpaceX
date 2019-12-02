@@ -14,6 +14,11 @@ source ./conda_installs.sh
 Accept the cryptography license terms and default installation path.  
 
 ## Build server
+0. Activate the dspacex conda environment:
+``` bash
+conda activate dspacex
+```
+
 1. Create a build directory.
 ```bash
 <.../dSpaceX>$ mkdir build
