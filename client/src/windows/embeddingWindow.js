@@ -16,8 +16,13 @@ class EmbeddingWindow extends React.Component {
 
     this.state = { renderEdges:false };
 
+    // Used to zoom and translate embedding
     this.maxScale = 10;
     this.zoomRate = 1.1;
+    this.rightMouseDown = false;
+    this.previousX = 0;
+    this.previousY = 0;
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
@@ -28,6 +33,9 @@ class EmbeddingWindow extends React.Component {
     this.resetScene = this.resetScene.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
+    this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
+    this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
+    this.handleMouseReleaseEvent = this.handleMouseReleaseEvent.bind(this);
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
   }
 
@@ -40,6 +48,9 @@ class EmbeddingWindow extends React.Component {
     window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
   }
 
   /**
@@ -98,6 +109,9 @@ class EmbeddingWindow extends React.Component {
     window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.removeEventListener('wheel', this.handleMouseScrollEvent);
+    this.refs.embeddingCanvas.removeEventListener('mousedown', this.handleMouseDownEvent);
+    this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveEvent);
+    this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
   }
 
   /**
@@ -281,10 +295,38 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
+   * Handles mouse down event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseDownEvent(event) {
+    console.log(event);
+  }
+
+  /**
+   * Handles mouse move event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseMoveEvent(event) {
+    console.log('Mouse Move Event');
+  }
+
+  /**
+   * Handles mouse release event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseReleaseEvent(event) {
+    console.log('Mouse Release Event');
+  }
+
+  /**
    * Handles hotkey events.
    * @param {object} event
    */
   handleKeyDownEvent(event) {
+    // Currently not a switch statement but there are other options that need to be added
     switch (event.key) {
       case 'e':
         this.setState({ renderEdges:!this.state.renderEdges });
