@@ -51,6 +51,7 @@ class EmbeddingWindow extends React.Component {
     this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('contextmenu', (e) => e.preventDefault(), false);
   }
 
   /**
@@ -300,7 +301,12 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseDownEvent(event) {
-    console.log(event);
+    let rightClick = 2;
+    if (event.button === rightClick) {
+      this.rightMouseDown = true;
+      this.previousX = event.offsetX;
+      this.previousY = event.offsetY;
+    }
   }
 
   /**
@@ -309,7 +315,24 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseMoveEvent(event) {
-    console.log('Mouse Move Event');
+    let canvas = this.refs.embeddingCanvas;
+    let x = event.offsetX;
+    let y = event.offsetY;
+
+    if (this.rightMouseDown) {
+      let dx = this.previousX - x;
+      let dy = y - this.previousY;
+      let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
+      let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
+      this.camera.translateX(scaleX * dx);
+      this.camera.translateY(scaleY * dy);
+
+      this.camera.updateProjectionMatrix();
+      this.renderScene();
+    }
+
+    this.previousX = x;
+    this.previousY = y;
   }
 
   /**
@@ -318,7 +341,10 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseReleaseEvent(event) {
-    console.log('Mouse Release Event');
+    let rightClick = 2;
+    if (event.button === rightClick) {
+      this.rightMouseDown = false;
+    }
   }
 
   /**
