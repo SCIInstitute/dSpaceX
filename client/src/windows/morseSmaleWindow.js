@@ -219,8 +219,8 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Gets the click coordinates on the canvas - used for picking
-   * @param {Event} event
+   * Gets the click coordinates on the canvas - used for selecting crystal
+   * @param {object} event
    * @return {{x: number, y: number}}
    */
   getCanvasPosition(event) {
@@ -232,8 +232,8 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-    * Converts pick position to clip space
-    * @param {Event} event
+    * Converts pixel space to clip space
+    * @param {object} event
     * @return {{x: number, y: number}}
     */
   getPickPosition(event) {
@@ -327,7 +327,6 @@ class MorseSmaleWindow extends React.Component {
       let color = new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]);
       let extremaMaterial = new THREE.MeshLambertMaterial({ color:color });
       let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
-      // extremaMesh.rotateX(-90);
       extremaMesh.translateX(extreme.position[0]);
       extremaMesh.translateY(extreme.position[1]);
       extremaMesh.translateZ(extreme.position[2]);
