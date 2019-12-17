@@ -14,10 +14,15 @@ class EmbeddingWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { renderEdges:true };
+    this.state = { renderEdges:false };
 
+    // Used to zoom and translate embedding
     this.maxScale = 10;
     this.zoomRate = 1.1;
+    this.rightMouseDown = false;
+    this.previousX = 0;
+    this.previousY = 0;
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
@@ -28,7 +33,11 @@ class EmbeddingWindow extends React.Component {
     this.resetScene = this.resetScene.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
+    this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
+    this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
+    this.handleMouseReleaseEvent = this.handleMouseReleaseEvent.bind(this);
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
+    this.getPickPosition = this.getPickPosition.bind(this);
   }
 
   /**
@@ -40,6 +49,10 @@ class EmbeddingWindow extends React.Component {
     window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('contextmenu', (e) => e.preventDefault(), false);
   }
 
   /**
@@ -65,6 +78,7 @@ class EmbeddingWindow extends React.Component {
     }
 
     // Decomposition is loaded for the first time
+    // Or has been updated
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
@@ -97,6 +111,9 @@ class EmbeddingWindow extends React.Component {
     window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.removeEventListener('wheel', this.handleMouseScrollEvent);
+    this.refs.embeddingCanvas.removeEventListener('mousedown', this.handleMouseDownEvent);
+    this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveEvent);
+    this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
   }
 
   /**
@@ -133,11 +150,17 @@ class EmbeddingWindow extends React.Component {
     } else {
       sy = height / width;
     }
-    this.camera = new THREE.OrthographicCamera(-1*sx, 1*sx, 1*sy, -1*sy, -1, 1);
+    this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
     this.camera.position.set(0, 0, -1);
 
     // world
     this.scene = new THREE.Scene();
+
+    // picking scene
+    this.pickingScene = new THREE.Scene();
+    this.pickingScene.background = new THREE.Color(0);
+    this.pickHelper = new PickHelper();
+    this.idToObject = {};
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
@@ -202,6 +225,22 @@ class EmbeddingWindow extends React.Component {
 
       this.scene.add(line);
       this.scene.add(nodeMesh);
+
+      // Add to picking Scene is is off by one so it is distinguishable from black background.
+      let id = index + 1;
+      this.idToObject[id] = nodeMesh;
+      const pickingMaterial = new THREE.MeshPhongMaterial({
+        emissive: new THREE.Color(id),
+        color: new THREE.Color(0, 0, 0),
+        specular: new THREE.Color(0, 0, 0),
+        transparent: true,
+        side: THREE.DoubleSide,
+        alphaTest: 0.5,
+        blending: THREE.NoBlending,
+      });
+      const pickingNode = new THREE.Mesh(nodeGeometry, pickingMaterial);
+      this.pickingScene.add(pickingNode);
+      pickingNode.position.copy(nodeMesh.position);
     });
   }
 
@@ -254,8 +293,8 @@ class EmbeddingWindow extends React.Component {
       sy = height / width;
     }
     this.camera.left = -1*sx;
-    this.camera.right = 1*sx;
-    this.camera.top = 1*sy;
+    this.camera.right = sx;
+    this.camera.top = sy;
     this.camera.bottom = -1*sy;
     this.camera.updateProjectionMatrix();
 
@@ -280,10 +319,77 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
+   * Handles mouse down event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseDownEvent(event) {
+    let rightClick = 2;
+    if (event.button === rightClick) {
+      this.rightMouseDown = true;
+      this.previousX = event.offsetX;
+      this.previousY = event.offsetY;
+    }
+  }
+
+  /**
+   * Handles mouse move event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseMoveEvent(event) {
+    let canvas = this.refs.embeddingCanvas;
+    let x = event.offsetX;
+    let y = event.offsetY;
+
+    if (this.rightMouseDown) {
+      let dx = this.previousX - x;
+      let dy = y - this.previousY;
+      let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
+      let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
+      this.camera.translateX(scaleX * dx);
+      this.camera.translateY(scaleY * dy);
+
+      this.camera.updateProjectionMatrix();
+      this.renderScene();
+    }
+
+    this.previousX = x;
+    this.previousY = y;
+  }
+
+  /**
+   * Handles mouse release event.
+   * Part of the embedding translation pipeline.
+   * @param {object} event
+   */
+  handleMouseReleaseEvent(event) {
+    const leftClick = 0;
+    const rightClick = 2;
+
+    if (event.button === rightClick) {
+      this.rightMouseDown = false;
+    }
+
+    if (event.button === leftClick) {
+      const pickPosition = this.getPickPosition(event);
+      const pickedObject = this.pickHelper.pick(pickPosition,
+        this.pickingScene,
+        this.camera,
+        this.renderer,
+        this.idToObject);
+      if (pickedObject) {
+        this.props.onDesignSelection(event, pickedObject.name);
+      }
+    }
+  }
+
+  /**
    * Handles hotkey events.
    * @param {object} event
    */
   handleKeyDownEvent(event) {
+    // Currently not a switch statement but there are other options that need to be added
     switch (event.key) {
       case 'e':
         this.setState({ renderEdges:!this.state.renderEdges });
@@ -292,6 +398,19 @@ class EmbeddingWindow extends React.Component {
         this.addNodesToScene(this.layout, this.colors);
     }
     this.renderScene();
+  }
+
+  /**
+   * Gets the picked position
+   * @param {object} event
+   * @return {{x: number, y: number}}
+   */
+  getPickPosition(event) {
+    const rect = this.refs.embeddingCanvas.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    };
   }
 
   /**
@@ -316,6 +435,71 @@ class EmbeddingWindow extends React.Component {
         <canvas ref='embeddingCanvas' style={canvasStyle}/>
       </Paper>
     );
+  }
+}
+
+/**
+ * Helper class to assist with picking
+ */
+class PickHelper {
+  /**
+   * Create PickHelper Object
+   */
+  constructor() {
+    this.pickingTexture = new THREE.WebGLRenderTarget(1, 1);
+    this.pixelBuffer = new Uint8Array(4);
+    this.pickedObject = null;
+  }
+
+  /**
+   * Returns object from canvas position
+   * @param {object} canvasPosition
+   * @param {object} scene
+   * @param {object} camera
+   * @param {object} renderer
+   * @param {set} idToObject
+   * @return {*} Selected object; null if nothing is selected
+   */
+  pick(canvasPosition, scene, camera, renderer, idToObject) {
+    const { pickingTexture, pixelBuffer } = this;
+
+    if (this.pickedObject) {
+      this.pickedObject = null;
+    }
+
+    const pixelRatio = renderer.getPixelRatio();
+    camera.setViewOffset(
+      renderer.getContext().drawingBufferWidth,
+      renderer.getContext().drawingBufferHeight,
+      canvasPosition.x * pixelRatio | 0,
+      canvasPosition.y * pixelRatio | 0,
+      1,
+      1,
+    );
+
+    renderer.setRenderTarget(pickingTexture);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+
+    camera.clearViewOffset();
+
+    renderer.readRenderTargetPixels(
+      pickingTexture,
+      0,
+      0,
+      1,
+      1,
+      pixelBuffer
+    );
+    const id = (pixelBuffer[0] << 16) |
+               (pixelBuffer[1] << 8) |
+               (pixelBuffer[2]);
+
+    const intersectedObject = idToObject[id];
+    if (intersectedObject) {
+      this.pickedObject = intersectedObject;
+    }
+    return this.pickedObject;
   }
 }
 

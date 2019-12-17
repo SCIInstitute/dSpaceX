@@ -13,7 +13,7 @@ TEST(DatasetLoader, loadDataset_linalg) {
   Dataset *dataset = DatasetLoader::loadDataset(filePath);
 }
 
-TEST(DatasetLoader, loadDataset_csv) {  
-  std::string filePath = kExampleDirPath + "/truss/config.yaml";
+TEST(DatasetLoader, loadDataset_csv) {
+  std::string filePath = kExampleDirPath + "cantilever_beam/config.yaml";
   Dataset *dataset = DatasetLoader::loadDataset(filePath);
 }

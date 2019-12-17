@@ -18,7 +18,7 @@ PROJECT(DSPACEX)
 
 OPTION(BUILD_HDVIZ_IMAGE "Build hdviz for image data (broken)" OFF)
 OPTION(BUILD_HDVIZ_CLI "Build HDViz preprocessing tool" OFF)
-OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" OFF)
+OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
 OPTION(BUILD_SERVER_LIB "Builder server lib" ON)
 OPTION(BUILD_SERVER "Build server" ON)
