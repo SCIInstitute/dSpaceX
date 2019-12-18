@@ -497,7 +497,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 
   // Now read all the models
   MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; persistence++)
+  for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//persistence++) //<ctc> hack to load just a couple lvls for testing
   {
     unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);

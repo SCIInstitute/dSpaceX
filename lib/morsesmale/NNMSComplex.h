@@ -313,6 +313,7 @@ private:
       FortranLinalg::DenseVector<TPrecision> ys;
       if(smooth){
         ys = FortranLinalg::DenseVector<TPrecision>(y.N());
+        //<ctc> no comparisons here
         for(unsigned int i=0; i< ys.N(); i++){
           ys(i) = 0;
           double wsum = 0;
@@ -342,11 +343,11 @@ private:
         for (unsigned int k=1; k<KNN.M(); k++) {
           int j = KNN(k, i);
           double d = sqrt(KNND(k, i));
-          double g = ys(j) - ys(i);
+          double g = ys(j) - ys(i);  // <ctc> but this can be zero... (if d = 0 below)
           if (d == 0 ) {
-            g = 0;
+            g = 0;   //<ctc> but what if d != 0, then is it okay for g to be zero?
           } else {
-            g = g / d; 
+            g = g / d; //<ctc> g shouldn't be zero... (or does it even matter? maybe it's implicit and the last or first is the winner regardless)
           }
           
           if (G(0, i) < g) {

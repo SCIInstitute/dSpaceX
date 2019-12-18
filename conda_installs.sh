@@ -37,8 +37,10 @@ eval "$(conda shell.bash hook)"
 conda activate $CONDAENV
 
 #install dspacex deps
-conda install --yes -c conda-forge zlib cmake nodejs eigen
+conda install --yes -c anaconda pip # needed in sub-environments or the base env's pip will silently install to base
+conda install --yes -c conda-forge zlib ncurses cmake nodejs eigen
 conda install --yes -c anaconda libpng
+pip install --upgrade pip
 
 if [ "$(uname)" == "Linux" ]; then
   conda install --yes -c conda-forge blas liblapack

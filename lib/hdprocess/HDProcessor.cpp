@@ -66,9 +66,10 @@ HDProcessResult* HDProcessor::processOnMetric(
   Precision fmin = Linalg<Precision>::Min(yall);
   Precision frange = fmax - fmin;
   for (unsigned int i=0; i < persistence.N(); i++) {
-    pScaled(i) = persistence(i) / frange;    // TODO: Shouldn't this also subtract fmin?
+    pScaled(i) = (persistence(i) - fmin) / frange;    // TODO: Shouldn't this also subtract fmin? yes, so I changed the-- oh jeez, this is hardcoded and exists in multiple functions. 
+    //pScaled(i) = persistence(i) / frange; //<ctc> keep it the same for debugging
   }
-  pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1?
+  pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1? -> it's because there is a max value at the end of these. Not sure if there are really N+1 persistences or if that's just what the mscomplex returns, setting the last one to be <floatmax>
   
   // Store Scled Persistence Data
   m_result->scaledPersistence = Linalg<Precision>::Copy(pScaled);
@@ -78,7 +79,8 @@ HDProcessResult* HDProcessor::processOnMetric(
   int nlevels = persistenceArg;
   int start = 0;
   if (nlevels > 0) {
-    start = persistence.N() - nlevels;
+    start = persistence.N() - nlevels - 1;  // persistence.N() is one more than the num persistence levels... so if there were k plevels and we wanted to compute visualization for k of them, this would tell us to start at 1. That settles it: it's ob1. Changed.
+    //start = persistence.N() - nlevels;
   }
   if (start < 0) {
     start = 0;
@@ -90,7 +92,8 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   // Save number of requested regression samples
   DenseVector<int> regressionSampleCount(1);
-  regressionSampleCount(1) = nSamples; // TODO why placed at index 1 and not 0 also why put it in a vector at all?
+  regressionSampleCount(0) = nSamples; // TODO why placed at index 1 and not 0 also why put it in a vector at all? the bigger question is why this doesn't segfault or assert the index is out of range. -> changed to 0 <ctc>
+  //regressionSampleCount(1) = nSamples; //<ctc> keep it the same for debugging
   m_result->regressionSampleCount = Linalg<int>::Copy(regressionSampleCount);
 
   // Store Min Level (Starting Level)
@@ -125,7 +128,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   }
 
   // Used to export crystal partitions for shape odds
-  // DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/home/sci/kyli.nmb/Desktop/crystalpartitions_truss_maxStress.csv");
+  DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
 
   // detach and return processed result
   HDProcessResult *result = m_result;
@@ -133,7 +136,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   return result;
 }
 
-
+#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.
@@ -246,6 +249,7 @@ HDProcessResult* HDProcessor::process(
   m_result = nullptr;
   return result;
 }
+#endif
 
 /**
  * Compute analysis for a single persistence level.
@@ -622,6 +626,8 @@ void HDProcessor::computeRegressionForCrystal(
  * Add small pertubations to data achieve general position / avoid pathological cases.
  */
 void HDProcessor::addNoise(DenseVector<Precision> &v) {
+  //throw std::runtime_error("Error: we don't want to add noise, but instead use consistent tiebreaker (based on field order).");
+  std::cerr << "Adding noise to M-S field...\n";
   Random<Precision> rand;
   double a = 0.00000001 *( Linalg<Precision>::Max(v) - Linalg<Precision>::Min(v));
   for (unsigned int i=0; i < v.N(); i++) {
