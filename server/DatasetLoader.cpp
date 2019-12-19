@@ -395,9 +395,9 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
 //     embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
 //
-std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
+std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
 {
-  std::vector<MSModelPair> ms_models;
+  std::vector<MSModelsPair> ms_models;
 
   if (!config["models"]) {
     throw std::runtime_error("Dataset config missing 'models' field.");
@@ -409,7 +409,7 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
     for (std::size_t i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-      MSModelPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
+      MSModelsPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
       ms_models.push_back(ms_model);
     }
   } else {
@@ -419,7 +419,7 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
   return ms_models;
 }
 
-MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
 {
   using namespace PModels;
 
@@ -496,7 +496,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
             << nsamples << " samples." << std::endl;
 
   // Now read all the models
-  MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
+  MSComplex ms_of_models(fieldname, nsamples, npersistences);
   for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//persistence++) //<ctc> hack to load just a couple lvls for testing
   {
     unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
@@ -545,7 +545,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     //break; // <ctc> hack so we can quickly read a single persistence level and test applying the model
   }
 
-  return MSModelPair(fieldname, ms_of_models);
+  return MSModelsPair(fieldname, ms_of_models);
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files

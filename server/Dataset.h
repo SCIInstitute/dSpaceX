@@ -71,7 +71,7 @@ class Dataset {
     return m_thumbnails;
   }
 
-  std::vector<PModels::MSModelContainer>& getMSModels() {
+  std::vector<PModels::MSComplex>& getMSModels() {
     return m_msModels;
   }
 
@@ -116,7 +116,7 @@ class Dataset {
       m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
-    Builder& withMSModel(std::string name, PModels::MSModelContainer &ms_model) {
+    Builder& withMSModel(std::string name, PModels::MSComplex &ms_model) {
       m_dataset->m_msModelFields.push_back(name);
       m_dataset->m_msModels.push_back(ms_model);
       return (*this);
@@ -149,7 +149,7 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<PModels::MSModelContainer> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
+  std::vector<PModels::MSComplex> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

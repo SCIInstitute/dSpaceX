@@ -7,17 +7,22 @@
 namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
 
 //
-// A set of PModels models are computed for elements of a Morse-Smale complex, with one model
-// per Crystal of each Persistence level. These persistences also contain a global embedding
-// (latent space) for evaulation in a common space for all of its crystals.  While a Model can
+// A set of probabilistic models are learned using the samples associated with the crystals at
+// each persistenve level of a Morse-Smale complex. While a Model can
 // exist independently, these structures help organize the group of models for a given M-S:
 //
 //  MSModelContainer knows the total number of samples for this M-S, contains its set of Persistence levels
 //   - Persistences contains set of Crystals and their global embeddings (common 2d latent space for all crystals at that level)
 //     - Crystal contains its model, which contains indices of its samples and its local embedding (latent space), along with W and w0.
 //
-// Note a vector of ModelPairs for all models of the MSModelContainer can be retrieved using
-// its getAllModels function.
+// Looking forward...
+//      There could be different models associated with a given crystal (e.g., ShapeOdds or SharedGP of various types),
+//      so we could either provide access to a vector of Models or allow them to be queried by type. The latter might
+//      not be easy since there could be multiple versions of a single type (ex: using different parameters for learning).
+//
+//      At least for ShapeOdds, persistences also contain a global embedding (latent space) for evaulation in a common
+//      space for all of its crystals. 
+//      
 //
 
 class MSCrystal
@@ -116,24 +121,28 @@ private:
   Eigen::MatrixXd global_embeddings;
 };
 
-// Morse-Smale model container
-class MSModelContainer
+
+// Associates a model with it's name (pXXcYY)
+typedef std::pair<std::string, Model&> ModelPair;
+
+// Morse-Smale model container, a M-S complex for a given field and the models learned for each of its crystals.
+class MSComplex
 {
 public:
-  MSModelContainer(std::string &field, unsigned nSamples, unsigned nPersistences)
+  MSComplex(std::string &field, unsigned nSamples, unsigned nPersistences)
     : fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
   {}
-  ~MSModelContainer()
+  ~MSComplex()
   {}
 
-  MSModelContainer(const MSModelContainer &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
+  MSComplex(const MSComplex &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
   {
-    //std::cout << "PModels::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::MSComplex copy ctor (&m = " << &m << ")." << std::endl;
   }
-  MSModelContainer operator=(const MSModelContainer &m)
+  MSComplex operator=(const MSComplex &m)
   {
-    //std::cout << "PModels::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
-    return MSModelContainer(m);
+    //std::cout << "PModels::MSComplex assignment operator (&model = " << &m << ")." << std::endl;
+    return MSComplex(m);
   }
   
   std::string getFieldname() const

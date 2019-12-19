@@ -2,7 +2,7 @@
 
 namespace PModels {
 
-ModelPair MSModelContainer::getModel(unsigned p, unsigned c)
+ModelPair MSComplex::getModel(unsigned p, unsigned c)
 {
   unsigned persistence_idx = p - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
   if (persistence_idx >= persistence_levels.size() || c >= persistence_levels[persistence_idx].numCrystals())
@@ -11,7 +11,7 @@ ModelPair MSModelContainer::getModel(unsigned p, unsigned c)
   return ModelPair(modelName(p, c), persistence_levels[persistence_idx].getCrystal(c).getModel());
 }
 
-std::vector<ModelPair> MSModelContainer::getAllModels()
+std::vector<ModelPair> MSComplex::getAllModels()
 {
   unsigned persistence_padding = paddedStringWidth(persistence_levels.size());
 
