@@ -8,7 +8,7 @@
 #include "utils/StringUtils.h"
 #include "imageutils/Image.h"
 
-namespace Shapeodds {  //<ctc> What is a more generic name for ShapeOdds, InfShapeOdds, GP, SharedGP, etc?
+namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
 
 class Model;
 typedef std::pair<std::string, Model&> ModelPair;  // moving foward this could be a ShapeOdds model or a SharedGP model
@@ -28,11 +28,11 @@ public:
   // since models may get large, keep track of when they're copyied so this step can be optimized (probably passing vectors around by value is copying their contents). C++11 should use move semantics (see https://mbevin.wordpress.com/2012/11/20/move-semantics/), so this is just to verify that's being done.
   Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
   {
-    //std::cout << "Shapeodds::Model copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::Model copy ctor (&m = " << &m << ")." << std::endl;
   }
   Model operator=(const Model &m)
   {
-    //std::cout << "Shapeodds::Model assignment operator (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::Model assignment operator (&m = " << &m << ")." << std::endl;
     return Model(m);
   }
   
@@ -84,7 +84,7 @@ private:
 
 
 //
-// A set of Shapeodds models are computed for elements of a Morse-Smale complex, with one model
+// A set of PModels models are computed for elements of a Morse-Smale complex, with one model
 // per Crystal of each Persistence level. These persistences also contain a global embedding
 // (latent space) for evaulation in a common space for all of its crystals.  While a Model can
 // exist independently, these structures help organize the group of models for a given M-S:
@@ -97,22 +97,22 @@ private:
 // its getAllModels function.
 //
 
-class Crystal
+class MSCrystal
 {
 public:
-  Crystal()
+  MSCrystal()
   {}
-  ~Crystal()
+  ~MSCrystal()
   {}
 
-  Crystal(const Crystal &m) : model(m.model)
+  MSCrystal(const MSCrystal &m) : model(m.model)
   {
-    //std::cout << "Shapeodds::Crystal copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::MSCrystal copy ctor (&m = " << &m << ")." << std::endl;
   }
-  Crystal operator=(const Crystal &m)
+  MSCrystal operator=(const MSCrystal &m)
   {
-    //std::cout << "Shapeodds::Crystal assignment operator (&m = " << &m << ")." << std::endl;
-    return Crystal(m);
+    //std::cout << "PModels::MSCrystal assignment operator (&m = " << &m << ")." << std::endl;
+    return MSCrystal(m);
   }
   
   void addSample(unsigned n)
@@ -139,22 +139,22 @@ private:
   Model model;
 };
 
-class PersistenceLevel
+class MSPersistenceLevel
 {
 public:
-  PersistenceLevel()
+  MSPersistenceLevel()
   {}
-  ~PersistenceLevel()
+  ~MSPersistenceLevel()
   {}
 
-  PersistenceLevel(const PersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
+  MSPersistenceLevel(const MSPersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
   {
-    //std::cout << "Shapeodds::PersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::MSPersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
   }
-  PersistenceLevel operator=(const PersistenceLevel &m)
+  MSPersistenceLevel operator=(const MSPersistenceLevel &m)
   {
-    //std::cout << "Shapeodds::PersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
-    return PersistenceLevel(m);
+    //std::cout << "PModels::MSPersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
+    return MSPersistenceLevel(m);
   }
   
   void setNumCrystals(unsigned nCrystals)
@@ -167,7 +167,7 @@ public:
     return crystals.size();
   }
 
-  Crystal& getCrystal(unsigned i)
+  MSCrystal& getCrystal(unsigned i)
   {
     return crystals[i];
   }
@@ -189,7 +189,7 @@ public:
   }
 
 private:
-  std::vector<Crystal> crystals;
+  std::vector<MSCrystal> crystals;
   Eigen::MatrixXd global_embeddings;
 };
 
@@ -205,11 +205,11 @@ public:
 
   MSModelContainer(const MSModelContainer &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
   {
-    //std::cout << "Shapeodds::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
+    //std::cout << "PModels::MSModelContainer copy ctor (&m = " << &m << ")." << std::endl;
   }
   MSModelContainer operator=(const MSModelContainer &m)
   {
-    //std::cout << "Shapeodds::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
+    //std::cout << "PModels::MSModelContainer assignment operator (&model = " << &m << ")." << std::endl;
     return MSModelContainer(m);
   }
   
@@ -228,7 +228,7 @@ public:
     return persistence_levels.size();
   }
 
-  PersistenceLevel& getPersistenceLevel(unsigned i)
+  MSPersistenceLevel& getPersistenceLevel(unsigned i)
   {
     unsigned persistence_idx = i - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     return persistence_levels[persistence_idx];
@@ -246,7 +246,7 @@ private:
 
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S
-  std::vector<PersistenceLevel> persistence_levels;
+  std::vector<MSPersistenceLevel> persistence_levels;
 };
 
 
@@ -277,4 +277,5 @@ private:
   std::vector<Model> models;
 };
 
-}
+} // end namespace PModels
+

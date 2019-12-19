@@ -2,7 +2,7 @@
 #include "imageutils/ImageLoader.h"
 #include "lodepng.h"
 
-namespace Shapeodds {
+namespace PModels {
 
 ShapeOdds::ShapeOdds()
 {
@@ -233,4 +233,4 @@ std::vector<ModelPair> MSModelContainer::getAllModels()
 }
 
 
-} // end namespace Shapeodds
+} // end namespace PModels

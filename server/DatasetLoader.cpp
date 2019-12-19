@@ -421,7 +421,7 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
 
 MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
 {
-  using namespace Shapeodds;
+  using namespace PModels;
 
   if (!modelNode["fieldname"]) {
     throw std::runtime_error("Model missing 'fieldname' field.");
@@ -500,7 +500,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
   for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//persistence++) //<ctc> hack to load just a couple lvls for testing
   {
     unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
-    PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
+    MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
@@ -527,7 +527,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      Shapeodds::Crystal &c = P.getCrystal(crystal);
+      PModels::MSCrystal &c = P.getCrystal(crystal);
       parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
@@ -549,7 +549,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, Shapeodds::Model &m)
+void DatasetLoader::parseModel(const std::string &modelPath, PModels::Model &m)
 {
   // read W
   auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");

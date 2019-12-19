@@ -766,7 +766,7 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
   std::cout << "fetchImageForLatentSpaceCoord_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
   //create images using the elements of this model's Z
-  const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+  const PModels::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
 
   Eigen::MatrixXd new_sample =  ShapeOdds::evaluateModel(model, z_coord);
 
@@ -864,7 +864,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
   //create images using the elements of this model's Z
-  const Shapeodds::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+  const PModels::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
   response["thumbnails"] = Json::Value(Json::arrayValue);
 
   auto sample_indices(model.getSampleIndices());
@@ -882,11 +882,11 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
     std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(zidx) + ".png");
-    Eigen::MatrixXd I = Shapeodds::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
-    float quality = Shapeodds::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistence, crystalid, zidx, sample_image,
+    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistence, crystalid, zidx, sample_image,
                                                             true /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
