@@ -1,4 +1,6 @@
-#include "SharedGP.h"
+#include "Models.h"
+
+namespace PModels {
 
 SharedGP::SharedGP()
 {
@@ -40,3 +42,5 @@ int SharedGP::do_something_quietly(int y)
 {
   return y*y;
 }
+
+} // end namespace PModels

@@ -1,11 +1,12 @@
 SET(PMODELS_HEADER_FILES
-  ShapeOdds.h
-  SharedGP.h
+  MorseSmale.h
+  Models.h
 )
 
 SET(PMODELS_SOURCE_FILES
   ShapeOdds.cpp
   SharedGP.cpp
+  MorseSmale.cpp
 )
 
 ADD_LIBRARY(pmodels ${PMODELS_HEADER_FILES} ${PMODELS_SOURCE_FILES})
