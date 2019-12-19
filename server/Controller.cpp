@@ -16,8 +16,8 @@
 #include "util/DenseVectorSample.h"
 #include "util/csv/loaders.h"
 #include "util/utils.h"
-#include "sharedgp/SharedGP.h"
-#include "shapeodds/ShapeOdds.h"
+#include "pmodels/SharedGP.h"
+#include "pmodels/ShapeOdds.h"
 #include "lodepng.h"
 
 #include <cassert>

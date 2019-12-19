@@ -60,8 +60,7 @@ if(1)
   INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
   
   ADD_SUBDIRECTORY(lib/lodepng)
-  ADD_SUBDIRECTORY(lib/shapeodds)
-  ADD_SUBDIRECTORY(lib/sharedgp)
+  ADD_SUBDIRECTORY(lib/pmodels)
 endif()
 
 if(BUILD_SERVER_LIB)

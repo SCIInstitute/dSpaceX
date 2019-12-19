@@ -6,7 +6,7 @@
 #include "imageutils/Image.h"
 #include "precision/Precision.h"
 #include "yaml-cpp/yaml.h"
-#include "shapeodds/ShapeOdds.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
+#include "pmodels/ShapeOdds.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
 
 #include <string>
 #include <vector>
