@@ -129,12 +129,8 @@ class DecompositionPanel extends React.Component {
    * @param {Event} event
    */
   handleDecompositionModeChange(event) {
-    //just shortcutting this to really set mode to Morse-Smale even if it's Shared-GP to test calling Shared-GP functions
     let mode = event.target.value;
     let set_mode = mode;
-    // if (mode == 'Shared-GP') {   //<ctc> remove this stuff as there is no shared-gp mode in decomposition... yet
-    //   set_mode = 'Morse-Smale';
-    // }
     this.setState({
       decompositionMode: set_mode,
     });
@@ -144,27 +140,6 @@ class DecompositionPanel extends React.Component {
       let datasetId = this.props.dataset.datasetId;
       this.client.fetchMorseSmalePersistence(datasetId, k)
         .then(function(result) {
-          this.setState({
-            minPersistence: result.minPersistenceLevel,
-            maxPersistence: result.maxPersistenceLevel,
-            complexSizes: result.complexSizes,
-            sliderPersistence: result.maxPersistenceLevel,
-            persistenceLevel: ('' + result.maxPersistenceLevel),
-          });
-          this.updateDataModel('' + result.maxPersistenceLevel);
-        }.bind(this));
-    } else if (mode == 'Shared-GP') {
-      let k = 15;
-      let datasetId = this.props.dataset.datasetId;
-      //this.client.fetchSharedLatentSpace(datasetId, k*10 /*qoi*/)
-      this.client.fetchAllImagesForCrystal_Shapeodds(datasetId, 15, 5)  // just calling this here to test
-        .then(function(result) {
-          console.log('returned from fetchAllImagesForCrystal_Shapeodds, msg: ' + result.msg);
-        }.bind(this));
-      console.log('adding fetchMorseSmalePersistence call after fetchSharedLatentSpace');
-      this.client.fetchMorseSmalePersistence(datasetId, k)
-        .then(function(result) {
-          console.log('returned from fetchMorseSmalePersistence called by fetchSharedLatentSpace');
           this.setState({
             minPersistence: result.minPersistenceLevel,
             maxPersistence: result.maxPersistenceLevel,

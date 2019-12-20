@@ -794,10 +794,11 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // <ctc> TODO: partition level set into numZ evenly-spaced field vals and compute a z_coord for each
   //       for now, just calling fetchAllImageForCrystal_Shapeodds
   int datasetId = request["datasetId"].asInt();
+  std::string fieldname = request["fieldname"].asString();
   int persistence = request["persistenceLevel"].asInt();
   int crystalid = request["crystalID"].asInt();
   int numZ = request["numSamples"].asInt();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<")\n";
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
   Controller::fetchAllImagesForCrystal_Shapeodds(request, response);
 }
 
@@ -855,17 +856,38 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     // TODO: Send back an error message.
   }
   maybeLoadDataset(datasetId);
-  // maybeLoadModel(persistence,crystal); //<ctc> if for speed we decide not to load models till their evaluation is requested
+  // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
-  int persistence = request["persistenceLevel"].asInt();
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  std::string fieldname = request["fieldname"].asString();
   int crystalid = request["crystalID"].asInt();
-  crystalid += 1; //<ctc> fixme: client is requesting incorrect crystal
-  std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
+  //crystalid += 1; //<ctc> fixme: client is requesting incorrect crystal (are they really or are we using 1-based crystal numbering) -> this seems like it always worked, but crystal ids were screwed up b/c of different partitions used to generate model vs dSpaceX's ms_complex
+  std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
+  // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
+  //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
+  //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
+  std::vector<PModels::MSComplex> &ms_complexes(m_currentDataset->getMSModels());
+  unsigned idx = 0;
+  for (; idx < ms_complexes.size(); idx++)
+    if (ms_complexes[idx].getFieldname() == fieldname) break;
+  if (idx >= ms_complexes.size())
+    throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
+  
+  // adjust persistenceLevel for the number in the requested ms_complex (<ctc> TODO: this may also come up elsewhere)
+  unsigned adjusted_persistenceLevel = persistenceLevel - (m_currentTopoData->getMaxPersistenceLevel() - ms_complexes[idx].numPersistenceLevels() + 1);
+  if (adjusted_persistenceLevel < 0)
+    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(persistenceLevel));
+  const PModels::Model &model(ms_complexes[idx].getModel(adjusted_persistenceLevel, crystalid).second);
+  
   //create images using the elements of this model's Z
-  const PModels::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
-  response["thumbnails"] = Json::Value(Json::arrayValue);
-
   auto sample_indices(model.getSampleIndices());
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
   for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
@@ -879,18 +901,19 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
-    std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) +
+    std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(zidx) + ".png");
     Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
-    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistence, crystalid, zidx, sample_image,
-                                                            true /*writeToDisk*/, outputBasepath);
+    // <ctc> FIXME/TODO: does this need adjusted_persistenceLevel?
+    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistenceLevel, crystalid, zidx, sample_image,
+                                                          true /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
     std::cout << "Quality of generation of image for model at persistence level "
-              << persistence << ", crystalid " << crystalid << ": " << quality << std::endl;
+              << persistenceLevel << ", crystalid " << crystalid << ": " << quality << std::endl;
 
     // add image to response
     Image image = convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
@@ -902,7 +925,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     response["thumbnails"].append(imageObject);
   }
 
-  response["msg"] = std::string("returning " + std::to_string(sample_indices.size()) + " images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
+  response["msg"] = std::string("returning " + std::to_string(sample_indices.size()) + " images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
 }
 
 /**
@@ -996,10 +1019,10 @@ void Controller::maybeProcessData(int k) {
                                                               m_currentDataset->getQoiVector(0),
                                                               m_currentK  /* knn */,
                                                               50        /* samples */,
-                                                              20        /* persistence */,
+                                                              20        /* num_persistences */,
                                                               false     /* random */,
                                                               0.25      /* sigma */,
-                                                              0         /* smooth */);
+                                                              15         /* smooth */);
     m_currentVizData = new SimpleHDVizDataImpl(m_currentProcessResult);
     m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {

@@ -162,7 +162,9 @@ public:
 
   MSPersistenceLevel& getPersistenceLevel(unsigned i)
   {
-    unsigned persistence_idx = i - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+    // <ctc> TODO: the number of persistence levels should be used to adjust the requested plvl from the PModels::MSComplex
+    //             sort of a chicken-and-egg problem since the shapeodds models don't realize there are more plvls than are computed
+    unsigned persistence_idx = i;// - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     return persistence_levels[persistence_idx];
   }
 

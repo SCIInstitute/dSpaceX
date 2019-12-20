@@ -4,7 +4,7 @@ namespace PModels {
 
 ModelPair MSComplex::getModel(unsigned p, unsigned c)
 {
-  unsigned persistence_idx = p - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+  unsigned persistence_idx = p;// - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
   if (persistence_idx >= persistence_levels.size() || c >= persistence_levels[persistence_idx].numCrystals())
     throw std::runtime_error("Requested model persistence / crystal index is out of range");
       

@@ -315,10 +315,11 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples) {
+  fetchNImagesForCrystal_Shapeodds(datasetId, fieldname, persistenceLevel, crystalID, numSamples) {
     let command = {
       name: 'fetchNImagesForCrystal_Shapeodds',
       datasetId: datasetId,
+      fieldname: fieldname,
       persistenceLevel: persistenceLevel,
       crystalID: crystalID,
       numSamples: numSamples,

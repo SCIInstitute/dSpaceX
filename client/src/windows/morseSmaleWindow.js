@@ -252,7 +252,7 @@ class MorseSmaleWindow extends React.Component {
    */
   pick(normalizedPosition) {
     // Get intersected object
-    const { datasetId, persistenceLevel } = this.props.decomposition;
+    const { datasetId, decompositionField, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
@@ -270,7 +270,7 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, persistenceLevel, crystalID, 50 /* numZ*/);
+      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel, crystalID, 50 /* numZ*/);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });

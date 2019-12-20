@@ -481,6 +481,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 
   // Read crystals, an array of P persistence levels x N samples per level
   // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
+  // <ctc> TODO: actually, this file renders moot all the (ob1) crystalID.csv files, so let's use it instead.
   Eigen::MatrixXi crystalPartitions_eigen;
   if (partitions_format.type == InputFormat::CSV)
     crystalPartitions_eigen = IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions);
@@ -497,9 +498,9 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//persistence++) //<ctc> hack to load just a couple lvls for testing
+  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
   {
-    unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+    unsigned persistence_idx = persistence;// + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
     // compute ncrystals for this persistence level using crystalPartitions
