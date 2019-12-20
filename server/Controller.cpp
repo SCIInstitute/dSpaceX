@@ -997,7 +997,7 @@ void Controller::maybeProcessData(int k) {
                                                               m_currentK  /* knn */,
                                                               50        /* samples */,
                                                               20        /* persistence */,
-                                                              true      /* random */,
+                                                              false     /* random */,
                                                               0.25      /* sigma */,
                                                               0         /* smooth */);
     m_currentVizData = new SimpleHDVizDataImpl(m_currentProcessResult);

@@ -536,13 +536,11 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     // read crystalIds (same for every model at this plevel, so only need to read/set them once)
     Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
   
-    // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
+    // FIXME: until fixed in data (produced by MATLAB), crystal ids are 1-based, so adjust them right away to be 0-based
     crystal_ids.array() -= 1.0;
       
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
-
-    //break; // <ctc> hack so we can quickly read a single persistence level and test applying the model
   }
 
   return MSModelsPair(fieldname, ms_of_models);

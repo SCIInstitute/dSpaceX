@@ -313,7 +313,6 @@ private:
       FortranLinalg::DenseVector<TPrecision> ys;
       if(smooth){
         ys = FortranLinalg::DenseVector<TPrecision>(y.N());
-        //<ctc> no comparisons here
         for(unsigned int i=0; i< ys.N(); i++){
           ys(i) = 0;
           double wsum = 0;
