@@ -14,7 +14,10 @@ class EmbeddingWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { renderEdges:false };
+    this.state = {
+      renderEdges: false,
+      renderThumbnails: false,
+    };
 
     // Used to zoom and translate embedding
     this.maxScale = 10;
@@ -26,8 +29,10 @@ class EmbeddingWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
-    this.addNodesToScene = this.addNodesToScene.bind(this);
     this.addEdgesToScene = this.addEdgesToScene.bind(this);
+    this.addNodesOrThumbnailsToScene = this.addNodesOrThumbnailsToScene.bind(this);
+    this.addNodesToScene = this.addNodesToScene.bind(this);
+    this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.animate = this.animate.bind(this);
     this.resetScene = this.resetScene.bind(this);
@@ -84,13 +89,17 @@ class EmbeddingWindow extends React.Component {
       this.resetScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       const qoiName = this.props.decomposition.decompositionField;
-      this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName).then((result) => {
-        this.adjacency = result.embedding.adjacency;
-        this.layout = result.embedding.layout;
-        this.colors = result.colors;
+      Promise.all([
+        this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName),
+        this.client.fetchThumbnails(datasetId),
+      ]).then((results) => {
+        const [graphResult, thumbnailResult] = results;
+        this.adjacency = graphResult.embedding.adjacency;
+        this.layout = graphResult.embedding.layout;
+        this.colors = graphResult.colors;
+        this.thumbnails = thumbnailResult.thumbnails;
         this.addEdgesToScene(this.adjacency, this.layout);
-
-        this.addNodesToScene(this.layout, this.colors);
+        this.addNodesOrThumbnailsToScene(this.layout, this.colors);
         this.renderScene();
       });
     }
@@ -99,8 +108,15 @@ class EmbeddingWindow extends React.Component {
     if (prevProps.selectedDesigns !== this.props.selectedDesigns) {
       this.resetScene();
       this.addEdgesToScene(this.adjacency, this.layout);
-      this.addNodesToScene(this.layout, this.colors);
+      this.addNodesOrThumbnailsToScene(this.layout, this.colors);
       this.renderScene();
+    }
+
+    // State changed - this is hit when edges and thumbnails are enabled/disabled
+    if (prevState !== this.state) {
+      this.resetScene();
+      this.addEdgesToScene(this.adjacency, this.layout);
+      this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails);
     }
   }
 
@@ -140,6 +156,8 @@ class EmbeddingWindow extends React.Component {
     let canvas = this.refs.embeddingCanvas;
     let gl = canvas.getContext('webgl');
 
+    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+
     // camera
     let width = canvas.clientWidth;
     let height = canvas.clientHeight;
@@ -151,7 +169,7 @@ class EmbeddingWindow extends React.Component {
       sy = height / width;
     }
     this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
-    this.camera.position.set(0, 0, -1);
+    this.camera.position.set(0, 0, 1);
 
     // world
     this.scene = new THREE.Scene();
@@ -191,6 +209,19 @@ class EmbeddingWindow extends React.Component {
     }
   }
 
+  /**
+   * Draws nodes or thumbnails to scene depending on
+   * settings.
+   * @param {array} nodeCoordinates
+   * @param {array} nodeColors
+   */
+  addNodesOrThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails) {
+    if (this.state.renderThumbnails) {
+      this.addThumbnailsToScene(nodeCoordinates, thumbnails);
+    } else {
+      this.addNodesToScene(nodeCoordinates, nodeColors);
+    }
+  }
   /**
    * Add the sample nodes to the scene
    * @param {array} nodeCoordinates
@@ -242,6 +273,58 @@ class EmbeddingWindow extends React.Component {
       this.pickingScene.add(pickingNode);
       pickingNode.position.copy(nodeMesh.position);
     });
+  }
+
+  /**
+   * Adds thumbnails to scene as nodes of embedding
+   * @param {array} nodeCoordinates - where each thumbnail should be placed
+   * @param {array} thumbnails - thumbnail to dispplay
+   */
+  addThumbnailsToScene(nodeCoordinates, thumbnails) {
+    // const canvas = this.refs.embeddingCanvas;
+    // const canvasWidth = canvas.clientWidth;
+    // const canvasHeight = canvas.clientHeight;
+    // nodeCoordinates.forEach((coord, index) => {
+    //   const thumbnailWidth = thumbnails[index].width;
+    //   const thumbnailHeight = thumbnails[index].height;
+    //   const nodeGeometry = new THREE.BoxGeometry(thumbnailWidth/canvasWidth, thumbnailHeight/canvasHeight, 0);
+    //
+    //   const textureData = this._base64ToUint8Array(thumbnails[index].rawData);
+    //
+    //   const texture = new THREE.DataTexture(textureData, thumbnailWidth, thumbnailHeight, THREE.LuminanceFormat, THREE.UnsignedByteType);
+    //   texture.magFilter = THREE.NearestFilter;
+    //   texture.needsUpdate = true;
+    //
+    //   let nodeMaterial = new THREE.MeshBasicMaterial({ map:texture });
+    //   let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+    //   // nodeMesh.translateX(coord[0]);
+    //   // nodeMesh.translateY(coord[1]);
+    //   this.scene.add(nodeMesh);
+    // });
+    // console.log('Width' + this.thumbnails[1].width);
+    // console.log('Height' + this.thumbnails[1].height);
+    // console.log(this._base64ToUint8Array(this.thumbnails[1].rawData));
+    console.log(this.thumbnails[0]);
+    const side = 32;
+
+    const amount = Math.pow(side, 2);
+    let thumb_data = this._base64ToUint8Array(this.thumbnails[0].rawData);
+    console.log(thumb_data);
+    console.log(this.thumbnails[0].rawData);
+    let data = new Uint8Array(amount);
+
+    for (let i = 0; i < amount; ++i) {
+      data[i] = Math.random()*256;
+    }
+
+    let texture = new THREE.DataTexture(thumb_data, 32, 16, THREE.LuminanceFormat, THREE.UnsignedByteType);
+    texture.magFilter = THREE.NearestFilter;
+    texture.needsUpdate = true;
+
+    let geometry = new THREE.PlaneGeometry(8, 4);
+    let material = new THREE.MeshBasicMaterial({ map:texture });
+    let plane = new THREE.Mesh(geometry, material);
+    this.scene.add(plane);
   }
 
   /**
@@ -393,11 +476,27 @@ class EmbeddingWindow extends React.Component {
     switch (event.key) {
       case 'e':
         this.setState({ renderEdges:!this.state.renderEdges });
-        this.resetScene();
-        this.addEdgesToScene(this.adjacency, this.layout);
-        this.addNodesToScene(this.layout, this.colors);
+        break;
+      case 't':
+        this.setState({ renderThumbnails:!this.state.renderThumbnails });
+        break;
     }
     this.renderScene();
+  }
+
+  /**
+   * Decode a base64 array into a Uint8Array - used to convert image
+   * data to usable for by Three.js texture
+   * @param {array} base64
+   * @return {Uint8Array}
+   */
+  _base64ToUint8Array(base64) {
+    let binaryString = atob(base64);
+    let array = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      array[i] = binaryString.charCodeAt(i);
+    }
+    return array;
   }
 
   /**
