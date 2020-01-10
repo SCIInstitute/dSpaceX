@@ -29,6 +29,7 @@ class EmbeddingWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
+    this.buildTexture = this.buildTexture.bind(this);
     this.addEdgesToScene = this.addEdgesToScene.bind(this);
     this.addNodesOrThumbnailsToScene = this.addNodesOrThumbnailsToScene.bind(this);
     this.addNodesToScene = this.addNodesToScene.bind(this);
@@ -83,7 +84,7 @@ class EmbeddingWindow extends React.Component {
     }
 
     // Decomposition is loaded for the first time
-    // Or has been updated
+    // Or has been updated so we need to load the data
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
@@ -98,25 +99,19 @@ class EmbeddingWindow extends React.Component {
         this.layout = graphResult.embedding.layout;
         this.colors = graphResult.colors;
         this.thumbnails = thumbnailResult.thumbnails;
+        this.textures = this.buildTexture(this.thumbnails);
         this.addEdgesToScene(this.adjacency, this.layout);
-        this.addNodesOrThumbnailsToScene(this.layout, this.colors);
+        this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
         this.renderScene();
       });
     }
 
-    // Selected designs changed
-    if (prevProps.selectedDesigns !== this.props.selectedDesigns) {
+    // Selected designs changed or state has changed
+    if (prevProps.selectedDesigns !== this.props.selectedDesigns || prevState !== this.state) {
       this.resetScene();
       this.addEdgesToScene(this.adjacency, this.layout);
-      this.addNodesOrThumbnailsToScene(this.layout, this.colors);
+      this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
       this.renderScene();
-    }
-
-    // State changed - this is hit when edges and thumbnails are enabled/disabled
-    if (prevState !== this.state) {
-      this.resetScene();
-      this.addEdgesToScene(this.adjacency, this.layout);
-      this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails);
     }
   }
 
@@ -189,6 +184,25 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
+   * Build texture for thumbnails
+   * @param {array} thumbnails - raw thumbnail data
+   * @return {array} textures - list of textures
+   */
+  buildTexture(thumbnails) {
+    let textures = [];
+    thumbnails.forEach((thumbnail) => {
+      const image = new Image();
+      image.src = 'data:image/jpeg;base64, ' + thumbnail.rawData;
+      const texture = new THREE.Texture();
+      texture.image = image;
+      texture.needsUpdate = true;
+      texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+      textures.push(texture);
+    });
+    return textures;
+  }
+
+  /**
    * Add graph edges to scene
    * @param {array} adjacencyMatrix - sample indexes with edges between them
    * @param {array} sampleCoordinates - sample coordinates
@@ -212,16 +226,19 @@ class EmbeddingWindow extends React.Component {
   /**
    * Draws nodes or thumbnails to scene depending on
    * settings.
-   * @param {array} nodeCoordinates
-   * @param {array} nodeColors
+   * @param {array} nodeCoordinates - where the nodes should be placed
+   * @param {array} nodeColors - color of nodes
+   * @param {array} thumbnails - thumbnail information
+   * @param {array} textures - texture for drawing thumbnails
    */
-  addNodesOrThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails) {
+  addNodesOrThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures) {
     if (this.state.renderThumbnails) {
-      this.addThumbnailsToScene(nodeCoordinates, thumbnails);
+      this.addThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures);
     } else {
       this.addNodesToScene(nodeCoordinates, nodeColors);
     }
   }
+
   /**
    * Add the sample nodes to the scene
    * @param {array} nodeCoordinates
@@ -278,53 +295,42 @@ class EmbeddingWindow extends React.Component {
   /**
    * Adds thumbnails to scene as nodes of embedding
    * @param {array} nodeCoordinates - where each thumbnail should be placed
-   * @param {array} thumbnails - thumbnail to dispplay
+   * @param {array} nodeColors - color for reach node
+   * @param {array} thumbnails - thumbnails
+   * @param {array} textures - textures to be used
    */
-  addThumbnailsToScene(nodeCoordinates, thumbnails) {
-    // const canvas = this.refs.embeddingCanvas;
-    // const canvasWidth = canvas.clientWidth;
-    // const canvasHeight = canvas.clientHeight;
-    // nodeCoordinates.forEach((coord, index) => {
-    //   const thumbnailWidth = thumbnails[index].width;
-    //   const thumbnailHeight = thumbnails[index].height;
-    //   const nodeGeometry = new THREE.BoxGeometry(thumbnailWidth/canvasWidth, thumbnailHeight/canvasHeight, 0);
-    //
-    //   const textureData = this._base64ToUint8Array(thumbnails[index].rawData);
-    //
-    //   const texture = new THREE.DataTexture(textureData, thumbnailWidth, thumbnailHeight, THREE.LuminanceFormat, THREE.UnsignedByteType);
-    //   texture.magFilter = THREE.NearestFilter;
-    //   texture.needsUpdate = true;
-    //
-    //   let nodeMaterial = new THREE.MeshBasicMaterial({ map:texture });
-    //   let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
-    //   // nodeMesh.translateX(coord[0]);
-    //   // nodeMesh.translateY(coord[1]);
-    //   this.scene.add(nodeMesh);
-    // });
-    // console.log('Width' + this.thumbnails[1].width);
-    // console.log('Height' + this.thumbnails[1].height);
-    // console.log(this._base64ToUint8Array(this.thumbnails[1].rawData));
-    console.log(this.thumbnails[0]);
-    const side = 32;
+  addThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures) {
+    const canvas = this.refs.embeddingCanvas;
+    const canvasWidth = canvas.clientWidth;
+    const canvasHeight = canvas.clientHeight;
+    nodeCoordinates.forEach((coord, index) => {
+      const thumbnailWidth = thumbnails[index].width;
+      const thumbnailHeight = thumbnails[index].height;
+      const nodeGeometry = new THREE.BoxGeometry(2*thumbnailWidth/canvasWidth, 2*thumbnailHeight/canvasHeight, 0);
 
-    const amount = Math.pow(side, 2);
-    let thumb_data = this._base64ToUint8Array(this.thumbnails[0].rawData);
-    console.log(thumb_data);
-    console.log(this.thumbnails[0].rawData);
-    let data = new Uint8Array(amount);
+      // If design is selected orange, else grey
+      let nodeMaterial;
+      if (this.props.selectedDesigns.has(index)) {
+        let color = new THREE.Color();
+        color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
+        nodeMaterial = new THREE.MeshBasicMaterial({ color:color, map:textures[index] });
+      } else {
+        nodeMaterial = new THREE.MeshBasicMaterial({ color:0xFFFFFF, map:textures[index] });
+      }
 
-    for (let i = 0; i < amount; ++i) {
-      data[i] = Math.random()*256;
-    }
+      let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      nodeMesh.translateX(coord[0]);
+      nodeMesh.translateY(coord[1]);
 
-    let texture = new THREE.DataTexture(thumb_data, 32, 16, THREE.LuminanceFormat, THREE.UnsignedByteType);
-    texture.magFilter = THREE.NearestFilter;
-    texture.needsUpdate = true;
+      // Outline Rectangle
+      let edges = new THREE.EdgesGeometry(nodeGeometry);
+      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
+      line.translateX(coord[0]);
+      line.translateY(coord[1]);
 
-    let geometry = new THREE.PlaneGeometry(8, 4);
-    let material = new THREE.MeshBasicMaterial({ map:texture });
-    let plane = new THREE.Mesh(geometry, material);
-    this.scene.add(plane);
+      this.scene.add(line);
+      this.scene.add(nodeMesh);
+    });
   }
 
   /**
@@ -472,7 +478,6 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleKeyDownEvent(event) {
-    // Currently not a switch statement but there are other options that need to be added
     switch (event.key) {
       case 'e':
         this.setState({ renderEdges:!this.state.renderEdges });
