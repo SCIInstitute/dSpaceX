@@ -1,12 +1,22 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 IF(COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW)
   CMAKE_POLICY(SET CMP0005 OLD)
 ENDIF(COMMAND CMAKE_POLICY)
 
+if(${CMAKE_VERSION} VERSION_LESS 3.14)
+    macro(FetchContent_MakeAvailable NAME)
+        FetchContent_GetProperties(${NAME})
+        if(NOT ${NAME}_POPULATED)
+            FetchContent_Populate(${NAME})
+            add_subdirectory(${${NAME}_SOURCE_DIR} ${${NAME}_BINARY_DIR})
+        endif()
+    endmacro()
+endif()
+
 PROJECT(DSPACEX)
 
-OPTION(BUILD_HDVIZ_IMAGE "Build hdviz for image data" OFF)
+OPTION(BUILD_HDVIZ_IMAGE "Build hdviz for image data (broken)" OFF)
 OPTION(BUILD_HDVIZ_CLI "Build HDViz preprocessing tool" OFF)
 OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
@@ -18,13 +28,13 @@ IF(WIN32)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -/MT")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -/MTd")
 ENDIF()
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
-    "Single output directory for building all executables.")
+  "Single output directory for building all executables.")
 
+include(DefaultBuildType)
+  
 ADD_DEFINITIONS ("-w")
-
-FIND_PACKAGE(LAPACK)
 
 INCLUDE_DIRECTORIES(lib)
 INCLUDE_DIRECTORIES(lib/yaml-cpp/include)
@@ -36,8 +46,23 @@ ADD_SUBDIRECTORY(lib/imageutils)
 ADD_SUBDIRECTORY(lib/jsoncpp)
 ADD_SUBDIRECTORY(lib/tinyply)
 ADD_SUBDIRECTORY(lib/yaml-cpp)
+ADD_SUBDIRECTORY(lib/utils)
 ADD_SUBDIRECTORY(lib/export)
-
+if(1)
+  # libigl
+  # <ctc> setting these only works if we're building libigl, not for find_package
+  # set(LIBIGL_EIGEN_VERSION 3.3.7 CACHE STRING "Eigen version")
+  # set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
+  # find_package(LIBIGL REQUIRED QUIET)
+  # ...and since right now we're only using Eigen, let's postpone installing igl
+  find_package(Eigen3 3.3.7 REQUIRED)
+  message(STATUS "EIGEN3_INCLUDE_DIR outside find_package is " ${EIGEN3_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
+  
+  ADD_SUBDIRECTORY(lib/lodepng)
+  ADD_SUBDIRECTORY(lib/shapeodds)
+  ADD_SUBDIRECTORY(lib/sharedgp)
+endif()
 
 if(BUILD_SERVER_LIB)
   INCLUDE_DIRECTORIES(lib/boost)

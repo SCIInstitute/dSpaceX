@@ -529,7 +529,6 @@ class GraphGLWindow extends GLWindow {
     const canvas = this.refs.canvas;
     let gl = canvas.getContext('webgl');
 
-    // TODO: Refactor to support thumbnails of various/heterogeneous sizes.
     this.thumbnailWidth = this.thumbnails[0].width;
     this.thumbnailHeight = this.thumbnails[0].height;
     const MAX_TEXTURE_SIZE = 8192;

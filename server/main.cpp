@@ -1,12 +1,13 @@
 #include "Controller.h"
 #include "serverlib/wst.h"
-
+#include "optparse/OptionParser.h"
 #include <chrono>
 #include <exception>
 #include <thread>
 
-
 const int kDefaultPort = 7681;
+const std::string kDefaultDatapath("../../examples");
+ 
 Controller *controller = nullptr;
 
 extern "C" void browserData(void *wsi, void *data) {
@@ -19,18 +20,19 @@ extern "C" void browserText(void *wsi, char *text, int lena) {
 
 int main(int argc, char *argv[])
 {
-  if (argc > 2) {
-    printf("\n Usage: dSpaceX [port]\n\n");
-    return 1;
-  }
+  using optparse::OptionParser;
+  OptionParser parser = OptionParser().description("dSpaceX Server");
+  parser.add_option("-p", "--port").dest("port").type("int").set_default(kDefaultPort).help("server port");
+  parser.add_option("-d", "--datapath").dest("datapath").set_default(kDefaultDatapath).help("path to datasets");
 
-  int port = kDefaultPort;
-  if (argc == 2) {
-    port = atoi(argv[1]);
-  }
+  const optparse::Values &options = parser.parse_args(argc, argv);
+  const std::vector<std::string> args = parser.args();
 
+  int port = options.get("port");
+  std::string datapath = options["datapath"];
+  
   try {
-    controller = new Controller();    
+    controller = new Controller(datapath);
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
     return 1;

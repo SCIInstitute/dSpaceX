@@ -6,6 +6,7 @@
 #include "imageutils/Image.h"
 #include "precision/Precision.h"
 #include "yaml-cpp/yaml.h"
+#include "shapeodds/ShapeOdds.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
 
 #include <string>
 #include <vector>
@@ -16,6 +17,8 @@ typedef
 std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
 typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
+typedef
+std::pair<std::string, Shapeodds::MSModelContainer> MSModelPair;
 
 class DatasetLoader {
 public:
@@ -46,6 +49,14 @@ private:
 
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
+
+  static std::vector<MSModelPair> parseMSModels(
+      const YAML::Node &config, const std::string &filePath);
+
+  static MSModelPair parseMSModelsForField(
+      const YAML::Node &config, const std::string &filePath);
+
+  static void parseModel(const std::string &modelPath, Shapeodds::Model &m);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

@@ -200,7 +200,9 @@ class Application extends React.Component {
     let windowConfig = {
       id: this.state.windows.length,
     };
-    this.setState({
+      this.setState({ //a React method, **be sure to always call this** since it notifies the UI as follows:
+	  // note that in vanilla javascript, the entire DOM will update whenever something is changed, but React creates a virtual DOM and so setState compares this to the full DOM and only updates what must be done, thereby make the entire site update more efficient.
+	  // if I were to only update windows without calling setState, it wouldn't update React properly... there are nuances and if I update something wrong it might not update the scene accordingly... talk to Kyli about this in more detail
       windows: this.state.windows.concat(windowConfig),
     });
   }
@@ -215,7 +217,7 @@ class Application extends React.Component {
     let windows = this.state.windows;
     windows[config.id] = newConfig;
     this.setState({
-      windows: windows,
+      windows: windows,  //but what does this call again? (lets React know that windows has changed, and React will figure out which window changed) Kyli will show me in the debugger how React knows which window changed.
     });
   }
 
@@ -446,7 +448,7 @@ class Application extends React.Component {
 
   /**
    * Renders the component to HTML.
-   * @return {JSX}
+   * @return {JSX}  //cool half-html, half-javascript thing, gnarly and yet helpful
    */
   render() {
     const { classes } = this.props;
@@ -477,7 +479,7 @@ class Application extends React.Component {
                   return (
                     <WindowPanel key={i} windowIndex={i}
                       config={windowConfig}
-                      onConfigChange={this.onWindowConfigChange}
+                      onConfigChange={this.onWindowConfigChange} //passes this function as a prop to the WindowPanel, so onConfigChange calls that function
                       dataset={this.state.currentDataset}
                       enabled={this.state.connected}/>
                   );
@@ -546,7 +548,7 @@ class Application extends React.Component {
                       return (
                         <EmbeddingMorseSmaleWindow
                           key={i}
-                          decomposition={windowConfig.decomposition}
+                          decomposition={windowConfig.decomposition}  // where the react props come from
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           numberOfWindows={this.state.windows.length}

@@ -12,13 +12,13 @@
 
 class Controller {
  public:
-  Controller();
+  Controller(const std::string &datapath_);
   void handleData(void *wsi, void *data);
   void handleText(void *wsi, const std::string &text);
 
  private:
   void configureCommandHandlers();
-  void configureAvailableDatasets(const std::string &rootPath = "../../examples");
+  void configureAvailableDatasets(const std::string &rootPath);
 
   void maybeLoadDataset(int datasetId);
   void maybeProcessData(int k);
@@ -39,6 +39,14 @@ class Controller {
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
 
+  // SharedGP
+  void fetchAllForLatentSpaceUsingSharedGP(const Json::Value &request, Json::Value &response);
+
+  // ShapeOdds
+  void fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
 
@@ -50,4 +58,5 @@ class Controller {
   HDProcessResult *m_currentProcessResult = nullptr;
   HDVizData *m_currentVizData = nullptr;
   TopologyData *m_currentTopoData = nullptr;
+  std::string datapath;
 };

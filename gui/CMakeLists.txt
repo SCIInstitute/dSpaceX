@@ -34,6 +34,7 @@ ADD_EXECUTABLE(HDViz HDViz.cpp DisplayTubes.cpp)
 TARGET_LINK_LIBRARIES (HDViz 
     gle 
     hdprocess
+    imageutils
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
@@ -42,6 +43,10 @@ TARGET_LINK_LIBRARIES (HDViz
 )
 SET_TARGET_PROPERTIES(HDViz PROPERTIES COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_SOURCE_DIR}/DejaVuSans.ttf) 
 
+#why doesn't simply adding imageutils to the target_link_libraries work???
+SET_TARGET_PROPERTIES(HDViz PROPERTIES
+  INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/imageutils"
+)
 
 
 ADD_EXECUTABLE(HDViz2 HDViz2.cpp DisplayTubes.cpp DisplayGraph.cpp)
@@ -61,6 +66,10 @@ TARGET_LINK_LIBRARIES (HDViz2
 )
 SET_TARGET_PROPERTIES(HDViz2 PROPERTIES COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_SOURCE_DIR}/DejaVuSans.ttf) 
 
+#why doesn't simply adding imageutils to the target_link_libraries work???
+SET_TARGET_PROPERTIES(HDViz2 PROPERTIES
+  INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/imageutils"
+)
 
 if(BUILD_HDVIZ_IMAGE)
 
@@ -70,12 +79,17 @@ TARGET_LINK_LIBRARIES (HDViz_3D
     gfortran
     blas
     lapack   
+    imageutils
     hdprocess
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
     ${OPENGL_LIBRARIES}  
     ${GLUT_LIBRARIES}    
     ${ITK_LIBRARIES}
+)
+#why doesn't simply adding imageutils to the target_link_libraries work???
+SET_TARGET_PROPERTIES(HDViz_3D PROPERTIES
+  INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/imageutils"
 )
 
 ADD_EXECUTABLE(HDViz_2D HDViz.cpp)
@@ -84,6 +98,7 @@ TARGET_LINK_LIBRARIES (HDViz_2D
     gfortran
     blas
     lapack
+    imageutils
     hdprocess
     ${FTGL_LIBRARIES}  
     ${FREETYPE_LIBRARY}  
@@ -91,6 +106,11 @@ TARGET_LINK_LIBRARIES (HDViz_2D
     ${GLUT_LIBRARIES}
     ${ITK_LIBRARIES}
 )
+#why doesn't simply adding imageutils to the target_link_libraries work???
+SET_TARGET_PROPERTIES(HDViz_2D PROPERTIES
+  INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../lib/imageutils"
+)
+
 SET_TARGET_PROPERTIES( HDViz_2D PROPERTIES COMPILE_DEFINITIONS DIMENSION=2 COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_SOURCE_DIR}/DejaVuSans.ttf)
 SET_TARGET_PROPERTIES( HDViz_3D PROPERTIES COMPILE_DEFINITIONS DIMENSION=3 COMPILE_FLAGS -DFONTNAME=${CMAKE_CURRENT_SOURCE_DIR}/DejaVuSans.ttf)
 endif(BUILD_HDVIZ_IMAGE)

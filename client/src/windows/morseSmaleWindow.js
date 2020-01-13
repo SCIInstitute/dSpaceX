@@ -62,6 +62,7 @@ class MorseSmaleWindow extends React.Component {
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
+      // object unpacking (a javascript thing, props is inherited from the React component)
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       Promise.all([
         this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
@@ -269,6 +270,7 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
+      this.props.evalShapeoddsModelForCrystal(datasetId, persistenceLevel, crystalID, 50 /* numZ*/);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });

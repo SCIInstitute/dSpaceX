@@ -5,8 +5,8 @@
 
 //include opengl stuff
 #ifdef __APPLE__
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
+#include <OpenGL/gl3.h>
+#include <OpenGL/gl3ext.h>
 #include <glut.h>
 #include <FTGL/FTGL.h>
 #else

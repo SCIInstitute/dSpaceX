@@ -2,6 +2,8 @@ import EmbeddingWindow from './embeddingWindow';
 // import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
+import ResponsiveDrawer from '../components/responsiveDrawer';
+import { withDSXContext } from '../dsxContext.js';
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -14,6 +16,40 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    */
   constructor(props) {
     super(props);
+
+    this.client = this.props.dsxContext.client;
+
+    this.state = {
+      drawerImages: [],
+    };
+
+    this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
+  }
+
+  /**
+   * Computes new samples using shapeodds model
+   * @param {number} datasetId
+   * @param {number} persistenceLevel
+   * @param {number} crystalID
+   * @param {number} numSamples
+   */
+  computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
+    // eslint-disable-next-line max-len
+    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+persistenceLevel+','+crystalID+','+numSamples+')');
+
+    // Ask server to compute the N new images for this crystal and add them to the drawer
+    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
+      .then((result) => {
+        const thumbnails = result.thumbnails.map((thumbnail, i) => {
+          return {
+            img: thumbnail,
+            id: i,
+          };
+        });
+        this.setState({ drawerImages:thumbnails });
+        // eslint-disable-next-line max-len
+        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
+      });
   }
 
   /**
@@ -45,10 +81,12 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
           numberOfWindows={this.props.numberOfWindows}
-          onCrystalSelection={this.props.onCrystalSelection}/>
+          onCrystalSelection={this.props.onCrystalSelection}
+          evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+        <ResponsiveDrawer images={this.state.drawerImages}/>
       </div>
     );
   }
 }
 
-export default EmbeddingMorseSmaleWindow;
+export default withDSXContext(EmbeddingMorseSmaleWindow);
