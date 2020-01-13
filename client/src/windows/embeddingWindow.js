@@ -17,10 +17,13 @@ class EmbeddingWindow extends React.Component {
     this.state = {
       renderEdges: false,
       renderThumbnails: false,
+      colorThumbnails: false,
+      thumbnailScale: 1,
     };
 
     // Used to zoom and translate embedding
     this.maxScale = 10;
+    this.minScale = 1;
     this.zoomRate = 1.1;
     this.rightMouseDown = false;
     this.previousX = 0;
@@ -306,17 +309,22 @@ class EmbeddingWindow extends React.Component {
     nodeCoordinates.forEach((coord, index) => {
       const thumbnailWidth = thumbnails[index].width;
       const thumbnailHeight = thumbnails[index].height;
-      const nodeGeometry = new THREE.BoxGeometry(2*thumbnailWidth/canvasWidth, 2*thumbnailHeight/canvasHeight, 0);
+      const nodeGeometry = new THREE.BoxGeometry(this.state.thumbnailScale*thumbnailWidth/canvasWidth,
+        this.state.thumbnailScale*thumbnailHeight/canvasHeight, 0);
 
-      // If design is selected orange, else grey
-      let nodeMaterial;
-      if (this.props.selectedDesigns.has(index)) {
-        let color = new THREE.Color();
+      // Color based on QoI if enabled, if not enabled selected design is colored orange
+      // to match the gallery view.
+      let color;
+      if (this.state.colorThumbnails
+        && (this.props.selectedDesigns.size === 0|| this.props.selectedDesigns.has(index))) {
+        color = new THREE.Color();
         color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
-        nodeMaterial = new THREE.MeshBasicMaterial({ color:color, map:textures[index] });
+      } else if (!this.state.colorThumbnails && this.props.selectedDesigns.has(index)) {
+        color = 0xFFA500;
       } else {
-        nodeMaterial = new THREE.MeshBasicMaterial({ color:0xFFFFFF, map:textures[index] });
+        color = 0xFFFFFF;
       }
+      const nodeMaterial = new THREE.MeshBasicMaterial({ color:color, map:textures[index] });
 
       let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
       nodeMesh.translateX(coord[0]);
@@ -478,12 +486,34 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleKeyDownEvent(event) {
+    let newScale;
     switch (event.key) {
-      case 'e':
+      case 'e': // Enable/disable edges
         this.setState({ renderEdges:!this.state.renderEdges });
         break;
-      case 't':
+      case 't': // Enable/disable thumbnails
         this.setState({ renderThumbnails:!this.state.renderThumbnails });
+        break;
+      case 'i': // Increase thumbnail size
+        if (this.state.renderThumbnails) {
+          newScale = this.state.thumbnailScale + 0.25;
+          if (newScale > this.maxScale) {
+            newScale = this.maxScale;
+          }
+          this.setState({ thumbnailScale:newScale });
+        }
+        break;
+      case 'd': // decrease thumbnail size
+        if (this.state.renderThumbnails) {
+          newScale = this.state.thumbnailScale - 0.25;
+          if (newScale < this.minScale) {
+            newScale = this.minScale;
+          }
+          this.setState({ thumbnailScale:newScale });
+        }
+        break;
+      case 'c': // enable color for thumbnail
+        this.setState({ colorThumbnails:!this.state.colorThumbnails });
         break;
     }
     this.renderScene();
