@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 IF(COMMAND CMAKE_POLICY)
-  CMAKE_POLICY(SET CMP0003 NEW)
-  CMAKE_POLICY(SET CMP0005 OLD)
+  CMAKE_POLICY(SET CMP0003 NEW) # NEW: /full/path/to/lib.so won't break search paths specified by link_directories command
+  CMAKE_POLICY(SET CMP0005 OLD) # OLD: don't escape preprocessor defs added via add_definitions command
 ENDIF(COMMAND CMAKE_POLICY)
 
 if(${CMAKE_VERSION} VERSION_LESS 3.14)
@@ -18,7 +18,7 @@ PROJECT(DSPACEX)
 
 OPTION(BUILD_HDVIZ_IMAGE "Build hdviz for image data (broken)" OFF)
 OPTION(BUILD_HDVIZ_CLI "Build HDViz preprocessing tool" OFF)
-OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" ON)
+OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" OFF)
 OPTION(BUILD_TESTS "Build tests" ON)
 OPTION(BUILD_SERVER_LIB "Builder server lib" ON)
 OPTION(BUILD_SERVER "Build server" ON)
@@ -56,7 +56,7 @@ if(1)
   # find_package(LIBIGL REQUIRED QUIET)
   # ...and since right now we're only using Eigen, let's postpone installing igl
   find_package(Eigen3 3.3.7 REQUIRED)
-  message(STATUS "EIGEN3_INCLUDE_DIR outside find_package is " ${EIGEN3_INCLUDE_DIR})
+  #message(STATUS "EIGEN3_INCLUDE_DIR outside find_package is " ${EIGEN3_INCLUDE_DIR})
   INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
   
   ADD_SUBDIRECTORY(lib/lodepng)
