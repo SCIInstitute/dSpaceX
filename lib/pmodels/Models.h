@@ -79,11 +79,44 @@ public:
     return max_fieldval;
   }
 
-  const Eigen::VectorXd getNewLatentSpaceValue(double fieldval)
+  const Eigen::VectorXd getNewLatentSpaceValue(double fieldval, double sigma = 0.25)
   {
-    return Z.row(0); // just to make sure everything around the function is working
+    // gaussian kernel regression to generate a new LSV
+    using namespace Eigen;
 
-    // do the proper gaussian kernel regression to generate a new LSV
+    // calculate difference
+    VectorXd difference = fieldvalues * -1.0;
+    difference.array() += fieldval;
+    //VectorXd difference = fieldval - fieldvalues;
+    std::cout << "difference between new field value and training field values:\n" << difference << std::endl;
+    difference.array().square();
+    std::cout << "squared difference:\n" << difference << std::endl;
+
+    // apply Gaussian to difference
+    VectorXd exponent = difference / -2.0 * sigma * sigma;
+    std::cout << "difference / -2sigma^2:\n" << exponent << std::endl;
+    exponent.array().exp();
+    std::cout << "e^(difference / -2sigma^2):\n" << exponent << std::endl;
+    double denom = sqrt(2.0 * M_PI * sigma);
+    std::cout << "denom (sqrt(2*pi*sigma):\n" << denom << std::endl;
+    MatrixXd gaussian_matrix = exponent / denom;
+    std::cout << "Gaussian matrix of difference:\n" << gaussian_matrix << std::endl;
+
+    // calculate weight and normalization for regression
+    double summation = gaussian_matrix.sum();
+    std::cout << "sum of Gaussian matrix of difference:\n" << summation << std::endl;
+    // note: may need to transpose gaussian here...
+    gaussian_matrix.transposeInPlace();
+    MatrixXd output = gaussian_matrix * Z;
+    std::cout << "Gaussian matrix * Z (latent space coords generated during model's training):\n" << output << std::endl;
+    //VectorXd newZ = output.rowwise().sum();
+    //std::cout << "New z_coord from rowwise summation of G * Z:\n" << newZ << std::endl;
+    VectorXd newZ = output.transpose();
+    std::cout << "for comparison, here's the first z_coord from the training data:\n" << Z.row(0) << std::endl;
+
+
+    return newZ;
+    //return Z.row(0); // just to make sure everything around the function is working
   }
 
 private:
