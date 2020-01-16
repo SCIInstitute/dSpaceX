@@ -75,6 +75,21 @@ class Dataset {
     return m_msModels;
   }
 
+  PModels::MSComplex& getMSComplex(const std::string fieldname)
+  {
+    // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
+    //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
+    //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
+    std::vector<PModels::MSComplex> &ms_complexes(getMSModels());
+    unsigned idx = 0;
+    for (; idx < ms_complexes.size(); idx++)
+      if (ms_complexes[idx].getFieldname() == fieldname) break;
+    if (idx >= ms_complexes.size())
+      throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
+
+    return ms_complexes[idx];
+  }
+
   const Image& getThumbnail(unsigned idx) {
     if (idx >= m_thumbnails.size())
       throw std::runtime_error("Tried to fetch thumbnail " + std::to_string(idx) + ", but there are only " + std::to_string(m_thumbnails.size()));

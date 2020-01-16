@@ -24,25 +24,12 @@ namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP
 //      space for all of its crystals. 
 //      
 //
-
 class MSCrystal
 {
 public:
   MSCrystal()
   {}
-  ~MSCrystal()
-  {}
 
-  MSCrystal(const MSCrystal &m) : model(m.model)
-  {
-    //std::cout << "PModels::MSCrystal copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  MSCrystal operator=(const MSCrystal &m)
-  {
-    //std::cout << "PModels::MSCrystal assignment operator (&m = " << &m << ")." << std::endl;
-    return MSCrystal(m);
-  }
-  
   void addSample(unsigned n)
   {
     model.addSample(n);
@@ -174,8 +161,9 @@ public:
 private:
   static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
   {
-    unsigned actual_persistence_level = p + 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
-    return std::string("p"+paddedIndexString(actual_persistence_level, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
+//    unsigned actual_persistence_level = p + 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
+// ugh: outside in the Controller we've already computed the correct index for this MS, but internally we don't know. Maybe just keep it that way? Except the model name will be wrong from the outside. ugh. ugh. ugh. Why do they need these names anyway? It's noted above how that could be a conflict with more than one field.
+    return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
   }
 
   std::string fieldname;            // name of field for which this M-S complex was computed

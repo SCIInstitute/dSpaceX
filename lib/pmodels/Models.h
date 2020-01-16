@@ -14,25 +14,13 @@ namespace PModels {
 // space.
 //
 // TODO: provide common interface for ShapeOdds, InfiniteShapeOdds, and SharedGP models
+// TODO: a model and its associated crystal should know to which fieldname it belongs, right?
 class Model
 {
 public:
-  Model()
-  {}
-  ~Model()
+  Model() : fieldvalues(NULL, 0)
   {}
 
-  // since models may get large, keep track of when they're copyied so this step can be optimized (probably passing vectors around by value is copying their contents). C++11 should use move semantics (see https://mbevin.wordpress.com/2012/11/20/move-semantics/), so this is just to verify that's being done.
-  Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
-  {
-    //std::cout << "PModels::Model copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  Model operator=(const Model &m)
-  {
-    //std::cout << "PModels::Model assignment operator (&m = " << &m << ")." << std::endl;
-    return Model(m);
-  }
-  
   void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
   {
     W  = _W;
@@ -54,7 +42,6 @@ public:
   {
     return sample_indices;
   }
-
   
   const Eigen::Matrix<double, 1, Eigen::Dynamic> getZCoord(const unsigned idx) const
   {
@@ -64,12 +51,51 @@ public:
     return Z.row(idx);
   }
 
+  // note: fieldname is part of the mscomplex in which this crystal lives, so maybe "getparent" would be better... some problem with copying that I ran into ([yet another] TODO)
+  void setFieldname(const std::string name)
+  {
+    fieldname = name;
+  }
+
+  const std::string& getFieldname() const
+  {
+    return fieldname;
+  }
+
+  void setFieldValues(Eigen::Map<Eigen::VectorXd> values)
+  {
+    new (&fieldvalues) Eigen::Map<Eigen::VectorXd>(values.data(), values.size());
+    min_fieldval = fieldvalues.minCoeff();
+    max_fieldval = fieldvalues.maxCoeff();
+  }
+
+  double minFieldValue()
+  {
+    return min_fieldval;
+  }
+
+  double maxFieldValue()
+  {
+    return max_fieldval;
+  }
+
+  const Eigen::VectorXd getNewLatentSpaceValue(double fieldval)
+  {
+    return Z.row(0); // just to make sure everything around the function is working
+
+    // do the proper gaussian kernel regression to generate a new LSV
+  }
+
 private:
   // Shapeodds model 
   std::set<unsigned> sample_indices;        // indices of images used to construct this model
   Eigen::MatrixXd Z;  
   Eigen::MatrixXd W;
   Eigen::MatrixXd w0;
+
+  std::string fieldname;
+  Eigen::Map<Eigen::VectorXd> fieldvalues;  
+  double min_fieldval, max_fieldval;
 
   friend class ShapeOdds;
 };
@@ -89,11 +115,8 @@ public:
   static float testEvaluateModel(const Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord,
                                  const unsigned p, const unsigned c, const unsigned z_idx, const Image &sampleImage,
                                  const bool writeToDisk = false, const std::string path = "");
-
-  int doSomething(int x=42);
   
 private:
-  int do_something_quietly(int y);
 
   Eigen::MatrixXd my_V_matrix;
   Eigen::MatrixXi my_F_matrix;

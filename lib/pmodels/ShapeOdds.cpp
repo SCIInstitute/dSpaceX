@@ -101,16 +101,6 @@ ShapeOdds::~ShapeOdds()
 {
 }
 
-int ShapeOdds::doSomething(int x)
-{
-  return do_something_quietly(x);
-}
-  
-int ShapeOdds::do_something_quietly(int y)
-{
-  return y*y;
-}
-
 // TODO if helpful; e.g., if we want to write [8|16|32|64]-bit greyscale this fcn could take care of resampling appropriately)
 // void writeImage(const Eigen::MatrixXd &column_order_image, std::string path, unsigned w, unsigned h)
 // {

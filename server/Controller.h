@@ -47,6 +47,9 @@ class Controller {
   void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
 
+  // PModels helpers
+  unsigned getPersistenceLevelIdx(const unsigned desired_persistence, const PModels::MSComplex &mscomplex) const;
+
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
 

@@ -498,7 +498,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
+  for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
   {
     unsigned persistence_idx = persistence;// + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
@@ -529,6 +529,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
       PModels::MSCrystal &c = P.getCrystal(crystal);
+      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in PModels::Model
       parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds

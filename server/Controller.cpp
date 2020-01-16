@@ -777,35 +777,11 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
   response["msg"] = std::string("here's your new sample computing using ShapeOdds(tm). Have a nice day!");
 }
 
-/**
- * This returns a set of new samples (images) computed with the given ShapeOdds model for
- * the specified crystal at this persistence level using numZ latent space coordinates.
- * The z_coords are created for numZ evenly-spaced values of the field covered by this crystal
- *
- * Parameters: 
- *   datasetId     - should already be loaded
- *   fieldname     - (e.g., one of the QoIs)
- *   persistenceId - persistence level of the M-S for this field of the dataset
- *   crystalId     - crystal of the given persistence level
- *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
- *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
- */
-void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
-  // <ctc> TODO: partition level set into numZ evenly-spaced field vals and compute a z_coord for each
-  //       for now, just calling fetchAllImageForCrystal_Shapeodds
-  int datasetId = request["datasetId"].asInt();
-  std::string fieldname = request["fieldname"].asString();
-  int persistence = request["persistenceLevel"].asInt();
-  int crystalid = request["crystalID"].asInt();
-  int numZ = request["numSamples"].asInt();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
-  Controller::fetchAllImagesForCrystal_Shapeodds(request, response);
-}
-
 // converts w*h x 1 matrix of doubles to w x h 2d image of unsigned char, throwing an exception if dims don't match
 // <ctc> TODO move this to utils (or somewhere) so it can be used by others
 Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h)
 {
+  //<ctc> note: this is about the same as in ShapeOdds::evaluateModel, accidental rewrite? consolidate.
   Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image_mat = (I.array() * 255.0).cast<unsigned char>();
 
   if (image_mat.size() != w * h)
@@ -839,9 +815,102 @@ Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned 
 #endif
 }
 
+void setFieldValues(PModels::Model &model, const std::string &fieldname, Dataset &dataset)
+{
+  // get field values for the given fieldname (todo: shouldn't assume field values for a qoi since could also be design param)
+  auto qois = dataset.getQoiNames();
+  auto result = std::find(std::begin(qois), std::end(qois), fieldname);
+  if (result == std::end(qois))
+    throw std::runtime_error("ERROR: no field (QoI) named " + fieldname);
+  int qoiIndex = result - std::begin(qois);
+  auto qoiVector = dataset.getQoiVector(qoiIndex);
+  model.setFieldValues(Eigen::Map<Eigen::VectorXd>(qoiVector.data(), qoiVector.N()));
+}
+
+/**
+ * This returns a set of new samples (images) computed with the given ShapeOdds model for
+ * the specified crystal at this persistence level using numZ latent space coordinates.
+ * The z_coords are created for numZ evenly-spaced values of the field covered by this crystal
+ *
+ * Parameters: 
+ *   datasetId     - should already be loaded
+ *   fieldname     - (e.g., one of the QoIs)
+ *   persistenceId - persistence level of the M-S for this field of the dataset
+ *   crystalId     - crystal of the given persistence level
+ *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
+ *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
+ */
+void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+    // TODO: Send back an error message.
+  }
+  maybeLoadDataset(datasetId);
+  // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
+
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
+    // TODO: Send back an error message. Invalid persistenceLevel.
+  }
+
+  std::string fieldname = request["fieldname"].asString();
+  int persistence = request["persistenceLevel"].asInt();
+  int crystalid = request["crystalID"].asInt();
+  int numZ = request["numSamples"].asInt();
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
+  
+  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  unsigned persistence_idx = getPersistenceLevelIdx(persistence, mscomplex);
+  PModels::Model &model(mscomplex.getModel(persistence_idx, crystalid).second);  
+  // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
+  setFieldValues(model, fieldname, *m_currentDataset);
+  const Image& sample_image = m_currentDataset->getThumbnail(0);  // just using this to get dims of image created by model prediction
+
+  // partition the crystal's model's field (QoI) into numZ values and evaluate model for each of them
+  double minval = model.minFieldValue();
+  double maxval = model.maxFieldValue();
+  double delta = (maxval - minval) / static_cast<double>(numZ); //<ctc> is the cast necessary? can't remember...
+  
+  for (unsigned i = 0; i < numZ; i++)
+  {
+    double fieldval = minval + delta * i;
+
+    // get new latent space coordinate for this field_val
+    Eigen::VectorXd z_coord = model.getNewLatentSpaceValue(fieldval);
+
+    // evaluate model at this coordinate
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
+    
+    // add result image to response
+    Image image = convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    Json::Value imageObject = Json::Value(Json::objectValue);
+    imageObject["width"] = image.getWidth();
+    imageObject["height"] = image.getHeight();
+    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getConstRawData()[0]), image.getConstRawData().size());
+    response["thumbnails"].append(imageObject);
+  }
+
+  response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
+}
+
+// computes index of the requested persistence level in this M-S complex
+// (since there could be more actual persistence levels than those stored in the complex)
+unsigned Controller::getPersistenceLevelIdx(const unsigned desired_persistence, const PModels::MSComplex &mscomplex) const
+{
+  unsigned persistence_idx = desired_persistence -
+    (m_currentTopoData->getMaxPersistenceLevel() - mscomplex.numPersistenceLevels() + 1);
+
+  if (persistence_idx < 0)
+    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(desired_persistence));
+  return persistence_idx;
+}
+
 /**
  * This returns a set of new samples (images) computed with the given ShapeOdds model for the
- * specified crystal at this persistence level using thelatent space coordinates for each of
+ * specified crystal at this persistence level using the latent space coordinates for each of
  * the original samples of model/crystal (each sample has a z_coord).
  *
  * Parameters: 
@@ -868,24 +937,11 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
 
   std::string fieldname = request["fieldname"].asString();
   int crystalid = request["crystalID"].asInt();
-  //crystalid += 1; //<ctc> fixme: client is requesting incorrect crystal (are they really or are we using 1-based crystal numbering) -> this seems like it always worked, but crystal ids were screwed up b/c of different partitions used to generate model vs dSpaceX's ms_complex
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
-  // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
-  //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
-  //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
-  std::vector<PModels::MSComplex> &ms_complexes(m_currentDataset->getMSModels());
-  unsigned idx = 0;
-  for (; idx < ms_complexes.size(); idx++)
-    if (ms_complexes[idx].getFieldname() == fieldname) break;
-  if (idx >= ms_complexes.size())
-    throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
-  
-  // adjust persistenceLevel for the number in the requested ms_complex (<ctc> TODO: this may also come up elsewhere)
-  unsigned adjusted_persistenceLevel = persistenceLevel - (m_currentTopoData->getMaxPersistenceLevel() - ms_complexes[idx].numPersistenceLevels() + 1);
-  if (adjusted_persistenceLevel < 0)
-    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(persistenceLevel));
-  const PModels::Model &model(ms_complexes[idx].getModel(adjusted_persistenceLevel, crystalid).second);
+  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  unsigned persistence_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
+  PModels::Model &model(mscomplex.getModel(persistence_idx, crystalid).second);
   
   //create images using the elements of this model's Z
   auto sample_indices(model.getSampleIndices());

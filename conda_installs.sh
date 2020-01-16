@@ -29,14 +29,16 @@ fi
 #update anaconda
 conda update --yes -n base -c defaults conda
 conda update --yes --all
-conda install --yes -c anaconda pip     # needed in sub-environments or the base env's pip will silently install to base
-pip install --upgrade pip
 
 #create and activate dspacex env
 CONDAENV=dspacex
 conda create --yes --name $CONDAENV
 eval "$(conda shell.bash hook)"
 conda activate $CONDAENV
+
+# pip is needed in sub-environments or the base env's pip will silently install to base
+conda install --yes pip
+pip install --upgrade pip
 
 #install dspacex deps
 conda install --yes -c conda-forge zlib=1.2.11 ncurses=6.1 cmake=3.15.5 nodejs=13.0.0 eigen=3.3.7
