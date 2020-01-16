@@ -83,7 +83,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           numberOfWindows={this.props.numberOfWindows}
           onCrystalSelection={this.props.onCrystalSelection}
           evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-        <ResponsiveDrawer images={this.state.drawerImages}/>
+        {/* <ResponsiveDrawer images={this.state.drawerImages}/>*/} // Original Drawer
       </div>
     );
   }
