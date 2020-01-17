@@ -125,7 +125,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   }
 
   // Used to export crystal partitions for shape odds
-  DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
+  //DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
 
   // detach and return processed result
   HDProcessResult *result = m_result;

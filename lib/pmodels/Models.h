@@ -18,14 +18,11 @@ namespace PModels {
 class Model
 {
 public:
-  Model() : fieldvalues(NULL, 0)
-  {}
-
   void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
   {
     W  = _W;
     w0 = _w0;
-    Z  = _Z;
+    Z  = _Z;  // todo: maybe better *not* to store this at all since the model used a subset and indices could be a reverse reference to sample
   }
 
   void addSample(unsigned n)
@@ -64,19 +61,34 @@ public:
 
   void setFieldValues(Eigen::Map<Eigen::VectorXd> values)
   {
-    new (&fieldvalues) Eigen::Map<Eigen::VectorXd>(values.data(), values.size());
-    min_fieldval = fieldvalues.minCoeff();
-    max_fieldval = fieldvalues.maxCoeff();
+    fieldvalues.resize(sample_indices.size());
+    {
+      unsigned i = 0;
+      for (auto idx : sample_indices)
+      {
+        fieldvalues(i++) = values(idx);
+      }
+    }
+
+    // TODO: odd place to put this... the reason is that the sample_indices aren't there when the model is set above
+    z_coords.resize(sample_indices.size(), Z.cols());
+    {
+      unsigned i = 0;
+      for (auto idx : sample_indices)
+      {
+        z_coords.row(i++) = Z.row(idx);
+      }
+    }
   }
 
   double minFieldValue()
   {
-    return min_fieldval;
+    return fieldvalues.minCoeff();
   }
 
   double maxFieldValue()
   {
-    return max_fieldval;
+    return fieldvalues.maxCoeff();
   }
 
   const Eigen::RowVectorXd getNewLatentSpaceValue(double new_fieldval, double sigma = 0.25)
@@ -84,23 +96,13 @@ public:
     //debug: hardcode new fieldval
     //new_fieldval = 0.62341;
     std::cout << "num_samples: " << sample_indices.size() << std::endl;
-    std::cout << "z-size: " << Z.cols() << std::endl;
+    std::cout << "z-size: " << z_coords.cols() << std::endl;
     
     // gaussian kernel regression to generate a new LSV
     using namespace Eigen;
 
-    RowVectorXd fieldvals(sample_indices.size());
-    MatrixXd z_coords(sample_indices.size(), Z.cols());
-    {
-      unsigned i = 0;
-      for (auto idx : sample_indices)
-      {
-        z_coords.row(i) = Z.row(idx);
-        fieldvals(i++) = fieldvalues(idx);
-      }
-    }
-    
     // calculate difference
+    RowVectorXd fieldvals(fieldvalues);
     fieldvals *= -1.0;
     fieldvals.array() += new_fieldval;
     std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;
@@ -133,22 +135,21 @@ public:
     output /= summation;
     //RowVectorXd output = (fieldvals * z_coords) / summation;
     std::cout << "output after division:\n" << output << std::endl;
-    std::cout << "for comparison, here's the first z_coord from the training data:\n" << Z.row(0) << std::endl;
+    std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
 
     return output;
-    //return Z.row(0); // just to make sure everything around the function is working
   }
 
 private:
   // Shapeodds model 
   std::set<unsigned> sample_indices;        // indices of images used to construct this model
-  Eigen::MatrixXd Z;  
+  Eigen::MatrixXd z_coords;                 // latent space coordinates of samples used to learn this model
+  Eigen::MatrixXd Z;                        // ALL latent space coordinates of the dataset (todo: don't store these in the model)
   Eigen::MatrixXd W;
   Eigen::MatrixXd w0;
 
   std::string fieldname;
-  Eigen::Map<Eigen::VectorXd> fieldvalues;  
-  double min_fieldval, max_fieldval;
+  Eigen::RowVectorXd fieldvalues;  
 
   friend class ShapeOdds;
 };

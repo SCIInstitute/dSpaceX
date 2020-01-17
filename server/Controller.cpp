@@ -950,6 +950,8 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   //create images using the elements of this model's Z
   auto sample_indices(model.getSampleIndices());
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
+
+  //todo: sort z coords by fieldvalue
   for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
