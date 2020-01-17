@@ -841,6 +841,7 @@ void setFieldValues(PModels::Model &model, const std::string &fieldname, Dataset
  *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
  */
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
+#if 1
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
@@ -879,7 +880,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     double fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
-    Eigen::VectorXd z_coord = model.getNewLatentSpaceValue(fieldval);
+    Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval);
 
     // evaluate model at this coordinate
     Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
@@ -894,6 +895,9 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   }
 
   response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
+#else
+  fetchAllImagesForCrystal_Shapeodds(request, response);
+#endif
 }
 
 // computes index of the requested persistence level in this M-S complex
