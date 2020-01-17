@@ -264,15 +264,17 @@ class Client {
   /**
    * Grab the graph embedding.
    * @param {string} datasetId
+   * @param {string} embeddingId
    * @param {number} k
    * @param {number} persistenceLevel
    * @param {string} qoiName
    * @return {Promise}
    */
-  fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName) {
+  fetchSingleEmbedding(datasetId, embeddingId, k, persistenceLevel, qoiName) {
     let command = {
-      name: 'fetchGraphEmbedding',
+      name: 'fetchSingleEmbedding',
       datasetId: datasetId,
+      embeddingId: embeddingId,
       k: k,
       persistenceLevel: persistenceLevel,
       qoiName: qoiName,
@@ -370,6 +372,13 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchEmbeddingsList(datasetId) {
+    const command = {
+      name: 'fetchEmbeddingsList',
+      datasetId: datasetId,
+    };
+    return this._createCommandPromise(command);
+  }
   /**
    * Grab the parameter values for the given parameter
    * @param {string} datasetId

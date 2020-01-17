@@ -94,7 +94,7 @@ class EmbeddingWindow extends React.Component {
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
       const qoiName = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName),
+        this.client.fetchSingleEmbedding(datasetId, 1, k, persistenceLevel, qoiName),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
         const [graphResult, thumbnailResult] = results;

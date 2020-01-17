@@ -53,10 +53,11 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
-  m_commandMap.insert({"fetchGraphEmbedding", std::bind(&Controller::fetchGraphEmbedding, this, _1, _2)});
+  m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
+  m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -397,12 +398,13 @@ void Controller::fetchMorseSmaleDecomposition(
  * @param request
  * @param response
  */
-void Controller::fetchGraphEmbedding(
-                                     const Json::Value &request, Json::Value &response) {
+void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     // TODO: Send back an error message.
   }
+
+  int embeddingId = request["embeddingId"].asInt();
 
   int k = request["k"].asInt();
   if (k < 0) {
@@ -422,8 +424,8 @@ void Controller::fetchGraphEmbedding(
   // TODO:  Modify logic to return layout based on chosen layout type.
   //        For now, only send back embeddings provided with the dataset.
   if (m_currentDataset->numberOfEmbeddings() > 0) {
-    auto embedding = m_currentDataset->getEmbeddingMatrix(0);
-    auto name = m_currentDataset->getEmbeddingNames()[0];
+    auto embedding = m_currentDataset->getEmbeddingMatrix(embeddingId);
+    auto name = m_currentDataset->getEmbeddingNames()[embeddingId];
 
     // TODO: Factor out a normalizing routine.
     float minX = embedding(0, 0);
@@ -639,6 +641,24 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
         if(crystal_partition(i) == crystalID) {
             response["crystalSamples"].append(i);
         }
+    }
+}
+
+void Controller::fetchEmbeddingsList(const Json::Value &request, Json::Value &response) {
+    int datasetId = request["datasetId"].asInt();
+    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+        // TODO: Send back an error message.
+    }
+
+    maybeLoadDataset(datasetId);
+
+    auto embeddingNames = m_currentDataset->getEmbeddingNames();
+    response["embeddings"] = Json::Value(Json::arrayValue);
+    for (unsigned int i = 0; i < embeddingNames.size(); ++i) {
+        Json::Value embeddingObject(Json::objectValue);
+        embeddingObject["name"] = embeddingNames[i];
+        embeddingObject["id"] = i;
+        response["embeddings"].append(embeddingObject);
     }
 }
 

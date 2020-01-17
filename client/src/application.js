@@ -179,8 +179,9 @@ class Application extends React.Component {
     Promise.all([
       this.getParameters(datasetId, parameterNames),
       this.getQois(datasetId, qoiNames),
+      this.client.fetchEmbeddingsList(datasetId),
     ]).then((results) => {
-      const [parameters, qois] = results;
+      const [parameters, qois, embeddingList] = results;
       this.setState({
         currentDataset: dataset,
         windows: [],
@@ -189,6 +190,7 @@ class Application extends React.Component {
         filters: [],
         parameters: parameters,
         qois: qois,
+        embeddings: embeddingList.embeddings,
       });
     });
   }
@@ -479,9 +481,10 @@ class Application extends React.Component {
                   return (
                     <WindowPanel key={i} windowIndex={i}
                       config={windowConfig}
-                      onConfigChange={this.onWindowConfigChange} //passes this function as a prop to the WindowPanel, so onConfigChange calls that function
+                      onConfigChange={this.onWindowConfigChange}
                       dataset={this.state.currentDataset}
-                      enabled={this.state.connected}/>
+                      enabled={this.state.connected}
+                      embeddings={this.state.embeddings}/>
                   );
                 }) : []
             }
@@ -548,7 +551,7 @@ class Application extends React.Component {
                       return (
                         <EmbeddingMorseSmaleWindow
                           key={i}
-                          decomposition={windowConfig.decomposition}  // where the react props come from
+                          decomposition={windowConfig.decomposition} // where the react props come from
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           numberOfWindows={this.state.windows.length}
