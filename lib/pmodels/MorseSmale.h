@@ -28,7 +28,26 @@ class MSCrystal
 {
 public:
   MSCrystal()
-  {}
+  {
+    std::cout << "PModels::MSCrystal ctor." << std::endl;
+  }
+  ~MSCrystal()
+  {
+    std::cout << "PModels::MSCrystal dtor." << std::endl;
+  }
+
+  MSCrystal(const MSCrystal &m) : model(m.model)
+  {
+    std::cout << "PModels::MSCrystal copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  MSCrystal operator=(const MSCrystal &m)
+  {
+    std::cout << "PModels::MSCrystal assignment operator (&m = " << &m << ")." << std::endl;
+    return MSCrystal(m);
+  }
+  
+  MSCrystal(MSCrystal &&c) = default;
+  MSCrystal& operator=(MSCrystal &&c) = default;
 
   void addSample(unsigned n)
   {
@@ -40,7 +59,7 @@ public:
     return model.numSamples();
   }
 
-  const std::set<unsigned>& getSampleIndices() const
+  const std::vector<unsigned>& getSampleIndices() const
   {
     return model.getSampleIndices();
   }
@@ -58,20 +77,27 @@ class MSPersistenceLevel
 {
 public:
   MSPersistenceLevel()
-  {}
+  {
+    std::cout << "PModels::MSPersistenceLevel ctor." << std::endl;
+  }
   ~MSPersistenceLevel()
-  {}
+  {
+    std::cout << "PModels::MSPersistenceLevel dtor." << std::endl;
+  }
 
   MSPersistenceLevel(const MSPersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
   {
-    //std::cout << "PModels::MSPersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
+    std::cout << "PModels::MSPersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
   }
   MSPersistenceLevel operator=(const MSPersistenceLevel &m)
   {
-    //std::cout << "PModels::MSPersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
+    std::cout << "PModels::MSPersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
     return MSPersistenceLevel(m);
   }
   
+  MSPersistenceLevel(MSPersistenceLevel &&c) = default;
+  MSPersistenceLevel& operator=(MSPersistenceLevel &&c) = default;
+
   void setNumCrystals(unsigned nCrystals)
   {
     crystals.resize(nCrystals);
@@ -109,29 +135,38 @@ private:
 };
 
 
-// Associates a model with it's name (pXXcYY)
+// Associates a model with it's name (pXXcYY) // <ctc> an issue? there could be more than one model with the same name (in another MSComplex)
 typedef std::pair<std::string, Model&> ModelPair;
 
 // Morse-Smale model container, a M-S complex for a given field and the models learned for each of its crystals.
 class MSComplex
 {
 public:
+  MSComplex()
+  {
+    std::cout << "PModels::MSComplex ctor." << std::endl;
+  }
   MSComplex(std::string &field, unsigned nSamples, unsigned nPersistences)
     : fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
-  {}
+  {
+    std::cout << "PModels::MSComplex ctor with initialization vars." << std::endl;
+  }
   ~MSComplex()
-  {}
-
+  {
+    std::cout << "PModels::MSComplex dtor." << std::endl;
+  }
   MSComplex(const MSComplex &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
   {
-    //std::cout << "PModels::MSComplex copy ctor (&m = " << &m << ")." << std::endl;
+    std::cout << "PModels::MSComplex copy ctor (&m = " << &m << ")." << std::endl;
   }
   MSComplex operator=(const MSComplex &m)
   {
-    //std::cout << "PModels::MSComplex assignment operator (&model = " << &m << ")." << std::endl;
+    std::cout << "PModels::MSComplex assignment operator (&model = " << &m << ")." << std::endl;
     return MSComplex(m);
   }
-  
+  MSComplex(MSComplex &&c) = default;
+  MSComplex& operator=(MSComplex &&c) = default;
+
   std::string getFieldname() const
   {
     return fieldname;

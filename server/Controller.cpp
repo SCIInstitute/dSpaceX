@@ -41,6 +41,14 @@ Controller::Controller(const std::string &datapath_) : datapath(datapath_) {
   configureAvailableDatasets(datapath);
 }
 
+// sendError
+// Sets the given error message in the Json response.
+void Controller::sendError(Json::Value &response, std::string str)
+{
+  response["error"] = true;
+  response["error_msg"] = str;
+}
+
 /**
  * Construct map of command names to command handlers.
  */
@@ -59,7 +67,6 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
-  //m_commandMap.insert({"fetchNewLatentSpaceCoord_ShapeOdds", std::bind(&Controller::fetchNewLatentSpaceCoord_ShapeOdds, this, _1, _2)});
   m_commandMap.insert({"fetchImageForLatentSpaceCoord_Shapeodds", std::bind(&Controller::fetchImageForLatentSpaceCoord_Shapeodds, this, _1, _2)});
   m_commandMap.insert({"fetchNImagesForCrystal_Shapeodds", std::bind(&Controller::fetchNImagesForCrystal_Shapeodds, this, _1, _2)});
   m_commandMap.insert({"fetchAllImagesForCrystal_Shapeodds", std::bind(&Controller::fetchAllImagesForCrystal_Shapeodds, this, _1, _2)});
@@ -114,6 +121,21 @@ void Controller::configureAvailableDatasets(const std::string &path) {
   }
 }
 
+// verifyFieldname
+// ensure the fieldname exists in this Controller's dataset
+bool Controller::verifyFieldname(Fieldtype type, const std::string &name)
+{
+  if (type == Fieldtype::QoI) {
+    auto qois = m_currentDataset->getQoiNames();
+    return std::find(std::begin(qois), std::end(qois), name) != std::end(qois);
+  }
+  else if (type == Fieldtype::DesignParameter) {
+    auto parameters = m_currentDataset->getParameterNames();
+    return std::find(std::begin(parameters), std::end(parameters), name) != std::end(parameters);
+  }
+  return false;
+}    
+
 void Controller::handleData(void *wsi, void *data) {
   // TODO:  Implement
 }
@@ -143,7 +165,6 @@ void Controller::handleText(void *wsi, const std::string &text) {
     wst_sendText(wsi, const_cast<char *>(text.c_str()));
   } catch (const std::exception &e) {
     std::cerr << "Command Execution Error: " << e.what() << std::endl;
-    // TODO: Send back an error message.
   }
 }
 
@@ -166,9 +187,9 @@ void Controller::fetchDatasetList(const Json::Value &request, Json::Value &respo
  */
 void Controller::fetchDataset(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
   maybeLoadDataset(datasetId);
 
   response["datasetId"] = datasetId;
@@ -187,16 +208,14 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
 /**
  * Handle the command to fetch the k-nearest-neighbor graph of a dataset.
  */
-void Controller::fetchKNeighbors(
-                                 const Json::Value &request, Json::Value &response) {
+void Controller::fetchKNeighbors(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
 
   // TODO: Don't reprocess data if previous commands already did so.
   int n = m_currentDataset->getDistanceMatrix().N();
@@ -215,25 +234,29 @@ void Controller::fetchKNeighbors(
     }
   }
 }
-
-
 /**
  * Handle the command to fetch the morse smale persistence levels of a dataset.
  */
-void Controller::fetchMorseSmalePersistence(
-                                            const Json::Value &request, Json::Value &response) {
+void Controller::fetchMorseSmalePersistence(const Json::Value &request, Json::Value &response)
+{
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
 
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -244,7 +267,7 @@ void Controller::fetchMorseSmalePersistence(
   response["maxPersistenceLevel"] = maxLevel;
   response["complexSizes"] = Json::Value(Json::arrayValue);
   for (int level = minLevel; level <= maxLevel; level++) {
-    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);  // <ctc> is this where the crystal numbering bug lives?
+    MorseSmaleComplex *complex = m_currentTopoData->getComplex(level);
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
   }
@@ -255,24 +278,30 @@ void Controller::fetchMorseSmalePersistence(
  */
 void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
 
@@ -298,33 +327,39 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
 /**
  * Handle the command to fetch the details of a single crystal in a persistence level.
  */
+// TODO: NOT USED BY ANYTHING!
 void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   MorseSmaleComplex *complex = m_currentTopoData->getComplex(persistenceLevel);
 
   int crystalId = request["crystalId"].asInt();
-  if (crystalId < 0 || crystalId >= complex->getCrystals().size()) {
-    // TODO: Send back an error message. Invalid CrystalId.
-  }
+  if (crystalId < 0 || crystalId >= complex->getCrystals().size())
+    return sendError(response, "invalid crystal id");
 
   Crystal *crystal = complex->getCrystals()[crystalId];
 
@@ -347,20 +382,26 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
 /**
  * Handle the command to fetch the full morse smale decomposition of a dataset.
  */
-void Controller::fetchMorseSmaleDecomposition(
-                                              const Json::Value &request, Json::Value &response) {
+// TODO: NOT USED BY ANYTHING!
+void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
-  int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
 
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
+  int k = request["k"].asInt();
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -396,27 +437,32 @@ void Controller::fetchMorseSmaleDecomposition(
  * @param request
  * @param response
  */
-void Controller::fetchGraphEmbedding(
-                                     const Json::Value &request, Json::Value &response) {
+void Controller::fetchGraphEmbedding(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
 
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
 
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
+
+  maybeLoadDataset(datasetId);
+  maybeProcessData(k, category, fieldname);
+
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
-
-  maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   // TODO:  Modify logic to return layout based on chosen layout type.
   //        For now, only send back embeddings provided with the dataset.
@@ -470,21 +516,17 @@ void Controller::fetchGraphEmbedding(
     response["embedding"]["adjacency"] = adjacency;
   }
 
-  // Get colors based on current QOI
-  std::string qoiName = request["qoiName"].asString();
-  auto qois = m_currentDataset->getQoiNames();
-  auto result = std::find(std::begin(qois), std::end(qois), qoiName);
-  if (result == std::end(qois)) {
-    // TODO: Send back an error message. Invalid Qoi Name.
-  }
-  int qoiIndex = result - std::begin(qois);
-  auto qoiVector = m_currentDataset->getQoiVector(qoiIndex);
+  // get the vector of values for the requested field
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
+  if (!fieldvals.data())
+    std::runtime_error("Invalid fieldname or empty field");
 
+  // Get colors based on current field
   auto colorMap = m_currentVizData->getColorMap(persistenceLevel);
   response["colors"] = Json::Value(Json::arrayValue);
-  for(unsigned int i = 0; i < qoiVector.N(); ++i) {
+  for(unsigned int i = 0; i < fieldvals.size(); ++i) {
     auto colorRow = Json::Value(Json::arrayValue);
-    auto color = colorMap.getColor(qoiVector(i));
+    auto color = colorMap.getColor(fieldvals(i));
     colorRow.append(color[0]);
     colorRow.append(color[1]);
     colorRow.append(color[2]);
@@ -494,24 +536,30 @@ void Controller::fetchGraphEmbedding(
 
 void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   // Get points for regression line
   auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
@@ -525,8 +573,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
 
     // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
-      auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(
-                                                                            m_currentVizData->getMean(persistenceLevel)[i](n));
+      auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(m_currentVizData->getMean(persistenceLevel)[i](n));
       colors[n + 1][0] = color[0];
       colors[n + 1][1] = color[1];
       colors[n + 1][2] = color[2];
@@ -572,24 +619,30 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
 
 void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
-  if (k < 0) {
-    // TODO: Send back an error message.
-  }
+  if (k < 0) return sendError(response, "invalid knn");
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldname"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k);
+  maybeProcessData(k, category, fieldname);
 
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
   auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
@@ -616,95 +669,79 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
 }
 
 void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &response) {
-    int datasetId = request["datasetId"].asInt();
-    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-        // TODO: Send back an error message.
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+
+  // get requested persistence level
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
+
+  // the crystal id to look for in this persistence level
+  int crystalID = request["crystalID"].asInt();
+
+  auto crystal_partition = m_currentVizData->getCrystalPartitions(persistenceLevel);
+
+  response["crystalSamples"] = Json::Value(Json::arrayValue);
+  for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
+    if(crystal_partition(i) == crystalID) {
+      response["crystalSamples"].append(i);
     }
-
-    unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-    unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
-    int persistenceLevel = request["persistenceLevel"].asInt();
-    if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-        // TODO: Send back an error message. Invalid persistenceLevel.
-    }
-
-    int crystalID = request["crystalID"].asInt();
-
-    auto crystal_partition = m_currentProcessResult->crystalPartitions[persistenceLevel];
-
-    response["crystalSamples"] = Json::Value(Json::arrayValue);
-    for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
-        if(crystal_partition(i) == crystalID) {
-            response["crystalSamples"].append(i);
-        }
-    }
+  }
 }
 
 /**
- * Handle the command to fetch an array of a named parameter.
+ * Handle the command to fetch an array of a named parameter. (todo: fetchParameter and fetchQoi could easily be consolidated)
  */
 void Controller::fetchParameter(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
 
+  // get the vector of values for the requested field
   std::string parameterName = request["parameterName"].asString();
-  auto parameters = m_currentDataset->getParameterNames();
-  auto result = std::find(std::begin(parameters), std::end(parameters), parameterName);
-  if (result == std::end(parameters)) {
-    // TODO: Send back an error message. Invalid Qoi Name.
-  }
-
-  int parameterIndex = result - std::begin(parameters);
-  auto parameterVector = m_currentDataset->getParameterVector(parameterIndex);
-
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(Fieldtype::DesignParameter, parameterName);
+  if (!fieldvals.data()) return sendError(response, "invalid fieldname");
+  
   response["parameterName"] = parameterName;
   response["parameter"] = Json::Value(Json::arrayValue);
-  for (int i = 0; i < parameterVector.N(); i++) {
-    response["parameter"].append(parameterVector(i));
+  for (int i = 0; i < fieldvals.size(); i++) {
+    response["parameter"].append(fieldvals(i));
   }
 }
 
-
 /**
- * Handle the command to fetch an array of a named QoI
+ * Handle the command to fetch an array of a named QoI (todo: fetchParameter and fetchQoi could easily be consolidated)
  */
 void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
 
+  // get the vector of values for the requested field
   std::string qoiName = request["qoiName"].asString();
-  auto qois = m_currentDataset->getQoiNames();
-  auto result = std::find(std::begin(qois), std::end(qois), qoiName);
-  if (result == std::end(qois)) {
-    // TODO: Send back an error message. Invalid Qoi Name.
-  }
-
-  int qoiIndex = result - std::begin(qois);
-  auto qoiVector = m_currentDataset->getQoiVector(qoiIndex);
-
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(Fieldtype::QoI, qoiName);
+  if (!fieldvals.data()) return sendError(response, "invalid fieldname");
+  
   response["qoiName"] = qoiName;
   response["qoi"] = Json::Value(Json::arrayValue);
-  for (int i = 0; i < qoiVector.N(); i++) {
-    response["qoi"].append(qoiVector(i));
+  for (int i = 0; i < fieldvals.size(); i++) {
+    response["qoi"].append(fieldvals(i));
   }
 }
 
 /**
  * Handle the command to fetch sample image thumbnails if available.
  */
-void Controller::fetchThumbnails(
-                                 const Json::Value &request, Json::Value &response) {
+void Controller::fetchThumbnails(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
 
   auto thumbnails = m_currentDataset->getThumbnails();
@@ -717,28 +754,12 @@ void Controller::fetchThumbnails(
     // imageObject["data"] = base64_encode(  // <ctc> not needed by anything, so why are we sending this?
     //                                     reinterpret_cast<const unsigned char *>(image.getData()),
     //                                     4 * image.getWidth() * image.getHeight());
-    imageObject["rawData"] = base64_encode(
-                                           reinterpret_cast<const unsigned char *>(&image.getRawData()[0]),
+    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getRawData()[0]),
                                            image.getRawData().size());
     response["thumbnails"].append(imageObject);
   }
 }
 
-/**
- * This computes a new latent space variable for the given model using:
- * 2d coord, Mu, Theta, then Estep, etc. (<ctc> look at matlab code and review discussions w/ Shireen and Wei)
- *
- * Parameters: 
- *   datasetId - should already be loaded
- *   fieldname - (e.g., one of the QoIs)
- *   persistenceId - persistence level of the M-S for this field of the dataset
- *   crystalId - crystal of the given persistence level
- *   ... (whatever is needed to decide how to compute the new z_coord (ex: 2d coord, Mu, Theta, ...)
- */
-// void Controller::fetchNewLatentSpaceCoord_ShapeOdds(const Json::Value &request, Json::Value &response) {
-//   int datasetId = request["datasetId"].asInt();
-  // <ctc> TODO:
-  
 /**
  * This computes and returns a new sample (image) for the given latent space coordinate using
  * the ShapeOdds model for the specified crystal at this persistence level
@@ -753,9 +774,8 @@ void Controller::fetchThumbnails(
 void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response) {
 #if 0
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> if for speed we decide not to load models till their evaluation is requested
 
@@ -815,18 +835,6 @@ Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned 
 #endif
 }
 
-void setFieldValues(PModels::Model &model, const std::string &fieldname, Dataset &dataset)
-{
-  // get field values for the given fieldname (todo: shouldn't assume field values for a qoi since could also be design param)
-  auto qois = dataset.getQoiNames();
-  auto result = std::find(std::begin(qois), std::end(qois), fieldname);
-  if (result == std::end(qois))
-    throw std::runtime_error("ERROR: no field (QoI) named " + fieldname);
-  int qoiIndex = result - std::begin(qois);
-  auto qoiVector = dataset.getQoiVector(qoiIndex);
-  model.setFieldValues(Eigen::Map<Eigen::VectorXd>(qoiVector.data(), qoiVector.N()));
-}
-
 /**
  * This returns a set of new samples (images) computed with the given ShapeOdds model for
  * the specified crystal at this persistence level using numZ latent space coordinates.
@@ -843,31 +851,36 @@ void setFieldValues(PModels::Model &model, const std::string &fieldname, Dataset
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
 #if 1
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
+  //TODO: add category here like the other functions (just too tired right now)
+
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   std::string fieldname = request["fieldname"].asString();
-  int persistence = request["persistenceLevel"].asInt();
   int crystalid = request["crystalID"].asInt();
   int numZ = request["numSamples"].asInt();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistence<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
   
   PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
-  unsigned persistence_idx = getPersistenceLevelIdx(persistence, mscomplex);
-  PModels::Model &model(mscomplex.getModel(persistence_idx, crystalid).second);  
+  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
+  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);  
+
   // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
-  setFieldValues(model, fieldname, *m_currentDataset);
+  // get the vector of values for the field
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(/*category*/Fieldtype::QoI, fieldname);
+  if (!fieldvals.data())
+    std::runtime_error("Invalid fieldname or empty field");
+  model.setFieldValues(fieldvals);
+
   const Image& sample_image = m_currentDataset->getThumbnail(0);  // just using this to get dims of image created by model prediction
 
   // partition the crystal's model's field (QoI) into numZ values and evaluate model for each of them
@@ -900,16 +913,16 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
 #endif
 }
 
-// computes index of the requested persistence level in this M-S complex
+// computes index of the requested (0-based) persistence level in this M-S complex
 // (since there could be more actual persistence levels than those stored in the complex)
-unsigned Controller::getPersistenceLevelIdx(const unsigned desired_persistence, const PModels::MSComplex &mscomplex) const
+unsigned Controller::getPersistenceLevelIdx(const unsigned desired_persistenceLevel, const PModels::MSComplex &mscomplex) const
 {
-  unsigned persistence_idx = desired_persistence -
+  unsigned persistenceLevel_idx = desired_persistenceLevel -
     (m_currentTopoData->getMaxPersistenceLevel() - mscomplex.numPersistenceLevels() + 1);
 
-  if (persistence_idx < 0)
-    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(desired_persistence));
-  return persistence_idx;
+  if (persistenceLevel_idx < 0)
+    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(desired_persistenceLevel));
+  return persistenceLevel_idx;
 }
 
 /**
@@ -925,28 +938,26 @@ unsigned Controller::getPersistenceLevelIdx(const unsigned desired_persistence, 
  */
 void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
+  // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
   int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel) {
-    // TODO: Send back an error message. Invalid persistenceLevel.
-  }
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
 
   std::string fieldname = request["fieldname"].asString();
   int crystalid = request["crystalID"].asInt();
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
   PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
-  unsigned persistence_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
-  PModels::Model &model(mscomplex.getModel(persistence_idx, crystalid).second);
-  
+  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
+  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
+
   //create images using the elements of this model's Z
   auto sample_indices(model.getSampleIndices());
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
@@ -968,8 +979,8 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
+
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
-    // <ctc> FIXME/TODO: does this need adjusted_persistenceLevel?
     float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistenceLevel, crystalid, zidx, sample_image,
                                                           true /*writeToDisk*/, outputBasepath);
 
@@ -995,14 +1006,12 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
  */
 void Controller::fetchAllForLatentSpaceUsingSharedGP(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
-  if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
-    // TODO: Send back an error message.
-  }
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
   int qoi = request["qoi"].asInt();
   std::cout << "fetchAllForLatentSpaceUsingSharedGP: datasetId is "<<datasetId<<", qoi is "<<qoi<<std::endl;
-  if (qoi < 0) {
-    // TODO: Send back an error message.
-  }
+  if (qoi < 0)
+    return sendError(response, "invalid parameter");
 
   std::cout << "TODO: return something :-)\n";
   response["msg"] = std::string("need to return desired QoI, DPs, and an image for the given shared_gp latent space");
@@ -1038,19 +1047,57 @@ void Controller::maybeLoadDataset(int datasetId) {
   m_currentDatasetId = datasetId;
 }
 
+// getFieldvalues
+// returns Eigen::Map vector wrapping the values for a given field
+const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, const std::string &name)
+{
+  if (type == Fieldtype::DesignParameter)
+  {
+    auto parameters = m_currentDataset->getParameterNames();
+    auto result = std::find(std::begin(parameters), std::end(parameters), name);
+    if (result == std::end(parameters)) 
+      return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+
+    int index = std::distance(parameters.begin(), result);
+    FortranLinalg::DenseVector<Precision> values = m_currentDataset->getParameterVector(index);
+    return Eigen::Map<Eigen::VectorXd>(values.data(), values.N());
+  }
+  else if (type == Fieldtype::QoI)
+  {
+    auto qois = m_currentDataset->getQoiNames();
+    auto result = std::find(std::begin(qois), std::end(qois), name);
+    if (result == std::end(qois)) 
+      return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+
+    int index = std::distance(qois.begin(), result);
+    FortranLinalg::DenseVector<Precision> values = m_currentDataset->getQoiVector(index);
+    return Eigen::Map<Eigen::VectorXd>(values.data(), values.N());
+  }
+  return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+}
+
 /**
- * Checks if the requested dataset has been processed
- * with the chosen k value. If not, processes the data.
+ * Checks if the requested dataset has been processed. If not, processes the data.
+ *
+ * k is the num nearest neighbors to consider when generating M-S complex for a dataset
+ * category is design parameter or qoi
+ * fieldname is the element of the given category to process
+ *
+ * TODO: maybeLoadDataset and maybeProcessData should return bool and caller return error if they fail
  */
-void Controller::maybeProcessData(int k) {
-  if (k == m_currentK) {
+void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldname) {
+  if (k == m_currentK && m_currentField == fieldname) {
     return;
   }
 
-  if (m_currentProcessResult) {
-    delete m_currentProcessResult;
-    m_currentProcessResult = nullptr;
-  }
+  // get the vector of values for the requested field
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
+  if (!fieldvals.data())
+    std::runtime_error("Invalid fieldname or empty field");
+
+  m_currentField = fieldname;
+  m_currentK = k;
+  
   if (m_currentVizData) {
     delete m_currentVizData;
     m_currentVizData = nullptr;
@@ -1071,24 +1118,20 @@ void Controller::maybeProcessData(int k) {
 
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
-  m_currentK = k;
 
-  // TODO: Provide mechanism to select QoI used.
   // TODO: Expose processing parameters to function interface.
   try {
-    m_currentProcessResult = genericProcessor.processOnMetric(
-                                                              m_currentDistanceMatrix,
-                                                              m_currentDataset->getQoiVector(0),
+    HDProcessResult *result = genericProcessor.processOnMetric(m_currentDistanceMatrix,
+                                                              FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
                                                               m_currentK  /* knn */,
                                                               50        /* samples */,
-                                                              20        /* num_persistences */,
+                                                              99        /* num_persistences */, //TODO: make passing -1 generate all of 'em
                                                               false     /* random */,
-                                                              0.25      /* sigma */,
+                                                              0.25      /* sigma */,    // TODO: this should be ~15% of fieldrange (but maybe not for M-S computation)
                                                               15         /* smooth */);
-    m_currentVizData = new SimpleHDVizDataImpl(m_currentProcessResult);
+    m_currentVizData = new SimpleHDVizDataImpl(result);
     m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {
     std::cerr << err << std::endl;
-    // TODO: Return Error Message.
   }
 }

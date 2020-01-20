@@ -18,6 +18,26 @@ namespace PModels {
 class Model
 {
 public:
+  Model()
+  {
+    std::cout << "PModels::Model ctor." << std::endl;
+  }
+  ~Model()
+  {
+    std::cout << "PModels::Model dtor." << std::endl;
+  }
+  Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
+  {
+    std::cout << "PModels::Model copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  Model operator=(const Model &m)
+  {
+    std::cout << "PModels::Model assignment operator (&m = " << &m << ")." << std::endl;
+    return Model(m);
+  }
+  Model(Model &&c) = default;
+  Model& operator=(Model &&c) = default;
+  
   void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
   {
     W  = _W;
@@ -27,7 +47,7 @@ public:
 
   void addSample(unsigned n)
   {
-    sample_indices.insert(n);
+    sample_indices.push_back(n);
   }
 
   const unsigned numSamples() const
@@ -35,17 +55,17 @@ public:
     return sample_indices.size();
   }
 
-  const std::set<unsigned>& getSampleIndices() const
+  const std::vector<unsigned>& getSampleIndices() const
   {
     return sample_indices;
   }
   
-  const Eigen::Matrix<double, 1, Eigen::Dynamic> getZCoord(const unsigned idx) const
+  const Eigen::VectorXd getZCoord(const unsigned idx) const
   {
     if (idx >= numSamples())
       throw std::runtime_error("cannot return " + std::to_string(idx) + "th z_coord because there are only " + std::to_string(numSamples()) + " samples in this model.");
     
-    return Z.row(idx);
+    return Z.row(sample_indices[idx]);
   }
 
   // note: fieldname is part of the mscomplex in which this crystal lives, so maybe "getparent" would be better... some problem with copying that I ran into ([yet another] TODO)
@@ -142,7 +162,7 @@ public:
 
 private:
   // Shapeodds model 
-  std::set<unsigned> sample_indices;        // indices of images used to construct this model
+  std::vector<unsigned> sample_indices;        // indices of images used to construct this model
   Eigen::MatrixXd z_coords;                 // latent space coordinates of samples used to learn this model
   Eigen::MatrixXd Z;                        // ALL latent space coordinates of the dataset (todo: don't store these in the model)
   Eigen::MatrixXd W;
@@ -161,7 +181,21 @@ class ShapeOdds // : public Model
 {
 public:
   ShapeOdds();
-  ~ShapeOdds();
+  ~ShapeOdds()
+  {
+    std::cout << "PModels::ShapeOdds dtor." << std::endl;
+  }
+  ShapeOdds(const ShapeOdds &m) : my_V_matrix(m.my_V_matrix), my_F_matrix(m.my_F_matrix), models(m.models)
+  {
+    std::cout << "PModels::ShapeOdds copy ctor (&m = " << &m << ")." << std::endl;
+  }
+  ShapeOdds operator=(const ShapeOdds &m)
+  {
+    std::cout << "PModels::ShapeOdds assignment operator (&m = " << &m << ")." << std::endl;
+    return ShapeOdds(m);
+  }
+  ShapeOdds(ShapeOdds &&c) = default;
+  ShapeOdds& operator=(ShapeOdds &&c) = default;
 
   static Eigen::MatrixXd evaluateModel(const Model &model, const Eigen::VectorXd &z_coord, const bool writeToDisk = false,
                                        const std::string outpath = "", unsigned w = 0, unsigned h = 0);
@@ -169,12 +203,10 @@ public:
   static float testEvaluateModel(const Model &model, const Eigen::Matrix<double, 1, Eigen::Dynamic> &z_coord,
                                  const unsigned p, const unsigned c, const unsigned z_idx, const Image &sampleImage,
                                  const bool writeToDisk = false, const std::string path = "");
-  
-private:
 
+private:
   Eigen::MatrixXd my_V_matrix;
   Eigen::MatrixXi my_F_matrix;
-
   std::vector<Model> models;
 };
 

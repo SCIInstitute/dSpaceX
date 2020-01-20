@@ -751,9 +751,11 @@ class GraphGLWindow extends GLWindow {
     if (!this.props.decomposition) {
       return;
     }
-    let { datasetId, k } = this.props.decomposition;
+    let { datasetId, k, persistenceLevel } = this.props.decomposition;
+    let category = this.props.decomposition.decompositionCategory;
+    let field = this.props.decomposition.decompositionField;
     this.client
-      .fetchGraphEmbedding(datasetId, k)
+      .fetchGraphEmbedding(datasetId, category, field, k, persistenceLevel)
       .then(function(result) {
         if (result.embedding && result.embedding.layout) {
           let layout = result.embedding.layout;
@@ -856,20 +858,21 @@ class GraphGLWindow extends GLWindow {
     }
     const { selectedDesigns, activeDesigns } = nextProps;
     const { datasetId, k, persistenceLevel } = nextProps.decomposition;
-    const qoiName = nextProps.decomposition.decompositionField;
+    const field = nextProps.decomposition.decompositionField;
+    const category = nextProps.decomposition.decompositionCategory;
 
     if (this.props.decomposition &&
         datasetId === this.props.decomposition.datasetId &&
         k === this.props.decomposition.k &&
         persistenceLevel === this.props.decomposition.persistenceLevel &&
-        qoiName === this.props.decomposition.decompositionField &&
+        field === this.props.decomposition.decompositionField &&
         selectedDesigns === this.props.selectedDesigns) {
       return;
     } else if (this.props.decomposition &&
         datasetId === this.props.decomposition.datasetId &&
         k === this.props.decomposition.k &&
         persistenceLevel === this.props.decomposition.persistenceLevel &&
-        qoiName === this.props.decomposition.decompositionField &&
+        field === this.props.decomposition.decompositionField &&
         (selectedDesigns !== this.props.selectedDesigns ||
         activeDesigns !== this.props.activeDesigns)) {
       if (this.layout && this.adjacency) {
@@ -912,8 +915,8 @@ class GraphGLWindow extends GLWindow {
       }
     } else {
       Promise.all([
-        this.client.fetchGraphEmbedding(datasetId, k),
-        this.client.fetchQoi(datasetId, qoiName),
+        this.client.fetchGraphEmbedding(datasetId, category, field, k, persistenceLevel),
+        this.client.fetchQoi(datasetId, field),
       ]).then((results) => {
         const [result, qoiResult] = results;
         this.qoi = qoiResult.qoi;

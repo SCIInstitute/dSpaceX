@@ -6,9 +6,11 @@ namespace PModels {
 
 ShapeOdds::ShapeOdds()
 {
+  std::cout << "PModels::ShapeOdds ctor." << std::endl;
+
+#if 0 // was just learning how to use the Eigen library
   using namespace Eigen;
   
-#if 0 // was just learning how to use the Eigen library
   // Inline mesh of a cube
   my_V_matrix = (MatrixXd(8,3)<<
                  0.0,0.0,0.0,
@@ -95,10 +97,6 @@ ShapeOdds::ShapeOdds()
   std::cout << "Mc:" << std::endl << Mc << std::endl;
   
 #endif
-}
-
-ShapeOdds::~ShapeOdds()
-{
 }
 
 // TODO if helpful; e.g., if we want to write [8|16|32|64]-bit greyscale this fcn could take care of resampling appropriately)

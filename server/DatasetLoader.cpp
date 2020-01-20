@@ -101,8 +101,11 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
 
   if (config["models"]) {
     auto ms_models = DatasetLoader::parseMSModels(config, filePath);
-    for (auto ms_model : ms_models) {
+    for (auto ms_model : ms_models) { //<ctc> this one i'm less understanding... maybe because it's part of a pair, which is an lvalue
       builder.withMSModel(ms_model.first, ms_model.second);
+      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
+    // for (auto ms_model : DatasetLoader::parseMSModels(config, filePath)) {
+    //   builder.withMSModel(ms_model.getFieldname(), /*std::move(ms_model)*/ ms_model); // it just passes it right along. Still needs move?
     }
   }
 
@@ -411,6 +414,9 @@ std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config,
       const YAML::Node &modelNode = modelsNode[i];
       MSModelsPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
       ms_models.push_back(ms_model);
+      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
+      // MSModelsPair ms_model("Max Stress", DatasetLoader::parseMSModelsForField(modelNode, filePath));
+      // ms_models.push_back(std::move(ms_model));
     }
   } else {
     throw std::runtime_error("Config 'models' field is not a list.");
@@ -420,6 +426,7 @@ std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config,
 }
 
 MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+///*PModels::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
 {
   using namespace PModels;
 
@@ -498,7 +505,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
+  for (unsigned persistence = 0; persistence < npersistences; persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
   {
     unsigned persistence_idx = persistence;// + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
@@ -545,7 +552,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     P.setCrystalSamples(crystal_ids);
   }
 
-  return MSModelsPair(fieldname, ms_of_models);
+  return MSModelsPair(fieldname, std::move(ms_of_models) /* must explicitly move b/c it's being added to a struct and still could be used locally*/);
+  //return ms_of_models;
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files

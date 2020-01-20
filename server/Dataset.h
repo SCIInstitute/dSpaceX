@@ -59,7 +59,7 @@ class Dataset {
     return m_parameters[i];
   }
 
-  std::vector<std::string> getParameterNames() {
+  std::vector<std::string>& getParameterNames() {
     return m_parameterNames;
   }
 
@@ -131,9 +131,9 @@ class Dataset {
       m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
-    Builder& withMSModel(std::string name, PModels::MSComplex &ms_model) {
+    Builder& withMSModel(std::string name, PModels::MSComplex ms_model) {  // <ctc> auto ms_model?
       m_dataset->m_msModelFields.push_back(name);
-      m_dataset->m_msModels.push_back(ms_model);
+      m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
       return (*this);
     }
     Builder& withName(std::string name) {

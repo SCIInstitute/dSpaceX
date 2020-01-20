@@ -19,6 +19,8 @@ typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
 typedef
 std::pair<std::string, PModels::MSComplex> MSModelsPair;
+// typedef
+// std::vector<PModels::MSComplex> MSModels; // <ctc> definitely an issue: more than one model for a given fieldname. Multimap or vector?
 
 class DatasetLoader {
 public:
@@ -50,9 +52,11 @@ private:
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
 
+  //static std::vector<PModels::MSComplex> parseMSModels(
   static std::vector<MSModelsPair> parseMSModels(
       const YAML::Node &config, const std::string &filePath);
 
+  //static std::vector<PModels::MSComplex> parseMSModelsForField(
   static MSModelsPair parseMSModelsForField(
       const YAML::Node &config, const std::string &filePath);
 

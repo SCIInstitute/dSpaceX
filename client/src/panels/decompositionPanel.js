@@ -89,9 +89,11 @@ class DecompositionPanel extends React.Component {
    * Fetch the morse smale complex persistence for the given options.
    */
   async fetchDecomposition() {
-    let k = 15;
+    let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
     let datasetId = this.props.dataset.datasetId;
-    let result = await this.client.fetchMorseSmalePersistence(datasetId, k);
+    let category = this.state.decompositionCategory;
+    let field = this.state.decompositionField;
+    let result = await this.client.fetchMorseSmalePersistence(datasetId, category, field, k);
     this.setState({
       minPersistence: result.minPersistenceLevel,
       maxPersistence: result.maxPersistenceLevel,
@@ -136,9 +138,11 @@ class DecompositionPanel extends React.Component {
     });
 
     if (mode == 'Morse-Smale') {
-      let k = 15;
+      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
       let datasetId = this.props.dataset.datasetId;
-      this.client.fetchMorseSmalePersistence(datasetId, k)
+      let category = this.state.decompositionCategory;
+      let field = this.state.decompositionField;
+      this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
         .then(function(result) {
           this.setState({
             minPersistence: result.minPersistenceLevel,
@@ -189,11 +193,12 @@ class DecompositionPanel extends React.Component {
    */
   async updateDataModel(level) {
     if (level != '') {
-      let k = 15;
+      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
       let datasetId = this.props.dataset.datasetId;
       let persistenceLevel = parseInt(level);
-      let result = await this.client.fetchMorseSmalePersistenceLevel(
-        datasetId, k, persistenceLevel);
+      let category = this.state.decompositionCategory;
+      let field = this.state.decompositionField;
+      let result = await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, k, persistenceLevel);
 
       this.setState({
         crystals: result.complex.crystals,

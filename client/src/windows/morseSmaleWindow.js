@@ -64,9 +64,11 @@ class MorseSmaleWindow extends React.Component {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      const category = this.props.decomposition.decompositionCategory;
+      const field = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, field, k, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, category, field, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         this.regressionCurves = regressionResponse;
