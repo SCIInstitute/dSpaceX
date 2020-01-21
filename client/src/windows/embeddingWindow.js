@@ -81,6 +81,10 @@ class EmbeddingWindow extends React.Component {
       return;
     }
 
+    if (this.props.embedding === undefined) {
+      return;
+    }
+
     // New window has been added to application
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
       this.resizeCanvas();
@@ -89,12 +93,14 @@ class EmbeddingWindow extends React.Component {
     // Decomposition is loaded for the first time
     // Or has been updated so we need to load the data
     if (prevProps.decomposition === null
-      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
+      || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      const { embedding } = this.props;
       const qoiName = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchSingleEmbedding(datasetId, 1, k, persistenceLevel, qoiName),
+        this.client.fetchSingleEmbedding(datasetId, embedding.id, k, persistenceLevel, qoiName),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
         const [graphResult, thumbnailResult] = results;

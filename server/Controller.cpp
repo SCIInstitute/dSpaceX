@@ -1020,7 +1020,7 @@ void Controller::maybeProcessData(int k) {
                                                               20        /* persistence */,
                                                               true      /* random */,
                                                               0.25      /* sigma */,
-                                                              0         /* smooth */);
+                                                              15         /* smooth */);
     m_currentVizData = new SimpleHDVizDataImpl(m_currentProcessResult);
     m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {

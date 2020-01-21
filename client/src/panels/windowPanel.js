@@ -90,34 +90,58 @@ class WindowPanel extends React.Component {
     });
   }
 
+  /**
+   * Handles x attribute group change
+   * @param {event} event
+   */
   handleXAttributeGroup(event) {
     let xAttributeGroup = event.target.value;
     let xAttribute = undefined;
     this.setState({ xAttributeGroup, xAttribute });
   }
 
+  /**
+   * Handles x attribute change
+   * @param {event} event
+   */
   handleXAttribute(event) {
     let xAttribute = event.target.value;
     this.setState({ xAttribute });
   }
 
+  /**
+   * Handles y attribute group change
+   * @param {event} event
+   */
   handleYAttributeGroup(event) {
     let yAttributeGroup = event.target.value;
     let yAttribute = undefined;
     this.setState({ yAttributeGroup, yAttribute });
   }
 
+  /**
+   * Handles y attribute change
+   * @param {event} event
+   */
   handleYAttribute(event) {
     let yAttribute = event.target.value;
     this.setState({ yAttribute });
   }
 
+  /**
+   * Handles marker attribute group change
+   * @param {event} event
+   */
   handleMarkerAttributeGroup(event) {
     let markerAttributeGroup = event.target.value;
     let markerAttribute = undefined;
     this.setState({ markerAttributeGroup, markerAttribute });
   }
 
+  /**
+   * Handles marker attribute change
+   * @param {event} event
+   */
   handleMarkerAttribute(event) {
     let markerAttribute = event.target.value;
     this.setState({ markerAttribute });
@@ -138,7 +162,7 @@ class WindowPanel extends React.Component {
    * Handle the decomposition changing.
    * @param {object} decomposition
    */
-  handleDecompositionChange(decomposition) { // here's that window panel, which somehow is gonna call onWindowConfigChange in application.js when the state changes. This function is called by render in thsi class
+  handleDecompositionChange(decomposition) {
     this.setState({
       decomposition: decomposition,
     });
@@ -189,30 +213,15 @@ class WindowPanel extends React.Component {
           disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='algorithm-input'>Embedding Algorithm</InputLabel>
           <Select ref="algorithmCombo"
-            value={this.state.embeddingAlgorithm}
+            value={this.state.embeddingAlgorithm || ''}
             onChange={this.handleEmbeddingAlgorithmChange} inputProps={{
               name: 'algorithm',
               id: 'algorithm-input',
             }}>
             {this.props.embeddings.map((embedding) =>
-              <MenuItem key={embedding.id} value={embedding.name.trim()} id={embedding.id}>
+              <MenuItem key={embedding.id} value={embedding.name.trim()}>
                 <em>{embedding.name}</em>
               </MenuItem>)}
-            {/* <MenuItem value="precomputed">*/}
-            {/*  <em>Precomputed</em>*/}
-            {/* </MenuItem>*/}
-            {/* <MenuItem value="shapeodds">*/}
-            {/*  <em>ShapeOdds</em>*/}
-            {/* </MenuItem>*/}
-            {/* <MenuItem value="pca" disabled={true}>*/}
-            {/*  <em>PCA</em>*/}
-            {/* </MenuItem>*/}
-            {/* <MenuItem value="isomap" disabled={true}>*/}
-            {/*  <em>ISOMap</em>*/}
-            {/* </MenuItem>*/}
-            {/* <MenuItem value="t-sne" disabled={true}>*/}
-            {/*  <em>t-SNE</em>*/}
-            {/* </MenuItem>*/}
           </Select>
         </FormControl>
 
@@ -258,8 +267,13 @@ class WindowPanel extends React.Component {
           client={this.client}/>
       </React.Fragment>
     );
-  }
+  };
 
+  /**
+   * Gets the attribute groups
+   * @param {string} attributeGroup
+   * @return {JSX}
+   */
   getAttributeNames(attributeGroup) {
     if (attributeGroup === 'parameters') {
       return this.props.dataset.parameterNames;
@@ -268,6 +282,10 @@ class WindowPanel extends React.Component {
     }
   };
 
+  /**
+   * Gets the scatter plot options.
+   * @return {JSX}
+   */
   getScatterPlotOptions() {
     const { classes } = this.props;
     return (

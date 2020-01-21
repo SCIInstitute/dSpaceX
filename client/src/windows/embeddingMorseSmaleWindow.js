@@ -1,5 +1,4 @@
 import EmbeddingWindow from './embeddingWindow';
-// import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
@@ -66,6 +65,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <EmbeddingWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
+          embedding={this.props.embedding}
           selectedDesigns={this.props.selectedDesigns}
           onDesignSelection={this.props.onDesignSelection}
           activeDesigns={this.props.activeDesigns}

@@ -202,9 +202,7 @@ class Application extends React.Component {
     let windowConfig = {
       id: this.state.windows.length,
     };
-      this.setState({ //a React method, **be sure to always call this** since it notifies the UI as follows:
-	  // note that in vanilla javascript, the entire DOM will update whenever something is changed, but React creates a virtual DOM and so setState compares this to the full DOM and only updates what must be done, thereby make the entire site update more efficient.
-	  // if I were to only update windows without calling setState, it wouldn't update React properly... there are nuances and if I update something wrong it might not update the scene accordingly... talk to Kyli about this in more detail
+    this.setState({
       windows: this.state.windows.concat(windowConfig),
     });
   }
@@ -219,7 +217,7 @@ class Application extends React.Component {
     let windows = this.state.windows;
     windows[config.id] = newConfig;
     this.setState({
-      windows: windows,  //but what does this call again? (lets React know that windows has changed, and React will figure out which window changed) Kyli will show me in the debugger how React knows which window changed.
+      windows: windows,
     });
   }
 
@@ -551,7 +549,9 @@ class Application extends React.Component {
                       return (
                         <EmbeddingMorseSmaleWindow
                           key={i}
-                          decomposition={windowConfig.decomposition} // where the react props come from
+                          decomposition={windowConfig.decomposition}
+                          embedding={this.state.embeddings.filter(
+                            (emb) => emb.name === windowConfig.embeddingAlgorithm)[0]}
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           numberOfWindows={this.state.windows.length}
