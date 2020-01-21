@@ -382,7 +382,7 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={true}>
+                <MenuItem value="parameter" disabled={false}>
                   <em>Parameter</em>
                 </MenuItem>
                 <MenuItem value="geometry" disabled={true}>
