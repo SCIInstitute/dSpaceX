@@ -27,28 +27,6 @@ namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP
 class MSCrystal
 {
 public:
-  MSCrystal()
-  {
-    std::cout << "PModels::MSCrystal ctor." << std::endl;
-  }
-  ~MSCrystal()
-  {
-    std::cout << "PModels::MSCrystal dtor." << std::endl;
-  }
-
-  MSCrystal(const MSCrystal &m) : model(m.model)
-  {
-    std::cout << "PModels::MSCrystal copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  MSCrystal operator=(const MSCrystal &m)
-  {
-    std::cout << "PModels::MSCrystal assignment operator (&m = " << &m << ")." << std::endl;
-    return MSCrystal(m);
-  }
-  
-  MSCrystal(MSCrystal &&c) = default;
-  MSCrystal& operator=(MSCrystal &&c) = default;
-
   void addSample(unsigned n)
   {
     model.addSample(n);
@@ -59,7 +37,7 @@ public:
     return model.numSamples();
   }
 
-  const std::vector<unsigned>& getSampleIndices() const
+  const std::vector<Model::ValueIndexPair>& getSampleIndices() const
   {
     return model.getSampleIndices();
   }
@@ -76,28 +54,6 @@ private:
 class MSPersistenceLevel
 {
 public:
-  MSPersistenceLevel()
-  {
-    std::cout << "PModels::MSPersistenceLevel ctor." << std::endl;
-  }
-  ~MSPersistenceLevel()
-  {
-    std::cout << "PModels::MSPersistenceLevel dtor." << std::endl;
-  }
-
-  MSPersistenceLevel(const MSPersistenceLevel &m) : crystals(m.crystals), global_embeddings(m.global_embeddings)
-  {
-    std::cout << "PModels::MSPersistenceLevel copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  MSPersistenceLevel operator=(const MSPersistenceLevel &m)
-  {
-    std::cout << "PModels::MSPersistenceLevel assignment operator (&m = " << &m << ")." << std::endl;
-    return MSPersistenceLevel(m);
-  }
-  
-  MSPersistenceLevel(MSPersistenceLevel &&c) = default;
-  MSPersistenceLevel& operator=(MSPersistenceLevel &&c) = default;
-
   void setNumCrystals(unsigned nCrystals)
   {
     crystals.resize(nCrystals);
@@ -135,37 +91,16 @@ private:
 };
 
 
-// Associates a model with it's name (pXXcYY) // <ctc> an issue? there could be more than one model with the same name (in another MSComplex)
+// Associates a model with it's name (pXXcYY) // todo: this is an issue because there could be more than one model with the same name (in another MSComplex)
 typedef std::pair<std::string, Model&> ModelPair;
 
 // Morse-Smale model container, a M-S complex for a given field and the models learned for each of its crystals.
 class MSComplex
 {
 public:
-  MSComplex()
-  {
-    std::cout << "PModels::MSComplex ctor." << std::endl;
-  }
   MSComplex(std::string &field, unsigned nSamples, unsigned nPersistences)
     : fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
-  {
-    std::cout << "PModels::MSComplex ctor with initialization vars." << std::endl;
-  }
-  ~MSComplex()
-  {
-    std::cout << "PModels::MSComplex dtor." << std::endl;
-  }
-  MSComplex(const MSComplex &m) : fieldname(m.fieldname), num_samples(m.num_samples), persistence_levels(m.persistence_levels)
-  {
-    std::cout << "PModels::MSComplex copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  MSComplex operator=(const MSComplex &m)
-  {
-    std::cout << "PModels::MSComplex assignment operator (&model = " << &m << ")." << std::endl;
-    return MSComplex(m);
-  }
-  MSComplex(MSComplex &&c) = default;
-  MSComplex& operator=(MSComplex &&c) = default;
+  {}
 
   std::string getFieldname() const
   {
@@ -182,12 +117,9 @@ public:
     return persistence_levels.size();
   }
 
-  MSPersistenceLevel& getPersistenceLevel(unsigned i)
+  MSPersistenceLevel& getPersistenceLevel(unsigned idx)
   {
-    // <ctc> TODO: the number of persistence levels should be used to adjust the requested plvl from the PModels::MSComplex
-    //             sort of a chicken-and-egg problem since the shapeodds models don't realize there are more plvls than are computed
-    unsigned persistence_idx = i;// - 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
-    return persistence_levels[persistence_idx];
+    return persistence_levels[idx];
   }
 
   ModelPair getModel(unsigned p, unsigned c);
@@ -196,8 +128,6 @@ public:
 private:
   static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
   {
-//    unsigned actual_persistence_level = p + 14; // <ctc> hack since persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
-// ugh: outside in the Controller we've already computed the correct index for this MS, but internally we don't know. Maybe just keep it that way? Except the model name will be wrong from the outside. ugh. ugh. ugh. Why do they need these names anyway? It's noted above how that could be a conflict with more than one field.
     return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
   }
 

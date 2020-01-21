@@ -56,7 +56,7 @@ std::string basePathOf(const std::string &filePath) {
   return path;
 }
 
-Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
+std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &filePath) {
   YAML::Node config = YAML::LoadFile(filePath);
   Dataset::Builder builder;
 

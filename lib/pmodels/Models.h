@@ -18,26 +18,14 @@ namespace PModels {
 class Model
 {
 public:
-  Model()
+  struct ValueIndexPair
   {
-    std::cout << "PModels::Model ctor." << std::endl;
-  }
-  ~Model()
-  {
-    std::cout << "PModels::Model dtor." << std::endl;
-  }
-  Model(const Model &m) : Z(m.Z), W(m.W), w0(m.w0), sample_indices(m.sample_indices)
-  {
-    std::cout << "PModels::Model copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  Model operator=(const Model &m)
-  {
-    std::cout << "PModels::Model assignment operator (&m = " << &m << ")." << std::endl;
-    return Model(m);
-  }
-  Model(Model &&c) = default;
-  Model& operator=(Model &&c) = default;
-  
+    float val;
+    unsigned idx;
+
+    static bool compare(const ValueIndexPair &p, const ValueIndexPair &q) { return p.val < q.val; }
+  };
+
   void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
   {
     W  = _W;
@@ -55,20 +43,20 @@ public:
     return sample_indices.size();
   }
 
-  const std::vector<unsigned>& getSampleIndices() const
+  const std::vector<ValueIndexPair>& getSampleIndices() const
   {
-    return sample_indices;
-  }
-  
-  const Eigen::VectorXd getZCoord(const unsigned idx) const
-  {
-    if (idx >= numSamples())
-      throw std::runtime_error("cannot return " + std::to_string(idx) + "th z_coord because there are only " + std::to_string(numSamples()) + " samples in this model.");
-    
-    return Z.row(sample_indices[idx]);
+    return fieldvalues_and_indices;
   }
 
-  // note: fieldname is part of the mscomplex in which this crystal lives, so maybe "getparent" would be better... some problem with copying that I ran into ([yet another] TODO)
+  const Eigen::VectorXd getZCoord(const unsigned global_idx) const
+  {
+    if (global_idx >= Z.size())
+      throw std::runtime_error("cannot return " + std::to_string(global_idx) + "th z_coord because there are only " + std::to_string(Z.size()) + " samples in the dataset.");
+    
+    return Z.row(global_idx);
+  }
+
+  // note: fieldname is part of the mscomplex in which this crystal lives, so maybe "getparent" would be better...
   void setFieldname(const std::string name)
   {
     fieldname = name;
@@ -81,14 +69,20 @@ public:
 
   void setFieldValues(Eigen::Map<Eigen::VectorXd> values)
   {
+    fieldvalues_and_indices.resize(sample_indices.size());
     fieldvalues.resize(sample_indices.size());
     {
       unsigned i = 0;
       for (auto idx : sample_indices)
       {
+        fieldvalues_and_indices[i].idx = idx;
+        fieldvalues_and_indices[i].val = values(idx);
         fieldvalues(i++) = values(idx);
       }
     }
+
+    // sort by increasing fieldvalue... TODO: maybe addSample should add its corresponding field value rather than this awkward fcn
+    std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), ValueIndexPair::compare);
 
     // TODO: odd place to put this... the reason is that the sample_indices aren't there when the model is set above
     z_coords.resize(sample_indices.size(), Z.cols());
@@ -125,37 +119,30 @@ public:
     RowVectorXd fieldvals(fieldvalues);
     fieldvals *= -1.0;
     fieldvals.array() += new_fieldval;
-    std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;
+    //std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;
 
     // apply Gaussian to difference
     fieldvals = fieldvals.array().square();
-    std::cout << "squared difference:\n" << fieldvals << std::endl;
+    //std::cout << "squared difference:\n" << fieldvals << std::endl;
     fieldvals /= (-2.0 * sigma * sigma);
-    std::cout << "difference / -2sigma^2:\n" << fieldvals << std::endl;
+    //std::cout << "difference / -2sigma^2:\n" << fieldvals << std::endl;
     fieldvals = fieldvals.array().exp();
-    std::cout << "e^(difference / -2sigma^2):\n" << fieldvals << std::endl;
+    //std::cout << "e^(difference / -2sigma^2):\n" << fieldvals << std::endl;
     double denom = sqrt(2.0 * M_PI * sigma);
-    std::cout << "denom (sqrt(2*pi*sigma):\n" << denom << std::endl;
+    //std::cout << "denom (sqrt(2*pi*sigma):\n" << denom << std::endl;
     fieldvals /= denom;
-    std::cout << "Gaussian matrix of difference:\n" << fieldvals << std::endl;
+    //std::cout << "Gaussian matrix of difference:\n" << fieldvals << std::endl;
 
     // calculate weight and normalization for regression
     double summation = fieldvals.sum();
-    std::cout << "sum of Gaussian vector of difference:\n" << summation << std::endl;
-
-    //gaussian_vector.transposeInPlace();
-    // MatrixXd output = gaussian_vector * z_coords;
-    // std::cout << "Gaussian matrix * z_coords (latent space coords generated during model's training):\n" << output << std::endl;
-    //VectorXd newZ = output.rowwise().sum();
-    //std::cout << "New z_coord from rowwise summation of G * z_coords:\n" << newZ << std::endl;
-    //VectorXd newZ = output.transpose();
+    //std::cout << "sum of Gaussian vector of difference:\n" << summation << std::endl;
 
     MatrixXd output = fieldvals * z_coords;
-    std::cout << "output before division:\n" << output << std::endl;
+    //std::cout << "output before division:\n" << output << std::endl;
     output /= summation;
     //RowVectorXd output = (fieldvals * z_coords) / summation;
-    std::cout << "output after division:\n" << output << std::endl;
-    std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
+    std::cout << "new z_coord:\n" << output << std::endl;
+    //std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
 
     return output;
   }
@@ -170,6 +157,7 @@ private:
 
   std::string fieldname;
   Eigen::RowVectorXd fieldvalues;  
+  std::vector<ValueIndexPair> fieldvalues_and_indices;  //TODO: this feels pretty hokey...
 
   friend class ShapeOdds;
 };
@@ -177,26 +165,9 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 // operates on Shapeodds models, e.g., to produce a new image from a latent space coordinate z.
-class ShapeOdds // : public Model
+class ShapeOdds // : public Model (TODO)
 {
 public:
-  ShapeOdds();
-  ~ShapeOdds()
-  {
-    std::cout << "PModels::ShapeOdds dtor." << std::endl;
-  }
-  ShapeOdds(const ShapeOdds &m) : my_V_matrix(m.my_V_matrix), my_F_matrix(m.my_F_matrix), models(m.models)
-  {
-    std::cout << "PModels::ShapeOdds copy ctor (&m = " << &m << ")." << std::endl;
-  }
-  ShapeOdds operator=(const ShapeOdds &m)
-  {
-    std::cout << "PModels::ShapeOdds assignment operator (&m = " << &m << ")." << std::endl;
-    return ShapeOdds(m);
-  }
-  ShapeOdds(ShapeOdds &&c) = default;
-  ShapeOdds& operator=(ShapeOdds &&c) = default;
-
   static Eigen::MatrixXd evaluateModel(const Model &model, const Eigen::VectorXd &z_coord, const bool writeToDisk = false,
                                        const std::string outpath = "", unsigned w = 0, unsigned h = 0);
   
@@ -205,8 +176,6 @@ public:
                                  const bool writeToDisk = false, const std::string path = "");
 
 private:
-  Eigen::MatrixXd my_V_matrix;
-  Eigen::MatrixXi my_F_matrix;
   std::vector<Model> models;
 };
 

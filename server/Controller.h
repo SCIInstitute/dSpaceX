@@ -82,7 +82,7 @@ class Controller {
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
-  Dataset *m_currentDataset = nullptr;
+  std::unique_ptr<Dataset> m_currentDataset;
   int m_currentDatasetId = -1;
   std::string m_currentField;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;

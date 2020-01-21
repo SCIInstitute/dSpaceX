@@ -11,6 +11,8 @@
 
 class Dataset {
  public:
+  ~Dataset() { std::cerr << "Dataset::~Dataset()\n"; }
+
   int numberOfSamples() {
     return m_sampleCount;
   }
@@ -99,7 +101,7 @@ class Dataset {
   class Builder {
    public:
     Builder() {
-      m_dataset = new Dataset();
+      m_dataset = std::make_unique<Dataset>();
     }
     Builder& withSampleCount(int count) {
       m_dataset->m_sampleCount = count;
@@ -144,16 +146,17 @@ class Dataset {
       m_dataset->m_thumbnails = thumbnails;
       return (*this);
     }
-    Dataset* build() {
+    std::unique_ptr<Dataset> build() {
       // TODO:  Add validation that sample counts match array sizes.
       //        Throw an exception if something doesn't match. 
       // m_dataset->m_hasSamplesMatrix ==> m_dataset->m_samplesMatrix.N()
       // _dataset->m_hasDistanceMatrix ==> m_dataset->m_distanceMatrix.N();
-      return m_dataset;
+      return std::move(m_dataset); // releases ownership of m_dataset
     }
-   private:
-    Dataset *m_dataset;
+  private:
+    std::unique_ptr<Dataset> m_dataset;
   };
+
  private:
   int m_sampleCount;
   FortranLinalg::DenseMatrix<Precision> m_samplesMatrix;

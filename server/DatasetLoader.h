@@ -24,7 +24,7 @@ std::pair<std::string, PModels::MSComplex> MSModelsPair;
 
 class DatasetLoader {
 public:
-  static Dataset* loadDataset(const std::string &filePath);
+  static std::unique_ptr<Dataset> loadDataset(const std::string &filePath);
   static std::string getDatasetName(const std::string &filePath);
 private:
   static std::string parseName(const YAML::Node &config);

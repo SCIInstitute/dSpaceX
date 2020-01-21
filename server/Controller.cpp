@@ -849,7 +849,7 @@ Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned 
  *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
  */
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
-#if 1
+#if 0
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size())
     return sendError(response, "invalid datasetid");
@@ -958,30 +958,39 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
   PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
 
+  // TODO: cut and paste from above! ugh:
+  // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
+  // get the vector of values for the field
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(/*category*/Fieldtype::QoI, fieldname);
+  if (!fieldvals.data())
+    std::runtime_error("Invalid fieldname or empty field");
+  model.setFieldValues(fieldvals);
+
   //create images using the elements of this model's Z
   auto sample_indices(model.getSampleIndices());
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
 
   //todo: sort z coords by fieldvalue
-  for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
+  //for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
+  for (auto sample: sample_indices) // <ctc> note: these are sorted in Model::setFieldValues
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
     extern Controller *controller;
     if (!controller || !controller->m_currentDataset)
       throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
 
-    const Image& sample_image = controller->m_currentDataset->getThumbnail(zidx);
+    const Image& sample_image = controller->m_currentDataset->getThumbnail(sample.idx);
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
     std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) +
-                        "-z" + std::to_string(zidx) + ".png");
-    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(zidx), true /*writeToDisk*/,
+                        "-z" + std::to_string(sample.idx) + ".png");
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(sample.idx), true /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
 
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
-    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(zidx), persistenceLevel, crystalid, zidx, sample_image,
+    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(sample.idx), persistenceLevel, crystalid, sample.idx, sample_image,
                                                           true /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
@@ -1027,8 +1036,7 @@ void Controller::maybeLoadDataset(int datasetId) {
   }
 
   if (m_currentDataset) {
-    delete m_currentDataset;
-    m_currentDataset = nullptr;
+    m_currentDataset.reset();
   }
   if (m_currentVizData) {
     delete m_currentVizData;
@@ -1041,7 +1049,7 @@ void Controller::maybeLoadDataset(int datasetId) {
   m_currentK = -1;
 
   std::string configPath = m_availableDatasets[datasetId].second;
-  m_currentDataset = DatasetLoader::loadDataset(configPath);
+  m_currentDataset = DatasetLoader::loadDataset(configPath); // <ctc> need std::move(loaded_dataset)?
   std::cout << m_currentDataset->getName() << " dataset loaded." << std::endl;
 
   m_currentDatasetId = datasetId;

@@ -124,8 +124,8 @@ HDProcessResult* HDProcessor::processOnMetric(
     computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
 
-  // Used to export crystal partitions for shape odds
-  DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
+  // Used to export crystal partitions for shape odds (TODO: add some parameter and come up with a better name for this)
+  //DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
 
   // detach and return processed result
   HDProcessResult *result = m_result;

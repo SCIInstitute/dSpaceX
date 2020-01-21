@@ -4,10 +4,8 @@
 
 namespace PModels {
 
-ShapeOdds::ShapeOdds()
+void testEigen()
 {
-  std::cout << "PModels::ShapeOdds ctor." << std::endl;
-
 #if 0 // was just learning how to use the Eigen library
   using namespace Eigen;
   
@@ -95,7 +93,6 @@ ShapeOdds::ShapeOdds()
   std::cout << "MD:" << std::endl << MD << std::endl;
   std::cout << "...cast to char is:\n";
   std::cout << "Mc:" << std::endl << Mc << std::endl;
-  
 #endif
 }
 
