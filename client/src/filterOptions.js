@@ -130,7 +130,7 @@ class FilterOptions extends Component {
     const { classes, removeFilter, filterConfig, parameters, qois } = this.props;
     return (
       <Paper style={{ paddingLeft:'10px', paddingRight:'10px', paddingBottom:'20px' }}>
-        <IconButton variant='raised' style={{ marginLeft:'170px' }} onClick={() => removeFilter(filterConfig.id)}>
+        <IconButton variant='contained' style={{ marginLeft:'170px' }} onClick={() => removeFilter(filterConfig.id)}>
           <Close className={classes.icon} fontSize='small'/>
         </IconButton>
         <FormControl className={classes.formControl} style={{ display:'flex', wrap:'nowrap', marginBottom:'5px' }}>
