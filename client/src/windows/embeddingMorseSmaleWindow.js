@@ -1,5 +1,4 @@
 import EmbeddingWindow from './embeddingWindow';
-// import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
@@ -33,14 +32,15 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {number} persistenceLevel
    * @param {number} crystalID
    * @param {number} numSamples
-   * @param {bool} 
+   * @param {bool} showOrig
    */
   computeNewSamplesUsingShapeoddsModel(datasetId, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
-    // eslint-disable-next-line max-len
-    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','+crystalID+','+numSamples+','+showOrig+')');
+    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
+      +crystalID+','+numSamples+','+showOrig+')');
 
     // Ask server to compute the N new images for this crystal and add them to the drawer
-    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, fieldname, persistenceLevel, crystalID, numSamples, showOrig)
+    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, fieldname, persistenceLevel,
+      crystalID, numSamples, showOrig)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
@@ -68,6 +68,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <EmbeddingWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}
+          embedding={this.props.embedding}
           selectedDesigns={this.props.selectedDesigns}
           onDesignSelection={this.props.onDesignSelection}
           activeDesigns={this.props.activeDesigns}

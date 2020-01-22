@@ -217,7 +217,7 @@ class MorseSmaleWindow extends React.Component {
     // Handle left click release
     if (event.button === 0) {
       const position = this.getPickPosition(event);
-      this.pick(position, event.ctrlKey); // click w/ ctrl held down to produce model's original samples 
+      this.pick(position, event.ctrlKey); // click w/ ctrl held down to produce model's original samples
     }
   }
 
@@ -251,6 +251,7 @@ class MorseSmaleWindow extends React.Component {
   /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
+   * @param {boolean} showOrig
    */
   pick(normalizedPosition, showOrig) {
     // Get intersected object
@@ -272,7 +273,8 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel, crystalID, 50 /*numZ*/, showOrig);
+      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel,
+        crystalID, 50 /* numZ*/, showOrig);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });

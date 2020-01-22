@@ -61,10 +61,11 @@ class Controller {
   void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
-  void fetchGraphEmbedding(const Json::Value &request, Json::Value &response);
+  void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
+  void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);

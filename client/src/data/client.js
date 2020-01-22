@@ -283,20 +283,23 @@ class Client {
   /**
    * Grab the graph embedding.
    * @param {string} datasetId
-   * @param {string} category design parameter or qoi
-   * @param {string} fieldname
+   * @param {string} embeddingId
    * @param {number} k
    * @param {number} persistenceLevel
+   * @param {string} category
+   * @param {string} fieldName
    * @return {Promise}
    */
-  fetchGraphEmbedding(datasetId, category, fieldname, k, persistenceLevel) {
+  fetchSingleEmbedding(datasetId, embeddingId, k,
+    persistenceLevel, category, fieldName) {
     let command = {
-      name: 'fetchGraphEmbedding',
+      name: 'fetchSingleEmbedding',
       datasetId: datasetId,
-      category: category,
-      fieldname: fieldname,
+      embeddingId: embeddingId,
       k: k,
       persistenceLevel: persistenceLevel,
+      category: category,
+      fieldName: fieldName,
     };
     return this._createCommandPromise(command);
   }
@@ -401,6 +404,13 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchEmbeddingsList(datasetId) {
+    const command = {
+      name: 'fetchEmbeddingsList',
+      datasetId: datasetId,
+    };
+    return this._createCommandPromise(command);
+  }
   /**
    * Grab the parameter values for the given parameter
    * @param {string} datasetId

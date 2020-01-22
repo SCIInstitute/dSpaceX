@@ -23,6 +23,9 @@ distances:
      metric: euclidean
 
 embeddings:
-  - name: tsne
+  - name: t-SNE
     format: csv
     file: CantileverBeam_tsne_layout.csv
+  - name: ShapeOdds
+    format: csv
+    file: shapeodds_global_embedding.csv

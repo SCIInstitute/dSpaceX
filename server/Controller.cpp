@@ -60,10 +60,11 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
-  m_commandMap.insert({"fetchGraphEmbedding", std::bind(&Controller::fetchGraphEmbedding, this, _1, _2)});
+  m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
+  m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -437,10 +438,14 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
  * @param request
  * @param response
  */
-void Controller::fetchGraphEmbedding(const Json::Value &request, Json::Value &response) {
+
+void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &response) {
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size())
     return sendError(response, "invalid datasetid");
+
+  int embeddingId = request["embeddingId"].asInt();
+  if (embeddingId < 0) return sendError(response, "invalid embeddingId");
 
   // k is the num nearest neighbors to consider when generating M-S complex for a dataset
   int k = request["k"].asInt();
@@ -450,12 +455,12 @@ void Controller::fetchGraphEmbedding(const Json::Value &request, Json::Value &re
   Fieldtype category = Fieldtype(request["category"].asString());
   if (!category.valid()) return sendError(response, "invalid category");
 
-  // desired fieldname (one of the design params or qois)
-  std::string fieldname = request["fieldname"].asString();
-  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
+  // desired fieldName (one of the design params or qois)
+  std::string fieldName = request["fieldName"].asString();
+  if (!verifyFieldname(category, fieldName)) return sendError(response, "invalid field name");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(k, category, fieldName);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -464,11 +469,9 @@ void Controller::fetchGraphEmbedding(const Json::Value &request, Json::Value &re
   if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
     return sendError(response, "invalid persistence level");
 
-  // TODO:  Modify logic to return layout based on chosen layout type.
-  //        For now, only send back embeddings provided with the dataset.
   if (m_currentDataset->numberOfEmbeddings() > 0) {
-    auto embedding = m_currentDataset->getEmbeddingMatrix(0);
-    auto name = m_currentDataset->getEmbeddingNames()[0];
+    auto embedding = m_currentDataset->getEmbeddingMatrix(embeddingId);
+    auto name = m_currentDataset->getEmbeddingNames()[embeddingId];
 
     // TODO: Factor out a normalizing routine.
     float minX = embedding(0, 0);
@@ -517,7 +520,7 @@ void Controller::fetchGraphEmbedding(const Json::Value &request, Json::Value &re
   }
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldName);
   if (!fieldvals.data())
     std::runtime_error("Invalid fieldname or empty field");
 
@@ -691,6 +694,24 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
       response["crystalSamples"].append(i);
     }
   }
+}
+
+void Controller::fetchEmbeddingsList(const Json::Value &request, Json::Value &response) {
+    int datasetId = request["datasetId"].asInt();
+    if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
+        // TODO: Send back an error message.
+    }
+
+    maybeLoadDataset(datasetId);
+
+    auto embeddingNames = m_currentDataset->getEmbeddingNames();
+    response["embeddings"] = Json::Value(Json::arrayValue);
+    for (unsigned int i = 0; i < embeddingNames.size(); ++i) {
+        Json::Value embeddingObject(Json::objectValue);
+        embeddingObject["name"] = embeddingNames[i];
+        embeddingObject["id"] = i;
+        response["embeddings"].append(embeddingObject);
+    }
 }
 
 /**
@@ -986,13 +1007,13 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
     std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(sample.idx) + ".png");
-    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(sample.idx), true /*writeToDisk*/,
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(sample.idx), false /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
 
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
     float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(sample.idx), persistenceLevel, crystalid, sample.idx, sample_image,
-                                                          true /*writeToDisk*/, outputBasepath);
+                                                          false /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
     std::cout << "Quality of generation of image for model at persistence level "
