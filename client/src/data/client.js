@@ -177,13 +177,18 @@ class Client {
   /**
    * Compute Morse-Smale Decomposition
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k number of neighbors.
    * @return {Promise}
    */
-  fetchMorseSmaleDecomposition(datasetId, k) {
+  // TODO: NOT USED BY ANYTHING!
+  fetchMorseSmaleDecomposition(datasetId, category, fieldname, k) {
     let command = {
-      name: 'fetchMorseSmaleDecomposition',
+      name: 'fetchMorseSmaleDecomposition', //but there's a server function with this name
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
     };
     return this._createCommandPromise(command);
@@ -193,14 +198,18 @@ class Client {
    * Compute Morse-Smale Decomposition, return
    * only the persistence range (i.e. min and max).
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k number of neighbors.
    * @return {Promise}
    */
-  fetchMorseSmalePersistence(datasetId, k) {
+  fetchMorseSmalePersistence(datasetId, category, fieldname, k) {
     console.log('creating promise to call fetchMorseSmalePersistence');
     let command = {
       name: 'fetchMorseSmalePersistence',
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
     };
     return this._createCommandPromise(command);
@@ -209,14 +218,18 @@ class Client {
   /**
    * Fetch the crystal indexes composing a single morse smale persistence level.
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k number of neighbors.
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmalePersistenceLevel(datasetId, k, persistenceLevel) {
+  fetchMorseSmalePersistenceLevel(datasetId, category, fieldname, k, persistenceLevel) {
     let command = {
       name: 'fetchMorseSmalePersistenceLevel',
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
       persistenceLevel: persistenceLevel,
     };
@@ -226,15 +239,20 @@ class Client {
   /**
    * Fetch the details of a single crystal of a persistence level.
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k number of neighbors.
    * @param {number} persistenceLevel
    * @param {number} crystalId
    * @return {Promise}
    */
-  fetchMorseSmaleCrystal(datasetId, k, persistenceLevel, crystalId) {
+  // TODO: NOT USED BY ANYTHING!
+  fetchMorseSmaleCrystal(datasetId, category, fieldname, k, persistenceLevel, crystalId) {
     let command = {
-      name: 'fetchMorseSmaleCrystal',
+      name: 'fetchMorseSmaleCrystal', //but there's a server function with this name
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
       persistenceLevel: persistenceLevel,
       crystalId: crystalId,
@@ -250,9 +268,10 @@ class Client {
    * @param {array} crystalIds
    * @return {Promise}
    */
+  // TODO: NOT USED BY ANYTHING!
   fetchMorseSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
     let command = {
-      name: 'fetchMorseSmaleCrystals',
+      name: 'fetchMorseSmaleCrystals', //not even a server function with this name
       datasetId: datasetId,
       k: k,
       persistenceLevel: persistenceLevel,
@@ -267,17 +286,20 @@ class Client {
    * @param {string} embeddingId
    * @param {number} k
    * @param {number} persistenceLevel
-   * @param {string} qoiName
+   * @param {string} category
+   * @param {string} fieldName
    * @return {Promise}
    */
-  fetchSingleEmbedding(datasetId, embeddingId, k, persistenceLevel, qoiName) {
+  fetchSingleEmbedding(datasetId, embeddingId, k,
+    persistenceLevel, category, fieldName) {
     let command = {
       name: 'fetchSingleEmbedding',
       datasetId: datasetId,
       embeddingId: embeddingId,
       k: k,
       persistenceLevel: persistenceLevel,
-      qoiName: qoiName,
+      category: category,
+      fieldName: fieldName,
     };
     return this._createCommandPromise(command);
   }
@@ -317,13 +339,15 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples) {
+  fetchNImagesForCrystal_Shapeodds(datasetId, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
     let command = {
       name: 'fetchNImagesForCrystal_Shapeodds',
       datasetId: datasetId,
+      fieldname: fieldname,
       persistenceLevel: persistenceLevel,
       crystalID: crystalID,
       numSamples: numSamples,
+      showOrig: showOrig,
     };
     return this._createCommandPromise(command);
   }
@@ -331,14 +355,18 @@ class Client {
   /**
    * Fetch the Morse-Smale regression points for the specified persistence level
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k nearest neighbors
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmaleRegression(datasetId, k, persistenceLevel) {
+  fetchMorseSmaleRegression(datasetId, category, fieldname, k, persistenceLevel) {
     let command = {
       name: 'fetchMorseSmaleRegression',
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
       persistenceLevel: persistenceLevel,
     };
@@ -348,14 +376,18 @@ class Client {
   /**
    * Fetch the Morse-Smale extrema points for the specified persistence level
    * @param {string} datasetId
+   * @param {string} category design parameter or qoi
+   * @param {string} fieldname
    * @param {number} k
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmaleExtrema(datasetId, k, persistenceLevel) {
+  fetchMorseSmaleExtrema(datasetId, category, fieldname, k, persistenceLevel) {
     let command = {
       name: 'fetchMorseSmaleExtrema',
       datasetId: datasetId,
+      category: category,
+      fieldname: fieldname,
       k: k,
       persistenceLevel: persistenceLevel,
     };

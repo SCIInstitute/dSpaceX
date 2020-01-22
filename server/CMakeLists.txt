@@ -34,7 +34,7 @@ TARGET_LINK_LIBRARIES (dSpaceX
   hdprocess
   imageutils
   jsoncpp
-  shapeodds
+  pmodels
   dspacex_utils
   libwsserver
   lapack
