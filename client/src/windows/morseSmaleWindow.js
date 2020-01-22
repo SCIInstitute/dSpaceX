@@ -64,9 +64,11 @@ class MorseSmaleWindow extends React.Component {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      const category = this.props.decomposition.decompositionCategory;
+      const field = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, k, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, k, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, field, k, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, category, field, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         this.regressionCurves = regressionResponse;
@@ -215,7 +217,7 @@ class MorseSmaleWindow extends React.Component {
     // Handle left click release
     if (event.button === 0) {
       const position = this.getPickPosition(event);
-      this.pick(position);
+      this.pick(position, event.ctrlKey); // click w/ ctrl held down to produce model's original samples 
     }
   }
 
@@ -250,9 +252,9 @@ class MorseSmaleWindow extends React.Component {
    * Pick level set of decomposition
    * @param {object} normalizedPosition
    */
-  pick(normalizedPosition) {
+  pick(normalizedPosition, showOrig) {
     // Get intersected object
-    const { datasetId, persistenceLevel } = this.props.decomposition;
+    const { datasetId, decompositionField, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
@@ -270,7 +272,7 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, persistenceLevel, crystalID, 50 /* numZ*/);
+      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel, crystalID, 50 /*numZ*/, showOrig);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });

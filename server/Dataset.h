@@ -4,13 +4,15 @@
 #include "flinalg/LinalgIO.h"
 #include "precision/Precision.h"
 #include "imageutils/Image.h"
-#include "shapeodds/ShapeOdds.h"
+#include "pmodels/MorseSmale.h"
 
 #include <vector>
 
 
 class Dataset {
  public:
+  ~Dataset() { std::cerr << "Dataset::~Dataset()\n"; }
+
   int numberOfSamples() {
     return m_sampleCount;
   }
@@ -59,7 +61,7 @@ class Dataset {
     return m_parameters[i];
   }
 
-  std::vector<std::string> getParameterNames() {
+  std::vector<std::string>& getParameterNames() {
     return m_parameterNames;
   }
 
@@ -71,8 +73,23 @@ class Dataset {
     return m_thumbnails;
   }
 
-  std::vector<Shapeodds::MSModelContainer>& getMSModels() {
+  std::vector<PModels::MSComplex>& getMSModels() {
     return m_msModels;
+  }
+
+  PModels::MSComplex& getMSComplex(const std::string fieldname)
+  {
+    // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
+    //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
+    //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
+    std::vector<PModels::MSComplex> &ms_complexes(getMSModels());
+    unsigned idx = 0;
+    for (; idx < ms_complexes.size(); idx++)
+      if (ms_complexes[idx].getFieldname() == fieldname) break;
+    if (idx >= ms_complexes.size())
+      throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
+
+    return ms_complexes[idx];
   }
 
   const Image& getThumbnail(unsigned idx) {
@@ -84,7 +101,7 @@ class Dataset {
   class Builder {
    public:
     Builder() {
-      m_dataset = new Dataset();
+      m_dataset = std::make_unique<Dataset>();
     }
     Builder& withSampleCount(int count) {
       m_dataset->m_sampleCount = count;
@@ -116,9 +133,9 @@ class Dataset {
       m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
-    Builder& withMSModel(std::string name, Shapeodds::MSModelContainer &ms_model) {
+    Builder& withMSModel(std::string name, PModels::MSComplex ms_model) {  // <ctc> auto ms_model?
       m_dataset->m_msModelFields.push_back(name);
-      m_dataset->m_msModels.push_back(ms_model);
+      m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
       return (*this);
     }
     Builder& withName(std::string name) {
@@ -129,16 +146,17 @@ class Dataset {
       m_dataset->m_thumbnails = thumbnails;
       return (*this);
     }
-    Dataset* build() {
+    std::unique_ptr<Dataset> build() {
       // TODO:  Add validation that sample counts match array sizes.
       //        Throw an exception if something doesn't match. 
       // m_dataset->m_hasSamplesMatrix ==> m_dataset->m_samplesMatrix.N()
       // _dataset->m_hasDistanceMatrix ==> m_dataset->m_distanceMatrix.N();
-      return m_dataset;
+      return std::move(m_dataset); // releases ownership of m_dataset
     }
-   private:
-    Dataset *m_dataset;
+  private:
+    std::unique_ptr<Dataset> m_dataset;
   };
+
  private:
   int m_sampleCount;
   FortranLinalg::DenseMatrix<Precision> m_samplesMatrix;
@@ -149,7 +167,7 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<Shapeodds::MSModelContainer> m_msModels;  // Shapeodds models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
+  std::vector<PModels::MSComplex> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

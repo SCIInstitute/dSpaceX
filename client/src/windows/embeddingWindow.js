@@ -92,9 +92,10 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
       const { datasetId, k, persistenceLevel } = this.props.decomposition;
-      const qoiName = this.props.decomposition.decompositionField;
+      const category = this.props.decomposition.decompositionCategory;
+      const field = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchGraphEmbedding(datasetId, k, persistenceLevel, qoiName),
+        this.client.fetchGraphEmbedding(datasetId, category, field, k, persistenceLevel),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
         const [graphResult, thumbnailResult] = results;
