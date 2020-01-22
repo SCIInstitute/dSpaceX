@@ -272,7 +272,7 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel, crystalID, 16 /* 50 */ /*numZ*/, showOrig);
+      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionField, persistenceLevel, crystalID, 50 /*numZ*/, showOrig);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
