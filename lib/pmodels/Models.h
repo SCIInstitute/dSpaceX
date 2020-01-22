@@ -109,8 +109,8 @@ public:
   {
     //debug: hardcode new fieldval
     //new_fieldval = 0.62341;
-    std::cout << "num_samples: " << sample_indices.size() << std::endl;
-    std::cout << "z-size: " << z_coords.cols() << std::endl;
+    //std::cout << "num_samples: " << sample_indices.size() << std::endl;
+    //std::cout << "z-size: " << z_coords.cols() << std::endl;
     
     // gaussian kernel regression to generate a new LSV
     using namespace Eigen;
@@ -141,7 +141,7 @@ public:
     //std::cout << "output before division:\n" << output << std::endl;
     output /= summation;
     //RowVectorXd output = (fieldvals * z_coords) / summation;
-    std::cout << "new z_coord:\n" << output << std::endl;
+    //std::cout << "new z_coord:\n" << output << std::endl;
     //std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
 
     return output;

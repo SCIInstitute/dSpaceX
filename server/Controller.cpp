@@ -849,7 +849,10 @@ Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned 
  *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
  */
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
-#if 0
+  bool showOrig = request["showOrig"].asBool();
+  if (showOrig)
+    return fetchAllImagesForCrystal_Shapeodds(request, response);
+
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size())
     return sendError(response, "invalid datasetid");
@@ -886,14 +889,15 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // partition the crystal's model's field (QoI) into numZ values and evaluate model for each of them
   double minval = model.minFieldValue();
   double maxval = model.maxFieldValue();
-  double delta = (maxval - minval) / static_cast<double>(numZ); //<ctc> is the cast necessary? can't remember...
+  double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
+  double sigma = delta * 0.15; // ~15% of fieldrange
   
   for (unsigned i = 0; i < numZ; i++)
   {
     double fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
-    Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval);
+    Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval, sigma);
 
     // evaluate model at this coordinate
     Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
@@ -908,9 +912,6 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   }
 
   response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
-#else
-  fetchAllImagesForCrystal_Shapeodds(request, response);
-#endif
 }
 
 // computes index of the requested (0-based) persistence level in this M-S complex
@@ -1133,7 +1134,7 @@ void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldna
                                                               FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
                                                               m_currentK  /* knn */,
                                                               50        /* samples */,
-                                                              99        /* num_persistences */, //TODO: make passing -1 generate all of 'em
+                                                              -1        /* num_persistences */, // -1 generates all of 'em
                                                               false     /* random */,
                                                               0.25      /* sigma */,    // TODO: this should be ~15% of fieldrange (but maybe not for M-S computation)
                                                               15         /* smooth */);
