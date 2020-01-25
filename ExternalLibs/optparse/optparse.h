@@ -1,3 +1,7 @@
+/*  
+ * 2019.12.02: cloned from https://github.com/myint/optparse
+ */
+
 /**
  * Copyright (C) 2010 Johannes Weißl <jargon@molb.org>
  * License: your favourite BSD-style license
@@ -18,7 +22,6 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-
 
 namespace optparse
 {
@@ -44,8 +47,14 @@ namespace optparse
 
         operator bool()
         {
-            bool t;
-            return (valid && (std::istringstream(str) >> t)) ? t : false;
+            // first try to read as the word 'true' or 'false', otherwise 0 or 1
+            std::string str_lower(str);
+            std::transform(str.begin(), str.end(), str_lower.begin(),
+                           [](unsigned char c){ return std::tolower(c); });
+            bool t = (valid && (std::istringstream(str_lower) >> std::boolalpha >> t)) ? t : false;
+            if (!t)
+              t = (valid && (std::istringstream(str) >> t)) ? t : false;
+            return t;
         }
 
         operator short()
@@ -146,6 +155,12 @@ namespace optparse
             {
                 _user_set.erase(d);
             }
+        }
+
+        // clear all values in this map
+        void clear()
+        {
+          _map.clear();
         }
 
         Value get(const std::string &d) const
@@ -846,7 +861,13 @@ namespace optparse
 
         Values &parse_args(const std::vector<std::string> &arguments)
         {
+            _values.clear(); // clear so there are no leftover options from previous runs
             return detail::parse_args_helper(*this, arguments);
+        }
+
+        const Values &get_parsed_options() const
+        {
+          return _values;
         }
 
         template<typename InputIterator>
@@ -940,8 +961,7 @@ namespace optparse
 
         virtual void error(const std::string &msg) const
         {
-          //print_usage(std::cerr);
-            print_help(); // for a small number of options this is very useful when an error is encountered
+            print_usage(std::cerr);
             std::cerr << prog() << ": " << "error" << ": " << msg << std::endl;
             exit(2);
         }
@@ -1239,6 +1259,7 @@ namespace optparse
                                          const std::vector<std::string> &v)
         {
             parser._remaining.assign(v.begin(), v.end());
+            parser._leftover.clear();
 
             if (parser.add_version_option() and not parser.version().empty())
             {
