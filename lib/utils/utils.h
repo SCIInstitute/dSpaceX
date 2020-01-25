@@ -1,7 +1,7 @@
 #pragma once
 
 #include "flinalg/Linalg.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 
 namespace HDProcess {
 

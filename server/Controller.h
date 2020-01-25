@@ -4,38 +4,12 @@
 #include "hdprocess/HDProcessResult.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
-#include <jsoncpp/json/json.h>
+#include "dspacex/Fieldtype.h"
 
+#include <jsoncpp/json/json.h>
 #include <map>
 #include <functional>
 
-
-// Fieldtype
-//
-// example:
-// Fieldtype type("qoi");
-// if (type == Fieldtype::DesignParameter) ...
-struct Fieldtype {
-  Fieldtype(const std::string strtype)
-  {
-    if (strtype == "parameter")
-      kind = DesignParameter;
-    else if (strtype == "qoi")
-      kind = QoI;
-    else
-      kind = Invalid;
-  }
-
-  Fieldtype(const int type) : kind(type) {}
-
-  operator int() const { return kind; } // enables comparison using ==
-  bool valid() { return kind == DesignParameter || kind == QoI; }
-
-  int kind;
-  const static int DesignParameter = 0;
-  const static int QoI = 1;
-  const static int Invalid = -1;
-};
 
 class Controller {
  public:
@@ -74,7 +48,6 @@ class Controller {
   void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
 
-  // returns Eigen::Map vector wrapping the values for a given field
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 
   // PModels helpers

@@ -4,7 +4,7 @@
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
 #include "imageutils/Image.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 #include "yaml-cpp/yaml.h"
 #include "pmodels/MorseSmale.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
 

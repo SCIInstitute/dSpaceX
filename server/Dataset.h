@@ -2,12 +2,11 @@
 
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 #include "imageutils/Image.h"
 #include "pmodels/MorseSmale.h"
 
 #include <vector>
-
 
 class Dataset {
  public:

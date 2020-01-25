@@ -3,7 +3,7 @@
 #include "flinalg/Linalg.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 
 #include <string>
 #include <vector>

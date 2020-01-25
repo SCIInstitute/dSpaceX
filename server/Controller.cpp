@@ -11,11 +11,11 @@
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
 #include <jsoncpp/json/json.h>
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 #include "serverlib/wst.h"
-#include "util/DenseVectorSample.h"
-#include "util/csv/loaders.h"
-#include "util/utils.h"
+#include "utils/DenseVectorSample.h"
+#include "utils/loaders.h"
+#include "utils/utils.h"
 #include "pmodels/Models.h"
 
 #include <cassert>
@@ -1039,7 +1039,8 @@ void Controller::maybeLoadDataset(int datasetId) {
 }
 
 // getFieldvalues
-// returns Eigen::Map vector wrapping the values for a given field
+// 
+// returns Eigen::Map wrapping the vector of values for a given field
 const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, const std::string &name)
 {
   if (type == Fieldtype::DesignParameter)
