@@ -6,8 +6,10 @@
 #include <Eigen/Core>
 #include "imageutils/Image.h"
 
-namespace PModels {
+namespace dspacex {
 
+// Probabilistic models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
+//
 // There is a model for each crystal at each persistence level for a given M-S topology. It is
 // constructed from a given number of input images (samples), and consists of L necessary
 // values that make the model able to compute new images for a given point, z, in the latent
@@ -197,4 +199,4 @@ private:
 
 };
 
-} // end namespace PModels
+} // dspacex

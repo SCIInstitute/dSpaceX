@@ -19,14 +19,16 @@ typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
 typedef
 std::pair<std::string, PModels::MSComplex> MSModelsPair;
-// typedef
-// std::vector<PModels::MSComplex> MSModels; // <ctc> definitely an issue: more than one model for a given fieldname. Multimap or vector?
 
 class DatasetLoader {
 public:
   static std::unique_ptr<Dataset> loadDataset(const std::string &filePath);
   static std::string getDatasetName(const std::string &filePath);
+
 private:
+  // Disallow creating an instance of this object (reinforces its purpose)
+  DatasetLoader() {}
+
   static std::string parseName(const YAML::Node &config);
 
   static int parseSampleCount(const YAML::Node &config);

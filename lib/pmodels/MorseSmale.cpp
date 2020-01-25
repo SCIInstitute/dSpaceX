@@ -1,6 +1,6 @@
 #include "MorseSmale.h"
 
-namespace PModels {
+namespace dspacex {
 
 ModelPair MSComplex::getModel(unsigned persistence, unsigned crystal)
 {
@@ -29,4 +29,4 @@ std::vector<ModelPair> MSComplex::getAllModels()
   return models;
 }
 
-} // end namespace PModels
+} // dspacex

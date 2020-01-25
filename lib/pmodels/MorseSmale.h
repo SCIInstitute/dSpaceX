@@ -4,7 +4,7 @@
 #include "utils/StringUtils.h"
 #include "Models.h"
 
-namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
+namespace dspacex {
 
 //
 // A set of probabilistic models are learned using the samples associated with the crystals at
@@ -138,5 +138,5 @@ private:
 
 
 
-} // end namespace PModels
+} // dspacex
 
