@@ -426,9 +426,9 @@ std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config,
 }
 
 MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
-///*PModels::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+///*dspacex::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
 {
-  using namespace PModels;
+  using namespace dspacex;
 
   if (!modelNode["fieldname"]) {
     throw std::runtime_error("Model missing 'fieldname' field.");
@@ -535,8 +535,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      PModels::MSCrystal &c = P.getCrystal(crystal);
-      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in PModels::Model
+      dspacex::MSCrystal &c = P.getCrystal(crystal);
+      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in dspacex::Model
       parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
@@ -557,7 +557,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, PModels::Model &m)
+void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
 {
   // read W
   auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");

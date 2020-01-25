@@ -73,16 +73,16 @@ class Dataset {
     return m_thumbnails;
   }
 
-  std::vector<PModels::MSComplex>& getMSModels() {
+  std::vector<dspacex::MSComplex>& getMSModels() {
     return m_msModels;
   }
 
-  PModels::MSComplex& getMSComplex(const std::string fieldname)
+  dspacex::MSComplex& getMSComplex(const std::string fieldname)
   {
     // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
     //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
     //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
-    std::vector<PModels::MSComplex> &ms_complexes(getMSModels());
+    std::vector<dspacex::MSComplex> &ms_complexes(getMSModels());
     unsigned idx = 0;
     for (; idx < ms_complexes.size(); idx++)
       if (ms_complexes[idx].getFieldname() == fieldname) break;
@@ -133,7 +133,7 @@ class Dataset {
       m_dataset->m_embeddings.push_back(embedding);
       return (*this);
     }
-    Builder& withMSModel(std::string name, PModels::MSComplex ms_model) {  // <ctc> auto ms_model?
+    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model) {  // <ctc> auto ms_model?
       m_dataset->m_msModelFields.push_back(name);
       m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
       return (*this);
@@ -167,7 +167,7 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<PModels::MSComplex> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
+  std::vector<dspacex::MSComplex> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

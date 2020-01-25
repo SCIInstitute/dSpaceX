@@ -18,7 +18,7 @@ std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
 typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
 typedef
-std::pair<std::string, PModels::MSComplex> MSModelsPair;
+std::pair<std::string, dspacex::MSComplex> MSModelsPair;
 
 class DatasetLoader {
 public:
@@ -54,15 +54,15 @@ private:
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
 
-  //static std::vector<PModels::MSComplex> parseMSModels(
+  //static std::vector<dspacex::MSComplex> parseMSModels(
   static std::vector<MSModelsPair> parseMSModels(
       const YAML::Node &config, const std::string &filePath);
 
-  //static std::vector<PModels::MSComplex> parseMSModelsForField(
+  //static std::vector<dspacex::MSComplex> parseMSModelsForField(
   static MSModelsPair parseMSModelsForField(
       const YAML::Node &config, const std::string &filePath);
 
-  static void parseModel(const std::string &modelPath, PModels::Model &m);
+  static void parseModel(const std::string &modelPath, dspacex::Model &m);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

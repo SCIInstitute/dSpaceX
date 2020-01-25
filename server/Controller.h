@@ -78,7 +78,7 @@ class Controller {
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 
   // PModels helpers
-  unsigned getPersistenceLevelIdx(const unsigned desired_persistence, const PModels::MSComplex &mscomplex) const;
+  unsigned getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
