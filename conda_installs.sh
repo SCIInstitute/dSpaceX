@@ -43,6 +43,7 @@ pip install --upgrade pip
 #install dspacex deps
 conda install --yes -c conda-forge zlib=1.2.11 ncurses=6.1 cmake=3.15.5 nodejs=13.0.0 eigen=3.3.7
 conda install --yes -c anaconda libpng=1.6.37
+conda install --yes -c conda-forge gtest=1.10.0
 
 if [ "$(uname)" = "Linux" ]; then
   conda install --yes -c conda-forge blas=2.14 liblapack=3.8.0

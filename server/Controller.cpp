@@ -1,7 +1,7 @@
 #include <base64/base64.h>
 #include <boost/filesystem.hpp>
 #include "Controller.h"
-#include "DatasetLoader.h"
+#include "dspacex/DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
