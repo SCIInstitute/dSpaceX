@@ -869,18 +869,17 @@ Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned 
  *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
  *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
  */
-void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
-  bool showOrig = request["showOrig"].asBool();
-  if (showOrig)
-    return fetchAllImagesForCrystal_Shapeodds(request, response);
-
+void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response)
+{
   int datasetId = request["datasetId"].asInt();
   if (datasetId < 0 || datasetId >= m_availableDatasets.size())
     return sendError(response, "invalid datasetid");
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
-  //TODO: add category here like the other functions (just too tired right now)
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -891,16 +890,33 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
 
   std::string fieldname = request["fieldname"].asString();
   int crystalid = request["crystalID"].asInt();
+  
+  int mscomplex_idx = m_currentDataset->getMSComplexIdxForFieldname(fieldname);
+
+  // if there isn't a model associated with the crystal at this plvl, just show its associated samples' images 
+  if (mscomplex_idx < 0)
+    return fetchCrystalOriginalSampleImages(request, response);
+
+  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  int persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
+
+  // if there isn't a model for the selected persistence level, just show its associated samples' images
+  if (persistenceLevel_idx < 0)
+    return fetchCrystalOriginalSampleImages(request, response);
+
+  // if user requests original images, show predicted images for the crystal's samples' z_coords
+  bool showOrig = request["showOrig"].asBool();
+  if (showOrig)
+    return fetchAllImagesForCrystal_Shapeodds(request, response);
+
   int numZ = request["numSamples"].asInt();
   std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
   
-  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
-  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
-  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);  
+  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
 
   // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(/*category*/Fieldtype::QoI, fieldname);
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
   if (!fieldvals.data())
     std::runtime_error("Invalid fieldname or empty field");
   model.setFieldValues(fieldvals);
@@ -937,13 +953,14 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
 
 // computes index of the requested (0-based) persistence level in this M-S complex
 // (since there could be more actual persistence levels than those stored in the complex)
-unsigned Controller::getPersistenceLevelIdx(const unsigned desired_persistenceLevel, const PModels::MSComplex &mscomplex) const
+int Controller::getPersistenceLevelIdx(const unsigned desired_persistenceLevel, const PModels::MSComplex &mscomplex) const
 {
-  unsigned persistenceLevel_idx = desired_persistenceLevel -
+  int persistenceLevel_idx = desired_persistenceLevel -
     (m_currentTopoData->getMaxPersistenceLevel() - mscomplex.numPersistenceLevels() + 1);
 
-  if (persistenceLevel_idx < 0)
-    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(desired_persistenceLevel));
+  // the new default behavior is to send samples' original images when there's no model at this plvl
+//  if (persistenceLevel_idx < 0)
+//    throw std::runtime_error("ERROR: no models at persistence level " + std::to_string(desired_persistenceLevel));
   return persistenceLevel_idx;
 }
 
@@ -965,6 +982,10 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   maybeLoadDataset(datasetId);
   // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -977,13 +998,13 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
   PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
-  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
+  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex); //fixme: now returns int
   PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
 
   // TODO: cut and paste from above! ugh:
   // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(/*category*/Fieldtype::QoI, fieldname);
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
   if (!fieldvals.data())
     std::runtime_error("Invalid fieldname or empty field");
   model.setFieldValues(fieldvals);
@@ -992,9 +1013,9 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   auto sample_indices(model.getSampleIndices());
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
 
-  //todo: sort z coords by fieldvalue
+  //z coords are sorted by fieldvalue in Model::setFieldValues
   //for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
-  for (auto sample: sample_indices) // <ctc> note: these are sorted in Model::setFieldValues
+  for (auto sample: sample_indices)
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
     extern Controller *controller;
@@ -1030,6 +1051,68 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   }
 
   response["msg"] = std::string("returning " + std::to_string(sample_indices.size()) + " images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
+}
+
+// fetches the original sample images for the specified crystal (no MSComplex/crystal/model required)
+void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response) {
+  int datasetId = request["datasetId"].asInt();
+  if (datasetId < 0 || datasetId >= m_availableDatasets.size())
+    return sendError(response, "invalid datasetid");
+  maybeLoadDataset(datasetId);
+
+  // category of the passed fieldname (design param or qoi)
+  Fieldtype category = Fieldtype(request["category"].asString());
+  if (!category.valid()) return sendError(response, "invalid category");
+
+  // get requested persistence level
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+  int persistenceLevel = request["persistenceLevel"].asInt();
+  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
+    return sendError(response, "invalid persistence level");
+
+  std::string fieldname = request["fieldname"].asString();
+  int crystalid = request["crystalID"].asInt();
+  std::cout << "fetchCrystalOriginalSampleImages: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
+
+  // get the vector of values for the field
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
+  if (!fieldvals.data())
+    std::runtime_error("Invalid fieldname or empty field");
+
+  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
+  Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
+  std::vector<PModels::Model::ValueIndexPair> fieldvalues_and_indices;
+  for (unsigned i = 0; i < partitions.size(); i++)
+  {
+    if (partitions(i) == crystalid)
+    {
+      PModels::Model::ValueIndexPair sample;
+      sample.idx = i;
+      sample.val = fieldvals(i);
+      fieldvalues_and_indices.push_back(sample);
+    }
+  }
+
+  // sort by increasing fieldvalue
+  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), PModels::Model::ValueIndexPair::compare);
+  std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
+
+  for (auto sample: fieldvalues_and_indices)
+  {
+    // load thumbnail corresponding to this z_idx
+    const Image& sample_image = m_currentDataset->getThumbnail(sample.idx);
+    unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
+
+    // add image to response
+    Json::Value imageObject = Json::Value(Json::objectValue);
+    imageObject["width"] = sample_image.getWidth();
+    imageObject["height"] = sample_image.getHeight();
+    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&sample_image.getConstRawData()[0]), sample_image.getConstRawData().size());
+    response["thumbnails"].append(imageObject);
+  }
+
+  response["msg"] = std::string("returning " + std::to_string(fieldvalues_and_indices.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
 }
 
 /**

@@ -34,13 +34,13 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {number} numSamples
    * @param {bool} showOrig
    */
-  computeNewSamplesUsingShapeoddsModel(datasetId, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
+  computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
     console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
-      +crystalID+','+numSamples+','+showOrig+')');
+                +crystalID+','+numSamples+','+showOrig+')');
 
     // Ask server to compute the N new images for this crystal and add them to the drawer
-    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, fieldname, persistenceLevel,
-      crystalID, numSamples, showOrig)
+    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel,
+                                                 crystalID, numSamples, showOrig)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
