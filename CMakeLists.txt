@@ -22,25 +22,31 @@ OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" OFF)
 OPTION(BUILD_TESTS "Build tests" ON)
 OPTION(BUILD_SERVER_LIB "Builder server lib" ON)
 OPTION(BUILD_SERVER "Build server" ON)
+OPTION(SHOW_COMPILER_WARNINGS "compiler warnings" OFF)
 
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
+include(DefaultBuildType)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+if (SHOW_COMPILER_WARNINGS)
+  add_definitions("-Wall") # show all warning messages
+else()
+  add_definitions("-w")    # inhibit all warning messages
+endif()
+
 IF(WIN32)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -/MT")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -/MTd")
 ENDIF()
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
   "Single output directory for building all executables.")
 
-include(DefaultBuildType)
-  
-ADD_DEFINITIONS ("-w")
-
 find_package(Eigen3 3.3.7 REQUIRED)
-
+INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(lib)
 INCLUDE_DIRECTORIES(ExternalLibs)
 INCLUDE_DIRECTORIES(ExternalLibs/yaml-cpp/include)
+INCLUDE_DIRECTORIES(ExternalLibs/libigl-2.1.0/include)
 
 ADD_SUBDIRECTORY(ExternalLibs/lodepng)
 ADD_SUBDIRECTORY(lib/annmod)

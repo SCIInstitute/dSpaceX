@@ -858,7 +858,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   if (mscomplex_idx < 0)
     return fetchCrystalOriginalSampleImages(request, response);
 
-  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  dspacex::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
   int persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
 
   // if there isn't a model for the selected persistence level, just show its associated samples' images
@@ -1043,12 +1043,12 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
 
   FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
   Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
-  std::vector<PModels::Model::ValueIndexPair> fieldvalues_and_indices;
+  std::vector<dspacex::Model::ValueIndexPair> fieldvalues_and_indices;
   for (unsigned i = 0; i < partitions.size(); i++)
   {
     if (partitions(i) == crystalid)
     {
-      PModels::Model::ValueIndexPair sample;
+      dspacex::Model::ValueIndexPair sample;
       sample.idx = i;
       sample.val = fieldvals(i);
       fieldvalues_and_indices.push_back(sample);
@@ -1056,7 +1056,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   }
 
   // sort by increasing fieldvalue
-  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), PModels::Model::ValueIndexPair::compare);
+  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), dspacex::Model::ValueIndexPair::compare);
   std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
 
   for (auto sample: fieldvalues_and_indices)
