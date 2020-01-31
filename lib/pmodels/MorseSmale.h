@@ -122,6 +122,7 @@ public:
     return persistence_levels[idx];
   }
 
+  bool hasModel(unsigned p, unsigned c) const;
   ModelPair getModel(unsigned p, unsigned c);
   std::vector<ModelPair> getAllModels();
   

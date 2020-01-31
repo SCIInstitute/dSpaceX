@@ -47,11 +47,12 @@ class Controller {
   void fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 
-  // PModels helpers
-  unsigned getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
+  // todo: user shouldn't need this: a plvl is a plvl, so bury the details
+  int getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;

@@ -2,10 +2,15 @@
 
 namespace dspacex {
 
+bool MSComplex::hasModel(unsigned persistence, unsigned crystal) const
+{
+  return !(persistence >= persistence_levels.size() ||
+           crystal >= persistence_levels[persistence].numCrystals());
+}
+
 ModelPair MSComplex::getModel(unsigned persistence, unsigned crystal)
 {
-  if (persistence >= persistence_levels.size() ||
-      crystal >= persistence_levels[persistence].numCrystals())
+  if (!hasModel(persistence, crystal))
     throw std::runtime_error("Requested model persistence / crystal index is out of range");
       
   return ModelPair(modelName(persistence, crystal),
