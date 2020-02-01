@@ -8,9 +8,13 @@
 
 #include <vector>
 
+namespace dspacex {
+
 class Dataset {
  public:
   ~Dataset() { std::cerr << "Dataset::~Dataset()\n"; }
+
+  bool valid() const;
 
   int numberOfSamples() {
     return m_sampleCount;
@@ -72,92 +76,32 @@ class Dataset {
     return m_thumbnails;
   }
 
-  std::vector<dspacex::MSComplex>& getMSModels() {
+  std::vector<MSComplex>& getMSModels() {
     return m_msModels;
   }
 
-  int getMSComplexIdxForFieldname(const std::string fieldname) const
-  {
-    // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
-    //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
-    //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
-    int idx = 0;
-    for (; idx < m_msModels.size(); idx++)
-      if (m_msModels[idx].getFieldname() == fieldname)
-        return idx;
-    return -1;
-  }
+  int getMSComplexIdxForFieldname(const std::string fieldname) const;
+  dspacex::MSComplex& getMSComplex(const std::string fieldname);
 
-  dspacex::MSComplex& getMSComplex(const std::string fieldname)
-  {
-    int idx = getMSComplexIdxForFieldname(fieldname);
-    if (idx < 0)
-      throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
+  const Image& getThumbnail(unsigned idx) const;
 
-    return m_msModels[idx];
-  }
-
-  const Image& getThumbnail(unsigned idx) {
-    if (idx >= m_thumbnails.size())
-      throw std::runtime_error("Tried to fetch thumbnail " + std::to_string(idx) + ", but there are only " + std::to_string(m_thumbnails.size()));
-    return m_thumbnails[idx];
-  }
-
+  // Builder includes necessary functions for a user to build and return a dSpaceX Dataset
   class Builder {
    public:
     Builder() {
       m_dataset = std::make_unique<Dataset>();
     }
-    Builder& withSampleCount(int count) {
-      m_dataset->m_sampleCount = count;
-      return (*this);
-    }
-    // TODO:  change to withGeometry of templatized form.
-    Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix) {
-      m_dataset->m_samplesMatrix = samplesMatrix;
-      m_dataset->m_hasSamplesMatrix = true;
-      return (*this);
-    }
-    Builder& withDistanceMatrix(FortranLinalg::DenseMatrix<Precision> &distanceMatrix) {
-      m_dataset->m_distanceMatrix = distanceMatrix;
-      m_dataset->m_hasDistanceMatrix = true;
-      return (*this);
-    }
-    Builder& withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter) {
-      m_dataset->m_parameterNames.push_back(name);
-      m_dataset->m_parameters.push_back(parameter);
-      return (*this);
-    }
-    Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi) {
-      m_dataset->m_qoiNames.push_back(name);
-      m_dataset->m_qois.push_back(qoi);
-      return (*this);
-    }
-    Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding) {
-      m_dataset->m_embeddingNames.push_back(name);
-      m_dataset->m_embeddings.push_back(embedding);
-      return (*this);
-    }
-    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model) {  // <ctc> auto ms_model?
-      m_dataset->m_msModelFields.push_back(name);
-      m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
-      return (*this);
-    }
-    Builder& withName(std::string name) {
-      m_dataset->m_name = name;
-      return (*this);
-    }
-    Builder& withThumbnails(std::vector<Image> thumbnails) {
-      m_dataset->m_thumbnails = thumbnails;
-      return (*this);
-    }
-    std::unique_ptr<Dataset> build() {
-      // TODO:  Add validation that sample counts match array sizes.
-      //        Throw an exception if something doesn't match. 
-      // m_dataset->m_hasSamplesMatrix ==> m_dataset->m_samplesMatrix.N()
-      // _dataset->m_hasDistanceMatrix ==> m_dataset->m_distanceMatrix.N();
-      return std::move(m_dataset); // releases ownership of m_dataset
-    }
+    std::unique_ptr<Dataset> build();
+    Builder& withSampleCount(int count);
+    Builder& withSamplesMatrix(FortranLinalg::DenseMatrix<Precision> &samplesMatrix);     // TODO:  change to withGeometry of templatized form.
+    Builder& withDistanceMatrix(FortranLinalg::DenseMatrix<Precision> &distanceMatrix);
+    Builder& withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter);
+    Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi);
+    Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding);
+    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model);  // <ctc> auto ms_model?
+    Builder& withName(std::string name);
+    Builder& withThumbnails(std::vector<Image> thumbnails);
+    
   private:
     std::unique_ptr<Dataset> m_dataset;
   };
@@ -172,7 +116,10 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<dspacex::MSComplex> m_msModels;  // PModels models are per M-S complex and stored so they can be accessed by crystals in a given persistence level. <ctc> maybe these should be renamed to EmbeddingModel or something like that
+  // todo: they're not msModels, just msComplexes (one per field, image, and parameter) whose crystals might have predictive models (e.g., ShapeOdds, SharedGP).
+  // todo: there may even be predictive models not associated with any m-s complex
+  // todo: maybe these should be renamed to EmbeddingModel or something like that... except a model just happens to be associated with a m-s embedding, so PredictiveModel is better
+  std::vector<dspacex::MSComplex> m_msModels;  
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;
@@ -180,3 +127,5 @@ class Dataset {
   bool m_hasDistanceMatrix = false;
   bool m_hasSamplesMatrix = false;
 };
+
+} // dspacex

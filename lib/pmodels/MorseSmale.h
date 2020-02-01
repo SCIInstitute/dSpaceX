@@ -42,12 +42,19 @@ public:
     return model.getSampleIndices();
   }
 
-  Model& getModel()
+  Model& getModel() //todo: return by model type since a crystal can have more than one model. Maybe have to return a pointer in case model doesn't exist. Could a crystal have more than one of the same type of model? Seems possible since differently-constructed models may want to be compared.
   {
-    return model;
+    return model;  //todo: which model?
   }
+  
+  // void addModel(Model &m)
+  // {
+  //   models.append(m)
+  // }
 
 private:
+  // todo: there can be more than one model per crystal (say, one per qoi and one per design param and one per image/dt
+  // todo: the crystal probably shouldn't own the model(s) since they're technically independent of the crystal
   Model model;
 };
 

@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+namespace dspacex {
+
 typedef
 std::pair<std::string, FortranLinalg::DenseVector<Precision>> ParameterNameValuePair;
 typedef
@@ -75,3 +77,4 @@ private:
       bool padZeroes, unsigned int thumbnailCount);
 };
 
+} // dspacex

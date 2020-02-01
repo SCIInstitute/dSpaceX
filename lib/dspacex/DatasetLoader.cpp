@@ -10,6 +10,8 @@
 #include <sstream>
 #include <vector>
 
+using namespace dspacex;
+
 struct InputFormat
 {
   enum Type { CSV, JSON, LINALG_DENSEMATRIX, LINALG_DENSEVECTOR };

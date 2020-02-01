@@ -28,6 +28,8 @@
 #include <fstream>
 #include <string>
 
+using namespace dspacex;
+
 // Simplify namespace access to _1, _2 for std::bind parameter binding.
 using namespace std::placeholders;
 
