@@ -6,7 +6,7 @@
 #include "imageutils/Image.h"
 #include "dspacex/Precision.h"
 #include "yaml-cpp/yaml.h"
-#include "pmodels/MorseSmale.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
+#include "pmodels/MorseSmale.h"
 
 #include <string>
 #include <vector>
