@@ -1,7 +1,7 @@
-ADD_DEFINITIONS(-DTEST_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/test/data\\"")
-ADD_DEFINITIONS(-DEXAMPLE_DATA_DIR="\\"${DSPACEX_SOURCE_DIR}/examples\\"")
+ADD_DEFINITIONS(-DTEST_DATA_DIR="\\"${CMAKE_SOURCE_DIR}/test/data\\"")
+ADD_DEFINITIONS(-DEXAMPLE_DATA_DIR="\\"${CMAKE_SOURCE_DIR}/examples\\"")  # manually create a symlink to /usr/sci/projects/dspacex?
 
-include_directories(../../server ${EIGEN3_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/server ${EIGEN3_INCLUDE_DIR})
 
 newtest(HDVizData_tests)
-newtest(DataLoader_tests ../../server/DatasetLoader.cpp )
+newtest(DataLoader_tests)
