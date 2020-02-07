@@ -1,6 +1,6 @@
 #include "Models.h"
 
-namespace dspacex {
+namespace PModels {
 
 SharedGP::SharedGP()
 {
@@ -43,4 +43,4 @@ int SharedGP::do_something_quietly(int y)
   return y*y;
 }
 
-} // dspacex
+} // end namespace PModels

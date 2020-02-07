@@ -4,7 +4,7 @@
 #include "flinalg/DenseVector.h"
 #include "hdprocess/HDProcessor.h"
 #include "hdprocess/HDProcessResultSerializer.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include "tclap/CmdLine.h"
 
 

@@ -6,7 +6,7 @@
 #include "flinalg/Linalg.h"
 #include "HDVizData.h"
 #include "HDProcessResult.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 
 #include <string>
 

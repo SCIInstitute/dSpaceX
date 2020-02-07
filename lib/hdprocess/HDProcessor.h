@@ -10,8 +10,9 @@
 #include "HDProcessResult.h"
 #include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include "utils/Random.h"
+#include "export/DataExport.h"
 
 #include <list>
 #include <iostream>

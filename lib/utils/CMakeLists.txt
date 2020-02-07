@@ -5,16 +5,10 @@ SET(UTILS_HEADER_FILES
   MinHeap.h
   Random.h 
   StringUtils.h
-  DataExport.h
-  utils.h
-  loaders.h
 )
 
 SET(UTILS_SOURCE_FILES
   StringUtils.cpp
-  DataExport.cpp
-  utils.cpp
-  loaders.cpp
 )
 
 ADD_LIBRARY(dspacex_utils ${UTILS_HEADER_FILES} ${UTILS_SOURCE_FILES})

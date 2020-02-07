@@ -11,7 +11,7 @@
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
 #include "hdprocess/LegacyTopologyDataImpl.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include <tclap/CmdLine.h>
 
 #include <cmath>

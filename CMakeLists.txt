@@ -22,47 +22,50 @@ OPTION(BUILD_HDVIZ_GUI "Build HDViz visualization tool" OFF)
 OPTION(BUILD_TESTS "Build tests" ON)
 OPTION(BUILD_SERVER_LIB "Builder server lib" ON)
 OPTION(BUILD_SERVER "Build server" ON)
-OPTION(SHOW_COMPILER_WARNINGS "compiler warnings" OFF)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
-include(DefaultBuildType)
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-if (SHOW_COMPILER_WARNINGS)
-  add_definitions("-Wall") # show all warning messages
-else()
-  add_definitions("-w")    # inhibit all warning messages
-endif()
-
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 IF(WIN32)
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -/MT")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -/MTd")
 ENDIF()
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/" "${PROJECT_SOURCE_DIR}/cmake/" "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
   "Single output directory for building all executables.")
 
-find_package(Eigen3 3.3.7 REQUIRED)
-INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(lib)
-INCLUDE_DIRECTORIES(ExternalLibs)
-INCLUDE_DIRECTORIES(ExternalLibs/yaml-cpp/include)
-INCLUDE_DIRECTORIES(ExternalLibs/libigl-2.1.0/include)
+include(DefaultBuildType)
+  
+ADD_DEFINITIONS ("-w")
 
-ADD_SUBDIRECTORY(ExternalLibs/lodepng)
-ADD_SUBDIRECTORY(lib/annmod)
-ADD_SUBDIRECTORY(ExternalLibs/base64)
+INCLUDE_DIRECTORIES(lib)
+INCLUDE_DIRECTORIES(lib/yaml-cpp/include)
+
+ADD_SUBDIRECTORY(lib/annmod/)
+ADD_SUBDIRECTORY(lib/base64/)
 ADD_SUBDIRECTORY(lib/hdprocess)
 ADD_SUBDIRECTORY(lib/imageutils)
-ADD_SUBDIRECTORY(ExternalLibs/jsoncpp)
-ADD_SUBDIRECTORY(ExternalLibs/tinyply)
-ADD_SUBDIRECTORY(ExternalLibs/yaml-cpp)
+ADD_SUBDIRECTORY(lib/jsoncpp)
+ADD_SUBDIRECTORY(lib/tinyply)
+ADD_SUBDIRECTORY(lib/yaml-cpp)
 ADD_SUBDIRECTORY(lib/utils)
-ADD_SUBDIRECTORY(lib/pmodels)
-ADD_SUBDIRECTORY(lib/dspacex)
+ADD_SUBDIRECTORY(lib/export)
+if(1)
+  # libigl
+  # <ctc> setting these only works if we're building libigl, not for find_package
+  # set(LIBIGL_EIGEN_VERSION 3.3.7 CACHE STRING "Eigen version")
+  # set(LIBIGL_WITH_PNG ON CACHE BOOL "Libigl w/ PNG support")
+  # find_package(LIBIGL REQUIRED QUIET)
+  # ...and since right now we're only using Eigen, let's postpone installing igl
+  find_package(Eigen3 3.3.7 REQUIRED)
+  #message(STATUS "EIGEN3_INCLUDE_DIR outside find_package is " ${EIGEN3_INCLUDE_DIR})
+  INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
+  
+  ADD_SUBDIRECTORY(lib/lodepng)
+  ADD_SUBDIRECTORY(lib/pmodels)
+endif()
 
 if(BUILD_SERVER_LIB)
-  INCLUDE_DIRECTORIES(ExternalLibs/boost)
-  ADD_SUBDIRECTORY(ExternalLibs/boost)
+  INCLUDE_DIRECTORIES(lib/boost)
+  ADD_SUBDIRECTORY(lib/boost)
   ADD_SUBDIRECTORY(lib/serverlib)
 endif()
 
@@ -71,8 +74,8 @@ if(BUILD_SERVER)
 endif()
 
 if(BUILD_HDVIZ_GUI)
-  ADD_SUBDIRECTORY(ExternalLibs/gle)
-  INCLUDE_DIRECTORIES(ExternalLibs/gle/lib)
+  ADD_SUBDIRECTORY(lib/gle)
+  INCLUDE_DIRECTORIES(lib/gle/lib)
   ADD_SUBDIRECTORY(gui)
 endif()
 
@@ -81,5 +84,7 @@ if(BUILD_HDVIZ_CLI)
 endif()
 
 if(BUILD_TESTS)
+  INCLUDE(CTest)
+  ENABLE_TESTING()
   ADD_SUBDIRECTORY(test)
 endif()

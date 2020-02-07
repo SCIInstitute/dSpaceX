@@ -1,6 +1,6 @@
 #include "flinalg/LinalgIO.h"
 #include "NNMSComplex.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include <tclap/CmdLine.h>
 
 
