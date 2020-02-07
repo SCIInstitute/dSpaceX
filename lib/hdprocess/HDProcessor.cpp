@@ -1,5 +1,4 @@
 #include "HDProcessor.h"
-#include "utils/DataExport.h"
 
 Precision MAX = std::numeric_limits<Precision>::max();
 
@@ -61,6 +60,8 @@ HDProcessResult* HDProcessor::processOnMetric(
   m_result->Y = Linalg<Precision>::Copy(yall);  
 
   // Scale persistence to be in [0,1]
+  // TODO: Is this just doing a normalization?
+  //       <ctc> I tried just a normalization and results are similar, but persistence values relate to field, so this may be more appropriate
   DenseVector<Precision> pScaled(persistence.N());
   Precision fmax = Linalg<Precision>::Max(yall);
   Precision fmin = Linalg<Precision>::Min(yall);
@@ -68,7 +69,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   for (unsigned int i=0; i < persistence.N(); i++) {
     pScaled(i) = persistence(i) / frange;    // don't subtract fmin here since it comes from field values, not persistence
   }
-  pScaled(pScaled.N()-1) = 1;                // set to 1 because the max value returned by the mscomplex is huge
+  pScaled(pScaled.N()-1) = 1;                // this is this set to 1 because there is a max value at the end of these returned by the mscomplex
   
   // Store Scled Persistence Data
   m_result->scaledPersistence = Linalg<Precision>::Copy(pScaled);
@@ -123,14 +124,9 @@ HDProcessResult* HDProcessor::processOnMetric(
     computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
 
-  // Export crystal partitions for shapeodds
-  {
-    bool exportCrystalPartitions = false;  // TODO: add these as a parameters to the function
-    std::string partitionsName("crystalpartitions.csv");
-    if (exportCrystalPartitions)
-      DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, partitionsName);
-  }
-  
+  // Used to export crystal partitions for shape odds (TODO: add some parameter and come up with a better name for this)
+  //DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
+
   // detach and return processed result
   HDProcessResult *result = m_result;
   m_result = nullptr;

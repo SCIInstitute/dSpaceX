@@ -1,7 +1,7 @@
 #include <base64/base64.h>
 #include <boost/filesystem.hpp>
 #include "Controller.h"
-#include "dspacex/DatasetLoader.h"
+#include "DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
@@ -11,12 +11,13 @@
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
 #include <jsoncpp/json/json.h>
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include "serverlib/wst.h"
-#include "utils/DenseVectorSample.h"
-#include "utils/loaders.h"
-#include "utils/utils.h"
+#include "util/DenseVectorSample.h"
+#include "util/csv/loaders.h"
+#include "util/utils.h"
 #include "pmodels/Models.h"
+#include "lodepng.h"
 
 #include <cassert>
 #include <algorithm>
@@ -27,8 +28,6 @@
 #include <functional>
 #include <fstream>
 #include <string>
-
-using namespace dspacex;
 
 // Simplify namespace access to _1, _2 for std::bind parameter binding.
 using namespace std::placeholders;
@@ -807,7 +806,7 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
   std::cout << "fetchImageForLatentSpaceCoord_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
   //create images using the elements of this model's Z
-  const dspacex::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
+  const PModels::Model &model(m_currentDataset->getMSModels()[0].getModel(persistence, crystalid).second);
 
   Eigen::MatrixXd new_sample =  ShapeOdds::evaluateModel(model, z_coord);
 
@@ -817,6 +816,44 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
 #endif
   
   response["msg"] = std::string("here's your new sample computing using ShapeOdds(tm). Have a nice day!");
+}
+
+// converts w*h x 1 matrix of doubles to w x h 2d image of unsigned char, throwing an exception if dims don't match
+// <ctc> TODO move this to utils (or somewhere) so it can be used by others
+Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h)
+{
+  //<ctc> note: this is about the same as in ShapeOdds::evaluateModel, accidental rewrite? consolidate.
+  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image_mat = (I.array() * 255.0).cast<unsigned char>();
+
+  if (image_mat.size() != w * h)
+  { 
+    throw std::runtime_error("Warning: w * h (" + std::to_string(w) + " * " + std::to_string(h) + ") != computed image size (" + std::to_string(image_mat.size()) + ")");
+  }
+  image_mat.resize(h, w);
+  image_mat.transposeInPlace();  // make data row-order
+
+  std::vector<unsigned char> png;
+  unsigned error = lodepng::encode(png, image_mat.data(), w, h, LCT_GREY, 8);
+  if (error) {
+    throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
+  } 
+
+  std::vector<char> char_png_vec(w * h);        //<ctc> grumble-grumble... it'll just turn around and be converted back to unsigned char*
+  std::copy(png.begin(), png.end(), char_png_vec.begin());
+  return Image(w, h, NULL, char_png_vec, "png");
+
+#if 0
+  //<ctc> this doesn't work since when the Eigen::Matrix goes out of scope it still deletes its data.
+  //  char *image_data = reinterpret_cast<char *>(std::move(image.data()));
+  // ...so instead we just copy it for now, but I put a question out there to see if Eigen's matrix can relinquish its data.
+  std::vector<char> image_data_vec(w * h);
+  char *idata = reinterpret_cast<char *>(image.data());
+  std::copy(idata, idata + w * h, image_data_vec.begin());
+  //return Image(w, h, NULL, image_data_vec, "raw");
+  unsigned char *foo = std::reinterpret_cast<unsigned char*>(idata); // why the error calling the Image constructor with this argument? -> must use static_cast!
+  //return Image(w, h, std::reinterpret_cast<unsigned char*>(idata), image_data_vec, "raw");
+  return Image(w, h, (unsigned char*)idata, image_data_vec, "raw");
+#endif
 }
 
 /**
@@ -860,12 +897,12 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   if (mscomplex_idx < 0)
     return fetchCrystalOriginalSampleImages(request, response);
 
-  dspacex::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
   int persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
 
   // if there isn't a model for the selected persistence level, just show its associated samples' images
   if (persistenceLevel_idx < 0)
-    return fetchCrystalOriginalSampleImages(request, response); // fixme: plvl access should simply be by actual plvl, not this idx confusion (class consolidation should resolve this)
+    return fetchCrystalOriginalSampleImages(request, response);
 
   // if user requests original images, show predicted images for the crystal's samples' z_coords
   bool showOrig = request["showOrig"].asBool();
@@ -875,7 +912,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   int numZ = request["numSamples"].asInt();
   std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
   
-  dspacex::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);  
+  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
 
   // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
   // get the vector of values for the field
@@ -900,10 +937,10 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval, sigma);
 
     // evaluate model at this coordinate
-    Eigen::MatrixXd I = dspacex::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
     
     // add result image to response
-    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    Image image = convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
@@ -916,7 +953,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
 
 // computes index of the requested (0-based) persistence level in this M-S complex
 // (since there could be more actual persistence levels than those stored in the complex)
-int Controller::getPersistenceLevelIdx(const unsigned desired_persistenceLevel, const dspacex::MSComplex &mscomplex) const
+int Controller::getPersistenceLevelIdx(const unsigned desired_persistenceLevel, const PModels::MSComplex &mscomplex) const
 {
   int persistenceLevel_idx = desired_persistenceLevel -
     (m_currentTopoData->getMaxPersistenceLevel() - mscomplex.numPersistenceLevels() + 1);
@@ -960,9 +997,9 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   int crystalid = request["crystalID"].asInt();
   std::cout << "fetchAllImagesForCrystal_Shapeodds: datasetId is "<<datasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
-  dspacex::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
-  int persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex);
-  dspacex::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
+  PModels::MSComplex &mscomplex = m_currentDataset->getMSComplex(fieldname);
+  unsigned persistenceLevel_idx = getPersistenceLevelIdx(persistenceLevel, mscomplex); //fixme: now returns int
+  PModels::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);
 
   // TODO: cut and paste from above! ugh:
   // <ctc> we need to connect the dataset and its values more closely when reading a model, as the crystal's model should already know its fieldvalues
@@ -991,12 +1028,12 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     std::string outputBasepath(datapath + "/CantileverBeam_wclust_wraw/outimages"); //<ctc> todo: dataset_name or /debug/datasetname/outimages
     std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) +
                         "-z" + std::to_string(sample.idx) + ".png");
-    Eigen::MatrixXd I = dspacex::ShapeOdds::evaluateModel(model, model.getZCoord(sample.idx), false /*writeToDisk*/,
+    Eigen::MatrixXd I = PModels::ShapeOdds::evaluateModel(model, model.getZCoord(sample.idx), false /*writeToDisk*/,
                                                             outpath, sample_image.getWidth(), sample_image.getHeight());
 
 
     //<ctc> simplify this to use the images passed in rather than re-generating (rename it to compareImages or something)
-    float quality = dspacex::ShapeOdds::testEvaluateModel(model, model.getZCoord(sample.idx), persistenceLevel, crystalid, sample.idx, sample_image,
+    float quality = PModels::ShapeOdds::testEvaluateModel(model, model.getZCoord(sample.idx), persistenceLevel, crystalid, sample.idx, sample_image,
                                                           false /*writeToDisk*/, outputBasepath);
 
     // todo: is "quality" the correct term for comparison of generated image vs original?
@@ -1004,7 +1041,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
               << persistenceLevel << ", crystalid " << crystalid << ": " << quality << std::endl;
 
     // add image to response
-    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    Image image = convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
@@ -1045,12 +1082,12 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
 
   FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
   Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
-  std::vector<dspacex::Model::ValueIndexPair> fieldvalues_and_indices;
+  std::vector<PModels::Model::ValueIndexPair> fieldvalues_and_indices;
   for (unsigned i = 0; i < partitions.size(); i++)
   {
     if (partitions(i) == crystalid)
     {
-      dspacex::Model::ValueIndexPair sample;
+      PModels::Model::ValueIndexPair sample;
       sample.idx = i;
       sample.val = fieldvals(i);
       fieldvalues_and_indices.push_back(sample);
@@ -1058,7 +1095,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   }
 
   // sort by increasing fieldvalue
-  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), dspacex::Model::ValueIndexPair::compare);
+  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), PModels::Model::ValueIndexPair::compare);
   std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
 
   for (auto sample: fieldvalues_and_indices)
@@ -1124,8 +1161,7 @@ void Controller::maybeLoadDataset(int datasetId) {
 }
 
 // getFieldvalues
-// 
-// returns Eigen::Map wrapping the vector of values for a given field
+// returns Eigen::Map vector wrapping the values for a given field
 const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, const std::string &name)
 {
   if (type == Fieldtype::DesignParameter)

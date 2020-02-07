@@ -8,17 +8,24 @@ FIND_PACKAGE(BLAS REQUIRED)
 
 SET(SERVER_INCLUDE_FILES
   Controller.h
+  DatasetLoader.h
   dsxdyn.h)
 
 SET(SERVER_SOURCE_FILES
-  server.cpp
+  main.cpp
   Controller.cpp
+  DatasetLoader.cpp
   dsxdyn.c)
 
-ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES})
-target_include_directories(dSpaceX PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include>)
+# Add library includes
+INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+INCLUDE_DIRECTORIES(../lib/hdprocess)
+
+MESSAGE(STATUS "BLAS_LIBRARIES: ${BLAS_LIBRARIES}")
+MESSAGE(STATUS "LAPACK_LIBRARIES: ${LAPACK_LIBRARIES}")
+MESSAGE(STATUS "ZLIB_LIBRARIES: ${ZLIB_LIBRARIES}")
+
+ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES} ${ZLIB_INCLUDE_DIRS})
 TARGET_LINK_LIBRARIES (dSpaceX
   base64
   blas
@@ -29,7 +36,6 @@ TARGET_LINK_LIBRARIES (dSpaceX
   jsoncpp
   pmodels
   dspacex_utils
-  dspacex
   libwsserver
   lapack
   pthread

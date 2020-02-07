@@ -1,10 +1,10 @@
 #pragma once
 
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 #include "utils/StringUtils.h"
 #include "Models.h"
 
-namespace dspacex {
+namespace PModels {  // Probabilistic models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
 
 //
 // A set of probabilistic models are learned using the samples associated with the crystals at
@@ -42,19 +42,12 @@ public:
     return model.getSampleIndices();
   }
 
-  Model& getModel() //todo: return by model type since a crystal can have more than one model. Maybe have to return a pointer in case model doesn't exist. Could a crystal have more than one of the same type of model? Seems possible since differently-constructed models may want to be compared.
+  Model& getModel()
   {
-    return model;  //todo: which model?
+    return model;
   }
-  
-  // void addModel(Model &m)
-  // {
-  //   models.append(m)
-  // }
 
 private:
-  // todo: there can be more than one model per crystal (say, one per qoi and one per design param and one per image/dt
-  // todo: the crystal probably shouldn't own the model(s) since they're technically independent of the crystal
   Model model;
 };
 
@@ -146,5 +139,5 @@ private:
 
 
 
-} // dspacex
+} // end namespace PModels
 

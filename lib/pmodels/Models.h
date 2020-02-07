@@ -6,10 +6,8 @@
 #include <Eigen/Core>
 #include "imageutils/Image.h"
 
-namespace dspacex {
+namespace PModels {
 
-// Probabilistic (predictive) models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
-//
 // There is a model for each crystal at each persistence level for a given M-S topology. It is
 // constructed from a given number of input images (samples), and consists of L necessary
 // values that make the model able to compute new images for a given point, z, in the latent
@@ -17,12 +15,9 @@ namespace dspacex {
 //
 // TODO: provide common interface for ShapeOdds, InfiniteShapeOdds, and SharedGP models
 // TODO: a model and its associated crystal should know to which fieldname it belongs, right?
-// todo: rename to PredictiveModel
 class Model
 {
 public:
-
-  // fieldvalue and the index of its sample in the full set of samples for this dataset
   struct ValueIndexPair
   {
     float val;
@@ -31,8 +26,6 @@ public:
     static bool compare(const ValueIndexPair &p, const ValueIndexPair &q) { return p.val < q.val; }
   };
 
-
-  // todo: this belongs with ShapeOdds
   void setModel(Eigen::MatrixXd _W, Eigen::MatrixXd _w0, Eigen::MatrixXd _Z)
   {
     W  = _W;
@@ -102,17 +95,17 @@ public:
     }
   }
 
-  double minFieldValue() const
+  double minFieldValue()
   {
     return fieldvalues.minCoeff();
   }
 
-  double maxFieldValue() const
+  double maxFieldValue()
   {
     return fieldvalues.maxCoeff();
   }
 
-  const Eigen::RowVectorXd getNewLatentSpaceValue(double new_fieldval, double sigma = 0.25) const
+  const Eigen::RowVectorXd getNewLatentSpaceValue(double new_fieldval, double sigma = 0.25)
   {
     //debug: hardcode new fieldval
     //new_fieldval = 0.62341;
@@ -204,4 +197,4 @@ private:
 
 };
 
-} // dspacex
+} // end namespace PModels

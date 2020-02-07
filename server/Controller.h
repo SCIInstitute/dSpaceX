@@ -1,15 +1,41 @@
 #pragma once
 
-#include "dspacex/Dataset.h"
+#include "Dataset.h"
 #include "hdprocess/HDProcessResult.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
-#include "dspacex/Fieldtype.h"
-
 #include <jsoncpp/json/json.h>
+
 #include <map>
 #include <functional>
 
+
+// Fieldtype
+//
+// example:
+// Fieldtype type("qoi");
+// if (type == Fieldtype::DesignParameter) ...
+struct Fieldtype {
+  Fieldtype(const std::string strtype)
+  {
+    if (strtype == "parameter")
+      kind = DesignParameter;
+    else if (strtype == "qoi")
+      kind = QoI;
+    else
+      kind = Invalid;
+  }
+
+  Fieldtype(const int type) : kind(type) {}
+
+  operator int() const { return kind; } // enables comparison using ==
+  bool valid() { return kind == DesignParameter || kind == QoI; }
+
+  int kind;
+  const static int DesignParameter = 0;
+  const static int QoI = 1;
+  const static int Invalid = -1;
+};
 
 class Controller {
  public:
@@ -49,15 +75,16 @@ class Controller {
   void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
+  // returns Eigen::Map vector wrapping the values for a given field
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 
-  // todo: user shouldn't need this: a plvl is a plvl, so bury the details
-  int getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
+  // PModels helpers
+  int getPersistenceLevelIdx(const unsigned desired_persistence, const PModels::MSComplex &mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
-  std::unique_ptr<dspacex::Dataset> m_currentDataset;
+  std::unique_ptr<Dataset> m_currentDataset;
   int m_currentDatasetId = -1;
   std::string m_currentField;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;

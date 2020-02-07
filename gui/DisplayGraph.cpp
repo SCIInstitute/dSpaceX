@@ -4,7 +4,7 @@
 #include "flinalg/LinalgIO.h"
 #include "hdprocess/util/csv/loaders.h"
 #include "metrics/EuclideanMetric.h"
-#include "dspacex/Precision.h"
+#include "precision/Precision.h"
 
 #include <png.h>
 #include <iostream>
