@@ -102,7 +102,7 @@ class TableWindow extends React.Component {
   /**
    *
    */
-  componentWillMount() {
+  componentDidMount() {
     switch (this.props.attributeGroup) {
       case 'parameters':
         this.getParameters().then((data) => {
@@ -167,7 +167,6 @@ class TableWindow extends React.Component {
     if (selectedDesigns.has(id)) {
       return classes.selected;
     } else if (activeDesigns.has(id)) {
-      console.log(activeDesigns.size);
       if (activeDesigns.size === numberOfSamples) {
         return classes.row;
       }
@@ -196,12 +195,12 @@ class TableWindow extends React.Component {
           <TableHead style={{ borderBottom:'1px solid black' }}>
             <TableRow>
               {columnNames.length > 0 && <TableCell
-                style={{ fontWeight:'bold', fontSize:'medium' }} numeric padding='dense'>id</TableCell>}
+                style={{ fontWeight:'bold', fontSize:'medium' }} align='right' padding='dense'>id</TableCell>}
               {
                 columnNames.map((n) => {
                   return (
                     <TableCell
-                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} numeric padding='dense'>{n}</TableCell>
+                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} align='right' padding='dense'>{n}</TableCell>
                   );
                 })
               }
@@ -216,11 +215,11 @@ class TableWindow extends React.Component {
                       key={i}
                       className={this.getClassName(i)}
                       onClick={(e) => this.props.onDesignSelection(e, i)}>
-                      <TableCell numeric padding='dense'>{i}</TableCell>
+                      <TableCell align='right' padding='dense'>{i}</TableCell>
                       {
                         columnNames.map((p) => {
                           return (
-                            <TableCell numeric padding='dense'
+                            <TableCell align='right' padding='dense'
                               key={i + '-' + p}>
                               { n[p] && n[p].toPrecision(5) }
                             </TableCell>

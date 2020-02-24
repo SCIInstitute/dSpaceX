@@ -13,21 +13,13 @@ const styles = () => ({
   root: {
     overflowX: 'auto',
   },
-  svgContainer: {
-    'display': 'inline-block',
-    'position': 'relative',
+  flexContainer: {
+    'display': 'flex',
+    'flex-direction': 'column',
     'width': '100%',
     'verticalAlign': 'top',
     'overflow': 'hidden',
     'border': '1px solid gray',
-  },
-  svgContent: {
-    'display': 'inline-block',
-    'position': 'absolute',
-    'top': 10,
-    'left': 0,
-    'fontSize': '0.75em',
-    'fontFamily': '"Roboto", "Helvetica", "Arial", sans-serif',
   },
   switchContainer: {
     'display': 'flex',
@@ -36,6 +28,18 @@ const styles = () => ({
   switch: {
     'margin-top': 10,
     'margin-right': 50,
+  },
+  svgContainer: {
+    'display': 'absolute',
+    'width': '100%',
+    'top': 0,
+    'left': 0,
+    'bottom': 0,
+    'right': 0,
+  },
+  svgContent: {
+    'fontSize': '0.75em',
+    'fontFamily': '"Roboto", "Helvetica", "Arial", sans-serif',
   },
 });
 
@@ -78,7 +82,7 @@ class ScatterPlotWindow extends React.Component {
   /**
    * Called before componenet mounts by React
    */
-  componentWillMount() {
+  componentDidMount() {
     this.getParameters().then((data) => {
       this.setState({ parameters:data } );
     });
@@ -265,7 +269,7 @@ class ScatterPlotWindow extends React.Component {
     }
 
     // Create margins
-    let margin = { top:50, right:50, bottom:50, left:50 };
+    let margin = { top:10, right:50, bottom:50, left:50 };
     let chartWidth = this.svgWidth - margin.left - margin.right;
     let chartHeight = this.svgHeight - margin.top - margin.bottom;
 
@@ -297,13 +301,13 @@ class ScatterPlotWindow extends React.Component {
 
     // Add Labels to chart
     d3.select(node).append('text')
-      .attr('x', (chartHeight / 2 + margin.top + margin.bottom))
-      .attr('y', -1 * (175))
+      .attr('x', chartHeight / 2 + 155) // Sorry about the magic numbers; this is what made the chart look good.
+      .attr('y', -1 * (165))
       .attr('transform', 'rotate(-90,' + chartWidth / 2 + ',' + chartHeight / 2 + ')')
       .text(yAttribute);
 
     d3.select(node).append('text')
-      .attr('x', (chartWidth / 2 + margin.left + margin.right))
+      .attr('x', (chartWidth / 2 + margin.left))
       .attr('y', (chartHeight + margin.top + 30))
       .attr('text-anchor', 'end')
       .text(xAttribute);
@@ -326,7 +330,7 @@ class ScatterPlotWindow extends React.Component {
       circles
         .attr('cx', (d) => xScale(d.x))
         .attr('cy', (d) => yScale(d.y))
-        .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
         .attr('r', (d) => cScale(d.marker))
         .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
         .attr('fill-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15')
@@ -343,7 +347,7 @@ class ScatterPlotWindow extends React.Component {
       circles
         .attr('cx', (d) => xScale(d.x))
         .attr('cy', (d) => yScale(d.y))
-        .attr('transform', 'translate(' + margin.left + ',' + margin.bottom + ')')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
         .attr('r', 5)
         .attr('fill', (d) => selectedDesigns.has(d.id) ? '#3f51b5' : '#D3D3D3')
         .attr('fill-opacity', (d) => activeDesigns.has(d.id) ? '1' : '0.15')
@@ -378,18 +382,20 @@ class ScatterPlotWindow extends React.Component {
   render() {
     const { classes } = this.props;
     return (
-      <Paper className={[classes.root, classes.svgContainer].join(' ')}>
+      <Paper className={[classes.root, classes.flexContainer].join(' ')}>
         <div className={classes.switchContainer}>
           {this.areAxesSet() && <FormControlLabel className={classes.switch} control={<Switch
             checked={this.state.lassoEnabled}
             onChange={this.handleLassoChange}
             color='primary'/>} label="Lasso"/>}
         </div>
-        <svg ref={(node) => this.node = node}
-          id='scatterPlotSvg'
-          className={classes.svgContent}
-          viewBox={'0 0 '+ this.svgWidth +' '+ this.svgHeight}
-          preserveAspectRatio='xMidYMid meet'/>
+        <div className={classes.svgContainer}>
+          <svg ref={(node) => this.node = node}
+            id='scatterPlotSvg'
+            className={classes.svgContent}
+            viewBox={'0 0 ' + this.svgWidth + ' ' + this.svgHeight}
+            preserveAspectRatio='xMidYMid meet'/>
+        </div>
       </Paper>);
   }
 }

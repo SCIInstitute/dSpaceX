@@ -69,7 +69,7 @@ class DecompositionPanel extends React.Component {
     // Currently only Morse-Smale is supported.
     if (config.decompositionMode != 'Morse-Smale') {
       if (config.decompositionMode == 'Shared-GP') {
-        console.log("validating Shared-GP decomposition model (even though it's not yet valid)");
+        console.log('validating Shared-GP decomposition model (even though it\'s not yet valid)');
         return true;
       }
       return false;
@@ -111,9 +111,9 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
-    if (prevState.decompositionMode != this.state.decompositionMode ||
-        prevState.decompositionCategory != this.state.decompositionCategory ||
-        prevState.decompositionField != this.state.decompositionField) {
+    if (prevState.decompositionMode !== this.state.decompositionMode ||
+        prevState.decompositionCategory !== this.state.decompositionCategory ||
+        prevState.decompositionField !== this.state.decompositionField) {
       let config = {
         decompositionMode: this.state.decompositionMode,
         decompositionCategory: this.state.decompositionCategory,
@@ -132,9 +132,8 @@ class DecompositionPanel extends React.Component {
    */
   handleDecompositionModeChange(event) {
     let mode = event.target.value;
-    let set_mode = mode;
     this.setState({
-      decompositionMode: set_mode,
+      decompositionMode: mode,
     });
 
     if (mode == 'Morse-Smale') {
@@ -266,26 +265,6 @@ class DecompositionPanel extends React.Component {
     let isDisabled = crystals[index].isDisabled;
     crystals[index].isDisabled = !isDisabled;
     this.setState({ crystals:crystals });
-  }
-
-  /**
-   * React to new props. Reset views if dataset changes.
-   * @param {object} nextProps
-   */
-  componentWillReceiveProps(nextProps) {
-    let shouldReset = !nextProps.dataset ||
-        nextProps.dataset != this.props.dataset;
-    if (shouldReset) {
-      this.setState({
-        decompositionMode: '',
-        persistenceLevel: '',
-        minPersistence: null,
-        maxPersistence: null,
-        complexSizes: [],
-        crystals: [],
-        sliderPersistence: null,
-      });
-    }
   }
 
   /**
