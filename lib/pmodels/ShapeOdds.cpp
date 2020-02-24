@@ -2,7 +2,7 @@
 #include "imageutils/ImageLoader.h"
 #include "lodepng.h"
 
-namespace PModels {
+namespace dspacex {
 
 void testEigen()
 {
@@ -191,4 +191,4 @@ float ShapeOdds::testEvaluateModel(const Model &model, const Eigen::Matrix<doubl
   return quality;
 }
 
-} // end namespace PModels
+} // dspacex

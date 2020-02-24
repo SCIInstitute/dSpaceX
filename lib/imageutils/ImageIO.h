@@ -92,48 +92,7 @@ class ImageIO{
     cast->Update();
     return cast->GetOutput();  
   };
-
-  /*static ImagePointer createImage(ImagePointer tmplate){
-    ImagePointer image = Image::New();
-    image->SetRegions( tmplate->GetLargestPossibleRegion() );
-    image->SetOrigin( tmplate->GetOrigin());
-    image->SetSpacing( tmplate->GetSpacing() );
-    image->SetDirection( tmplate->GetDirection());
-    image->Allocate();
-    return image; 
-  };*/
-
-  //read data matrix from images
-  static FortranLinalg::DenseMatrix<Precision> readDataMatrix(ImageVectorConverter<Image> &converter, 
-                                    std::string imageFileList) {
-      std::vector<std::string> files =
-        IO::readStringList(imageFileList);
-      return readDataMatrix(converter, files);
-  };
-
-
-  //read data matrix from images
-  static FortranLinalg::DenseMatrix<Precision> readDataMatrix(ImageVectorConverter<Image> &converter, 
-                                    std::vector<std::string> &imageFiles) {
-
-    int D = converter.getD();
-    FortranLinalg::DenseMatrix<Precision> data( D, imageFiles.size() );
-
-    long column = 0;
-    for(std::vector<std::string>::iterator fileIt = imageFiles.begin(); fileIt !=
-      imageFiles.end(); ++fileIt){
-    
-      ImageReaderPointer imageReader = ImageReader::New();
-      imageReader->SetFileName( *fileIt );
-    
-      ImagePointer input = readImage( (*fileIt).c_str());
-
-      converter.fillColumn(input, column, data);
-      ++column;
-    }
-    return data;
-  };
-
+  
 };
 
 
