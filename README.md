@@ -36,6 +36,14 @@ Generator can be omitted for a simple Makefile, or set to one of those [listed o
 <../dSpaceX/build>$ make -j8
 ```
 
+4. Run the server.
+``` bash
+<../dSpaceX/build>$ ./bin/dSpaceX
+```
+Options include `--port` and `--datapath` to specify the port on which to listen for client connections and the path to available datasets.
+Use `--help` to list all options.
+
+
 **Additional Notes**
 The default CMake configuration will only build the HDProcess library.
 It can also optionally build the following binaries if desired.

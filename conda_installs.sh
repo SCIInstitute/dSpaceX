@@ -52,7 +52,7 @@ function install_conda() {
        zlib=1.2.11 \
        ncurses=6.1 \
        cmake=3.15.5 \
-       nodejs=13.0.0 \
+       nodejs=13.9.0 \
        eigen=3.3.7 \
        libpng=1.6.37 \
        gtest=1.10.0 \
