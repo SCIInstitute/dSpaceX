@@ -11,7 +11,7 @@
 #include "HDProcessResult.h"
 #include "kernelstats/FirstOrderKernelRegression.h"
 #include "morsesmale/NNMSComplex.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 #include "utils/Random.h"
 
 #include <map>

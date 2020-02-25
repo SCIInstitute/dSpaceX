@@ -10,10 +10,10 @@ const std::string kExampleDirPath = std::string(EXAMPLE_DATA_DIR);
 
 TEST(DatasetLoader, loadDataset_linalg) {  
   std::string filePath = kExampleDirPath + "_no_load/gaussian2d/config.yaml";
-  std::unique_ptr<Dataset> dataset = DatasetLoader::loadDataset(filePath);
+  std::unique_ptr<dspacex::Dataset> dataset = dspacex::DatasetLoader::loadDataset(filePath);
 }
 
 TEST(DatasetLoader, loadDataset_csv) {
-  std::string filePath = kExampleDirPath + "cantilever_beam/config.yaml";
-  std::unique_ptr<Dataset> dataset = DatasetLoader::loadDataset(filePath);
+  std::string filePath = kExampleDirPath + "/cantilever_beam/config.yaml";
+  std::unique_ptr<dspacex::Dataset> dataset = dspacex::DatasetLoader::loadDataset(filePath);
 }

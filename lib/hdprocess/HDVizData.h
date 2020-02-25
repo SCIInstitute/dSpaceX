@@ -4,7 +4,7 @@
 #include "flinalg/LinalgIO.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/Linalg.h"
-#include "precision/Precision.h"
+#include "dspacex/Precision.h"
 
 #include <string>
 #include <vector>
