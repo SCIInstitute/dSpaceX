@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <Eigen/Core>
 
 class Image {
  public:
@@ -18,6 +19,8 @@ class Image {
   int getHeight() const;
   std::string getFormat() const;
   
+  static Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h);
+
  private:
   int m_width;
   int m_height;

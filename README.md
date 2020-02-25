@@ -27,7 +27,7 @@ conda activate dspacex
 2. Run cmake to configure.
 ```bash
 <.../dSpaceX>$ cd build
-<.../dSpaceX/build>$ cmake -G<generator> ../
+<.../dSpaceX/build>$ cmake -G<generator> -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} ../
 ```
 Generator can be omitted for a simple Makefile, or set to one of those [listed on the CMake page](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#command-line-build-tool-generators).
 
