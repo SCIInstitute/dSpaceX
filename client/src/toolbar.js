@@ -46,7 +46,7 @@ class Toolbar extends React.Component {
             display: 'flex',
             flexDirection: 'row-reverse',
           }}>
-            <Button variant='raised' style={{
+            <Button variant='contained' style={{
               backgroundColor: this.props.displayFilterDrawer ? '#ddd' : 'white',
               marginLeft: '5px' }}
             disabled={!this.props.dataset}
@@ -56,7 +56,7 @@ class Toolbar extends React.Component {
                 style={{ paddingRight:'5px' }}/>
               Filter
             </Button>
-            <Button variant='raised' style={{ backgroundColor:'white' }}
+            <Button variant='contained' style={{ backgroundColor:'white' }}
               onClick={this.props.onConnectClick}
               disabled={this.props.connectedToServer} >
               Connect
