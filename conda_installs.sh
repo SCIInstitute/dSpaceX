@@ -55,7 +55,8 @@ function install_conda() {
        nodejs=13.0.0 \
        eigen=3.3.7 \
        libpng=1.6.37 \
-       gtest=1.10.0
+       gtest=1.10.0 \
+       yaml-cpp=0.6.3
   then return 1; fi
 
   # linux-only deps

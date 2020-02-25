@@ -5,6 +5,7 @@ FIND_PACKAGE(Threads)
 FIND_PACKAGE(ZLIB REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 SET(SERVER_INCLUDE_FILES
   Controller.h
@@ -19,9 +20,9 @@ ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES})
 target_include_directories(dSpaceX PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include>)
-TARGET_LINK_LIBRARIES (dSpaceX
+TARGET_LINK_LIBRARIES(dSpaceX
   base64
-  blas
+  ${BLAS_LIBRARIES}
   boostparts
   dl
   hdprocess
@@ -31,7 +32,7 @@ TARGET_LINK_LIBRARIES (dSpaceX
   dspacex_utils
   dspacex
   libwsserver
-  lapack
+  ${LAPACK_LIBRARIES}
   pthread
   ${ZLIB_LIBRARIES}
   yaml-cpp)

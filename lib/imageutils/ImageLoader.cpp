@@ -1,5 +1,5 @@
 #include "ImageLoader.h"
-#include "png.h"
+#include <png.h>
 
 #include <cstdlib>
 #include <iostream>

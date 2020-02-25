@@ -1,5 +1,6 @@
 enable_testing()
 find_package(GTest REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # Definitions for Tests
 function(NEWTEST name)

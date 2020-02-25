@@ -16,4 +16,6 @@ TARGET_INCLUDE_DIRECTORIES(dspacex PUBLIC
   $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>)
 TARGET_LINK_LIBRARIES(dspacex
+  dspacex_utils
+  imageutils
   )
