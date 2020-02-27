@@ -27,7 +27,7 @@ class GalleryWindow extends Component {
    * Gets data from server when component mounts
    * TODO this needs to be extracted and managed by a data manager
    */
-  componentWillMount() {
+  componentDidMount() {
     let { datasetId } = this.props.dataset;
 
     // Get Thumbnails

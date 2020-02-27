@@ -27,7 +27,7 @@ conda activate dspacex
 2. Run cmake to configure.
 ```bash
 <.../dSpaceX>$ cd build
-<.../dSpaceX/build>$ cmake -G<generator> ../
+<.../dSpaceX/build>$ cmake -G<generator> -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} ../
 ```
 Generator can be omitted for a simple Makefile, or set to one of those [listed on the CMake page](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#command-line-build-tool-generators).
 
@@ -35,6 +35,14 @@ Generator can be omitted for a simple Makefile, or set to one of those [listed o
 ```bash
 <../dSpaceX/build>$ make -j8
 ```
+
+4. Run the server.
+``` bash
+<../dSpaceX/build>$ ./bin/dSpaceX
+```
+Options include `--port` and `--datapath` to specify the port on which to listen for client connections and the path to available datasets.
+Use `--help` to list all options.
+
 
 **Additional Notes**
 The default CMake configuration will only build the HDProcess library.

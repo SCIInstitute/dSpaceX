@@ -76,13 +76,6 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           onDesignSelection={this.props.onDesignSelection}
           activeDesigns={this.props.activeDesigns}
           numberOfWindows={this.props.numberOfWindows}/>
-        {/* <GraphGLWindow*/}
-        {/*  dataset={this.props.dataset}*/}
-        {/*  decomposition={this.props.decomposition}*/}
-        {/*  selectedDesigns={this.props.selectedDesigns}*/}
-        {/*  onDesignSelection={this.props.onDesignSelection}*/}
-        {/*  activeDesigns={this.props.activeDesigns}*/}
-        {/*  numberOfWindows={this.props.numberOfWindows}/>*/}
         <MorseSmaleWindow
           dataset={this.props.dataset}
           decomposition={this.props.decomposition}

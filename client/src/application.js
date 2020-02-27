@@ -109,13 +109,6 @@ class Application extends React.Component {
   }
 
   /**
-   * Callback invoked before the component receives new props.
-   */
-  componentWillMount() {
-    console.log('Initializing Application...');
-  }
-
-  /**
    * Callback invoked immediately after the component is mounted.
    */
   componentDidMount() {

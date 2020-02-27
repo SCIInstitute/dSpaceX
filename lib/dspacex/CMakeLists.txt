@@ -1,0 +1,21 @@
+SET(DSPACEX_HEADER_FILES
+  Precision.h
+  Fieldtype.h
+  DatasetLoader.h
+  Dataset.h
+)
+
+SET(DSPACEX_SOURCE_FILES
+  DatasetLoader.cpp
+  Dataset.cpp
+)
+
+ADD_LIBRARY(dspacex ${DSPACEX_HEADER_FILES} ${DSPACEX_SOURCE_FILES})
+TARGET_INCLUDE_DIRECTORIES(dspacex PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
+  $<INSTALL_INTERFACE:include>)
+TARGET_LINK_LIBRARIES(dspacex
+  dspacex_utils
+  imageutils
+  )
