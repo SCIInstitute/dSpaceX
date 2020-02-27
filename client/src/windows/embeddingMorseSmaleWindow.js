@@ -2,8 +2,8 @@ import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
-import { withDSXContext } from '../dsxContext.js';
 import ResizeablePanels from '../components/ResizeablePanels';
+import { withDSXContext } from '../dsxContext.js';
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -67,23 +67,24 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       flexDirection: 'row',
     };
     return (
-      <div style={container}>
-        <EmbeddingWindow
-          dataset={this.props.dataset}
-          decomposition={this.props.decomposition}
-          embedding={this.props.embedding}
-          selectedDesigns={this.props.selectedDesigns}
-          onDesignSelection={this.props.onDesignSelection}
-          activeDesigns={this.props.activeDesigns}
-          numberOfWindows={this.props.numberOfWindows}/>
-        <MorseSmaleWindow
-          dataset={this.props.dataset}
-          decomposition={this.props.decomposition}
-          numberOfWindows={this.props.numberOfWindows}
-          onCrystalSelection={this.props.onCrystalSelection}
-          evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-        <ResponsiveDrawer images={this.state.drawerImages}/>
-      </div>
+      <ResizeablePanels/>
+      // <div style={container}>
+      //   <EmbeddingWindow
+      //     dataset={this.props.dataset}
+      //     decomposition={this.props.decomposition}
+      //     embedding={this.props.embedding}
+      //     selectedDesigns={this.props.selectedDesigns}
+      //     onDesignSelection={this.props.onDesignSelection}
+      //     activeDesigns={this.props.activeDesigns}
+      //     numberOfWindows={this.props.numberOfWindows}/>
+      //   <MorseSmaleWindow
+      //     dataset={this.props.dataset}
+      //     decomposition={this.props.decomposition}
+      //     numberOfWindows={this.props.numberOfWindows}
+      //     onCrystalSelection={this.props.onCrystalSelection}
+      //     evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+      //   <ResponsiveDrawer images={this.state.drawerImages}/>
+      // </div>
     );
   }
 }
