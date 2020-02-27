@@ -6,7 +6,7 @@
 #include "imageutils/Image.h"
 #include "precision/Precision.h"
 #include "yaml-cpp/yaml.h"
-#include "shapeodds/ShapeOdds.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
+#include "pmodels/MorseSmale.h"  //fixme: dataloader_test won't compile now. Not sure how it's includes are set
 
 #include <string>
 #include <vector>
@@ -18,11 +18,13 @@ std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
 typedef
 std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
 typedef
-std::pair<std::string, Shapeodds::MSModelContainer> MSModelPair;
+std::pair<std::string, PModels::MSComplex> MSModelsPair;
+// typedef
+// std::vector<PModels::MSComplex> MSModels; // <ctc> definitely an issue: more than one model for a given fieldname. Multimap or vector?
 
 class DatasetLoader {
 public:
-  static Dataset* loadDataset(const std::string &filePath);
+  static std::unique_ptr<Dataset> loadDataset(const std::string &filePath);
   static std::string getDatasetName(const std::string &filePath);
 private:
   static std::string parseName(const YAML::Node &config);
@@ -50,13 +52,15 @@ private:
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
 
-  static std::vector<MSModelPair> parseMSModels(
+  //static std::vector<PModels::MSComplex> parseMSModels(
+  static std::vector<MSModelsPair> parseMSModels(
       const YAML::Node &config, const std::string &filePath);
 
-  static MSModelPair parseMSModelsForField(
+  //static std::vector<PModels::MSComplex> parseMSModelsForField(
+  static MSModelsPair parseMSModelsForField(
       const YAML::Node &config, const std::string &filePath);
 
-  static void parseModel(const std::string &modelPath, Shapeodds::Model &m);
+  static void parseModel(const std::string &modelPath, PModels::Model &m);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

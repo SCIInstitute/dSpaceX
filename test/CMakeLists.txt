@@ -5,7 +5,7 @@ IF(WIN32)
   set(GTEST_SHARED_ARG ON)
 ELSE()
   set(GTEST_SHARED_ARG OFF)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 ENDIF()
 
 ExternalProject_Add(googletest

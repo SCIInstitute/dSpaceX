@@ -61,18 +61,18 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   // Scale persistence to be in [0,1]
   // TODO: Is this just doing a normalization?
+  //       <ctc> I tried just a normalization and results are similar, but persistence values relate to field, so this may be more appropriate
   DenseVector<Precision> pScaled(persistence.N());
   Precision fmax = Linalg<Precision>::Max(yall);
   Precision fmin = Linalg<Precision>::Min(yall);
   Precision frange = fmax - fmin;
   for (unsigned int i=0; i < persistence.N(); i++) {
-    pScaled(i) = persistence(i) / frange;    // TODO: Shouldn't this also subtract fmin?
+    pScaled(i) = persistence(i) / frange;    // don't subtract fmin here since it comes from field values, not persistence
   }
-  pScaled(pScaled.N()-1) = 1;                // TODO: Determine why is this set to 1?
+  pScaled(pScaled.N()-1) = 1;                // this is this set to 1 because there is a max value at the end of these returned by the mscomplex
   
   // Store Scled Persistence Data
   m_result->scaledPersistence = Linalg<Precision>::Copy(pScaled);
-  
 
   // Read number of persistence levels to compute visualization for
   int nlevels = persistenceArg;
@@ -90,7 +90,7 @@ HDProcessResult* HDProcessor::processOnMetric(
 
   // Save number of requested regression samples
   DenseVector<int> regressionSampleCount(1);
-  regressionSampleCount(1) = nSamples; // TODO why placed at index 1 and not 0 also why put it in a vector at all?
+  regressionSampleCount(0) = nSamples;
   m_result->regressionSampleCount = Linalg<int>::Copy(regressionSampleCount);
 
   // Store Min Level (Starting Level)
@@ -124,8 +124,8 @@ HDProcessResult* HDProcessor::processOnMetric(
     computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
 
-  // Used to export crystal partitions for shape odds
-  // DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/home/sci/kyli.nmb/Desktop/crystalpartitions_truss_maxStress.csv");
+  // Used to export crystal partitions for shape odds (TODO: add some parameter and come up with a better name for this)
+  //DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, "/Users/cam/Desktop/crystalpartitions_truss_maxStress.csv");
 
   // detach and return processed result
   HDProcessResult *result = m_result;
@@ -133,7 +133,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   return result;
 }
 
-
+#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.
@@ -246,6 +246,7 @@ HDProcessResult* HDProcessor::process(
   m_result = nullptr;
   return result;
 }
+#endif
 
 /**
  * Compute analysis for a single persistence level.
@@ -622,6 +623,7 @@ void HDProcessor::computeRegressionForCrystal(
  * Add small pertubations to data achieve general position / avoid pathological cases.
  */
 void HDProcessor::addNoise(DenseVector<Precision> &v) {
+  std::cerr << "Adding noise to M-S field...\n";
   Random<Precision> rand;
   double a = 0.00000001 *( Linalg<Precision>::Max(v) - Linalg<Precision>::Min(v));
   for (unsigned int i=0; i < v.N(); i++) {

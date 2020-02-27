@@ -56,7 +56,7 @@ std::string basePathOf(const std::string &filePath) {
   return path;
 }
 
-Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
+std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &filePath) {
   YAML::Node config = YAML::LoadFile(filePath);
   Dataset::Builder builder;
 
@@ -101,8 +101,11 @@ Dataset* DatasetLoader::loadDataset(const std::string &filePath) {
 
   if (config["models"]) {
     auto ms_models = DatasetLoader::parseMSModels(config, filePath);
-    for (auto ms_model : ms_models) {
+    for (auto ms_model : ms_models) { //<ctc> this one i'm less understanding... maybe because it's part of a pair, which is an lvalue
       builder.withMSModel(ms_model.first, ms_model.second);
+      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
+    // for (auto ms_model : DatasetLoader::parseMSModels(config, filePath)) {
+    //   builder.withMSModel(ms_model.getFieldname(), /*std::move(ms_model)*/ ms_model); // it just passes it right along. Still needs move?
     }
   }
 
@@ -395,9 +398,9 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
 //     embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
 //
-std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
+std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
 {
-  std::vector<MSModelPair> ms_models;
+  std::vector<MSModelsPair> ms_models;
 
   if (!config["models"]) {
     throw std::runtime_error("Dataset config missing 'models' field.");
@@ -409,8 +412,11 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
     std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
     for (std::size_t i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-      MSModelPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
+      MSModelsPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
       ms_models.push_back(ms_model);
+      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
+      // MSModelsPair ms_model("Max Stress", DatasetLoader::parseMSModelsForField(modelNode, filePath));
+      // ms_models.push_back(std::move(ms_model));
     }
   } else {
     throw std::runtime_error("Config 'models' field is not a list.");
@@ -419,9 +425,10 @@ std::vector<MSModelPair> DatasetLoader::parseMSModels(const YAML::Node &config, 
   return ms_models;
 }
 
-MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+///*PModels::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
 {
-  using namespace Shapeodds;
+  using namespace PModels;
 
   if (!modelNode["fieldname"]) {
     throw std::runtime_error("Model missing 'fieldname' field.");
@@ -481,6 +488,7 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
 
   // Read crystals, an array of P persistence levels x N samples per level
   // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
+  // <ctc> TODO: actually, this file renders moot all the (ob1) crystalID.csv files, so let's use it instead.
   Eigen::MatrixXi crystalPartitions_eigen;
   if (partitions_format.type == InputFormat::CSV)
     crystalPartitions_eigen = IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions);
@@ -496,11 +504,11 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
             << nsamples << " samples." << std::endl;
 
   // Now read all the models
-  MSModelContainer ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; persistence++)
+  MSComplex ms_of_models(fieldname, nsamples, npersistences);
+  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
   {
-    unsigned persistence_idx = persistence + 14; // <ctc> hack persistence levels are numbered 0-19 in shapeodds output for CantileverBeam
-    PersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
+    unsigned persistence_idx = persistence;
+    MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
@@ -527,7 +535,8 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      Shapeodds::Crystal &c = P.getCrystal(crystal);
+      PModels::MSCrystal &c = P.getCrystal(crystal);
+      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in PModels::Model
       parseModel(crystalPath, c.getModel());
 
       modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
@@ -536,20 +545,19 @@ MSModelPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, co
     // read crystalIds (same for every model at this plevel, so only need to read/set them once)
     Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
   
-    // FIXME: until fixed in data, crystal ids are 1-based, so adjust them right away to be 0-based
+    // FIXME: until fixed in data (produced by MATLAB), crystal ids are 1-based, so adjust them right away to be 0-based
     crystal_ids.array() -= 1.0;
       
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
-
-    //break; // <ctc> hack so we can quickly read a single persistence level and test applying the model
   }
 
-  return MSModelPair(fieldname, ms_of_models);
+  return MSModelsPair(fieldname, std::move(ms_of_models) /* must explicitly move b/c it's being added to a struct and still could be used locally*/);
+  //return ms_of_models;
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, Shapeodds::Model &m)
+void DatasetLoader::parseModel(const std::string &modelPath, PModels::Model &m)
 {
   // read W
   auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");

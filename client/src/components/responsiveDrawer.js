@@ -4,7 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import withStyles from '@material-ui/core/es/styles/withStyles';
 
-const styles = (theme) => ({
+const styles = () => ({
   dragger: {
     height: '100%',
     width: '100%',
@@ -23,12 +23,16 @@ const styles = (theme) => ({
  * This class create a drawer that user can resize
  */
 class ResponsiveDrawer extends Component {
+  /**
+   * Create ResponsiveDrawer object
+   * @param {object} props
+   */
   constructor(props) {
     super(props);
     this.state = {
       isResizing: false,
       lastDownY: 0,
-      newHeight: { height:300 },
+      newHeight: { height:150 },
     };
 
     this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -36,10 +40,18 @@ class ResponsiveDrawer extends Component {
     this.handleMouseUp = this.handleMouseUp.bind(this);
   }
 
+  /**
+   * Handles mouse down event
+   * @param {event} e
+   */
   handleMouseDown(e) {
     this.setState({ isResizing:true, lastDownY:e.clientY });
   }
 
+  /**
+   * Handles mouse move event
+   * @param {MouseEvent} e
+   */
   handleMouseMove(e) {
     if (!this.state.isResizing) {
       return;
@@ -53,15 +65,26 @@ class ResponsiveDrawer extends Component {
     }
   }
 
+  /**
+   * Handles mouse up event
+   * @param {MouseEvent} e
+   */
   handleMouseUp(e) {
     this.setState({ isResizing:false });
   }
 
+  /**
+   * React function called when component mounts.
+   */
   componentDidMount() {
     document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
     document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
   }
 
+  /**
+   * React function renders component
+   * @return {JSX}
+   */
   render() {
     const { classes } = this.props;
     return (

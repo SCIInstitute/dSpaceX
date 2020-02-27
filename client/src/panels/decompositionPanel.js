@@ -89,9 +89,11 @@ class DecompositionPanel extends React.Component {
    * Fetch the morse smale complex persistence for the given options.
    */
   async fetchDecomposition() {
-    let k = 15;
+    let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
     let datasetId = this.props.dataset.datasetId;
-    let result = await this.client.fetchMorseSmalePersistence(datasetId, k);
+    let category = this.state.decompositionCategory;
+    let field = this.state.decompositionField;
+    let result = await this.client.fetchMorseSmalePersistence(datasetId, category, field, k);
     this.setState({
       minPersistence: result.minPersistenceLevel,
       maxPersistence: result.maxPersistenceLevel,
@@ -129,42 +131,19 @@ class DecompositionPanel extends React.Component {
    * @param {Event} event
    */
   handleDecompositionModeChange(event) {
-    //just shortcutting this to really set mode to Morse-Smale even if it's Shared-GP to test calling Shared-GP functions
     let mode = event.target.value;
     let set_mode = mode;
-    // if (mode == 'Shared-GP') {   //<ctc> remove this stuff as there is no shared-gp mode in decomposition... yet
-    //   set_mode = 'Morse-Smale';
-    // }
     this.setState({
       decompositionMode: set_mode,
     });
 
     if (mode == 'Morse-Smale') {
-      let k = 15;
+      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
       let datasetId = this.props.dataset.datasetId;
-      this.client.fetchMorseSmalePersistence(datasetId, k)
+      let category = this.state.decompositionCategory;
+      let field = this.state.decompositionField;
+      this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
         .then(function(result) {
-          this.setState({
-            minPersistence: result.minPersistenceLevel,
-            maxPersistence: result.maxPersistenceLevel,
-            complexSizes: result.complexSizes,
-            sliderPersistence: result.maxPersistenceLevel,
-            persistenceLevel: ('' + result.maxPersistenceLevel),
-          });
-          this.updateDataModel('' + result.maxPersistenceLevel);
-        }.bind(this));
-    } else if (mode == 'Shared-GP') {
-      let k = 15;
-      let datasetId = this.props.dataset.datasetId;
-      //this.client.fetchSharedLatentSpace(datasetId, k*10 /*qoi*/)
-      this.client.fetchAllImagesForCrystal_Shapeodds(datasetId, 15, 5)  // just calling this here to test
-        .then(function(result) {
-          console.log('returned from fetchAllImagesForCrystal_Shapeodds, msg: ' + result.msg);
-        }.bind(this));
-      console.log('adding fetchMorseSmalePersistence call after fetchSharedLatentSpace');
-      this.client.fetchMorseSmalePersistence(datasetId, k)
-        .then(function(result) {
-          console.log('returned from fetchMorseSmalePersistence called by fetchSharedLatentSpace');
           this.setState({
             minPersistence: result.minPersistenceLevel,
             maxPersistence: result.maxPersistenceLevel,
@@ -214,11 +193,12 @@ class DecompositionPanel extends React.Component {
    */
   async updateDataModel(level) {
     if (level != '') {
-      let k = 15;
+      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
       let datasetId = this.props.dataset.datasetId;
       let persistenceLevel = parseInt(level);
-      let result = await this.client.fetchMorseSmalePersistenceLevel(
-        datasetId, k, persistenceLevel);
+      let category = this.state.decompositionCategory;
+      let field = this.state.decompositionField;
+      let result = await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, k, persistenceLevel);
 
       this.setState({
         crystals: result.complex.crystals,
@@ -402,7 +382,7 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={true}>
+                <MenuItem value="parameter" disabled={false}>
                   <em>Parameter</em>
                 </MenuItem>
                 <MenuItem value="geometry" disabled={true}>

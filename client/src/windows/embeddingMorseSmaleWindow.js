@@ -1,5 +1,4 @@
 import EmbeddingWindow from './embeddingWindow';
-// import GraphGLWindow from './graphGLWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResponsiveDrawer from '../components/responsiveDrawer';
@@ -30,27 +29,32 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   /**
    * Computes new samples using shapeodds model
    * @param {number} datasetId
+   * @param {string} category
+   * @param {string} fieldname
    * @param {number} persistenceLevel
    * @param {number} crystalID
    * @param {number} numSamples
+   * @param {bool} showOrig
    */
-  computeNewSamplesUsingShapeoddsModel(datasetId, persistenceLevel, crystalID, numSamples) {
-    // // eslint-disable-next-line max-len
-    // console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+persistenceLevel+','+crystalID+','+numSamples+')');
-    //
-    // // Ask server to compute the N new images for this crystal and add them to the drawer
-    // this.client.fetchNImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID, numSamples)
-    //   .then((result) => {
-    //     const thumbnails = result.thumbnails.map((thumbnail, i) => {
-    //       return {
-    //         img: thumbnail,
-    //         id: i,
-    //       };
-    //     });
-    //     this.setState({ drawerImages:thumbnails });
-    //     // eslint-disable-next-line max-len
-    //     console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
-    //   });
+  computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel,
+    crystalID, numSamples, showOrig) {
+    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
+                +crystalID+','+numSamples+','+showOrig+')');
+
+    // Ask server to compute the N new images for this crystal and add them to the drawer
+    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel,
+      crystalID, numSamples, showOrig)
+      .then((result) => {
+        const thumbnails = result.thumbnails.map((thumbnail, i) => {
+          return {
+            img: thumbnail,
+            id: i,
+          };
+        });
+        this.setState({ drawerImages:thumbnails });
+        // eslint-disable-next-line max-len
+        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
+      });
   }
 
   /**
@@ -63,40 +67,30 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       flexDirection: 'row',
     };
     return (
-      <ResizeablePanels>
-        <div>
-          This is the first panel. It will use the rest of the available space.
-        </div>
-        <div>
-          This is the second panel. Starts with 300px.
-        </div>
-        <div>
-          This is the third panel. Starts with 300px.
-        </div>
-      </ResizeablePanels>
-      // <div style={container}>
-      //   <EmbeddingWindow
-      //     dataset={this.props.dataset}
-      //     decomposition={this.props.decomposition}
-      //     selectedDesigns={this.props.selectedDesigns}
-      //     onDesignSelection={this.props.onDesignSelection}
-      //     activeDesigns={this.props.activeDesigns}
-      //     numberOfWindows={this.props.numberOfWindows}/>
-      //   {/* <GraphGLWindow*/}
-      //   {/*  dataset={this.props.dataset}*/}
-      //   {/*  decomposition={this.props.decomposition}*/}
-      //   {/*  selectedDesigns={this.props.selectedDesigns}*/}
-      //   {/*  onDesignSelection={this.props.onDesignSelection}*/}
-      //   {/*  activeDesigns={this.props.activeDesigns}*/}
-      //   {/*  numberOfWindows={this.props.numberOfWindows}/>*/}
-      //   <MorseSmaleWindow
-      //     dataset={this.props.dataset}
-      //     decomposition={this.props.decomposition}
-      //     numberOfWindows={this.props.numberOfWindows}
-      //     onCrystalSelection={this.props.onCrystalSelection}
-      //     evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-      //   {<ResponsiveDrawer images={this.state.drawerImages}/>}
-      // </div>
+      <div style={container}>
+        <EmbeddingWindow
+          dataset={this.props.dataset}
+          decomposition={this.props.decomposition}
+          embedding={this.props.embedding}
+          selectedDesigns={this.props.selectedDesigns}
+          onDesignSelection={this.props.onDesignSelection}
+          activeDesigns={this.props.activeDesigns}
+          numberOfWindows={this.props.numberOfWindows}/>
+        {/* <GraphGLWindow*/}
+        {/*  dataset={this.props.dataset}*/}
+        {/*  decomposition={this.props.decomposition}*/}
+        {/*  selectedDesigns={this.props.selectedDesigns}*/}
+        {/*  onDesignSelection={this.props.onDesignSelection}*/}
+        {/*  activeDesigns={this.props.activeDesigns}*/}
+        {/*  numberOfWindows={this.props.numberOfWindows}/>*/}
+        <MorseSmaleWindow
+          dataset={this.props.dataset}
+          decomposition={this.props.decomposition}
+          numberOfWindows={this.props.numberOfWindows}
+          onCrystalSelection={this.props.onCrystalSelection}
+          evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+        <ResponsiveDrawer images={this.state.drawerImages}/>
+      </div>
     );
   }
 }
