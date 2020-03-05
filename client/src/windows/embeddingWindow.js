@@ -558,23 +558,11 @@ class EmbeddingWindow extends React.Component {
    * @return {JSX}
    */
   render() {
-    let paperStyle = {
-      position: 'relative',
-      border: '1px solid gray',
-      flexBasis: '50%',
-    };
-
-    let canvasStyle = {
-      width: '100%',
+    const style = {
       height: '100%',
-      boxSizing: 'border-box',
-      position: 'absolute',
+      width: '100%',
     };
-    return (
-      <Paper style={paperStyle}>
-        <canvas ref='embeddingCanvas' style={canvasStyle}/>
-      </Paper>
-    );
+    return (<canvas ref='embeddingCanvas' style={style}/>);
   }
 }
 

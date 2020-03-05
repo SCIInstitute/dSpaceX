@@ -374,24 +374,12 @@ class MorseSmaleWindow extends React.Component {
    * @return {JSX} Morse-Smale JSX component
    */
   render() {
-    let paperStyle = {
-      position: 'relative',
-      border: '1px solid gray',
-      flexBasis: '50%',
-    };
-
-    let canvasStyle = {
+    let style = {
       width: '100%',
       height: '100%',
-      boxSizing: 'border-box',
-      position: 'absolute',
     };
 
-    return (
-      <Paper style={paperStyle}>
-        <canvas ref='msCanvas' style={canvasStyle} />
-      </Paper>
-    );
+    return (<canvas ref='msCanvas' style={style} />);
   }
 }
 
