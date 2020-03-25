@@ -4,7 +4,7 @@ let config = {
   target: 'web',
   mode: 'development',
   devtool: 'source-map',
-  entry: ['babel-polyfill', './src/main.js'],
+  entry: ['@babel/polyfill', './src/main.js'],
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: 'client.bundle.js',
@@ -17,7 +17,7 @@ let config = {
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['babel-preset-env'],
+            presets: ['@babel/preset-env'],
           },
         },
       },
