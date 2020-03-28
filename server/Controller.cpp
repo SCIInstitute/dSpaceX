@@ -1172,6 +1172,28 @@ void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldna
   if (!fieldvals.data())
     std::runtime_error("Invalid fieldname or empty field");
 
+  // <ctc> TODO: change [Vector|Matrix]Xd to [Vector|Matrix]<Precision> rather than hardcode double
+
+  std::cout << "fieldname: " << fieldname << std::endl;
+  Precision minval = fieldvals.minCoeff();
+  Precision maxval = fieldvals.maxCoeff();
+  Precision meanval = fieldvals.mean();
+  std::cout << "min: " << minval << std::endl;
+  std::cout << "max: " << maxval << std::endl;
+  std::cout << "avg: " << meanval << std::endl;
+
+  //compute variance
+  {
+    Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(fieldvals);
+    copyvals.array() -= meanval;
+    copyvals.array() = copyvals.array().square();
+    Precision variance = copyvals.sum() / (copyvals.size()-1);
+    std::cout << "var: " << variance << std::endl;
+    std::cout << "sdv: " << sqrt(variance) << std::endl;
+  }
+  
+  fieldvals.normalize();
+  
   m_currentField = fieldname;
   m_currentK = k;
   
@@ -1205,7 +1227,7 @@ void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldna
                                                               -1        /* num_persistences */, // -1 generates all of 'em
                                                               false     /* random */,
                                                               0.25      /* sigma */,    // TODO: this should be ~15% of fieldrange (but maybe not for M-S computation)
-                                                              15         /* smooth */);
+                                                              15        /* smooth */);
     m_currentVizData = new SimpleHDVizDataImpl(result);
     m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {
