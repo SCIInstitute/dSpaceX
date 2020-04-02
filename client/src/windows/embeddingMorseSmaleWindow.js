@@ -73,6 +73,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   componentDidMount() {
     ReactDOM.findDOMNode(this).addEventListener('mousemove', this.handleResize);
     ReactDOM.findDOMNode(this).addEventListener('mouseup', this.handleStopResize);
+    ReactDOM.findDOMNode(this).addEventListener('mouseleave', this.handleStopResize);
   }
 
   handleWidthResizeStart(event) {
@@ -86,6 +87,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   handleHeightResizeStart(event) {
     this.setState({
       isDragging: true,
+      isWidth: false,
       initialPos: event.clientY,
     });
   }
@@ -147,6 +149,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @return {JSX}
    */
   render() {
+    const width = { ...styles.VerticalPanel, width:'40%' };
     return (
       <div style={styles.MainContainer}>
         <div style={styles.TopContainer}>
@@ -172,7 +175,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         </div>
         <div style={styles.BottomContainer}>
           <div style={styles.HorizontalDivider} onMouseDown={() => console.log('Horizontal Divider Selected')}/>
-          <div style={styles.HorizontalPanel}>Will be Drawer</div>
+          <div style={styles.HorizontalPanel}>Will be Drawer!!</div>
         </div>
       </div>);
   }
