@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
+    "start": "webpack-dev-server --config webpack.config.js",
     "lint": "eslint src"
   },
   "repository": {
@@ -31,6 +32,7 @@
     "eslint-config-google": "^0.9.1",
     "eslint-plugin-css-modules": "^2.11.0",
     "eslint-plugin-react": "^7.19.0",
+    "html-webpack-plugin": "^4.2.0",
     "raw-loader": "^0.5.1",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",

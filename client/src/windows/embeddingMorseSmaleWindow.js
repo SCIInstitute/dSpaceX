@@ -175,7 +175,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         </div>
         <div style={styles.BottomContainer}>
           <div style={styles.HorizontalDivider} onMouseDown={() => console.log('Horizontal Divider Selected')}/>
-          <div style={styles.HorizontalPanel}>Will be Drawer!!</div>
+          <div style={styles.HorizontalPanel}>I think it works!</div>
         </div>
       </div>);
   }
