@@ -38,13 +38,13 @@ function install_conda() {
   if ! conda update --yes --all; then return 1; fi
 
   # create and activate dspacex env
-  CONDAENV=dspacex
+  CONDAENV=dspacex-new
   if ! conda create --yes --name $CONDAENV python=3.7; then return 1; fi
   eval "$(conda shell.bash hook)"
   if ! conda activate $CONDAENV; then return 1; fi
 
   # pip is needed in sub-environments or the base env's pip will silently install to base
-  if ! conda install --yes pip; then return 1; fi
+  if ! conda install --yes pip=20.0.2; then return 1; fi
   if ! pip install --upgrade pip; then return 1; fi
 
   # install dspacex deps
