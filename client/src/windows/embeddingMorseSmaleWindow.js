@@ -55,11 +55,19 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     super(props);
 
     this.state = {
-      embeddingDimensions: null,
       drawerImages: [],
       isDragging: false,
       isWidth: false,
+      embeddingPanelWidth: '50%',
+      msPanelWidth: '50%',
+      topContainerHeight: '75%',
+      bottomContainerHeight: '25%',
     };
+
+    this.embbeddingPanel = React.createRef();
+    this.msPanel = React.createRef();
+    this.topContainer = React.createRef();
+    this.bottomContainer = React.createRef();
 
     this.client = this.props.dsxContext.client;
 
@@ -101,16 +109,25 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       } else {
         delta = event.clientY - this.state.initialPos;
       }
-      console.log(delta);
+      // console.log(delta);
       this.setState({ delta:delta });
     }
   }
 
   handleStopResize() {
-    this.setState({
-      isDragging: false,
-      isWidth: false,
-    });
+    const { isWidth, delta } = this.state;
+    if (isWidth) {
+      console.log('embedding panel');
+      console.log(this.embbeddingPanel.current.clientWidth);
+      this.setState({
+        isDragging: false,
+        isWidth: false,
+        embeddingPanelWidth: this.embbeddingPanel.current.clientWidth + delta,
+        msPanelWidth: this.embbeddingPanel.current.clientWidth - delta,
+      });
+    } else {
+      // adjust top and bottom container size
+    }
   }
 
   /**
@@ -149,11 +166,15 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @return {JSX}
    */
   render() {
-    const width = { ...styles.VerticalPanel, width:'40%' };
+    const { embeddingPanelWidth, msPanelWidth, topContainerHeight, bottomContainerHeight } = this.state;
+    const embeddingStyles = { ...styles.VerticalPanel, width:embeddingPanelWidth };
+    const msStyles = { ...styles.VerticalPanel, width:msPanelWidth };
+    const topContainerStyles = { ...styles.TopContainer, height:topContainerHeight };
+    const bottomContainerStyles = { ...styles.BottomContainer, bottomContainerHeight };
     return (
       <div style={styles.MainContainer}>
-        <div style={styles.TopContainer}>
-          <div style={styles.VerticalPanel}>
+        <div style={topContainerStyles} ref={this.topContainer}>
+          <div style={embeddingStyles} ref={this.embbeddingPanel}>
             <EmbeddingWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
@@ -164,7 +185,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               numberOfWindows={this.props.numberOfWindows}/>
           </div>
           <div style={styles.VerticalDivider} onMouseDown={(e) => this.handleWidthResizeStart(e)}/>
-          <div style={styles.VerticalPanel}>
+          <div style={msStyles} ref={this.msPanel}>
             <MorseSmaleWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
@@ -173,9 +194,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
           </div>
         </div>
-        <div style={styles.BottomContainer}>
-          <div style={styles.HorizontalDivider} onMouseDown={() => console.log('Horizontal Divider Selected')}/>
-          <div style={styles.HorizontalPanel}>I think it works!</div>
+        <div style={bottomContainerStyles} ref={this.bottomContainer}>
+          <div style={styles.HorizontalDivider} onMouseDown={(e) => this.handleHeightResizeStart(e)}/>
+          <div style={styles.HorizontalPanel}>Today Will BE GREAT!!</div>
         </div>
       </div>);
   }
