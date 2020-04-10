@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import Paper from '@material-ui/core/Paper';
 import React from 'react';
+import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -87,7 +87,7 @@ class EmbeddingWindow extends React.Component {
 
     // New window has been added to application
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas();
+      this.resizeCanvas(true);
     }
 
     // Decomposition is loaded for the first time
@@ -96,7 +96,7 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, decompositionCategory, decompositionField} = this.props.decomposition;
+      const { datasetId, k, persistenceLevel, decompositionCategory, decompositionField } = this.props.decomposition;
       const { embedding } = this.props;
       Promise.all([
         this.client.fetchSingleEmbedding(datasetId, embedding.id, k,
@@ -375,8 +375,9 @@ class EmbeddingWindow extends React.Component {
   /**
    * Called when the canvas is resized.
    * This can happen on a window resize or when another window is added to dSpaceX.
+   * @param {boolean} newWindowAdded
    */
-  resizeCanvas() {
+  resizeCanvas(newWindowAdded = true) {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
 
@@ -401,8 +402,13 @@ class EmbeddingWindow extends React.Component {
     this.camera.bottom = -1*sy;
     this.camera.updateProjectionMatrix();
 
-    // Redraw scene
-    this.renderScene();
+    // By default (newWindowAdded = true in argument) redraws scene when new window is added.
+    // For the resizing event that comes from the ResizeablePanels in the embeddingMoreseSmaleWindows and is captured
+    // by the ReactResizeDetector in this window it is set to false. This is because of a race condition created by how
+    // quickly the scene would have to redraw when adjusting the panel size.
+    if (newWindowAdded) {
+      this.renderScene();
+    }
   }
 
   /**
@@ -562,7 +568,10 @@ class EmbeddingWindow extends React.Component {
       height: '100%',
       width: '100%',
     };
-    return (<canvas ref='embeddingCanvas' style={style}/>);
+    return (
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
+        <canvas ref='embeddingCanvas' style={style}/>
+      </ReactResizeDetector>);
   }
 }
 

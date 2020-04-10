@@ -200,7 +200,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             {/* <div style={{ background:'#ffffff', height:'100%', width:'100%' }} />*/}
           </ResizablePanels>
         </div>
-        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>Bottom Container For Design Images</div>
+        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>Bottom Container For Design Images - please update</div>
       </ResizablePanels>
       // <ResizablePanels
       //   bkcolor='#ffffff'

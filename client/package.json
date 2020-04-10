@@ -57,6 +57,7 @@
     "prop-types": "^15.7.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-resize-detector": "^4.2.1",
     "resizable-panels-react": "^2.0.8",
     "style-loader": "^0.23.1",
     "three": "^0.106.2"

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrthographicTrackballControls } from 'three/examples/jsm/controls/OrthographicTrackballControls';
-import Paper from '@material-ui/core/Paper';
 import React from 'react';
+import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -177,8 +177,9 @@ class MorseSmaleWindow extends React.Component {
   /**
    * Called when the canvas is resized.
    * This can happen on a window resize or when another window is added to dSpaceX.
+   * @param {boolean} newWindowAdded
    */
-  resizeCanvas() {
+  resizeCanvas(newWindowAdded = true) {
     let width = this.refs.msCanvas.clientWidth;
     let height = this.refs.msCanvas.clientHeight;
 
@@ -206,7 +207,9 @@ class MorseSmaleWindow extends React.Component {
     this.initControls();
 
     // Redraw scene with updates
-    this.renderScene();
+    if (newWindowAdded) {
+      this.renderScene();
+    }
   }
 
   /**
@@ -379,7 +382,10 @@ class MorseSmaleWindow extends React.Component {
       height: '100%',
     };
 
-    return (<canvas ref='msCanvas' style={style} />);
+    return (
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
+        <canvas ref='msCanvas' style={style} />
+      </ReactResizeDetector>);
   }
 }
 
