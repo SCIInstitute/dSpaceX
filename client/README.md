@@ -1,6 +1,7 @@
 # dSpaceX Web Client
 The web client for dSpaceX uses Node.js and the Webpack bundler to build the javascript application. Webpack runs on the Node.js runtime. There are two package managers for Node: npm and yarn. This project uses npm. Steps for installing and building follow:
 
+## Building dSpaceX Client
 1. Install the client depedencies locally for the project - be sure you are running in the dspacex conda environment first 
     _NOTE:_ Requires [nodejs](https://nodejs.org/en/) (version 8.9.4 LTS or greater), which is already installed by [conda_installs.sh](../conda_installs.sh) (see main **[README.md](README.md)**).
 ```bash
@@ -15,31 +16,31 @@ The web client for dSpaceX uses Node.js and the Webpack bundler to build the jav
 <.../dSpaceX/client>$ npm run build
 ```
     This creates a file called 'client.bundle.js' in the `client/build` folder.
-    _*NOTE:* you must re-run `npm run build` each time the client code is modified_
+    _*NOTE:* you must re-run `npm run build` each time the client code is modified to see the updates when loading dSpaceX.html in browser (see below)_
 
 3. Open dSpaceX build in browser in a browser.*
 ```http
-file:///.../dSpaceX/client/build/index.html
+file:///.../dSpaceX/client/dSpaceX.html
 ```
-    _\**NOTE:* currently only the *Chrome* brower is supported. However, it is very likely other browsers will work given our tec stack_
+    _\**NOTE:* currently only the *Chrome* brower is actively supported. However, it is very likely other browsers will work given our tec stack_
 
-# Running a developement server
-1. Activate conda environment and run start script
+## Running a development server
+1. Activate dspacex conda environment and run start script
 ```bash
 <.../dSpaceX/client> conda activate dSpaceX
 <.../dSpaceX/client>$ npm start
 ```
 
-2. Connect to local host in browser
+2. Connect to local host and dSpaceX.html in browser
 ```http
-http://localhost:3000/
+http://localhost:3000/dSpaceX.html
 ```
 
-# Building release bundle (significantly smaller) and serving it locally
-1. Activate conda environment and run start script
+## Building release bundle (significantly smaller) and serving it locally
+1. Activate dspacex conda environment and run build script
 ```bash
 <.../dSpaceX/client> conda activate dSpaceX
-<.../dSpaceX/client>$ npm build
+<.../dSpaceX/client>$ npm run build
 <.../dSpaceX/client>$ http-server . -p 8080
 ```
 
