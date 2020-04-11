@@ -1,7 +1,7 @@
 import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
-import ResponsiveDrawer from '../components/responsiveDrawer';
+import ResizablePanels from 'resizable-panels-react';
 import { withDSXContext } from '../dsxContext.js';
 
 /**
@@ -16,11 +16,11 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.client = this.props.dsxContext.client;
-
     this.state = {
       drawerImages: [],
     };
+
+    this.client = this.props.dsxContext.client;
 
     this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
   }
@@ -28,19 +28,21 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   /**
    * Computes new samples using shapeodds model
    * @param {number} datasetId
+   * @param {string} category
    * @param {string} fieldname
    * @param {number} persistenceLevel
    * @param {number} crystalID
    * @param {number} numSamples
    * @param {bool} showOrig
    */
-  computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
+  computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel,
+    crystalID, numSamples, showOrig) {
     console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
                 +crystalID+','+numSamples+','+showOrig+')');
 
     // Ask server to compute the N new images for this crystal and add them to the drawer
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel,
-                                                 crystalID, numSamples, showOrig)
+      crystalID, numSamples, showOrig)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
@@ -49,8 +51,8 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           };
         });
         this.setState({ drawerImages:thumbnails });
-        // eslint-disable-next-line max-len
-        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
+        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length
+          + ' images; msg: ' + result.msg);
       });
   }
 
@@ -59,28 +61,44 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @return {JSX}
    */
   render() {
-    let container = {
-      display: 'flex',
-      flexDirection: 'row',
-    };
     return (
-      <div style={container}>
-        <EmbeddingWindow
-          dataset={this.props.dataset}
-          decomposition={this.props.decomposition}
-          embedding={this.props.embedding}
-          selectedDesigns={this.props.selectedDesigns}
-          onDesignSelection={this.props.onDesignSelection}
-          activeDesigns={this.props.activeDesigns}
-          numberOfWindows={this.props.numberOfWindows}/>
-        <MorseSmaleWindow
-          dataset={this.props.dataset}
-          decomposition={this.props.decomposition}
-          numberOfWindows={this.props.numberOfWindows}
-          onCrystalSelection={this.props.onCrystalSelection}
-          evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-        <ResponsiveDrawer images={this.state.drawerImages}/>
-      </div>
+      <ResizablePanels
+        bkcolor='#ffffff'
+        displayDirection='column'
+        width='100%'
+        height='100%'
+        panelsSize={[72, 25]}
+        sizeUnitMeasure='%'
+        resizerColor='#808080'
+        resizerSize='5px'>
+        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
+          <ResizablePanels
+            bkcolor='#ffffff'
+            displayDirection='row'
+            width='100%'
+            height='100%'
+            panelsSize={[50, 50]}
+            sizeUnitMeasure='%'
+            resizerColor='#808080'
+            resizerSize='5px'>
+            <EmbeddingWindow
+              dataset={this.props.dataset}
+              decomposition={this.props.decomposition}
+              embedding={this.props.embedding}
+              selectedDesigns={this.props.selectedDesigns}
+              onDesignSelection={this.props.onDesignSelection}
+              activeDesigns={this.props.activeDesigns}
+              numberOfWindows={this.props.numberOfWindows}/>
+            <MorseSmaleWindow
+              dataset={this.props.dataset}
+              decomposition={this.props.decomposition}
+              numberOfWindows={this.props.numberOfWindows}
+              onCrystalSelection={this.props.onCrystalSelection}
+              evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+          </ResizablePanels>
+        </div>
+        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>Bottom Container For Design Images</div>
+      </ResizablePanels>
     );
   }
 }
