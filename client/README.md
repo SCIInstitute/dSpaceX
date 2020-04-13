@@ -36,6 +36,27 @@ file:///.../dSpaceX/client/dSpaceX.html
 http://localhost:3000/dSpaceX.html
 ```
 
+## Running a watch server - this is similar to a development server but it will not auto-refresh on a save
+1. Activate dspacex conda environment and run watch script in one terminal
+```bash
+<.../dSpaceX/client> conda activate dSpaceX
+<.../dSpaceX/client>$ npm watch
+```
+
+2. In second terminal, activate dspacex conda environment and run a local server
+```bash
+<.../dSpaceX/client> conda activate dSpaceX
+<.../dSpaceX/client>$ http-server . -p 8080
+```
+
+3. Connect to local host and dSpaceX.html in browser
+```http
+http://localhost:8080/dSpaceX.html
+``` 
+
+4. The watch server will update the build when changes are saved to reload the build in the server use 
+ctrl + shift + r or command + shift + r to refresh and ignore the cache.
+
 ## Building release bundle (significantly smaller) and serving it locally
 1. Activate dspacex conda environment and run build script
 ```bash
