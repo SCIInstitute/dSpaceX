@@ -1,7 +1,7 @@
 import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
-import ResizablePanels from 'resizable-panels-react';
+import ResizablePanels from '../panels/ResizablePanelsReact';
 import { withDSXContext } from '../dsxContext.js';
 
 /**

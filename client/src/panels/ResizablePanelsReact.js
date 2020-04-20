@@ -1,9 +1,41 @@
+/* 
+ * Resizable panels for React
+ * Started from https://github.com/bertyhell/ResizablePanelsReact
+ */
+
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-// Components
-import Resizer from './components/Resizer';
+/* 
+ * Resizer component
+ */
+class Resizer extends Component {
+  getStyle() {
+    if (this.props.direction === 'column') {
+      return {
+        width: '100%',
+        height: this.props.size,
+        background: this.props.color,
+        cursor: 'row-resize'
+      };
+    }
 
+    return {
+      width: this.props.size,
+      height: '100%',
+      background: this.props.color,
+      cursor: 'col-resize'
+    };
+  }
+
+  render() {
+    return <div onMouseDown={this.props.onMouseDown} style={this.getStyle()} />;
+  }
+}
+
+/* 
+ * ResizablePanels class
+ */
 export default class ResizablePanels extends Component {
   constructor(props) {
     super(props);

@@ -38,7 +38,6 @@ class EmbeddingWindow extends React.Component {
     this.addNodesToScene = this.addNodesToScene.bind(this);
     this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
-    this.animate = this.animate.bind(this);
     this.resetScene = this.resetScene.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
@@ -54,7 +53,6 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    this.animate();
     window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
@@ -355,14 +353,6 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
-   * Animated the scene.
-   * This is necessary for interactivity.
-   */
-  animate() {
-    requestAnimationFrame(this.animate);
-  }
-
-  /**
    * Resets the scene when there is new data by removing
    * the old scene children.
    */
@@ -388,7 +378,6 @@ class EmbeddingWindow extends React.Component {
     this.renderer.setSize(width, height, false);
 
     // Resize camera
-    // this.sizeCamera(width, height);
     let sx = 1;
     let sy = 1;
     if (width > height) {
