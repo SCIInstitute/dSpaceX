@@ -40,7 +40,7 @@ http://localhost:3000/dSpaceX.html
 1. Activate dspacex conda environment and run watch script in one terminal
 ```bash
 <.../dSpaceX/client> conda activate dSpaceX
-<.../dSpaceX/client>$ npm watch
+<.../dSpaceX/client>$ npm run watch
 ```
 
 2. In second terminal, activate dspacex conda environment and run a local server
