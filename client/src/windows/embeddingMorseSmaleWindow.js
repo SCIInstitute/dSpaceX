@@ -70,7 +70,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         panelsSize={[72, 25]}
         sizeUnitMeasure='%'
         resizerColor='#808080'
-        resizerSize='5px'>
+        resizerSize='1px'>
         <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
           <ResizablePanels
             bkcolor='#ffffff'
@@ -80,7 +80,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             panelsSize={[50, 50]}
             sizeUnitMeasure='%'
             resizerColor='#808080'
-            resizerSize='5px'>
+            resizerSize='1px'>
             <EmbeddingWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}

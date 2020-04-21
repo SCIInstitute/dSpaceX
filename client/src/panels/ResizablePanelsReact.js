@@ -1,6 +1,8 @@
 /* 
  * Resizable panels for React
  * Started from https://github.com/bertyhell/ResizablePanelsReact
+ *
+ * NOTE: resizing disabled for now, see comments below (RESIZER DISABLED)
  */
 
 import React, { Component } from 'react';
@@ -16,7 +18,7 @@ class Resizer extends Component {
         width: '100%',
         height: this.props.size,
         background: this.props.color,
-        cursor: 'row-resize'
+        //cursor: 'row-resize'   // RESIZER DISABLED (don't change cursor)
       };
     }
 
@@ -24,7 +26,7 @@ class Resizer extends Component {
       width: this.props.size,
       height: '100%',
       background: this.props.color,
-      cursor: 'col-resize'
+      //cursor: 'col-resize'   // RESIZER DISABLED (don't change cursor)
     };
   }
 
@@ -51,12 +53,12 @@ export default class ResizablePanels extends Component {
   componentDidMount() {
     this.setState({ ...this.state, panelsSize: this.props.panelsSize });
 
-    ReactDOM.findDOMNode(this).addEventListener(
-      'mousemove',
-      this.executeResize
-    );
-    ReactDOM.findDOMNode(this).addEventListener('mouseup', this.stopResize);
-    ReactDOM.findDOMNode(this).addEventListener('mouseleave', this.stopResize);
+    /* RESIZING DISABLED */
+    if (false) {
+      ReactDOM.findDOMNode(this).addEventListener('mousemove', this.executeResize);
+      ReactDOM.findDOMNode(this).addEventListener('mouseup', this.stopResize);
+      ReactDOM.findDOMNode(this).addEventListener('mouseleave', this.stopResize);
+    }
   }
 
   render() {
