@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrthographicTrackballControls } from 'three/examples/jsm/controls/OrthographicTrackballControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
@@ -164,14 +164,14 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the controls.
    */
   initControls() {
-    this.controls = new OrthographicTrackballControls(this.camera, this.renderer.domElement);
-    this.controls.rotateSpeed = 0.75;
-    this.controls.zoomSpeed = 0.1;
-    this.controls.panSpeed = 0.5;
-    this.controls.noZoom = false;
-    this.controls.noPan = false;
-    this.controls.staticMoving = true;
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.screenSpacePanning = true;
+    this.controls.minDistance = this.camera.near;
+    this.controls.maxDistance = this.camera.far;
+    this.controls.target.set(0, 0, 0.5);  // z is normalized [0,1], x/y are not normalized, so adjust target when loading new data (todo)
+
     this.controls.addEventListener( 'change', this.renderScene );
+    this.controls.update();  // note: only necessary to call this when camera is manually changed
   }
 
   /**
