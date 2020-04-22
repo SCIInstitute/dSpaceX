@@ -406,10 +406,10 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseScrollEvent(event) {
-    if (event.deltaY < 0 && this.camera.zoom > -this.maxScale) {
+    if (event.deltaY > 0 && this.camera.zoom > -this.maxScale) {
       this.camera.zoom = this.camera.zoom / this.zoomRate;
     }
-    if (event.deltaY > 0 && this.camera.zoom < this.maxScale) {
+    if (event.deltaY < 0 && this.camera.zoom < this.maxScale) {
       this.camera.zoom = this.camera.zoom * this.zoomRate;
     }
     this.camera.updateProjectionMatrix();
