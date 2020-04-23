@@ -15,20 +15,32 @@ class MorseSmaleWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      perspectiveCamera: true,
+    };
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
-    this.createControls = this.createControls.bind(this);
+    this.createCamerasAndControls = this.createCamerasAndControls.bind(this);
     this.updateCamera = this.updateCamera.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
-    this.mouseRelease = this.mouseRelease.bind(this);
-    this.getCanvasPosition = this.getCanvasPosition.bind(this);
-    this.getPickPosition = this.getPickPosition.bind(this);
+    this.updatePerspCamera = this.updatePerspCamera.bind(this);
+    this.updateOrthoCamera = this.updateOrthoCamera.bind(this);
+    this.toggleCamera = this.toggleCamera.bind(this);
+
+    this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
+    this.handleMouseRelease = this.handleMouseRelease.bind(this);
+
     this.pick = this.pick.bind(this);
+    this.getPickPosition = this.getPickPosition.bind(this);
+    this.getCanvasPosition = this.getCanvasPosition.bind(this);
+
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
-    this.renderScene = this.renderScene.bind(this);
+
     this.resetScene = this.resetScene.bind(this);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
+    this.renderScene = this.renderScene.bind(this);
   }
 
   /**
@@ -38,7 +50,8 @@ class MorseSmaleWindow extends React.Component {
   componentDidMount() {
     this.init();
     window.addEventListener('resize', this.resizeCanvas);
-    this.refs.msCanvas.addEventListener('mousedown', this.mouseRelease, { passive:true });
+    window.addEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true });
   }
 
   /**
@@ -55,7 +68,7 @@ class MorseSmaleWindow extends React.Component {
     }
 
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas();
+      this.resizeCanvas(null);
     }
 
     if (prevProps.decomposition === null
@@ -89,8 +102,13 @@ class MorseSmaleWindow extends React.Component {
    * Called by React when this component is removed from the DOM.
    */
   componentWillUnmount() {
+    // todo: do we need to dispose and remove event listeners for everything (i.e., a destructor)?
+    // this.controls.removeEventListener( 'change', this.renderScene );
+    // this.controls.dispose();
+
     window.removeEventListener('resize', this.resizeCanvas);
-    this.refs.msCanvas.removeEventListener('mousedown', this.mouseRelease);
+    window.removeEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.msCanvas.removeEventListener('mousedown', this.handleMouseRelease);
   }
 
   /**
@@ -125,11 +143,7 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 
     // camera and controls
-    this.camera = new THREE.OrthographicCamera();
-    this.camera.zoom = 2.5;
-    this.camera.position.set(0, -1, 0.5);
-    this.camera.up.set(0, 0, 1);
-    this.updateCamera(canvas.clientWidth, canvas.clientHeight);
+    this.createCamerasAndControls();
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -148,24 +162,11 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Initializes the controls.
-   * ONLY CALL THIS ONCE, otherwise multiple controls send multiple move operations to camera.
-   */
-  createControls() {
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.screenSpacePanning = true;
-    this.controls.minDistance = this.camera.near;
-    this.controls.maxDistance = this.camera.far;
-    this.controls.target0.set(0, 0, 0.5);  // z is normalized [0,1], x/y are not normalized, so adjust target when loading new data (todo)
-    this.controls.addEventListener( 'change', this.renderScene );
-  }
-
-  /**
    * Called when the canvas is resized.
    * This can happen on a window resize or when another window is added to dSpaceX.
    * @param {boolean} newWindowAdded
    */
-  resizeCanvas(newWindowAdded = true) {
+  resizeCanvas(event) {
     let width = this.refs.msCanvas.clientWidth;
     let height = this.refs.msCanvas.clientHeight;
 
@@ -173,27 +174,41 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.height = height;
 
     // Resize renderer
-    this.renderer.setSize(width, height, false );
+    this.renderer.setSize(width, height, false);
 
     // update camera
-    this.updateCamera(width, height, { resetPos:false });
+    this.updateCamera(width, height);
 
     // Redraw scene with updates
-    if (newWindowAdded) {
-      this.renderScene();
-    }
+    this.renderScene();
   }
 
   /**
    * Event handling for mouse click release
    * @param {Event} event
    */
-  mouseRelease(event) {
+  handleMouseRelease(event) {
     // Handle left click release
     if (event.button === 0) {
       const position = this.getPickPosition(event);
       this.pick(position, event.ctrlKey); // click w/ ctrl held down to produce model's original samples
     }
+  }
+
+  /**
+   * Handles hotkey events.
+   * @param {object} event
+   */
+  handleKeyDownEvent(event) {
+    switch (event.key) {
+      case 'v': // toggle orthogonal/perspective camera
+        this.toggleCamera();
+        break;
+      case 'r': // reset view
+        this.controls.reset();   // resets camera to original position
+        break;
+    }
+    this.renderScene();
   }
 
   /**
@@ -334,13 +349,79 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.frontDirectionalLight);
     this.scene.add(this.backDirectionalLight);
 
-    this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, { resetPos:true });
+    this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
   }
 
   /**
-   * updateCamera
+   * createCamerasAndControls
+   * There are two types of cameras, perspective and orthographic, each with associated controls.
+   * NOTE: need to have essentially "the camera for this scene" before creating controls so that controls.reset() works as expected.
+   * TODO: z is normalized by Controller to [0,1], but x/y are not normalized, so adjust target when loading new data.
    */
-  updateCamera(width, height, resetPos = false) {
+  createCamerasAndControls() {
+    let width = this.refs.msCanvas.clientWidth;
+    let height = this.refs.msCanvas.clientHeight;
+
+    // orthographic
+    this.orthoCamera = new THREE.OrthographicCamera();
+    this.orthoCamera.zoom = 2.5;
+    this.orthoCamera.position.set(0, -1, 0.5);
+    this.orthoCamera.up.set(0, 0, 1);
+    this.updateOrthoCamera(width, height);
+
+    this.orthoControls = new OrbitControls(this.orthoCamera, this.renderer.domElement);
+    this.orthoControls.screenSpacePanning = true;
+    this.orthoControls.minDistance = this.orthoCamera.near;
+    this.orthoControls.maxDistance = this.orthoCamera.far;
+    this.orthoControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.orthoControls.addEventListener( 'change', this.renderScene );
+
+    // perspective
+    const fov = 25;  // narrow field of view so objects don't shrink so much in the distance
+    const aspect = width / height;
+    const near = 0.001;
+    const far = 100;
+    this.perspCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    this.perspCamera.position.set(0, -6, 0.5);
+    this.perspCamera.up.set(0, 0, 1);
+		this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.updatePerspCamera(width, height);
+
+    this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
+    this.perspControls.screenSpacePanning = true;
+    this.perspControls.minDistance = this.perspCamera.near;
+    this.perspControls.maxDistance = this.perspCamera.far;
+    this.perspControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.perspControls.addEventListener( 'change', this.renderScene );
+
+    // set default to perspective [by starting w/ ortho and toggling]
+    this.camera = this.orthoCamera;
+    this.controls = this.orthoControls;
+    this.toggleCamera();
+  }
+
+  /**
+   * toggleCamera
+   * Toggles between orthographic and perspective cameras.
+   */
+  toggleCamera() {
+    this.controls.enable = false;
+    if (this.camera === this.orthoCamera) {
+      this.camera = this.perspCamera;
+      this.controls = this.perspControls;
+    }
+    else {
+      this.camera = this.orthoCamera;
+      this.controls = this.orthoControls;
+    }
+    this.controls.enable = true;
+    this.controls.reset();
+  }
+  
+  /**
+   * updateOrthoCamera
+   */
+  updateOrthoCamera(width, height) {
     let sx = 1;
     let sy = 1;
     if (width > height) {
@@ -348,18 +429,28 @@ class MorseSmaleWindow extends React.Component {
     } else {
       sy = height/width;
     }
-    this.camera.left = -4*sx;
-    this.camera.right = 4*sx;
-    this.camera.top = 4*sy;
-    this.camera.bottom = -4*sy;
-    this.camera.near = -16;
-    this.camera.far = 16;
+    this.orthoCamera.left   = -4*sx;
+    this.orthoCamera.right  = 4*sx;
+    this.orthoCamera.top    = 4*sy;
+    this.orthoCamera.bottom = -4*sy;
+    this.orthoCamera.near   = -16;
+    this.orthoCamera.far    = 16;
+  }
+  
+  /**
+   * updatePerspCamera
+   */
+  updatePerspCamera(width, height) {
+    this.perspCamera.aspect = width / height;
+  }
+  
+  /**
+   * updateCamera
+   */
+  updateCamera(width, height, resetPos = false) {
+    this.updateOrthoCamera(width, height);
+    this.updatePerspCamera(width, height);
 
-    // controls
-    if (this.controls === undefined) {
-      this.createControls();   // need to have "pretty much the camera for this scene" before creating controls
-    }
-    
     if (resetPos) {
       this.controls.reset();   // resets camera to original position (also calls updateProjectionMatrix)
     }
@@ -380,7 +471,7 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
         <canvas ref='msCanvas' style={style} />
       </ReactResizeDetector>);
   }
