@@ -18,7 +18,8 @@ class MorseSmaleWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
-    this.initControls = this.initControls.bind(this);
+    this.createControls = this.createControls.bind(this);
+    this.updateCamera = this.updateCamera.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.mouseRelease = this.mouseRelease.bind(this);
     this.getCanvasPosition = this.getCanvasPosition.bind(this);
@@ -116,20 +117,19 @@ class MorseSmaleWindow extends React.Component {
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
 
-    // camera
-    let width = canvas.clientWidth;
-    let height = canvas.clientHeight;
-    let sx = 1;
-    let sy = 1;
-    if (width > height) {
-      sx = width/height;
-    } else {
-      sy = height/width;
-    }
-    this.camera = new THREE.OrthographicCamera(-4*sx, 4*sx, 4*sy, -4*sy, -16, 16);
+    // scene
+    this.scene = new THREE.Scene();
+
+    // renderer
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+
+    // camera and controls
+    this.camera = new THREE.OrthographicCamera();
     this.camera.zoom = 2.5;
-    this.camera.position.set(0, -1, 0);
+    this.camera.position.set(0, -1, 0.5);
     this.camera.up.set(0, 0, 1);
+    this.updateCamera(canvas.clientWidth, canvas.clientHeight);
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -138,23 +138,12 @@ class MorseSmaleWindow extends React.Component {
     this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     this.backDirectionalLight.position.set(-5, -1, -5);
 
-    // world
-    this.scene = new THREE.Scene();
-    this.scene.add(this.ambientLight);
-    this.scene.add(this.frontDirectionalLight);
-    this.scene.add(this.backDirectionalLight);
-
-    // renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-
-    // controls
-    this.initControls();
-
     // picking
     this.pickedObject = undefined;
     this.raycaster = new THREE.Raycaster();
 
+    // reset and render
+    this.resetScene();
     this.renderScene();
   }
 
@@ -162,15 +151,13 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the controls.
    * ONLY CALL THIS ONCE, otherwise multiple controls send multiple move operations to camera.
    */
-  initControls() {
+  createControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.screenSpacePanning = true;
     this.controls.minDistance = this.camera.near;
     this.controls.maxDistance = this.camera.far;
-    this.controls.target.set(0, 0, 0.5);  // z is normalized [0,1], x/y are not normalized, so adjust target when loading new data (todo)
-
+    this.controls.target0.set(0, 0, 0.5);  // z is normalized [0,1], x/y are not normalized, so adjust target when loading new data (todo)
     this.controls.addEventListener( 'change', this.renderScene );
-    this.controls.update();
   }
 
   /**
@@ -188,22 +175,8 @@ class MorseSmaleWindow extends React.Component {
     // Resize renderer
     this.renderer.setSize(width, height, false );
 
-    // Resize Camera
-    let sx = 1;
-    let sy = 1;
-    if (width > height) {
-      sx = width/height;
-    } else {
-      sy = height/width;
-    }
-    this.camera.left = -4*sx;
-    this.camera.right = 4*sx;
-    this.camera.top = 4*sy;
-    this.camera.bottom = -4*sy;
-    this.camera.updateProjectionMatrix();
-
-    // Update controls
-    this.controls.update();  // note: only necessary to call this when camera is manually changed
+    // update camera
+    this.updateCamera(width, height, { resetPos:false });
 
     // Redraw scene with updates
     if (newWindowAdded) {
@@ -360,6 +333,40 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.ambientLight);
     this.scene.add(this.frontDirectionalLight);
     this.scene.add(this.backDirectionalLight);
+
+    this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, { resetPos:true });
+  }
+
+  /**
+   * updateCamera
+   */
+  updateCamera(width, height, resetPos = false) {
+    let sx = 1;
+    let sy = 1;
+    if (width > height) {
+      sx = width/height;
+    } else {
+      sy = height/width;
+    }
+    this.camera.left = -4*sx;
+    this.camera.right = 4*sx;
+    this.camera.top = 4*sy;
+    this.camera.bottom = -4*sy;
+    this.camera.near = -16;
+    this.camera.far = 16;
+
+    // controls
+    if (this.controls === undefined) {
+      this.createControls();   // need to have "pretty much the camera for this scene" before creating controls
+    }
+    
+    if (resetPos) {
+      this.controls.reset();   // resets camera to original position (also calls updateProjectionMatrix)
+    }
+    else {
+      this.camera.updateProjectionMatrix();
+      this.controls.update();  // it's necessary to call this when the camera is manually changed
+    }
   }
 
   /**
