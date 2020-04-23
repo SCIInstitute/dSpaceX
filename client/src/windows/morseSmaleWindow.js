@@ -162,6 +162,7 @@ class MorseSmaleWindow extends React.Component {
 
   /**
    * Initializes the controls.
+   * ONLY CALL THIS ONCE, otherwise multiple controls send multiple move operations to camera.
    */
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -171,7 +172,7 @@ class MorseSmaleWindow extends React.Component {
     this.controls.target.set(0, 0, 0.5);  // z is normalized [0,1], x/y are not normalized, so adjust target when loading new data (todo)
 
     this.controls.addEventListener( 'change', this.renderScene );
-    this.controls.update();  // note: only necessary to call this when camera is manually changed
+    this.controls.update();
   }
 
   /**
