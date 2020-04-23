@@ -204,7 +204,7 @@ class MorseSmaleWindow extends React.Component {
     this.camera.updateProjectionMatrix();
 
     // Update controls
-    this.initControls();
+    this.controls.update();  // note: only necessary to call this when camera is manually changed
 
     // Redraw scene with updates
     if (newWindowAdded) {
