@@ -27,7 +27,6 @@ class MorseSmaleWindow extends React.Component {
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
-    this.animate = this.animate.bind(this);
     this.resetScene = this.resetScene.bind(this);
   }
 
@@ -37,7 +36,6 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    this.animate();
     window.addEventListener('resize', this.resizeCanvas);
     this.refs.msCanvas.addEventListener('mousedown', this.mouseRelease, { passive:true });
   }
@@ -349,15 +347,6 @@ class MorseSmaleWindow extends React.Component {
    */
   renderScene() {
     this.renderer.render(this.scene, this.camera);
-  }
-
-  /**
-   * Animates the scene.
-   * This is necessary for the Trackball Controls or any other interactivity.
-   */
-  animate() {
-    requestAnimationFrame(this.animate);
-    this.controls.update();
   }
 
   /**
