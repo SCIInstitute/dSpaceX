@@ -370,6 +370,7 @@ class MorseSmaleWindow extends React.Component {
     this.updateOrthoCamera(width, height);
 
     this.orthoControls = new OrbitControls(this.orthoCamera, this.renderer.domElement);
+    this.orthoControls.enable = false;
     this.orthoControls.screenSpacePanning = true;
     this.orthoControls.minDistance = this.orthoCamera.near;
     this.orthoControls.maxDistance = this.orthoCamera.far;
@@ -388,16 +389,17 @@ class MorseSmaleWindow extends React.Component {
     this.updatePerspCamera(width, height);
 
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
+    this.perspControls.enable = false;
     this.perspControls.screenSpacePanning = true;
     this.perspControls.minDistance = this.perspCamera.near;
     this.perspControls.maxDistance = this.perspCamera.far;
     this.perspControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
     this.perspControls.addEventListener( 'change', this.renderScene );
 
-    // set default to perspective [by starting w/ ortho and toggling]
-    this.camera = this.orthoCamera;
-    this.controls = this.orthoControls;
-    this.toggleCamera();
+    // set default to perspective
+    this.camera = this.perspCamera;
+    this.controls = this.perspControls;
+    this.controls.enable = true;
   }
 
   /**
