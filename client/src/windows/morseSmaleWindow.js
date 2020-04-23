@@ -15,10 +15,6 @@ class MorseSmaleWindow extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      perspectiveCamera: true,
-    };
-
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
