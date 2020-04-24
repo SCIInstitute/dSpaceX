@@ -240,6 +240,9 @@ class MorseSmaleWindow extends React.Component {
    * @param {boolean} showOrig
    */
   pick(normalizedPosition, showOrig) {
+    if (datasetId === undefined)
+      return
+
     // Get intersected object
     const { datasetId, decompositionCategory, decompositionField, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
