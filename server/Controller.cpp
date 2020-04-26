@@ -567,7 +567,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
 
   // Get points for regression line
   auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
-  int rows = m_currentVizData->getNumberOfSamples() + 2;
+  int rows = m_currentVizData->getNumberOfSamples();
   double points[rows][3];
   double colors[rows][3];
 
@@ -578,29 +578,15 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
     // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
       auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(m_currentVizData->getMean(persistenceLevel)[i](n));
-      colors[n + 1][0] = color[0];
-      colors[n + 1][1] = color[1];
-      colors[n + 1][2] = color[2];
+      colors[n][0] = color[0];
+      colors[n][1] = color[1];
+      colors[n][2] = color[2];
 
       for (unsigned int m = 0; m < layout[i].M(); ++m) {
-        points[n + 1][m] = layout[i](m, n);
+        points[n][m] = layout[i](m, n);
       }
-      points[n + 1][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+      points[n][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
     }
-
-    for (unsigned int j = 0; j < 3; ++j) {
-      points[0][j] = points[1][j] + points[2][j] - points[1][j];
-      points[m_currentVizData->getNumberOfSamples() + 1][j] =
-      points[m_currentVizData->getNumberOfSamples()][j] +
-      points[m_currentVizData->getNumberOfSamples()][j] -
-      points[m_currentVizData->getNumberOfSamples() - 1][j];
-    }
-
-    for (unsigned int j = 0; j < 3; ++j) {
-      colors[0][j] = colors[1][j];
-      colors[m_currentVizData->getNumberOfSamples() + 1][j] = colors[m_currentVizData->getNumberOfSamples()][j];
-    }
-
 
     // Get layout for each crystal
     Json::Value regressionObject(Json::objectValue);

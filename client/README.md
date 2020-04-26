@@ -30,6 +30,7 @@ file:///.../dSpaceX/client/dSpaceX.html
 <.../dSpaceX/client> conda activate dSpaceX
 <.../dSpaceX/client>$ npm start
 ```
+You can select a different port by adding `-- --port <num>` (ex: `npm start -- --port 3001`)
 
 2. Connect to local host and dSpaceX.html in browser
 ```http

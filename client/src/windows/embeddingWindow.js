@@ -395,9 +395,9 @@ class EmbeddingWindow extends React.Component {
     // For the resizing event that comes from the ResizeablePanels in the embeddingMoreseSmaleWindows and is captured
     // by the ReactResizeDetector in this window it is set to false. This is because of a race condition created by how
     // quickly the scene would have to redraw when adjusting the panel size.
-    if (newWindowAdded) {
+    //if (newWindowAdded) { //<ctc> trying to figure out why last render clears screen (or screen is cleared after last render) -> this isn't it, but I took it out of morseSmaleWindow, so maybe also not important here
       this.renderScene();
-    }
+  //}
   }
 
   /**

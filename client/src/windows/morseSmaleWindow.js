@@ -1,8 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
+import Paper from '@material-ui/core/Paper';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
+import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js';
 
 /**
  * Creates Morse-Smale decomposition
@@ -19,6 +27,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.init = this.init.bind(this);
     this.createCamerasAndControls = this.createCamerasAndControls.bind(this);
+    this.createComposer = this.createComposer.bind(this); // <ctc> this gets called even when not bound. Necessary to bind it?
     this.updateCamera = this.updateCamera.bind(this);
     this.updatePerspCamera = this.updatePerspCamera.bind(this);
     this.updateOrthoCamera = this.updateOrthoCamera.bind(this);
@@ -35,10 +44,14 @@ class MorseSmaleWindow extends React.Component {
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
 
     this.resetScene = this.resetScene.bind(this);
+    this.resetBounds = this.resetBounds.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.renderScene = this.renderScene.bind(this);
-  }
 
+    this.addSphere = this.addSphere.bind(this);
+    this.addLights = this.addLights.bind(this);
+  }
+  
   /**
    * Called by react when this component mounts.
    * Initializes Three.js for drawing and adds event listeners.
@@ -85,6 +98,10 @@ class MorseSmaleWindow extends React.Component {
         this.renderScene();
 
         if (this.pickedObject) {
+          // TODO: <ctc> verify this is ever executed since it's not clear how there could already be a picked curve w/ a new decomposition
+          console.log('Huh?? How is there a picked object with this new decomposition?');
+          // ...even if there is, it probably should have been set to undefined when the new decomposition was selected.
+
           let crystalID = this.pickedObject.name;
           this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
             this.props.onCrystalSelection(result.crystalSamples);
@@ -124,22 +141,47 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Initializes the renderer, camera, and scene for Three.js.
+   * create lights
    */
-  init() {
-    // canvas
-    let canvas = this.refs.msCanvas;
-    let gl = canvas.getContext('webgl');
+  initLights() {
+    RectAreaLightUniformsLib.init();
+    this.lights = new Object;
 
-    // scene
-    this.scene = new THREE.Scene();
+		this.lights.rectLightTop = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightTop.position.set( 0, 0, this.bounds.maxZ ); // max height of crystal models is 1
+		this.lights.rectLightTop.lookAt(0, 0, this.bounds.minZ);
+    // this.lights.rectLightHelperTop = new RectAreaLightHelper( this.lights.rectLightTop );
+    // this.lights.rectLightTop.add( this.lights.rectLightHelperTop );
 
-    // renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+		this.lights.rectLightBot = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+    this.lights.rectLightBot.position.set( 0, 0, this.bounds.minZ ); // min height of crystal models is 0
+		this.lights.rectLightBot.lookAt(0, 0, this.bounds.maxZ);
+    this.lights.rectLightHelperBot = new RectAreaLightHelper( this.lights.rectLightBot );
+    //this.lights.rectLightBot.add( this.lights.rectLightHelperBot );
 
-    // camera and controls
-    this.createCamerasAndControls();
+		this.lights.rectLightFront = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightFront.position.set( 0, this.bounds.minY, 0 ); // max width/depth of crystal models varies (TODO: update when crystals are added)
+		this.lights.rectLightFront.lookAt(0, this.bounds.maxY, 0);
+    // this.lights.rectLightHelperFront = new RectAreaLightHelper( this.lights.rectLightFront );
+    // this.lights.rectLightFront.add( this.lights.rectLightHelperFront );
+
+		this.lights.rectLightBack = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+		this.lights.rectLightBack.position.set( 0, this.bounds.maxY, 0 );
+		this.lights.rectLightBack.lookAt(0, this.bounds.minY, 0);
+    this.lights.rectLightHelperBack = new RectAreaLightHelper( this.lights.rectLightBack );
+    //this.lights.rectLightBack.add( this.lights.rectLightHelperBack );
+
+		this.lights.rectLightL = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightL.position.set( this.bounds.minX, 0, 0 );
+		this.lights.rectLightL.lookAt(this.bounds.maxX, 0, 0);
+    // this.lights.rectLightHelperL = new RectAreaLightHelper( this.lights.rectLightL );
+    // this.lights.rectLightL.add( this.lights.rectLightHelperL );
+
+		this.lights.rectLightR = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+    this.lights.rectLightR.position.set( this.bounds.maxX, 0, 0 );
+		this.lights.rectLightR.lookAt(this.bounds.minX, 0, 0);
+    this.lights.rectLightHelperR = new RectAreaLightHelper( this.lights.rectLightR );
+    //this.lights.rectLightR.add( this.lights.rectLightHelperR );
 
     // light
     this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -148,13 +190,87 @@ class MorseSmaleWindow extends React.Component {
     this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     this.backDirectionalLight.position.set(-5, -1, -5);
 
+    // this.lights.ambientLight = new THREE.AmbientLight( { color: 0xf5f5f5, intensity: 0.01 } );
+    // this.lights.frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    // this.lights.frontLight.position.set(-20, -50, 0.5);
+    // this.lights.sideLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    // this.lights.sideLight.position.set(50, -10, 0.75);
+    // this.lights.backLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    // this.lights.backLight.position.set(0, 50, 0.5);
+    // this.lights.topLight = new THREE.DirectionalLight(0xffffff, 0.75 );
+    // this.lights.topLight.position.set(0, 0, 100);
+  }
+
+  /**
+   * (re-)inserts the lights into the scene
+   */
+  addLights() {
+    //this.scene.add(this.lights.ambientLight);
+    // this.scene.add( this.lights.rectLightTop );
+    // this.scene.add( this.lights.rectLightBot );
+    // this.scene.add( this.lights.rectLightFront );
+    // this.scene.add( this.lights.rectLightBack );
+    // this.scene.add( this.lights.rectLightL );
+    // this.scene.add( this.lights.rectLightR );
+    // this.scene.add(this.lights.frontLight);
+    // this.scene.add(this.lights.sideLight);
+    // this.scene.add(this.lights.backLight);
+    // this.scene.add(this.lights.topLight);
+  }
+  
+  /**
+   * Scene bounds, usually [0,1] in z and whatever the crystals are in x and y.
+   */
+  resetBounds() {
+    this.bounds = {
+      minX: -1,
+      maxX: 1,
+      minY: -1,
+      maxY: 1,
+      minZ: -0.5,
+      maxZ: 1.5
+    };
+  }
+
+  /**
+   * Initializes the renderer, camera, and scene for Three.js.
+   */
+  init() {
+    // canvas
+    let canvas = this.refs.msCanvas;
+    let gl = canvas.getContext('webgl');
+    let width = canvas.clientWidth, height = canvas.clientHeight;
+
+    // scene
+    this.scene = new THREE.Scene();
+    //this.scene.background = new THREE.Color('white'); // do NOT set scene background or outline selection won't work
+
+    // renderer
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    this.renderer.autoClear = false;
+    //this.renderer.setClearColor( 0x000000, 0 ); //<ctc> very questionably necessary -> delete me when going through <ctc>s (ensure other stuff works first)
+    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> this is done in example, but killed the camera in mine... try again?
+
+    // camera and controls
+    this.createCamerasAndControls();
+
+    // composer, renderpass, outlinepass, fxaa
+    this.createComposer();
+
+    // Bounds
+    this.resetBounds();  //TODO need to set bounds and update lights when new crystals are added
+
+    // lights
+		var pointLight = new THREE.PointLight( 0xffffff, 1 );
+		this.perspCamera.add( pointLight );
+    this.initLights();
+
     // picking
-    this.pickedObject = undefined;
     this.raycaster = new THREE.Raycaster();
 
     // reset and render
     this.resetScene();
-    this.renderScene();
   }
 
   /**
@@ -163,31 +279,35 @@ class MorseSmaleWindow extends React.Component {
    * @param {boolean} newWindowAdded
    */
   resizeCanvas(event) {
-    let width = this.refs.msCanvas.clientWidth;
-    let height = this.refs.msCanvas.clientHeight;
+    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
+    // <ctc> huh? dump this or keep it? (try)
     this.refs.msCanvas.width = width;
     this.refs.msCanvas.height = height;
 
-    // Resize renderer
-    this.renderer.setSize(width, height, false);
-
     // update camera
-    this.updateCamera(width, height);
+    this.updateCamera(width, height);  //<ctc> I think this should come before resize renderer and composer
+
+    // Resize renderer and composer
+    this.renderer.setSize(width, height, false);
+    this.composer.setSize(width, height, false);
+		this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
+    // <ctc> maybe need to add things here (see commented section of createComposer)
 
     // Redraw scene with updates
     this.renderScene();
   }
 
   /**
-   * Event handling for mouse click release
+   * Event handling for mouse click
    * @param {Event} event
    */
   handleMouseRelease(event) {
     // Handle left click release
     if (event.button === 0) {
       const position = this.getPickPosition(event);
-      this.pick(position, event.ctrlKey); // click w/ ctrl held down to produce model's original samples
+      if (this.pick(position, event.ctrlKey)) // click w/ ctrl held down to produce model's original samples
+        event.stopPropagation(); // release the event if this picks something
     }
   }
 
@@ -240,8 +360,9 @@ class MorseSmaleWindow extends React.Component {
    * @param {boolean} showOrig
    */
   pick(normalizedPosition, showOrig) {
-    if (datasetId === undefined)
-      return
+    if (this.props.decomposition === null) {
+      return;
+    }
 
     // Get intersected object
     const { datasetId, decompositionCategory, decompositionField, persistenceLevel } = this.props.decomposition;
@@ -249,27 +370,147 @@ class MorseSmaleWindow extends React.Component {
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
-      // Update opacity to signify selected crystal
-      if (this.pickedObject) {
-        // Make sure have object in current scene
-        this.pickedObject = this.scene.getObjectByName(this.pickedObject.name);
-        this.pickedObject.material.opacity = 0.75;
-        this.pickedObject = undefined;
+      // this.outlinePass.selectedObjects = [];
+      // this.outlinePass.selectedObjects.push(intersectedObjects[0].object);
+      //this.pickedObject = intersectedObjects[0].object;
+
+      if (intersectedObjects[0].object === this.crystalPosObject) {
+        // we picked the active pointer along a curve, so turn on dragging of the pointer
+        //this.draggingCrystalPos = true;  // TODO
+        console.log('You clicked the crystalPosObject!');
+
       }
-      this.pickedObject = intersectedObjects[0].object;
-      this.pickedObject.material.opacity = 1;
+      else if (intersectedObjects[0].object === this.pickedObject) {
+        console.log('You clicked the already selected object');
+
+        // TODO: (maybe) move crystal pos object to selected position along this crystal
+      }
+      else {
+        console.log('New crystal selected');
+
+        this.outlinePass.selectedObjects = [];
+        this.outlinePass.selectedObjects.push(intersectedObjects[0].object);
+
+        // new crystal selected, so revert currently picked object and highlight new one
+        if (this.pickedObject) {
+          this.outlinePass.selectedObjects = [this.pickedObject];
+          //this.pickedObject.material.opacity = 1.0;
+          this.pickedObject.material.emissive = new THREE.Color('black'); // todo: use Material.dispose() (see https://threejs.org/docs/#manual/en/introduction/How-to-dispose-of-objects)
+          this.crystalPosObject = undefined;
+        }
+        this.pickedObject = intersectedObjects[0].object;
+        //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere
+        //argh! this.pickedObject.material.emissive = new THREE.Color('aqua');
+
+        // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
+        // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
+        //        may need to save the catmull rom curves for each crystal in order to move these along the curve.
+        //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
+      }
+
+      // // Update opacity to signify selected crystal
+      // if (this.pickedObject) {
+      //   // Make sure have object in current scene
+      //   this.pickedObject = this.scene.getObjectByName(this.pickedObject.name);
+      //   this.pickedObject.material.opacity = 0.75;
+      //   this.pickedObject = undefined;
+
+      //   // add a clickable sphere along the curve
+      //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
+      // }
+      // this.pickedObject = intersectedObjects[0].object;
+      // this.pickedObject.material.opacity = 1;
+      
       this.renderScene();
 
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
       this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-        crystalID, 50 /* numZ*/, showOrig);
+        crystalID, 51 /* numZ*/, showOrig);  // <ctc> *this* hardcoded 51 might be the reason the final sample is black! damn hardcoding!!
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
+
+      return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
     }
+
+    return false;
   }
 
+  /**
+   * Adds a sphere to the scene
+   * @param {vector3} pos position
+   * @param {vector3} color THREE.Color object
+   * @param {float} radius
+   * returns object added to scene
+   */
+  addSphere(pos, color, radius = 0.05) {
+    let geometry = new THREE.SphereBufferGeometry(radius, 32, 32);
+    let material = new THREE.MeshStandardMaterial({ color:color });
+    let mesh = new THREE.Mesh(geometry, material);
+    let dist = pos.length();
+    let dir = pos.clone().normalize();
+    mesh.translateOnAxis(dir, dist);
+    this.scene.add(mesh);
+    return mesh;
+  }
+
+  /**
+   * Adds a plane to the scene
+   * @param {vector3} pos position
+   * @param {vector3} normal position
+   * @param {vector3} color rgb color
+   * @param {float} size xy dims
+   * returns object added to scene
+   */
+  addPlane( {position = [0,0,0], normal = [0,0,1], size = [1,1], color = null} ) {
+    if (!color)
+      color = new THREE.Color('brown');
+    let geometry = new THREE.PlaneBufferGeometry(size[0], size[1]);
+    let material = new THREE.MeshBasicMaterial({ color:color });
+    let mesh = new THREE.Mesh(geometry, material);
+    let translation = position.length();
+    let translation_dir = position.clone().normalize();
+    let up_vec = new THREE.Vector3(0,0,1);
+    let perp_vec = normal.clone().cross(up_vec);
+    let eps = 0.001;
+    if (perp_vec.length() > eps) {
+      mesh.rotate(perp_vec, up_vec.angleTo(normal));
+    }
+    mesh.translateOnAxis(translation_dir, translation);
+    this.scene.add(mesh);
+    return mesh;
+  }
+
+  /**
+   * Adds a box to the scene
+   * @param {vector3} pos position
+   * @param {vector3} normal position
+   * @param {vector3} color rgb color
+   * @param {float} size xy dims
+   * returns object added to scene
+   */
+/* TODO for crystal slider
+  addBox(pos = [0,0,0], normal = [0,0,1], size = [1,1], color = null) {
+    if (!color)
+      color = new THREE.Color('brown');
+    let geometry = new THREE.BoxBufferGeometry(size[0], size[1]);
+    let material = new THREE.MeshBasicMaterial({ color:color });
+    let mesh = new THREE.Mesh(geometry, material);
+    let dist = pos.length();
+    let dir = pos.clone().normalize();
+    let up = THREE.Vector3(0,1,0);
+    let perp = dir.clone().cross(up);
+    let eps = 0.001;
+    if (perp.length() > eps) {
+      mesh.rotate(perp, up.angleTo(dir));
+    }
+    mesh.translate(dir, dist);
+    this.scene.add(mesh);
+    return mesh;
+  }
+*/
+  
   /**
    * Adds the regression curves to the scene
    * @param {object} regressionData
@@ -282,10 +523,10 @@ class MorseSmaleWindow extends React.Component {
       });
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
-      let tubularSegments = 50;
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, tubularSegments, .02, 50, false);
+      let tubularSegments = curvePoints.length * 6;
+      let curveGeometry = new THREE.TubeBufferGeometry(curve, tubularSegments, .02 /*radius*/, 10 /*radialSegments*/, false /*closed*/);
       let count = curveGeometry.attributes.position.count;
-      curveGeometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+      curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
       let colors = regressionCurve.colors;
       let colorAttribute = curveGeometry.attributes.color;
       let color = new THREE.Color();
@@ -295,17 +536,15 @@ class MorseSmaleWindow extends React.Component {
           colorAttribute.setXYZ(i*tubularSegments+j, color.r, color.g, color.b);
         }
       }
-      let opacity = 0.75;
-      if (this.pickedObject && parseInt(this.pickedObject.name) === index) {
-        opacity = 1.00;
-      }
+      //let opacity = 1.0;
       let curveMaterial = new THREE.MeshLambertMaterial({
-        color: 0xffffff,
-        flatShading: true,
-        vertexColors: THREE.VertexColors,
-        transparent: true,
-        opacity: opacity,
+        //color: 0xffffff,
+        //flatShading: true,
+        vertexColors: true,//THREE.VertexColors,
+        //transparent: true,
+        //opacity: opacity,
       });
+      //curveMaterial.emissive = new THREE.Color('black');
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
       this.scene.add(curveMesh);
@@ -318,37 +557,10 @@ class MorseSmaleWindow extends React.Component {
    */
   addExtremaToScene(extrema) {
     extrema.forEach((extreme) => {
-      let extremaGeometry = new THREE.SphereBufferGeometry(0.05, 32, 32);
-      let color = new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]);
-      let extremaMaterial = new THREE.MeshLambertMaterial({ color:color });
-      let extremaMesh = new THREE.Mesh(extremaGeometry, extremaMaterial);
-      extremaMesh.translateX(extreme.position[0]);
-      extremaMesh.translateY(extreme.position[1]);
-      extremaMesh.translateZ(extreme.position[2]);
-      this.scene.add(extremaMesh);
+      let position = new THREE.Vector3().fromArray(extreme.position);
+      //todo: scale radius relative to this.bounds; ~0.05 (default) is good for bounds of size 1, 1, 1.
+      this.addSphere(position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
     });
-  }
-
-  /**
-   * Draws the scene to the canvas.
-   */
-  renderScene() {
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  /**
-   * Resets the scene when there is new data by removing
-   * the old scene children and adding back the lights.
-   */
-  resetScene() {
-    while (this.scene.children.length > 0) {
-      this.scene.remove(this.scene.children[0]);
-    }
-    this.scene.add(this.ambientLight);
-    this.scene.add(this.frontDirectionalLight);
-    this.scene.add(this.backDirectionalLight);
-
-    this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
   }
 
   /**
@@ -358,8 +570,7 @@ class MorseSmaleWindow extends React.Component {
    * TODO: z is normalized by Controller to [0,1], but x/y are not normalized, so adjust target when loading new data.
    */
   createCamerasAndControls() {
-    let width = this.refs.msCanvas.clientWidth;
-    let height = this.refs.msCanvas.clientHeight;
+    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
     // orthographic
     this.orthoCamera = new THREE.OrthographicCamera();
@@ -402,6 +613,36 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * createComposer
+   * Creates rendering architecture
+   */
+  createComposer() {
+    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+
+		this.composer = new EffectComposer(this.renderer);
+    var renderPass = new RenderPass(this.scene, this.camera);
+    renderPass.clear = false; //<ctc> trying this since it's true by default
+		this.composer.addPass(renderPass);
+
+    this.outlinePass = new OutlinePass(new THREE.Vector2(width, height), this.scene, this.camera); // <ctc> need to update these on resize?
+    this.outlinePass.visibleEdgeColor.set('cyan');
+    this.outlinePass.hiddenEdgeColor.set('#182838');
+		this.outlinePass.edgeStrength = 8.0;
+		this.outlinePass.edgeThickness = 1.0;
+    this.outlinePass.overlayMaterial.blending = THREE.NormalBlending;
+		//this.composer.addPass(this.outlinePass);
+
+		this.effectFXAA = new ShaderPass( FXAAShader );
+		this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );  // <ctc> probably need to update these on resize
+    /* from example <ctc>: try it
+		var pixelRatio = renderer.getPixelRatio();
+		fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( container.offsetWidth * pixelRatio );
+		fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( container.offsetHeight * pixelRatio );
+    */
+		//this.composer.addPass( this.effectFXAA );
+  }
+  
+  /**
    * toggleCamera
    * Toggles between orthographic and perspective cameras.
    */
@@ -410,6 +651,7 @@ class MorseSmaleWindow extends React.Component {
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
+      //this.outlinePass.camera = this.perspCamera; //<ctc> can you do this?
     }
     else {
       this.camera = this.orthoCamera;
@@ -423,8 +665,7 @@ class MorseSmaleWindow extends React.Component {
    * updateOrthoCamera
    */
   updateOrthoCamera(width, height) {
-    let sx = 1;
-    let sy = 1;
+    let sx = 1, sy = 1;
     if (width > height) {
       sx = width/height;
     } else {
@@ -459,6 +700,49 @@ class MorseSmaleWindow extends React.Component {
       this.camera.updateProjectionMatrix();
       this.controls.update();  // it's necessary to call this when the camera is manually changed
     }
+  }
+  
+  /**
+   * Resets the scene when there is new data by removing
+   * the old scene children and adding back the lights.
+   */
+  resetScene() {
+    while (this.scene.children.length > 0) {
+      this.scene.remove(this.scene.children[0]);
+    }
+    this.scene.add(this.ambientLight);
+    this.scene.add(this.frontDirectionalLight);
+    this.scene.add(this.backDirectionalLight);
+
+    //this.scene.add(this.camera); // kinda looks like new perspective camera needs to be part of scene (like above) -> it does NOT
+    //this.addLights();
+
+    this.pickedObject = undefined;
+    this.crystalPosObject = undefined;
+    this.outlinePass.selectedObjects = [];
+
+/******/
+    // floor and other temporary stuff or visual aids
+    let origin = new THREE.Vector3(0, 0, 0);
+    //let up = new THREE.Vector3(0, 0, 1);
+    //this.floorMesh = this.addPlane( {position:origin.clone().set(0,0,-0.05), normal:up, size:[500,500], color:new THREE.Color(0xd0d0d0)} );
+    //<ctc> may add outline(s) and/or back/side walls to help give context to the min/max of the crystals
+    //<ctc> another thing that might help would be a color bar, similarly indicating the range of values
+    //<ctc> test add some spheres to the scene to help w/ lighting (todo: removeme)
+    this.crystalPosObject = this.addSphere( origin, new THREE.Color('purple') );
+    this.crystalPosObject = this.addSphere( new THREE.Vector3(1, -1, 1), new THREE.Color('darkorange') );
+    this.crystalPosObject = this.addSphere( new THREE.Vector3(-1, 1, 1), new THREE.Color('darkorange') );
+/******/
+
+    this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
+  }
+
+  /**
+   * Draws the scene to the canvas.
+   */
+  renderScene() {
+    this.renderer.render(this.scene, this.camera);
+    //this.composer.render();
   }
 
   /**
