@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';  //<ctc> just an empty effects pass (for testing)
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
@@ -248,9 +249,9 @@ class MorseSmaleWindow extends React.Component {
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    //this.renderer.autoClear = false; //<ctc> by default true
+    //this.renderer.autoClear = false; //<ctc> DONE (don't change again) by default true
     //this.renderer.setClearColor( 0x000000, 0 ); //<ctc> very questionably necessary -> delete me when going through <ctc>s (ensure other stuff works first)
-    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> this is done in example, but killed the camera in mine... try again? tried: failed. 
+    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> DONE (don't change again) this is done in example, but killed the camera in mine... try again? tried: failed. 
 
     // camera and controls
     this.createCamerasAndControls();
@@ -286,13 +287,17 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.height = height;
 
     // update camera
-    this.updateCamera(width, height);  //<ctc> I think this should come before resize renderer and composer
+    this.updateCamera(width, height);  //<ctc> I think this should come before resize renderer and composer (not sure how to test, but it's working right now)
 
     // Resize renderer and composer
     this.renderer.setSize(width, height, false);
     this.composer.setSize(width, height, false);
-    this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
-    // <ctc> maybe need to add things here (see commented section of createComposer)
+
+    // resize composer passes
+    //var pixelRatio = 22;//<ctc> DONE (don't change again) actual screen pixel ratio; using it for renderer breaks things, but for fxaa it helps... though difference isn't discernable at these resolutions
+    var pixelRatio = window.devicePixelRatio; // prefer actual device pixel ratio to that of renderer (this.renderer.getPixelRatio())
+    this.effectFXAA.material.uniforms[ 'resolution' ].value.x = 1 / ( width * pixelRatio ); 
+    this.effectFXAA.material.uniforms[ 'resolution' ].value.y = 1 / ( height * pixelRatio );
 
     // Redraw scene with updates
     this.renderScene();
@@ -621,8 +626,8 @@ class MorseSmaleWindow extends React.Component {
 
     this.composer = new EffectComposer(this.renderer);
     var renderPass = new RenderPass(this.scene, this.camera);
-    //renderPass.clear = false; //<ctc> by default true, just like renderer
-    this.composer.addPass(renderPass);
+    //renderPass.clear = false; //<ctc> DONE (don't change again) by default true, just like renderer
+    //this.composer.addPass(renderPass); // <ctc> DONE (don't change again) try adding this last since it looks good when it's the only one
 
     this.outlinePass = new OutlinePass(new THREE.Vector2(width, height), this.scene, this.camera); // <ctc> need to update these on resize?
     this.outlinePass.visibleEdgeColor.set('cyan');
@@ -632,14 +637,13 @@ class MorseSmaleWindow extends React.Component {
     this.outlinePass.overlayMaterial.blending = THREE.NormalBlending;
     //this.composer.addPass(this.outlinePass);
 
-    this.effectFXAA = new ShaderPass( FXAAShader );
-    this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );  // <ctc> probably need to update these on resize
-    /* from example <ctc>: try it
-    var pixelRatio = renderer.getPixelRatio();
-    fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( container.offsetWidth * pixelRatio );
-    fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( container.offsetHeight * pixelRatio );
-    */
-    //this.composer.addPass( this.effectFXAA );
+    this.effectFXAA = new ShaderPass(FXAAShader); // resolution set in resizeCanvas
+    this.composer.addPass( this.effectFXAA );
+
+    //test a copy pass
+	  var copyPass = new ShaderPass( CopyShader );
+    this.composer.addPass( copyPass );
+    this.composer.addPass(renderPass);
   }
   
   /**
