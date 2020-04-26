@@ -147,39 +147,39 @@ class MorseSmaleWindow extends React.Component {
     RectAreaLightUniformsLib.init();
     this.lights = new Object;
 
-		this.lights.rectLightTop = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightTop = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
     this.lights.rectLightTop.position.set( 0, 0, this.bounds.maxZ ); // max height of crystal models is 1
-		this.lights.rectLightTop.lookAt(0, 0, this.bounds.minZ);
+    this.lights.rectLightTop.lookAt(0, 0, this.bounds.minZ);
     // this.lights.rectLightHelperTop = new RectAreaLightHelper( this.lights.rectLightTop );
     // this.lights.rectLightTop.add( this.lights.rectLightHelperTop );
 
-		this.lights.rectLightBot = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+    this.lights.rectLightBot = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
     this.lights.rectLightBot.position.set( 0, 0, this.bounds.minZ ); // min height of crystal models is 0
-		this.lights.rectLightBot.lookAt(0, 0, this.bounds.maxZ);
+    this.lights.rectLightBot.lookAt(0, 0, this.bounds.maxZ);
     this.lights.rectLightHelperBot = new RectAreaLightHelper( this.lights.rectLightBot );
     //this.lights.rectLightBot.add( this.lights.rectLightHelperBot );
 
-		this.lights.rectLightFront = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightFront = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
     this.lights.rectLightFront.position.set( 0, this.bounds.minY, 0 ); // max width/depth of crystal models varies (TODO: update when crystals are added)
-		this.lights.rectLightFront.lookAt(0, this.bounds.maxY, 0);
+    this.lights.rectLightFront.lookAt(0, this.bounds.maxY, 0);
     // this.lights.rectLightHelperFront = new RectAreaLightHelper( this.lights.rectLightFront );
     // this.lights.rectLightFront.add( this.lights.rectLightHelperFront );
 
-		this.lights.rectLightBack = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
-		this.lights.rectLightBack.position.set( 0, this.bounds.maxY, 0 );
-		this.lights.rectLightBack.lookAt(0, this.bounds.minY, 0);
+    this.lights.rectLightBack = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+    this.lights.rectLightBack.position.set( 0, this.bounds.maxY, 0 );
+    this.lights.rectLightBack.lookAt(0, this.bounds.minY, 0);
     this.lights.rectLightHelperBack = new RectAreaLightHelper( this.lights.rectLightBack );
     //this.lights.rectLightBack.add( this.lights.rectLightHelperBack );
 
-		this.lights.rectLightL = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
+    this.lights.rectLightL = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
     this.lights.rectLightL.position.set( this.bounds.minX, 0, 0 );
-		this.lights.rectLightL.lookAt(this.bounds.maxX, 0, 0);
+    this.lights.rectLightL.lookAt(this.bounds.maxX, 0, 0);
     // this.lights.rectLightHelperL = new RectAreaLightHelper( this.lights.rectLightL );
     // this.lights.rectLightL.add( this.lights.rectLightHelperL );
 
-		this.lights.rectLightR = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
+    this.lights.rectLightR = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
     this.lights.rectLightR.position.set( this.bounds.maxX, 0, 0 );
-		this.lights.rectLightR.lookAt(this.bounds.minX, 0, 0);
+    this.lights.rectLightR.lookAt(this.bounds.minX, 0, 0);
     this.lights.rectLightHelperR = new RectAreaLightHelper( this.lights.rectLightR );
     //this.lights.rectLightR.add( this.lights.rectLightHelperR );
 
@@ -248,9 +248,9 @@ class MorseSmaleWindow extends React.Component {
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    this.renderer.autoClear = false;
+    //this.renderer.autoClear = false; //<ctc> by default true
     //this.renderer.setClearColor( 0x000000, 0 ); //<ctc> very questionably necessary -> delete me when going through <ctc>s (ensure other stuff works first)
-    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> this is done in example, but killed the camera in mine... try again?
+    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> this is done in example, but killed the camera in mine... try again? tried: failed. 
 
     // camera and controls
     this.createCamerasAndControls();
@@ -262,8 +262,8 @@ class MorseSmaleWindow extends React.Component {
     this.resetBounds();  //TODO need to set bounds and update lights when new crystals are added
 
     // lights
-		var pointLight = new THREE.PointLight( 0xffffff, 1 );
-		this.perspCamera.add( pointLight );
+    var pointLight = new THREE.PointLight( 0xffffff, 1 );
+    this.perspCamera.add( pointLight );
     this.initLights();
 
     // picking
@@ -291,7 +291,7 @@ class MorseSmaleWindow extends React.Component {
     // Resize renderer and composer
     this.renderer.setSize(width, height, false);
     this.composer.setSize(width, height, false);
-		this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
+    this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
     // <ctc> maybe need to add things here (see commented section of createComposer)
 
     // Redraw scene with updates
@@ -595,7 +595,7 @@ class MorseSmaleWindow extends React.Component {
     this.perspCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     this.perspCamera.position.set(0, -6, 0.5);
     this.perspCamera.up.set(0, 0, 1);
-		this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
     this.updatePerspCamera(width, height);
 
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
@@ -619,27 +619,27 @@ class MorseSmaleWindow extends React.Component {
   createComposer() {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
-		this.composer = new EffectComposer(this.renderer);
+    this.composer = new EffectComposer(this.renderer);
     var renderPass = new RenderPass(this.scene, this.camera);
-    renderPass.clear = false; //<ctc> trying this since it's true by default
-		this.composer.addPass(renderPass);
+    //renderPass.clear = false; //<ctc> by default true, just like renderer
+    this.composer.addPass(renderPass);
 
     this.outlinePass = new OutlinePass(new THREE.Vector2(width, height), this.scene, this.camera); // <ctc> need to update these on resize?
     this.outlinePass.visibleEdgeColor.set('cyan');
     this.outlinePass.hiddenEdgeColor.set('#182838');
-		this.outlinePass.edgeStrength = 8.0;
-		this.outlinePass.edgeThickness = 1.0;
+    this.outlinePass.edgeStrength = 8.0;
+    this.outlinePass.edgeThickness = 1.0;
     this.outlinePass.overlayMaterial.blending = THREE.NormalBlending;
-		//this.composer.addPass(this.outlinePass);
+    //this.composer.addPass(this.outlinePass);
 
-		this.effectFXAA = new ShaderPass( FXAAShader );
-		this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );  // <ctc> probably need to update these on resize
+    this.effectFXAA = new ShaderPass( FXAAShader );
+    this.effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );  // <ctc> probably need to update these on resize
     /* from example <ctc>: try it
-		var pixelRatio = renderer.getPixelRatio();
-		fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( container.offsetWidth * pixelRatio );
-		fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( container.offsetHeight * pixelRatio );
+    var pixelRatio = renderer.getPixelRatio();
+    fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / ( container.offsetWidth * pixelRatio );
+    fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / ( container.offsetHeight * pixelRatio );
     */
-		//this.composer.addPass( this.effectFXAA );
+    //this.composer.addPass( this.effectFXAA );
   }
   
   /**
@@ -741,8 +741,8 @@ class MorseSmaleWindow extends React.Component {
    * Draws the scene to the canvas.
    */
   renderScene() {
-    this.renderer.render(this.scene, this.camera);
-    //this.composer.render();
+    //this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
   /**
