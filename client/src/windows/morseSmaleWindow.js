@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+// get rid of composer and passes <ctc> todo if outline effect works
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';  //<ctc> just an empty effects pass (for testing)
 import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
+
+import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
@@ -44,6 +48,7 @@ class MorseSmaleWindow extends React.Component {
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
 
+    this.deselectAll = this.deselectAll.bind(this);
     this.resetScene = this.resetScene.bind(this);
     this.resetBounds = this.resetBounds.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
@@ -96,6 +101,7 @@ class MorseSmaleWindow extends React.Component {
         this.regressionCurves = regressionResponse;
         this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
+        this.deselectAll();
         this.renderScene();
 
         if (this.pickedObject) {
@@ -245,13 +251,22 @@ class MorseSmaleWindow extends React.Component {
     // scene
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color('white'); // do NOT set scene background or outline selection won't work
+    this.selectedScene = new THREE.Scene();
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    //this.renderer.autoClear = false; //<ctc> DONE (don't change again) by default true
+    this.renderer.autoClear = false; //<ctc> by default true, but can be set false and done manually in renderScene (todo: try it)
     //this.renderer.setClearColor( 0x000000, 0 ); //<ctc> very questionably necessary -> delete me when going through <ctc>s (ensure other stuff works first)
     //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> DONE (don't change again) this is done in example, but killed the camera in mine... try again? tried: failed. 
+
+    const outline = new OutlineEffect(this.renderer, {
+      defaultThickness: 0.005,
+      defaultColor: [0, 1, 1],
+      defaultAlpha: 1.0,
+      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
+    });
+    this.outline = outline;
 
     // camera and controls
     this.createCamerasAndControls();
@@ -360,6 +375,16 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * deselectAll
+   */
+  deselectAll() {
+    var selected = Object.values(this.selectedScene.children);
+    for (var item of selected) {
+      item.visible = false;
+    }
+  }
+  
+  /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
@@ -396,16 +421,26 @@ class MorseSmaleWindow extends React.Component {
         this.outlinePass.selectedObjects = [];
         this.outlinePass.selectedObjects.push(intersectedObjects[0].object);
 
-        // new crystal selected, so revert currently picked object and highlight new one
-        if (this.pickedObject) {
-          this.outlinePass.selectedObjects = [this.pickedObject];
-          //this.pickedObject.material.opacity = 1.0;
-          this.pickedObject.material.emissive = new THREE.Color('black'); // todo: use Material.dispose() (see https://threejs.org/docs/#manual/en/introduction/How-to-dispose-of-objects)
-          this.crystalPosObject = undefined;
-        }
+        //<ctc> crap for old outline pass, just delete it
+        // // new crystal selected, so revert currently picked object and highlight new one
+        // if (this.pickedObject) {
+        //   this.outlinePass.selectedObjects = [this.pickedObject];
+        //   //this.pickedObject.material.opacity = 1.0;
+        //   this.pickedObject.material.emissive = new THREE.Color('black'); 
+        //   this.crystalPosObject = undefined;
+
+        //   // OutlineEffect's scene
+        // }
+        
         this.pickedObject = intersectedObjects[0].object;
         //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere
         //argh! this.pickedObject.material.emissive = new THREE.Color('aqua');
+
+        // make selected object visible in outline scene
+        var selected = Object.values(this.selectedScene.children);
+        for (var item of selected) {
+          item.visible = (item.name === this.pickedObject.name);
+        }
 
         // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
         // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
@@ -457,6 +492,7 @@ class MorseSmaleWindow extends React.Component {
     let dir = pos.clone().normalize();
     mesh.translateOnAxis(dir, dist);
     this.scene.add(mesh);
+    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 
@@ -484,6 +520,7 @@ class MorseSmaleWindow extends React.Component {
     }
     mesh.translateOnAxis(translation_dir, translation);
     this.scene.add(mesh);
+    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 
@@ -512,6 +549,7 @@ class MorseSmaleWindow extends React.Component {
     }
     mesh.translate(dir, dist);
     this.scene.add(mesh);
+    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 */
@@ -553,6 +591,7 @@ class MorseSmaleWindow extends React.Component {
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
       this.scene.add(curveMesh);
+      this.selectedScene.add(curveMesh.clone());
     });
   }
 
@@ -635,15 +674,18 @@ class MorseSmaleWindow extends React.Component {
     this.outlinePass.edgeStrength = 8.0;
     this.outlinePass.edgeThickness = 1.0;
     this.outlinePass.overlayMaterial.blending = THREE.NormalBlending;
-    //this.composer.addPass(this.outlinePass);
 
     this.effectFXAA = new ShaderPass(FXAAShader); // resolution set in resizeCanvas
-    this.composer.addPass( this.effectFXAA );
 
     //test a copy pass
-	  var copyPass = new ShaderPass( CopyShader );
-    this.composer.addPass( copyPass );
-    this.composer.addPass(renderPass);
+	  // var copyPass = new ShaderPass( CopyShader );
+    // this.composer.addPass( copyPass );
+
+    //this.composer.addPass(renderPass);
+    this.composer.addPass(this.outlinePass);
+    //this.composer.addPass(this.effectFXAA);
+    //this.composer.addPass(renderPass); //<ctc> tried rendering first and last, but outlines don't show if we do this last...
+    //                                           ...but antialiasing doesn't work unless render is last
   }
   
   /**
@@ -705,12 +747,17 @@ class MorseSmaleWindow extends React.Component {
       this.controls.update();  // it's necessary to call this when the camera is manually changed
     }
   }
-  
+
   /**
    * Resets the scene when there is new data by removing
    * the old scene children and adding back the lights.
    */
   resetScene() {
+    // Reset the scene used for outlining selected crystals
+    while (this.selectedScene.children.length > 0) {
+      this.selectedScene.remove(this.selectedScene.children[0]);
+    }
+
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
     }
@@ -746,7 +793,12 @@ class MorseSmaleWindow extends React.Component {
    */
   renderScene() {
     //this.renderer.render(this.scene, this.camera);
-    this.composer.render();
+    //this.composer.render();
+
+    // trying a different way that doesn't use composer
+    this.renderer.clear();
+    this.outline.renderOutline(this.selectedScene, this.camera);
+    this.renderer.render(this.scene, this.camera);
   }
 
   /**
