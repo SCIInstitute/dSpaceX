@@ -20,6 +20,9 @@ class MorseSmaleWindow extends React.Component {
   constructor(props) {
     super(props);
 
+    this.selectedOpacity = 1.0;
+    this.unselectedOpacity = 0.75;
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
@@ -89,8 +92,8 @@ class MorseSmaleWindow extends React.Component {
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         this.regressionCurves = regressionResponse;
-        this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
+        this.addRegressionCurvesToScene(regressionResponse);
         this.renderScene();
       });
     }
@@ -236,10 +239,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.autoClear = false; // clear scene manually in renderScene
 
     const outline = new OutlineEffect(this.renderer, {
-      defaultThickness: 0.005,
+      defaultThickness: 0.005,  // <ctc> try making this just a *tad* thicker, between .01 and .005
       defaultColor: [0, 1, 1],
       defaultAlpha: 1.0,
-      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
+      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene // <ctc> try setting this false
     });
     this.outline = outline;
 
@@ -369,32 +372,25 @@ class MorseSmaleWindow extends React.Component {
       else {
         console.log('New crystal selected');
 
-        this.pickedObject = intersectedObjects[0].object;
-        //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere <ctc> re-enable opacity
-        //argh! this.pickedObject.material.emissive = new THREE.Color('aqua');
 
-        // make selected object visible
-        this.pickedObject.visible = true;
+        // Ensure previously selected object is back to unselected opacity
+        if (this.pickedObject) {
+          this.pickedObject.material.opacity = this.unselectedOpacity;
+        }
+
+        this.pickedObject = intersectedObjects[0].object;
+        this.pickedObject.material.opacity = this.selectedOpacity;
 
         // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
         // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
         //        may need to save the catmull rom curves for each crystal in order to move these along the curve.
         //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
+
+        //...or start with a simple sphere
+        //   // add a clickable sphere along the curve
+        //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
       }
 
-      // // Update opacity to signify selected crystal
-      // if (this.pickedObject) {
-      //   // Make sure have object in current scene
-      //   this.pickedObject = this.scene.getObjectByName(this.pickedObject.name);
-      //   this.pickedObject.material.opacity = 0.75;
-      //   this.pickedObject = undefined;
-
-      //   // add a clickable sphere along the curve
-      //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
-      // }
-      // this.pickedObject = intersectedObjects[0].object;
-      // this.pickedObject.material.opacity = 1;
-      
       this.renderScene();
 
       // Get crystal partitions
@@ -510,13 +506,12 @@ class MorseSmaleWindow extends React.Component {
           colorAttribute.setXYZ(i*tubularSegments+j, color.r, color.g, color.b);
         }
       }
-      //let opacity = 1.0;
       let curveMaterial = new THREE.MeshLambertMaterial({
         //color: 0xffffff,
         //flatShading: true,
         vertexColors: true,//THREE.VertexColors,
-        //transparent: true,
-        //opacity: opacity,
+        transparent: true,
+        opacity: this.unselectedOpacity,
       });
       //curveMaterial.emissive = new THREE.Color('black');
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
