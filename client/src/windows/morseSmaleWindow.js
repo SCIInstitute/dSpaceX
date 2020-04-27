@@ -48,7 +48,6 @@ class MorseSmaleWindow extends React.Component {
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
 
-    this.deselectAll = this.deselectAll.bind(this);
     this.resetScene = this.resetScene.bind(this);
     this.resetBounds = this.resetBounds.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
@@ -101,19 +100,7 @@ class MorseSmaleWindow extends React.Component {
         this.regressionCurves = regressionResponse;
         this.addRegressionCurvesToScene(regressionResponse);
         this.addExtremaToScene(extremaResponse.extrema);
-        this.deselectAll();
         this.renderScene();
-
-        if (this.pickedObject) {
-          // TODO: <ctc> verify this is ever executed since it's not clear how there could already be a picked curve w/ a new decomposition
-          console.log('Huh?? How is there a picked object with this new decomposition?');
-          // ...even if there is, it probably should have been set to undefined when the new decomposition was selected.
-
-          let crystalID = this.pickedObject.name;
-          this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
-            this.props.onCrystalSelection(result.crystalSamples);
-          });
-        }
       });
     }
   }
@@ -251,14 +238,11 @@ class MorseSmaleWindow extends React.Component {
     // scene
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color('white'); // do NOT set scene background or outline selection won't work
-    this.selectedScene = new THREE.Scene();
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    this.renderer.autoClear = false; //<ctc> by default true, but can be set false and done manually in renderScene (todo: try it)
-    //this.renderer.setClearColor( 0x000000, 0 ); //<ctc> very questionably necessary -> delete me when going through <ctc>s (ensure other stuff works first)
-    //this.renderer.setPixelRatio( window.devicePixelRatio ); //<ctc> DONE (don't change again) this is done in example, but killed the camera in mine... try again? tried: failed. 
+    this.renderer.autoClear = false; // clear scene manually in renderScene
 
     const outline = new OutlineEffect(this.renderer, {
       defaultThickness: 0.005,
@@ -375,16 +359,6 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * deselectAll
-   */
-  deselectAll() {
-    var selected = Object.values(this.selectedScene.children);
-    for (var item of selected) {
-      item.visible = false;
-    }
-  }
-  
-  /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
@@ -436,11 +410,8 @@ class MorseSmaleWindow extends React.Component {
         //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere
         //argh! this.pickedObject.material.emissive = new THREE.Color('aqua');
 
-        // make selected object visible in outline scene
-        var selected = Object.values(this.selectedScene.children);
-        for (var item of selected) {
-          item.visible = (item.name === this.pickedObject.name);
-        }
+        // make selected object visible
+        this.pickedObject.visible = true;
 
         // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
         // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
@@ -492,7 +463,6 @@ class MorseSmaleWindow extends React.Component {
     let dir = pos.clone().normalize();
     mesh.translateOnAxis(dir, dist);
     this.scene.add(mesh);
-    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 
@@ -520,7 +490,6 @@ class MorseSmaleWindow extends React.Component {
     }
     mesh.translateOnAxis(translation_dir, translation);
     this.scene.add(mesh);
-    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 
@@ -549,7 +518,6 @@ class MorseSmaleWindow extends React.Component {
     }
     mesh.translate(dir, dist);
     this.scene.add(mesh);
-    this.selectedScene.add(mesh.clone());
     return mesh;
   }
 */
@@ -591,7 +559,6 @@ class MorseSmaleWindow extends React.Component {
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
       this.scene.add(curveMesh);
-      this.selectedScene.add(curveMesh.clone());
     });
   }
 
@@ -753,11 +720,6 @@ class MorseSmaleWindow extends React.Component {
    * the old scene children and adding back the lights.
    */
   resetScene() {
-    // Reset the scene used for outlining selected crystals
-    while (this.selectedScene.children.length > 0) {
-      this.selectedScene.remove(this.selectedScene.children[0]);
-    }
-
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
     }
@@ -792,12 +754,23 @@ class MorseSmaleWindow extends React.Component {
    * Draws the scene to the canvas.
    */
   renderScene() {
-    //this.renderer.render(this.scene, this.camera);
-    //this.composer.render();
+    var scene = Object.values(this.scene.children);
 
-    // trying a different way that doesn't use composer
     this.renderer.clear();
-    this.outline.renderOutline(this.selectedScene, this.camera);
+
+    if (this.pickedObject !== undefined) {
+      // hide everything but selected object for outline
+      for (var item of scene) {
+        item.visible = (item === this.pickedObject); // <ctc> once scene is shared can use object itself, not name (try it)
+      }
+      this.outline.renderOutline(this.scene, this.camera);
+
+      // now show everything
+      for (var item of scene) {
+        item.visible = true;
+      }
+    }
+    
     this.renderer.render(this.scene, this.camera);
   }
 
