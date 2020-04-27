@@ -258,7 +258,7 @@ void Controller::fetchMorseSmalePersistence(const Json::Value &request, Json::Va
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -296,7 +296,7 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -348,7 +348,7 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -403,7 +403,7 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -456,12 +456,12 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   Fieldtype category = Fieldtype(request["category"].asString());
   if (!category.valid()) return sendError(response, "invalid category");
 
-  // desired fieldName (one of the design params or qois)
-  std::string fieldName = request["fieldName"].asString();
-  if (!verifyFieldname(category, fieldName)) return sendError(response, "invalid field name");
+  // desired fieldname (one of the design params or qois)
+  std::string fieldname = request["fieldName"].asString();
+  if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid field name");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldName);
+  maybeProcessData(category, fieldname, k);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -521,7 +521,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   }
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldName);
+  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
   if (!fieldvals.data())
     std::runtime_error("Invalid fieldname or empty field");
 
@@ -556,7 +556,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -625,7 +625,7 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
   if (!verifyFieldname(category, fieldname)) return sendError(response, "invalid fieldname");
 
   maybeLoadDataset(datasetId);
-  maybeProcessData(k, category, fieldname);
+  maybeProcessData(category, fieldname, k);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -876,7 +876,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   double minval = model.minFieldValue();
   double maxval = model.maxFieldValue();
   double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
-  double sigma = delta * 0.15; // ~15% of fieldrange
+  double sigma = delta * 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
   
   for (unsigned i = 0; i < numZ; i++)
   {
@@ -1100,7 +1100,7 @@ void Controller::maybeLoadDataset(int datasetId) {
     delete m_currentTopoData;
     m_currentTopoData = nullptr;
   }
-  m_currentK = -1;
+  m_currentKNN = -1;
 
   std::string configPath = m_availableDatasets[datasetId].second;
   m_currentDataset = DatasetLoader::loadDataset(configPath); // <ctc> need std::move(loaded_dataset)?
@@ -1148,8 +1148,10 @@ const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, con
  *
  * TODO: maybeLoadDataset and maybeProcessData should return bool and caller return error if they fail
  */
-void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldname) {
-  if (k == m_currentK && m_currentField == fieldname) {
+void Controller::maybeProcessData(Fieldtype category, std::string fieldname, int knn, int num_samples,
+                                  double sigma, double smoothing, bool add_noise, unsigned num_persistences) {
+  if (knn == m_currentKNN && m_currentField == fieldname) {
+    // TODO: once user can interactively specify different params, also consider them here
     return;
   }
 
@@ -1181,7 +1183,7 @@ void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldna
   fieldvals.normalize();
   
   m_currentField = fieldname;
-  m_currentK = k;
+  m_currentKNN = knn;
   
   if (m_currentVizData) {
     delete m_currentVizData;
@@ -1207,13 +1209,13 @@ void Controller::maybeProcessData(int k, Fieldtype category, std::string fieldna
   // TODO: Expose processing parameters to function interface.
   try {
     HDProcessResult *result = genericProcessor.processOnMetric(m_currentDistanceMatrix,
-                                                              FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
-                                                              m_currentK  /* knn */,
-                                                              50        /* samples */,
-                                                              -1        /* num_persistences */, // -1 generates all of 'em
-                                                              false     /* random */,
-                                                              0.25      /* sigma */,    // TODO: this should be ~15% of fieldrange (but maybe not for M-S computation)
-                                                              15        /* smooth */);
+                                                               FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
+                                                               m_currentKNN,     /* k nearest neighbors to consider */
+                                                               num_samples,      /* points along each crystal */
+                                                               num_persistences, /* -1 generates all of 'em */
+                                                               add_noise,  /* adds very slight noise to field values, which must differ */
+                                                               sigma,      /* should be ~15% of fieldrange (maybe not for M-S computation?) */
+                                                               smoothing); /* smooth */
     m_currentVizData = new SimpleHDVizDataImpl(result);
     m_currentTopoData = new LegacyTopologyDataImpl(m_currentVizData);
   } catch (const char *err) {

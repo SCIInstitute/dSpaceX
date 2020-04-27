@@ -25,7 +25,10 @@ class Controller {
   void configureAvailableDatasets(const std::string &rootPath);
 
   void maybeLoadDataset(int datasetId);
-  void maybeProcessData(int k, Fieldtype category, std::string fieldname);
+  void maybeProcessData(Fieldtype category, std::string fieldname, int knn,
+                        int num_samples = 50, double sigma = 0.25, double smoothing = 15.0,
+                        bool add_noise = true /* duplicate values risk erroroneous M-S */,
+                        unsigned num_persistences = -1 /* generates all persistence levels */);
 
   // Command Handlers
   void fetchDatasetList(const Json::Value &request, Json::Value &response);
@@ -61,7 +64,7 @@ class Controller {
   int m_currentDatasetId = -1;
   std::string m_currentField;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;
-  int m_currentK = -1; // num nearest neighbors to consider when generating M-S complex for a dataset
+  int m_currentKNN = -1; // num nearest neighbors to consider when generating M-S complex for a dataset
   HDVizData *m_currentVizData = nullptr;
   TopologyData *m_currentTopoData = nullptr;
   std::string datapath;
