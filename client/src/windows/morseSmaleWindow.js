@@ -1,14 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-// get rid of composer and passes <ctc> todo if outline effect works
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { CopyShader } from 'three/examples/jsm/shaders/CopyShader.js';  //<ctc> just an empty effects pass (for testing)
-import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
-import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
-
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import Paper from '@material-ui/core/Paper';
 import React from 'react';
@@ -32,7 +24,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.init = this.init.bind(this);
     this.createCamerasAndControls = this.createCamerasAndControls.bind(this);
-    this.createComposer = this.createComposer.bind(this); // <ctc> this gets called even when not bound. Necessary to bind it?
     this.updateCamera = this.updateCamera.bind(this);
     this.updatePerspCamera = this.updatePerspCamera.bind(this);
     this.updateOrthoCamera = this.updateOrthoCamera.bind(this);
@@ -255,9 +246,6 @@ class MorseSmaleWindow extends React.Component {
     // camera and controls
     this.createCamerasAndControls();
 
-    // composer, renderpass, outlinepass, fxaa
-    this.createComposer();
-
     // Bounds
     this.resetBounds();  //TODO need to set bounds and update lights when new crystals are added
 
@@ -286,17 +274,10 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.height = height;
 
     // update camera
-    this.updateCamera(width, height);  //<ctc> I think this should come before resize renderer and composer (not sure how to test, but it's working right now)
+    this.updateCamera(width, height);
 
-    // Resize renderer and composer
+    // resize renderer
     this.renderer.setSize(width, height, false);
-    this.composer.setSize(width, height, false);
-
-    // resize composer passes
-    //var pixelRatio = 22;//<ctc> DONE (don't change again) actual screen pixel ratio; using it for renderer breaks things, but for fxaa it helps... though difference isn't discernable at these resolutions
-    var pixelRatio = window.devicePixelRatio; // prefer actual device pixel ratio to that of renderer (this.renderer.getPixelRatio())
-    this.effectFXAA.material.uniforms[ 'resolution' ].value.x = 1 / ( width * pixelRatio ); 
-    this.effectFXAA.material.uniforms[ 'resolution' ].value.y = 1 / ( height * pixelRatio );
 
     // Redraw scene with updates
     this.renderScene();
@@ -374,10 +355,6 @@ class MorseSmaleWindow extends React.Component {
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
     if (intersectedObjects.length) {
-      // this.outlinePass.selectedObjects = [];
-      // this.outlinePass.selectedObjects.push(intersectedObjects[0].object);
-      //this.pickedObject = intersectedObjects[0].object;
-
       if (intersectedObjects[0].object === this.crystalPosObject) {
         // we picked the active pointer along a curve, so turn on dragging of the pointer
         //this.draggingCrystalPos = true;  // TODO
@@ -392,22 +369,8 @@ class MorseSmaleWindow extends React.Component {
       else {
         console.log('New crystal selected');
 
-        this.outlinePass.selectedObjects = [];
-        this.outlinePass.selectedObjects.push(intersectedObjects[0].object);
-
-        //<ctc> crap for old outline pass, just delete it
-        // // new crystal selected, so revert currently picked object and highlight new one
-        // if (this.pickedObject) {
-        //   this.outlinePass.selectedObjects = [this.pickedObject];
-        //   //this.pickedObject.material.opacity = 1.0;
-        //   this.pickedObject.material.emissive = new THREE.Color('black'); 
-        //   this.crystalPosObject = undefined;
-
-        //   // OutlineEffect's scene
-        // }
-        
         this.pickedObject = intersectedObjects[0].object;
-        //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere
+        //this.pickedObject.material.opacity = 0.75; //TODO: declare this value somewhere <ctc> re-enable opacity
         //argh! this.pickedObject.material.emissive = new THREE.Color('aqua');
 
         // make selected object visible
@@ -624,38 +587,6 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * createComposer
-   * Creates rendering architecture
-   */
-  createComposer() {
-    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
-
-    this.composer = new EffectComposer(this.renderer);
-    var renderPass = new RenderPass(this.scene, this.camera);
-    //renderPass.clear = false; //<ctc> DONE (don't change again) by default true, just like renderer
-    //this.composer.addPass(renderPass); // <ctc> DONE (don't change again) try adding this last since it looks good when it's the only one
-
-    this.outlinePass = new OutlinePass(new THREE.Vector2(width, height), this.scene, this.camera); // <ctc> need to update these on resize?
-    this.outlinePass.visibleEdgeColor.set('cyan');
-    this.outlinePass.hiddenEdgeColor.set('#182838');
-    this.outlinePass.edgeStrength = 8.0;
-    this.outlinePass.edgeThickness = 1.0;
-    this.outlinePass.overlayMaterial.blending = THREE.NormalBlending;
-
-    this.effectFXAA = new ShaderPass(FXAAShader); // resolution set in resizeCanvas
-
-    //test a copy pass
-	  // var copyPass = new ShaderPass( CopyShader );
-    // this.composer.addPass( copyPass );
-
-    //this.composer.addPass(renderPass);
-    this.composer.addPass(this.outlinePass);
-    //this.composer.addPass(this.effectFXAA);
-    //this.composer.addPass(renderPass); //<ctc> tried rendering first and last, but outlines don't show if we do this last...
-    //                                           ...but antialiasing doesn't work unless render is last
-  }
-  
-  /**
    * toggleCamera
    * Toggles between orthographic and perspective cameras.
    */
@@ -664,7 +595,6 @@ class MorseSmaleWindow extends React.Component {
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
-      //this.outlinePass.camera = this.perspCamera; //<ctc> can you do this?
     }
     else {
       this.camera = this.orthoCamera;
@@ -732,7 +662,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.pickedObject = undefined;
     this.crystalPosObject = undefined;
-    this.outlinePass.selectedObjects = [];
 
 /******/
     // floor and other temporary stuff or visual aids
