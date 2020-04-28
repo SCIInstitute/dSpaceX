@@ -48,7 +48,6 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
-    this.addLights = this.addLights.bind(this);
   }
   
   /**
@@ -128,85 +127,6 @@ class MorseSmaleWindow extends React.Component {
         || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
   }
 
-  /**
-   * create lights
-   */
-/*
-  initLights() {
-    RectAreaLightUniformsLib.init();
-    this.lights = new Object;
-
-    this.lights.rectLightTop = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
-    this.lights.rectLightTop.position.set( 0, 0, this.bounds.maxZ ); // max height of crystal models is 1
-    this.lights.rectLightTop.lookAt(0, 0, this.bounds.minZ);
-    // this.lights.rectLightHelperTop = new RectAreaLightHelper( this.lights.rectLightTop );
-    // this.lights.rectLightTop.add( this.lights.rectLightHelperTop );
-
-    this.lights.rectLightBot = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
-    this.lights.rectLightBot.position.set( 0, 0, this.bounds.minZ ); // min height of crystal models is 0
-    this.lights.rectLightBot.lookAt(0, 0, this.bounds.maxZ);
-    this.lights.rectLightHelperBot = new RectAreaLightHelper( this.lights.rectLightBot );
-    //this.lights.rectLightBot.add( this.lights.rectLightHelperBot );
-
-    this.lights.rectLightFront = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
-    this.lights.rectLightFront.position.set( 0, this.bounds.minY, 0 ); // max width/depth of crystal models varies (TODO: update when crystals are added)
-    this.lights.rectLightFront.lookAt(0, this.bounds.maxY, 0);
-    // this.lights.rectLightHelperFront = new RectAreaLightHelper( this.lights.rectLightFront );
-    // this.lights.rectLightFront.add( this.lights.rectLightHelperFront );
-
-    this.lights.rectLightBack = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
-    this.lights.rectLightBack.position.set( 0, this.bounds.maxY, 0 );
-    this.lights.rectLightBack.lookAt(0, this.bounds.minY, 0);
-    this.lights.rectLightHelperBack = new RectAreaLightHelper( this.lights.rectLightBack );
-    //this.lights.rectLightBack.add( this.lights.rectLightHelperBack );
-
-    this.lights.rectLightL = new THREE.RectAreaLight( 0xffffff, 1, 10, 10 );
-    this.lights.rectLightL.position.set( this.bounds.minX, 0, 0 );
-    this.lights.rectLightL.lookAt(this.bounds.maxX, 0, 0);
-    // this.lights.rectLightHelperL = new RectAreaLightHelper( this.lights.rectLightL );
-    // this.lights.rectLightL.add( this.lights.rectLightHelperL );
-
-    this.lights.rectLightR = new THREE.RectAreaLight( 0xffffff, 0.5, 10, 10 );
-    this.lights.rectLightR.position.set( this.bounds.maxX, 0, 0 );
-    this.lights.rectLightR.lookAt(this.bounds.minX, 0, 0);
-    this.lights.rectLightHelperR = new RectAreaLightHelper( this.lights.rectLightR );
-    //this.lights.rectLightR.add( this.lights.rectLightHelperR );
-
-    // light
-    this.ambientLight = new THREE.AmbientLight(0x404040); // soft white light   //<ctc> adjust temperature/brightness
-    this.frontDirectionalLight = new THREE.DirectionalLight(0xffffff);
-    this.frontDirectionalLight.position.set(5, -1, 5);
-    this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    this.backDirectionalLight.position.set(-5, -1, -5);
-
-    // this.lights.ambientLight = new THREE.AmbientLight( { color: 0xf5f5f5, intensity: 0.1 } );
-    // this.lights.frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    // this.lights.frontLight.position.set(-20, -50, 0.5);
-    // this.lights.sideLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    // this.lights.sideLight.position.set(50, -10, 0.75);
-    // this.lights.backLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    // this.lights.backLight.position.set(0, 50, 0.5);
-    // this.lights.topLight = new THREE.DirectionalLight(0xffffff, 0.75 );
-    // this.lights.topLight.position.set(0, 0, 100);
-  }
-*/
-  /**
-   * (re-)inserts the lights into the scene
-   */
-  addLights() {
-    //this.scene.add(this.lights.ambientLight);
-    // this.scene.add( this.lights.rectLightTop );
-    // this.scene.add( this.lights.rectLightBot );
-    // this.scene.add( this.lights.rectLightFront );
-    // this.scene.add( this.lights.rectLightBack );
-    // this.scene.add( this.lights.rectLightL );
-    // this.scene.add( this.lights.rectLightR );
-    // this.scene.add(this.lights.frontLight);
-    // this.scene.add(this.lights.sideLight);
-    // this.scene.add(this.lights.backLight);
-    // this.scene.add(this.lights.topLight);
-  }
-  
   /**
    * Scene bounds, usually [0,1] in z and whatever the crystals are in x and y.
    */
@@ -617,14 +537,10 @@ class MorseSmaleWindow extends React.Component {
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
-      // this.frontDirectionalLight.visible = false;
-      // this.backDirectionalLight.visible = false;
     }
     else {
       this.camera = this.orthoCamera;
       this.controls = this.orthoControls;
-      // this.frontDirectionalLight.visible = true;
-      // this.backDirectionalLight.visible = true;
     }
     this.controls.enable = true;
     this.controls.reset();
@@ -684,19 +600,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.pickedObject = undefined;
     this.crystalPosObject = undefined;
-
-/******/
-    // floor and other temporary stuff or visual aids
-    let origin = new THREE.Vector3(0, 0, 0);
-    //let up = new THREE.Vector3(0, 0, 1);
-    //this.floorMesh = this.addPlane( {position:origin.clone().set(0,0,-0.05), normal:up, size:[500,500], color:new THREE.Color(0xd0d0d0)} );
-    //<ctc> may add outline(s) and/or back/side walls to help give context to the min/max of the crystals
-    //<ctc> another thing that might help would be a color bar, similarly indicating the range of values
-    //<ctc> test add some spheres to the scene to help w/ lighting (todo: removeme)
-    // this.crystalPosObject = this.addSphere( origin, new THREE.Color('purple') );
-    // this.crystalPosObject = this.addSphere( new THREE.Vector3(1, -1, 1), new THREE.Color('darkorange') );
-    // this.crystalPosObject = this.addSphere( new THREE.Vector3(-1, 1, 1), new THREE.Color('darkorange') );
-/******/
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
   }
