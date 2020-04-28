@@ -502,17 +502,30 @@ class MorseSmaleWindow extends React.Component {
       let curve = new THREE.CatmullRomCurve3(curvePoints);
       let segmentsPerPoint = 6;
       let radialSegments = 10;
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, curvePoints.length * segmentsPerPoint /*tubularSegments*/,
-                                                       .02 /*radius*/, radialSegments, false /*closed curve*/);
+      let curveGeometry = new THREE.TubeBufferGeometry(curve, (curvePoints.length-1) * (segmentsPerPoint-1) /*tubularSegments*/,
+                                                       .02 /*radius*/, radialSegments-1, false /*closed curve*/);
       let count = curveGeometry.attributes.position.count;
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
       let colors = rCurve.colors, colorAttribute = curveGeometry.attributes.color;
-      for (let i = 0; i < curvePoints.length; ++i) {
-        for (let j = 0; j < segmentsPerPoint * radialSegments; ++j) {
-          colorAttribute.setXYZ(i*segmentsPerPoint*radialSegments+j,
-                                colors[i][0] /*r*/, colors[i][1] /*g*/, colors[i][2] /*b*/); //<ctc> still broken
-        }
+      
+      // set colors for first point
+      let c1 = new THREE.Color(colors[0][0], colors[0][1], colors[0][2]);
+      for (let r = 0; r < radialSegments; r++) {
+        colorAttribute.setXYZ(r, c1.r, c1.g, c1.b);
       }
+      // set colors for the rest
+      let c2 = new THREE.Color;
+      let color = new THREE.Color;
+      for (let i = 0; i < curvePoints.length-1; ++i) {
+        c2.setRGB(colors[i+1][0], colors[i+1][1], colors[i+1][2]);
+        for (let j = 1; j < segmentsPerPoint+1; ++j) {
+          color = c1.lerp(c2, 1.0/segmentsPerPoint * j);
+          for (let r = 0; r < radialSegments; r++)
+            colorAttribute.setXYZ(i*segmentsPerPoint*radialSegments + j*radialSegments + r, color.r, color.g, color.b);
+        }
+        c1.copy(c2);
+      }
+
       let curveMaterial = new THREE.MeshStandardMaterial({
         vertexColors: true,
         transparent: true,
