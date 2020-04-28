@@ -21,7 +21,7 @@ class MorseSmaleWindow extends React.Component {
     super(props);
 
     this.selectedOpacity = 1.0;
-    this.unselectedOpacity = 0.75;
+    this.unselectedOpacity = 0.80;
 
     this.client = this.props.dsxContext.client;
 
@@ -131,6 +131,7 @@ class MorseSmaleWindow extends React.Component {
   /**
    * create lights
    */
+/*
   initLights() {
     RectAreaLightUniformsLib.init();
     this.lights = new Object;
@@ -172,13 +173,13 @@ class MorseSmaleWindow extends React.Component {
     //this.lights.rectLightR.add( this.lights.rectLightHelperR );
 
     // light
-    this.ambientLight = new THREE.AmbientLight( 0x404040 ); // soft white light
+    this.ambientLight = new THREE.AmbientLight(0x404040); // soft white light   //<ctc> adjust temperature/brightness
     this.frontDirectionalLight = new THREE.DirectionalLight(0xffffff);
     this.frontDirectionalLight.position.set(5, -1, 5);
     this.backDirectionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
     this.backDirectionalLight.position.set(-5, -1, -5);
 
-    // this.lights.ambientLight = new THREE.AmbientLight( { color: 0xf5f5f5, intensity: 0.01 } );
+    // this.lights.ambientLight = new THREE.AmbientLight( { color: 0xf5f5f5, intensity: 0.1 } );
     // this.lights.frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
     // this.lights.frontLight.position.set(-20, -50, 0.5);
     // this.lights.sideLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -188,7 +189,7 @@ class MorseSmaleWindow extends React.Component {
     // this.lights.topLight = new THREE.DirectionalLight(0xffffff, 0.75 );
     // this.lights.topLight.position.set(0, 0, 100);
   }
-
+*/
   /**
    * (re-)inserts the lights into the scene
    */
@@ -231,7 +232,7 @@ class MorseSmaleWindow extends React.Component {
 
     // scene
     this.scene = new THREE.Scene();
-    //this.scene.background = new THREE.Color('white'); // do NOT set scene background or outline selection won't work
+    //this.scene.background = new THREE.Color('whatever'); // do NOT set scene background or outline selection won't work
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
@@ -239,10 +240,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.autoClear = false; // clear scene manually in renderScene
 
     const outline = new OutlineEffect(this.renderer, {
-      defaultThickness: 0.005,  // <ctc> try making this just a *tad* thicker, between .01 and .005
+      defaultThickness: 0.007,  // <ctc> try making this just a *tad* thicker, between .01 and .005
       defaultColor: [0, 1, 1],
       defaultAlpha: 1.0,
-      defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene // <ctc> try setting this false
+      defaultKeepAlive: false // keeps outline material in cache even if material is removed from scene // <ctc> try setting this false
     });
     this.outline = outline;
 
@@ -253,9 +254,7 @@ class MorseSmaleWindow extends React.Component {
     this.resetBounds();  //TODO need to set bounds and update lights when new crystals are added
 
     // lights
-    var pointLight = new THREE.PointLight( 0xffffff, 1 );
-    this.perspCamera.add( pointLight );
-    this.initLights();
+    this.ambientLight = new THREE.AmbientLight(0xcccccc, 0.5); // soft white light   //<ctc> adjust temperature/brightness
 
     // picking
     this.raycaster = new THREE.Raycaster();
@@ -437,7 +436,7 @@ class MorseSmaleWindow extends React.Component {
     if (!color)
       color = new THREE.Color('brown');
     let geometry = new THREE.PlaneBufferGeometry(size[0], size[1]);
-    let material = new THREE.MeshBasicMaterial({ color:color });
+    let material = new THREE.MeshStandardMaterial({ color:color });
     let mesh = new THREE.Mesh(geometry, material);
     let translation = position.length();
     let translation_dir = position.clone().normalize();
@@ -465,7 +464,7 @@ class MorseSmaleWindow extends React.Component {
     if (!color)
       color = new THREE.Color('brown');
     let geometry = new THREE.BoxBufferGeometry(size[0], size[1]);
-    let material = new THREE.MeshBasicMaterial({ color:color });
+    let material = new THREE.MeshStandardMaterial({ color:color });
     let mesh = new THREE.Mesh(geometry, material);
     let dist = pos.length();
     let dir = pos.clone().normalize();
@@ -501,27 +500,24 @@ class MorseSmaleWindow extends React.Component {
 
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
-      let tubularSegments = curvePoints.length * 6;
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, tubularSegments, .02 /*radius*/, 10 /*radialSegments*/, false /*closed*/);
+      let segmentsPerPoint = 6;
+      let radialSegments = 10;
+      let curveGeometry = new THREE.TubeBufferGeometry(curve, curvePoints.length * segmentsPerPoint /*tubularSegments*/,
+                                                       .02 /*radius*/, radialSegments, false /*closed curve*/);
       let count = curveGeometry.attributes.position.count;
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-      let colors = rCurve.colors;
-      let colorAttribute = curveGeometry.attributes.color;
-      let color = new THREE.Color();
+      let colors = rCurve.colors, colorAttribute = curveGeometry.attributes.color;
       for (let i = 0; i < curvePoints.length; ++i) {
-        color.setRGB(colors[i][0], colors[i][1], colors[i][2]);
-        for (let j = 0; j < tubularSegments; ++j) {
-          colorAttribute.setXYZ(i*tubularSegments+j, color.r, color.g, color.b);
+        for (let j = 0; j < segmentsPerPoint * radialSegments; ++j) {
+          colorAttribute.setXYZ(i*segmentsPerPoint*radialSegments+j,
+                                colors[i][0] /*r*/, colors[i][1] /*g*/, colors[i][2] /*b*/); //<ctc> still broken
         }
       }
-      let curveMaterial = new THREE.MeshLambertMaterial({
-        //color: 0xffffff,
-        //flatShading: true,
-        vertexColors: true,//THREE.VertexColors,
+      let curveMaterial = new THREE.MeshStandardMaterial({
+        vertexColors: true,
         transparent: true,
         opacity: this.unselectedOpacity,
       });
-      //curveMaterial.emissive = new THREE.Color('black');
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
 
@@ -530,7 +526,6 @@ class MorseSmaleWindow extends React.Component {
       let dist = midPoint.length();
       let dir = midPoint.clone().normalize();
       curveMesh.translateOnAxis(dir, dist);
-      //console.log('Added curve ' + curveMesh.name + ' at location [' + midPoint.x, midPoint.y, midPoint.z + ']');
 
       this.scene.add(curveMesh);
     });
@@ -562,6 +557,8 @@ class MorseSmaleWindow extends React.Component {
     this.orthoCamera.zoom = 2.5;
     this.orthoCamera.position.set(0, -1, 0.5);
     this.orthoCamera.up.set(0, 0, 1);
+    this.orthoCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.orthoCamera.name = "camera";
     this.updateOrthoCamera(width, height);
 
     this.orthoControls = new OrbitControls(this.orthoCamera, this.renderer.domElement);
@@ -581,8 +578,9 @@ class MorseSmaleWindow extends React.Component {
     this.perspCamera.position.set(0, -6, 0.5);
     this.perspCamera.up.set(0, 0, 1);
     this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.perspCamera.name = "camera";
     this.updatePerspCamera(width, height);
-
+    
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
     this.perspControls.enable = false;
     this.perspControls.screenSpacePanning = true;
@@ -606,10 +604,14 @@ class MorseSmaleWindow extends React.Component {
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
+      // this.frontDirectionalLight.visible = false;
+      // this.backDirectionalLight.visible = false;
     }
     else {
       this.camera = this.orthoCamera;
       this.controls = this.orthoControls;
+      // this.frontDirectionalLight.visible = true;
+      // this.backDirectionalLight.visible = true;
     }
     this.controls.enable = true;
     this.controls.reset();
@@ -664,12 +666,8 @@ class MorseSmaleWindow extends React.Component {
     while (this.scene.children.length > 0) {
       this.scene.remove(this.scene.children[0]);
     }
+    this.scene.add(this.camera);        // camera MUST be added to scene for it's light to work
     this.scene.add(this.ambientLight);
-    this.scene.add(this.frontDirectionalLight);
-    this.scene.add(this.backDirectionalLight);
-
-    //this.scene.add(this.camera); // kinda looks like new perspective camera needs to be part of scene (like above) -> it does NOT
-    //this.addLights();
 
     this.pickedObject = undefined;
     this.crystalPosObject = undefined;
@@ -682,9 +680,9 @@ class MorseSmaleWindow extends React.Component {
     //<ctc> may add outline(s) and/or back/side walls to help give context to the min/max of the crystals
     //<ctc> another thing that might help would be a color bar, similarly indicating the range of values
     //<ctc> test add some spheres to the scene to help w/ lighting (todo: removeme)
-    this.crystalPosObject = this.addSphere( origin, new THREE.Color('purple') );
-    this.crystalPosObject = this.addSphere( new THREE.Vector3(1, -1, 1), new THREE.Color('darkorange') );
-    this.crystalPosObject = this.addSphere( new THREE.Vector3(-1, 1, 1), new THREE.Color('darkorange') );
+    // this.crystalPosObject = this.addSphere( origin, new THREE.Color('purple') );
+    // this.crystalPosObject = this.addSphere( new THREE.Vector3(1, -1, 1), new THREE.Color('darkorange') );
+    // this.crystalPosObject = this.addSphere( new THREE.Vector3(-1, 1, 1), new THREE.Color('darkorange') );
 /******/
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
@@ -697,11 +695,16 @@ class MorseSmaleWindow extends React.Component {
     var scene = Object.values(this.scene.children);
 
     this.renderer.clear();
+    this.renderer.render(this.scene, this.camera); //<ctc> try a pre-render for whatever reason to fix outline bug -> it worked! hmm...
 
     if (this.pickedObject !== undefined) {
       // hide everything but selected object for outline
       for (var item of scene) {
         item.visible = (item === this.pickedObject); // <ctc> once scene is shared can use object itself, not name (try it)
+        // if (item.name === "camera") {   //<ctc> trying to make camera in scene work with outline (this doesn't fix it)
+        //   item.visible = true;
+        //   console.log('ensuring camera is still "visible"');
+        // }
       }
       this.outline.renderOutline(this.scene, this.camera);
 
@@ -711,6 +714,7 @@ class MorseSmaleWindow extends React.Component {
       }
     }
     
+    //this.scene.add(this.camera);        // <ctc> try re-adding camera to scene before render to fix outline lag -> NOPE, didn't work
     this.renderer.render(this.scene, this.camera);
   }
 
