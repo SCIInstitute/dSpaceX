@@ -486,18 +486,26 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} regressionData
    */
   addRegressionCurvesToScene(regressionData) {
-    regressionData.curves.forEach((regressionCurve, index) => {
+    regressionData.curves.forEach((rCurve, index) => {
+      let numPts = rCurve.points.length;
+
+      // Use this as curve position to ensure transparency sorting has better odds of working.
+      // NOTE: conflicts arise when using first or last point, bounding box, the most extreme point, etc, so midpoint is the compromise.
+      let midPoint = new THREE.Vector3(rCurve.points[numPts/2][0], rCurve.points[numPts/2][1], rCurve.points[numPts/2][2]);
+
       let curvePoints = [];
-      regressionCurve.points.forEach((regressionPoint) => {
-        curvePoints.push(new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]));
+      rCurve.points.forEach((regressionPoint) => {
+        let P = new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]);
+        curvePoints.push(P.sub(midPoint));
       });
+
       // Create curve
       let curve = new THREE.CatmullRomCurve3(curvePoints);
       let tubularSegments = curvePoints.length * 6;
       let curveGeometry = new THREE.TubeBufferGeometry(curve, tubularSegments, .02 /*radius*/, 10 /*radialSegments*/, false /*closed*/);
       let count = curveGeometry.attributes.position.count;
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-      let colors = regressionCurve.colors;
+      let colors = rCurve.colors;
       let colorAttribute = curveGeometry.attributes.color;
       let color = new THREE.Color();
       for (let i = 0; i < curvePoints.length; ++i) {
@@ -516,6 +524,14 @@ class MorseSmaleWindow extends React.Component {
       //curveMaterial.emissive = new THREE.Color('black');
       let curveMesh = new THREE.Mesh(curveGeometry, curveMaterial);
       curveMesh.name = index;
+
+      // translate to location of middle point of curve, ensuring all curves are [more likely to be] different distances from camera,
+      // since default sort only uses their position, not any of their points, their bounding box, etc
+      let dist = midPoint.length();
+      let dir = midPoint.clone().normalize();
+      curveMesh.translateOnAxis(dir, dist);
+      //console.log('Added curve ' + curveMesh.name + ' at location [' + midPoint.x, midPoint.y, midPoint.z + ']');
+
       this.scene.add(curveMesh);
     });
   }
