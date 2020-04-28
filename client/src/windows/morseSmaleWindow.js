@@ -693,18 +693,16 @@ class MorseSmaleWindow extends React.Component {
    */
   renderScene() {
     var scene = Object.values(this.scene.children);
-
     this.renderer.clear();
-    this.renderer.render(this.scene, this.camera); //<ctc> try a pre-render for whatever reason to fix outline bug -> it worked! hmm...
 
+    // render first... 
+    this.renderer.render(this.scene, this.camera);
+
+    // ...then outline
     if (this.pickedObject !== undefined) {
       // hide everything but selected object for outline
       for (var item of scene) {
-        item.visible = (item === this.pickedObject); // <ctc> once scene is shared can use object itself, not name (try it)
-        // if (item.name === "camera") {   //<ctc> trying to make camera in scene work with outline (this doesn't fix it)
-        //   item.visible = true;
-        //   console.log('ensuring camera is still "visible"');
-        // }
+        item.visible = (item === this.pickedObject);
       }
       this.outline.renderOutline(this.scene, this.camera);
 
@@ -713,9 +711,6 @@ class MorseSmaleWindow extends React.Component {
         item.visible = true;
       }
     }
-    
-    //this.scene.add(this.camera);        // <ctc> try re-adding camera to scene before render to fix outline lag -> NOPE, didn't work
-    this.renderer.render(this.scene, this.camera);
   }
 
   /**
