@@ -2,12 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
-import Paper from '@material-ui/core/Paper';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
-import { RectAreaLightHelper } from 'three/examples/jsm/helpers/RectAreaLightHelper.js';
 
 /**
  * Creates Morse-Smale decomposition
@@ -92,8 +89,8 @@ class MorseSmaleWindow extends React.Component {
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         this.regressionCurves = regressionResponse;
-        this.addExtremaToScene(extremaResponse.extrema);
         this.addRegressionCurvesToScene(regressionResponse);
+        this.addExtremaToScene(extremaResponse.extrema);
         this.renderScene();
       });
     }
