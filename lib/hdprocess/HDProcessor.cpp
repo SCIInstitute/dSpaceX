@@ -137,7 +137,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   return result;
 }
 
-#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.
+#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.  // NOTE: we think the function above is for distance matrices, and this one is for QoIs and Design Params
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.

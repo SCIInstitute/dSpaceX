@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import Paper from '@material-ui/core/Paper';
 import React from 'react';
+import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -38,7 +38,6 @@ class EmbeddingWindow extends React.Component {
     this.addNodesToScene = this.addNodesToScene.bind(this);
     this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
-    this.animate = this.animate.bind(this);
     this.resetScene = this.resetScene.bind(this);
     this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
@@ -54,7 +53,6 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    this.animate();
     window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
@@ -87,7 +85,7 @@ class EmbeddingWindow extends React.Component {
 
     // New window has been added to application
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas();
+      this.resizeCanvas(true);
     }
 
     // Decomposition is loaded for the first time
@@ -96,7 +94,7 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, decompositionCategory, decompositionField} = this.props.decomposition;
+      const { datasetId, k, persistenceLevel, decompositionCategory, decompositionField } = this.props.decomposition;
       const { embedding } = this.props;
       Promise.all([
         this.client.fetchSingleEmbedding(datasetId, embedding.id, k,
@@ -185,7 +183,7 @@ class EmbeddingWindow extends React.Component {
     this.idToObject = {};
 
     // renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl });
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.renderer.sortObjects = false;
 
@@ -355,14 +353,6 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
-   * Animated the scene.
-   * This is necessary for interactivity.
-   */
-  animate() {
-    requestAnimationFrame(this.animate);
-  }
-
-  /**
    * Resets the scene when there is new data by removing
    * the old scene children.
    */
@@ -375,8 +365,9 @@ class EmbeddingWindow extends React.Component {
   /**
    * Called when the canvas is resized.
    * This can happen on a window resize or when another window is added to dSpaceX.
+   * @param {boolean} newWindowAdded
    */
-  resizeCanvas() {
+  resizeCanvas(newWindowAdded = true) {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
 
@@ -387,7 +378,6 @@ class EmbeddingWindow extends React.Component {
     this.renderer.setSize(width, height, false);
 
     // Resize camera
-    // this.sizeCamera(width, height);
     let sx = 1;
     let sy = 1;
     if (width > height) {
@@ -401,8 +391,13 @@ class EmbeddingWindow extends React.Component {
     this.camera.bottom = -1*sy;
     this.camera.updateProjectionMatrix();
 
-    // Redraw scene
-    this.renderScene();
+    // By default (newWindowAdded = true in argument) redraws scene when new window is added.
+    // For the resizing event that comes from the ResizeablePanels in the embeddingMoreseSmaleWindows and is captured
+    // by the ReactResizeDetector in this window it is set to false. This is because of a race condition created by how
+    // quickly the scene would have to redraw when adjusting the panel size.
+    //if (newWindowAdded) { //<ctc> trying to figure out why last render clears screen (or screen is cleared after last render) -> this isn't it, but I took it out of morseSmaleWindow, so maybe also not important here
+      this.renderScene();
+  //}
   }
 
   /**
@@ -411,10 +406,10 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseScrollEvent(event) {
-    if (event.deltaY < 0 && this.camera.zoom > -this.maxScale) {
+    if (event.deltaY > 0 && this.camera.zoom > -this.maxScale) {
       this.camera.zoom = this.camera.zoom / this.zoomRate;
     }
-    if (event.deltaY > 0 && this.camera.zoom < this.maxScale) {
+    if (event.deltaY < 0 && this.camera.zoom < this.maxScale) {
       this.camera.zoom = this.camera.zoom * this.zoomRate;
     }
     this.camera.updateProjectionMatrix();
@@ -558,23 +553,14 @@ class EmbeddingWindow extends React.Component {
    * @return {JSX}
    */
   render() {
-    let paperStyle = {
-      position: 'relative',
-      border: '1px solid gray',
-      flexBasis: '50%',
-    };
-
-    let canvasStyle = {
-      width: '100%',
+    const style = {
       height: '100%',
-      boxSizing: 'border-box',
-      position: 'absolute',
+      width: '100%',
     };
     return (
-      <Paper style={paperStyle}>
-        <canvas ref='embeddingCanvas' style={canvasStyle}/>
-      </Paper>
-    );
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
+        <canvas ref='embeddingCanvas' style={style}/>
+      </ReactResizeDetector>);
   }
 }
 
