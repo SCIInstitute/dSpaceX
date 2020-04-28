@@ -22,6 +22,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.selectedOpacity = 1.0;
     this.unselectedOpacity = 0.80;
+    this.numInterpolants = 51; // how many samples to generate using current model [to fill drawer]
 
     this.client = this.props.dsxContext.client;
 
@@ -58,7 +59,7 @@ class MorseSmaleWindow extends React.Component {
     this.init();
     window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true });
+    this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
 
   /**
@@ -160,10 +161,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.autoClear = false; // clear scene manually in renderScene
 
     const outline = new OutlineEffect(this.renderer, {
-      defaultThickness: 0.007,  // <ctc> try making this just a *tad* thicker, between .01 and .005
+      defaultThickness: 0.007,
       defaultColor: [0, 1, 1],
       defaultAlpha: 1.0,
-      defaultKeepAlive: false // keeps outline material in cache even if material is removed from scene // <ctc> try setting this false
+      defaultKeepAlive: false // keeps outline material in cache even if material is removed from scene (no need for us)
     });
     this.outline = outline;
 
@@ -171,10 +172,10 @@ class MorseSmaleWindow extends React.Component {
     this.createCamerasAndControls();
 
     // Bounds
-    this.resetBounds();  //TODO need to set bounds and update lights when new crystals are added
+    this.resetBounds();  //TODO need to set bounds
 
     // lights
-    this.ambientLight = new THREE.AmbientLight(0xcccccc, 0.5); // soft white light   //<ctc> adjust temperature/brightness
+    this.ambientLight = new THREE.AmbientLight(0xcccccc, 0.5); // soft white light
 
     // picking
     this.raycaster = new THREE.Raycaster();
@@ -191,10 +192,6 @@ class MorseSmaleWindow extends React.Component {
   resizeCanvas(event) {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
-    // <ctc> huh? dump this or keep it? (try)
-    this.refs.msCanvas.width = width;
-    this.refs.msCanvas.height = height;
-
     // update camera
     this.updateCamera(width, height);
 
@@ -208,13 +205,15 @@ class MorseSmaleWindow extends React.Component {
   /**
    * Event handling for mouse click
    * @param {Event} event
+   *
+   * // todo: selection/rotation conflict -> should listen for mouseup, but currently tied to mousedown.
    */
   handleMouseRelease(event) {
     // Handle left click release
     if (event.button === 0) {
       const position = this.getPickPosition(event);
       if (this.pick(position, event.ctrlKey)) // click w/ ctrl held down to produce model's original samples
-        event.stopPropagation(); // release the event if this picks something
+        event.stopPropagation(); // release the event if this picks something // todo: doesn't seem to work as event still goes to controller
     }
   }
 
@@ -224,12 +223,21 @@ class MorseSmaleWindow extends React.Component {
    */
   handleKeyDownEvent(event) {
     switch (event.key) {
-      case 'v': // toggle orthogonal/perspective camera
-        this.toggleCamera();
-        break;
-      case 'r': // reset view
-        this.controls.reset();   // resets camera to original position
-        break;
+    case 'v': // toggle orthogonal/perspective camera
+      this.toggleCamera();
+      break;
+    case 'r': // reset view
+      this.controls.reset();   // resets camera to original position
+      break;
+    case '+': //increase numInterpolants
+    case '=': //increase numInterpolants
+      this.numInterpolants++;
+      console.log("numInterpolants increased to " + this.numInterpolants)
+      break;
+    case '-': //decrease numInterpolants
+      this.numInterpolants = Math.max(1, this.numInterpolants - 1);
+      console.log("numInterpolants decreased to " + this.numInterpolants)
+      break;
     }
     this.renderScene();
   }
@@ -291,7 +299,6 @@ class MorseSmaleWindow extends React.Component {
       else {
         console.log('New crystal selected');
 
-
         // Ensure previously selected object is back to unselected opacity
         if (this.pickedObject) {
           this.pickedObject.material.opacity = this.unselectedOpacity;
@@ -315,7 +322,7 @@ class MorseSmaleWindow extends React.Component {
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
       this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-        crystalID, 51 /* numZ*/, showOrig);  // <ctc> *this* hardcoded 51 might be the reason the final sample is black! damn hardcoding!!
+        crystalID, this.numInterpolants, showOrig);
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
