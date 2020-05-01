@@ -4,7 +4,7 @@
 
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
-if [ "$sourced" == "0" ]; then
+if [[ "$sourced" == "0" ]]; then
   echo "ERROR: must call this script using \"source ./conda_installs.sh\""
   exit 1
 fi
@@ -12,12 +12,12 @@ fi
 function install_conda() {
   if ! command -v conda 2>/dev/null 1>&2; then
     echo "installing anaconda..."
-    if [ "$(uname)" == "Darwin" ]; then
-      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    if [[ "$(uname)" == "Darwin" ]]; then
+      curl -o ./Miniconda3-latest-MacOSX-x86_64.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
       bash ./Miniconda3-latest-MacOSX-x86_64.sh
       rm ./Miniconda3-latest-MacOSX-x86_64.sh
-    elif [ "$(uname)" == "Linux" ]; then
-      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    elif [[ "$(uname)" == "Linux" ]]; then
+      curl -o ./Miniconda3-latest-Linux-x86_64.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
       bash ./Miniconda3-latest-Linux-x86_64.sh
       rm ./Miniconda3-latest-Linux-x86_64.sh
     else
@@ -63,7 +63,7 @@ function install_conda() {
   then return 1; fi
 
   # linux-only deps
-  if [ "$(uname)" = "Linux" ]; then
+  if [[ "$(uname)" = "Linux" ]]; then
     conda install --yes \
           blas=2.14 \
           liblapack=3.8.0
