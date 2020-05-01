@@ -38,7 +38,7 @@ function install_conda() {
   if ! conda update --yes --all; then return 1; fi
 
   # create and activate dspacex env
-  CONDAENV=dspacex-new
+  CONDAENV=dSpaceX
   if ! conda create --yes --name $CONDAENV python=3.7; then return 1; fi
   eval "$(conda shell.bash hook)"
   if ! conda activate $CONDAENV; then return 1; fi
@@ -56,7 +56,10 @@ function install_conda() {
        eigen=3.3.7 \
        libpng=1.6.37 \
        gtest=1.10.0 \
-       yaml-cpp=0.6.3
+       yaml-cpp=0.6.3 \
+       numpy=1.18.1 \
+       scikit-learn=0.22.1 \
+       pandas=1.0.3
   then return 1; fi
 
   # linux-only deps
@@ -69,6 +72,7 @@ function install_conda() {
   # pip installs (none currently needed, but here are two examples:)
   #if ! pip install matplotlib==3.1.2; then return 1; fi
   #if ! pip install -e Python/DatasetUtilsPackage; then return 1; fi   # install the local GirderConnector code as a package
+  if ! pip install pynrrd==0.4.2; then return 1; fi
 
   conda info
   return 0
