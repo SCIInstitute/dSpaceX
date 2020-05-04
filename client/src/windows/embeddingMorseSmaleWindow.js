@@ -2,6 +2,7 @@ import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
 import ResizablePanels from '../panels/ResizablePanelsReact';
+import ResponsiveDrawer from '../components/responsiveDrawer';
 import { withDSXContext } from '../dsxContext.js';
 
 /**
@@ -62,25 +63,8 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    */
   render() {
     return (
-      <ResizablePanels
-        bkcolor='#ffffff'
-        displayDirection='column'
-        width='100%'
-        height='100%'
-        panelsSize={[72, 25]}
-        sizeUnitMeasure='%'
-        resizerColor='#808080'
-        resizerSize='1px'>
-        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
-          <ResizablePanels
-            bkcolor='#ffffff'
-            displayDirection='row'
-            width='100%'
-            height='100%'
-            panelsSize={[50, 50]}
-            sizeUnitMeasure='%'
-            resizerColor='#808080'
-            resizerSize='1px'>
+      <div>
+        <div style={{ background:'#ffffff', height:'80%', width:'100%' }}>
             <EmbeddingWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
@@ -95,12 +79,55 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               numberOfWindows={this.props.numberOfWindows}
               onCrystalSelection={this.props.onCrystalSelection}
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-          </ResizablePanels>
         </div>
-        <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>Bottom Container For Design Images</div>
-      </ResizablePanels>
+        <div style={{ background:'#ffffff', height:'20%', width:'100%' }}>
+          <ResponsiveDrawer images={this.state.drawerImages}/>
+        </div>
+      </div>
     );
   }
 }
 
 export default withDSXContext(EmbeddingMorseSmaleWindow);
+
+    // return (
+    //   <ResizablePanels
+    //     bkcolor='#ffffff'
+    //     displayDirection='column'
+    //     width='100%'
+    //     height='100%'
+    //     panelsSize={[72, 25]}
+    //     sizeUnitMeasure='%'
+    //     resizerColor='#808080'
+    //     resizerSize='1px'>
+    //     <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
+    //       <ResizablePanels
+    //         bkcolor='#ffffff'
+    //         displayDirection='row'
+    //         width='100%'
+    //         height='100%'
+    //         panelsSize={[50, 50]}
+    //         sizeUnitMeasure='%'
+    //         resizerColor='#808080'
+    //         resizerSize='1px'>
+    //         <EmbeddingWindow
+    //           dataset={this.props.dataset}
+    //           decomposition={this.props.decomposition}
+    //           embedding={this.props.embedding}
+    //           selectedDesigns={this.props.selectedDesigns}
+    //           onDesignSelection={this.props.onDesignSelection}
+    //           activeDesigns={this.props.activeDesigns}
+    //           numberOfWindows={this.props.numberOfWindows}/>
+    //         <MorseSmaleWindow
+    //           dataset={this.props.dataset}
+    //           decomposition={this.props.decomposition}
+    //           numberOfWindows={this.props.numberOfWindows}
+    //           onCrystalSelection={this.props.onCrystalSelection}
+    //           evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+    //       </ResizablePanels>
+    //     </div>
+    //     <div>
+    //       <ResponsiveDrawer images={this.state.drawerImages}/>
+    //     </div>
+    //   </ResizablePanels>
+    // );
