@@ -59,7 +59,8 @@ function install_conda() {
        yaml-cpp=0.6.3 \
        numpy=1.18.1 \
        scikit-learn=0.22.1 \
-       pandas=1.0.3
+       pandas=1.0.3 \
+       pillow=7.0.0
   then return 1; fi
 
   # linux-only deps
