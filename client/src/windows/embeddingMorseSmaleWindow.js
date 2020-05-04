@@ -1,9 +1,16 @@
 import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import React from 'react';
-import ResizablePanels from '../panels/ResizablePanelsReact';
 import ResponsiveDrawer from '../components/responsiveDrawer';
 import { withDSXContext } from '../dsxContext.js';
+import { withStyles } from '@material-ui/core/styles';
+
+const styles = (theme) => ({
+  mainContainer: {
+    'display': 'flex',
+    'flex-direction': 'column',
+  },
+});
 
 /**
  * Creates windows that displays the 2D Graph Embedding of the data
@@ -62,9 +69,12 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @return {JSX}
    */
   render() {
+    const { classes } = this.props;
+
     return (
-      <div>
-        <div style={{ background:'#ffffff', height:'80%', width:'100%' }}>
+      <div className={classes.main}>
+        <div style={{ background:'#ffffff', height:'80%', width:'100%', display:'flex' }}>
+          <div style={{ width:'50%' }}>
             <EmbeddingWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
@@ -73,14 +83,18 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               onDesignSelection={this.props.onDesignSelection}
               activeDesigns={this.props.activeDesigns}
               numberOfWindows={this.props.numberOfWindows}/>
+          </div>
+          <div style={{ width:'50%' }}>
             <MorseSmaleWindow
+              style={{ wdith:'50%' }}
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
               numberOfWindows={this.props.numberOfWindows}
               onCrystalSelection={this.props.onCrystalSelection}
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+          </div>
         </div>
-        <div style={{ background:'#ffffff', height:'20%', width:'100%' }}>
+        <div style={{ background:'#ffffff', height:'20%', display:'flex', flexDirection:'column', overflow:'scroll' }}>
           <ResponsiveDrawer images={this.state.drawerImages}/>
         </div>
       </div>
@@ -88,46 +102,46 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   }
 }
 
-export default withDSXContext(EmbeddingMorseSmaleWindow);
+export default withDSXContext(withStyles(styles)(EmbeddingMorseSmaleWindow));
 
-    // return (
-    //   <ResizablePanels
-    //     bkcolor='#ffffff'
-    //     displayDirection='column'
-    //     width='100%'
-    //     height='100%'
-    //     panelsSize={[72, 25]}
-    //     sizeUnitMeasure='%'
-    //     resizerColor='#808080'
-    //     resizerSize='1px'>
-    //     <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
-    //       <ResizablePanels
-    //         bkcolor='#ffffff'
-    //         displayDirection='row'
-    //         width='100%'
-    //         height='100%'
-    //         panelsSize={[50, 50]}
-    //         sizeUnitMeasure='%'
-    //         resizerColor='#808080'
-    //         resizerSize='1px'>
-    //         <EmbeddingWindow
-    //           dataset={this.props.dataset}
-    //           decomposition={this.props.decomposition}
-    //           embedding={this.props.embedding}
-    //           selectedDesigns={this.props.selectedDesigns}
-    //           onDesignSelection={this.props.onDesignSelection}
-    //           activeDesigns={this.props.activeDesigns}
-    //           numberOfWindows={this.props.numberOfWindows}/>
-    //         <MorseSmaleWindow
-    //           dataset={this.props.dataset}
-    //           decomposition={this.props.decomposition}
-    //           numberOfWindows={this.props.numberOfWindows}
-    //           onCrystalSelection={this.props.onCrystalSelection}
-    //           evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-    //       </ResizablePanels>
-    //     </div>
-    //     <div>
-    //       <ResponsiveDrawer images={this.state.drawerImages}/>
-    //     </div>
-    //   </ResizablePanels>
-    // );
+// return (
+//   <ResizablePanels
+//     bkcolor='#ffffff'
+//     displayDirection='column'
+//     width='100%'
+//     height='100%'
+//     panelsSize={[72, 25]}
+//     sizeUnitMeasure='%'
+//     resizerColor='#808080'
+//     resizerSize='1px'>
+//     <div style={{ background:'#ffffff', height:'100%', width:'100%' }}>
+//       <ResizablePanels
+//         bkcolor='#ffffff'
+//         displayDirection='row'
+//         width='100%'
+//         height='100%'
+//         panelsSize={[50, 50]}
+//         sizeUnitMeasure='%'
+//         resizerColor='#808080'
+//         resizerSize='1px'>
+//         <EmbeddingWindow
+//           dataset={this.props.dataset}
+//           decomposition={this.props.decomposition}
+//           embedding={this.props.embedding}
+//           selectedDesigns={this.props.selectedDesigns}
+//           onDesignSelection={this.props.onDesignSelection}
+//           activeDesigns={this.props.activeDesigns}
+//           numberOfWindows={this.props.numberOfWindows}/>
+//         <MorseSmaleWindow
+//           dataset={this.props.dataset}
+//           decomposition={this.props.decomposition}
+//           numberOfWindows={this.props.numberOfWindows}
+//           onCrystalSelection={this.props.onCrystalSelection}
+//           evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+//       </ResizablePanels>
+//     </div>
+//     <div>
+//       <ResponsiveDrawer images={this.state.drawerImages}/>
+//     </div>
+//   </ResizablePanels>
+// );

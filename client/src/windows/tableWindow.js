@@ -200,7 +200,8 @@ class TableWindow extends React.Component {
                 columnNames.map((n) => {
                   return (
                     <TableCell
-                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} align='right' padding='dense'>{n}</TableCell>
+                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} align='right' padding='dense'>{n}
+                    </TableCell>
                   );
                 })
               }

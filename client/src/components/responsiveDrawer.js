@@ -63,61 +63,19 @@ class ResponsiveDrawer extends React.Component {
   }
 
   render() {
-    const { classes } = this.props;
-    // render() {
-    //   let style = {
-    //     width: '100%',
-    //     height: '100%',
-    //   };
-
-    //   return (
-    //       <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
-    //       <canvas ref='msCanvas' style={style} />
-    //       </ReactResizeDetector>);
+    const { images } = this.props;
     return (
-          <Grid container
-            justify={'flex-end'}
-            spacing={8}
-            style={{ margin:'5px 0px 0px 0px' }}>
-            {this.props.images.length > 0 &&
-         this.props.images.map((thumbnail, i) =>
-           <Grid key={i} item>
-             <Paper style={{ backgroundColor:'#D3D3D3' }}>
-               <img alt={'Image:' + thumbnail.id}
-                 height='45'
-                 style={{ margin:'5px 5px 5px 5px' }}
-                 src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
-             </Paper>
-           </Grid>)}
-      </Grid>
+      images.length > 0 &&
+         images.map((thumbnail) =>
+
+             <img alt={'Image:' + thumbnail.id}
+               height='45'
+               style={{ margin:'5px 5px 5px 5px' }}
+               src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
+           )
     );
   }
 }
 
-export default withStyles(styles, { withTheme:true })(ResponsiveDrawer);
+export default withStyles(styles)(ResponsiveDrawer);
 
-  // return (
-  //     <Drawer
-  //   variant="permanent"
-  //   open
-  //   anchor={'bottom'}
-  //   classes={{ paper:classes.drawerPaper }}
-  //   PaperProps={{ style:this.state.newHeight }}>
-  //     <div id='dragger' onMouseDown={(event) => { this.handleMouseDown(event); }} className={classes.dragger}>
-  //     <Grid container
-  //   justify={'flex-end'}
-  //   spacing={8}
-  //   style={{ margin:'5px 0px 0px 0px' }}>
-  //     {this.props.images.length > 0 &&
-  //      this.props.images.map((thumbnail, i) =>
-  //                            <Grid key={i} item>
-  //                            <Paper style={{ backgroundColor:'#D3D3D3' }}>
-  //                            <img alt={'Image:' + thumbnail.id}
-  //                            height='45'
-  //                            style={{ margin:'5px 5px 5px 5px' }}
-  //                            src={'data:image/png;base64, ' + thumbnail.img.rawData}/>
-  //                            </Paper>
-  //                            </Grid>)}
-  //   </Grid>
-  //     </div>
-  //     </Drawer>
