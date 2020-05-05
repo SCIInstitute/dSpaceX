@@ -10,6 +10,27 @@ const styles = (theme) => ({
     'display': 'flex',
     'flex-direction': 'column',
   },
+  topContainer: {
+    'background': '#ffffff',
+    'display': 'flex',
+    'height': '80%',
+    'width': '100%',
+  },
+  verticalDivider: {
+    'background': '#D3D3D3',
+    'width': '4px',
+  },
+  horizontalDivider: {
+    'background': '#D3D3D3',
+    'height': '3px',
+
+  },
+  bottomPanel: {
+    'background': '#ffffff',
+    'height': '20%',
+    'display': 'flex',
+    'overflow': 'auto',
+  },
 });
 
 /**
@@ -70,10 +91,11 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    */
   render() {
     const { classes } = this.props;
+    const { drawerImages } = this.state;
 
     return (
       <div className={classes.main}>
-        <div style={{ background:'#ffffff', height:'80%', width:'100%', display:'flex' }}>
+        <div className={classes.topContainer}>
           <div style={{ width:'50%' }}>
             <EmbeddingWindow
               dataset={this.props.dataset}
@@ -84,9 +106,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               activeDesigns={this.props.activeDesigns}
               numberOfWindows={this.props.numberOfWindows}/>
           </div>
+          <div className={classes.verticalDivider}/>
           <div style={{ width:'50%' }}>
             <MorseSmaleWindow
-              style={{ wdith:'50%' }}
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
               numberOfWindows={this.props.numberOfWindows}
@@ -94,8 +116,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
           </div>
         </div>
-        <div style={{ background:'#ffffff', height:'20%', display:'flex', flexDirection:'column', overflow:'scroll' }}>
-          <ResponsiveDrawer images={this.state.drawerImages}/>
+        <div className={classes.horizontalDivider}/>
+        <div className={classes.bottomPanel}>
+          {drawerImages.length > 0 && drawerImages.map((thumbnail) =>
+            <span>thumbnail.id</span>)}
         </div>
       </div>
     );

@@ -643,10 +643,10 @@ class MorseSmaleWindow extends React.Component {
       height: '100%',
     };
 
-    return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
-        <canvas ref='msCanvas' style={style} />
-      </ReactResizeDetector>);
+    return (<canvas ref='msCanvas' style={style} />);
+      // <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
+      //   <canvas ref='msCanvas' style={style} />
+      // </ReactResizeDetector>);
   }
 }
 
