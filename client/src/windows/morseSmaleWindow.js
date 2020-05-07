@@ -187,7 +187,8 @@ class MorseSmaleWindow extends React.Component {
    * @param {boolean} newWindowAdded
    */
   resizeCanvas(event) {
-    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+    let width = this.refs.msCanvas.clientWidth;
+    let height = this.refs.msCanvas.clientHeight;
 
     // update camera
     this.updateCamera(width, height);
@@ -574,7 +575,7 @@ class MorseSmaleWindow extends React.Component {
   updatePerspCamera(width, height) {
     this.perspCamera.aspect = width / height;
   }
-  
+
   /**
    * updateCamera
    */
@@ -583,11 +584,10 @@ class MorseSmaleWindow extends React.Component {
     this.updatePerspCamera(width, height);
 
     if (resetPos) {
-      this.controls.reset();   // resets camera to original position (also calls updateProjectionMatrix)
-    }
-    else {
+      this.controls.reset(); // resets camera to original position (also calls updateProjectionMatrix)
+    } else {
       this.camera.updateProjectionMatrix();
-      this.controls.update();  // it's necessary to call this when the camera is manually changed
+      this.controls.update(); // it's necessary to call this when the camera is manually changed
     }
   }
 
@@ -643,10 +643,10 @@ class MorseSmaleWindow extends React.Component {
       height: '100%',
     };
 
-    return (<canvas ref='msCanvas' style={style} />);
-      // <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
-      //   <canvas ref='msCanvas' style={style} />
-      // </ReactResizeDetector>);
+    return (
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
+        <canvas ref='msCanvas' style={style} />
+      </ReactResizeDetector>);
   }
 }
 

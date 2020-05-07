@@ -557,10 +557,10 @@ class EmbeddingWindow extends React.Component {
       height: '100%',
       width: '100%',
     };
-    return (<canvas ref='embeddingCanvas' style={style}/>);
-      // <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
-      //   <canvas ref='embeddingCanvas' style={style}/>
-      // </ReactResizeDetector>);
+    return (
+      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
+        <canvas ref='embeddingCanvas' style={style}/>
+      </ReactResizeDetector>);
   }
 }
 
