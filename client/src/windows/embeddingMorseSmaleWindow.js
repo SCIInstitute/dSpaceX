@@ -94,6 +94,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               decomposition={this.props.decomposition}
               numberOfWindows={this.props.numberOfWindows}
               onCrystalSelection={this.props.onCrystalSelection}
+              drawerImages={this.state.drawerImages}
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
           </ResizablePanels>
         </div>

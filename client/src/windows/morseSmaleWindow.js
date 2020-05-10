@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
+import { SpriteMaterial } from 'three/src/materials/SpriteMaterial.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
@@ -46,6 +46,7 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
+    this.setImage = this.setImage.bind(this);
   }
   
   /**
@@ -151,6 +152,32 @@ class MorseSmaleWindow extends React.Component {
     // scene
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color('whatever'); // do NOT set scene background or outline selection won't work
+
+
+
+    // uiScene  //<ctc> put this in a create function
+    this.uiCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 1, 2 );
+    this.uiCamera.position.set( 0, 0, 1 );
+    this.uiCamera.name = "uiCamera";
+
+    this.uiScene = new THREE.Scene();
+
+    // instantiate a loader
+    this.textureLoader = new THREE.TextureLoader();
+    
+    //<ctc> test that we can create a 2d sprite texture and load an image into it (once it works, then try to load the base64 raw from pick())
+    this.spriteTexture = this.textureLoader.load("../../la.png");
+
+    // imageSprite
+    this.imageSprite = new THREE.Sprite(new SpriteMaterial({map:this.spriteTexture}));
+    this.imageSprite.position.set(0.825,0.5,0); // position of center of sprite
+    this.imageSprite.scale.x = 0.25;
+    this.imageSprite.scale.y = 0.25;
+    this.imageSprite.material.map = this.spriteTexture;
+    this.uiScene.add(this.imageSprite);
+    // ---- ui create function
+
+
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
@@ -266,6 +293,37 @@ class MorseSmaleWindow extends React.Component {
     };
   }
 
+  /*
+   * set the material for the current image, hiding image if no data
+   * @param {data} raw base64 [png] image data
+   */
+  setImage(data) {
+    if (data !== undefined) {
+      
+      // load the new image sent from the server // works! <ctc> 
+      this.textureLoader.load(
+	      'data:image/png;base64,' + data.img.rawData, function(texture) {
+          this.imageSprite.material.map = texture;
+          this.imageSprite.visible = true;
+          this.imageSprite.material.needsUpdate = true;
+ 		      console.log('texture loaded!');
+          this.renderScene();
+        }.bind(this));
+
+      // just load another image from disk. Works! <ctc> 
+      // new THREE.TextureLoader().load("../../satyam.png", function(texture) {
+      //   this.imageSprite.material.map = texture;
+      //   this.imageSprite.visible = true;
+      //   this.imageSprite.material.needsUpdate = true;
+ 		  //   console.log('texture loaded!');
+      //   this.renderScene();
+      // }.bind(this));
+    }
+    else {
+      this.imageSprite.visible = false;
+    }
+  }
+
   /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
@@ -319,7 +377,8 @@ class MorseSmaleWindow extends React.Component {
       // Get crystal partitions
       let crystalID = this.pickedObject.name;
       this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-        crystalID, this.numInterpolants, showOrig);
+                                              crystalID, this.numInterpolants, showOrig);
+      this.setImage(this.props.drawerImages[0]); //<ctc> test that first image of selected crystal can be used to set images sprite
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
@@ -631,6 +690,9 @@ class MorseSmaleWindow extends React.Component {
         item.visible = true;
       }
     }
+
+    // ...and finally, the UI
+    this.renderer.render(this.uiScene, this.uiCamera);
   }
 
   /**
