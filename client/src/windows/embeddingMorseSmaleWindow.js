@@ -13,10 +13,12 @@ const styles = (theme) => ({
   },
   rightPanel: {
     backgroundColor: '#ffffff',
+    lineHeight: 0,
   },
   leftPanel: {
     backgroundColor: '#ffffff',
     borderRight: 'solid #A9A9A9',
+    lineHeight: 0,
   },
   gridlistRoot: {
     display: 'flex',
@@ -123,12 +125,12 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           </Grid>
         </Grid>
         <div className={classes.gridlistRoot}>
-          {drawerImages.length > 0 && <Typography>Original Designs</Typography>}
-          <GridList className={classes.gridList} cols={12}>
+          {/* {drawerImages.length > 0 && <Typography>Original Designs</Typography>}*/}
+          <GridList className={classes.gridList} cols={10}>
             {drawerImages.map((tile) => (
               <GridListTile key={tile.id}>
                 <Paper className={classes.paper}>
-                  <Typography>{'Design: ' + tile.id}</Typography>
+                  {/* <Typography>{'Design: ' + tile.id}</Typography>*/}
                   <img alt={'Image:' + tile.id}
                     height={tile.img.height}
                     src={'data:image/png;base64, ' + tile.img.rawData}/>
