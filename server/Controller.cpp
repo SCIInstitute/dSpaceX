@@ -859,7 +859,8 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     return fetchAllImagesForCrystal_Shapeodds(request, response);
 
   int numZ = request["numSamples"].asInt();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
+  double percent = request["percent"].asDouble();
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<", percent is "<<percent<<")\n";
   
   dspacex::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);  
 
@@ -875,8 +876,15 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // partition the crystal's model's field (QoI) into numZ values and evaluate model for each of them
   double minval = model.minFieldValue();
   double maxval = model.maxFieldValue();
+
+  // <ctc> if numZ == 1, use given percent along crystal  (todo: cleanup)
   double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
   double sigma = delta * 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
+  if (numZ == 1) {
+    delta = 1.0;
+    minval = minval + (maxval - minval) * percent;  // only getting the single value at this percent along crystal
+    sigma = 0.05; // 5% of fieldrange, because continuous sampling should be smaller?
+  }
   
   for (unsigned i = 0; i < numZ; i++)
   {
