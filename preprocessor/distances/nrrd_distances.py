@@ -3,7 +3,7 @@ import nrrd
 import numpy as np
 import re
 
-from preprocessor.distances.distance_formulas import l1_distance_formula, l2_distance_formula
+from distances.distance_formulas import l1_distance_formula, l2_distance_formula
 
 
 def calculate_l1_distance_nrrd(directory):

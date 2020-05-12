@@ -60,7 +60,8 @@ function install_conda() {
        numpy=1.18.1 \
        scikit-learn=0.22.1 \
        pandas=1.0.3 \
-       pillow=7.0.0
+       pillow=7.0.0 \
+       pyyaml=5.3.1
   then return 1; fi
 
   # linux-only deps
@@ -74,6 +75,7 @@ function install_conda() {
   #if ! pip install matplotlib==3.1.2; then return 1; fi
   #if ! pip install -e Python/DatasetUtilsPackage; then return 1; fi   # install the local GirderConnector code as a package
   if ! pip install pynrrd==0.4.2; then return 1; fi
+  if ! pip install pyrender==0.4.2; then return 1; fi
 
   conda info
   return 0
