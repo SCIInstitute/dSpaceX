@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import numpy as np
+import os
 import pandas as pd
 import sys
 from sklearn.manifold import TSNE, Isomap, MDS
@@ -8,6 +9,7 @@ import yaml
 
 from distances.nrrd_distances import calculate_l1_distance_nrrd, calculate_l2_distance_nrrd
 from distances.png_distances import calculate_l1_distance_png, calculate_l2_distance_png
+from thumbnails.nanoparticles_thumbnails import generate_thumbnails
 
 def process_data(config):
     output_directory = config['outputDirectory']
@@ -48,7 +50,7 @@ def process_data(config):
         elif config['shapeFormat'] == 'png':
             distance = calculate_l1_distance_png(config['shapeDirectory'])
         else:
-            print('We\'re sorry we do not currently support the ' + config.shapeFormat +
+            print('We\'re sorry we do not currently support the ' + config['shapeFormat'] +
                   '. Supported formats include nrrd and png.')
             sys.exit()
     else:
@@ -58,7 +60,7 @@ def process_data(config):
         elif config['shapeFormat'] == 'png':
             distance = calculate_l2_distance_png(config['shapeDirectory'])
         else:
-            print('We\'re sorry we do not currently support the ' + config.shapeFormat +
+            print('We\'re sorry we do not currently support the ' + config['shapeFormat'] +
                   '. Supported formats include nrrd and png.')
             sys.exit()
     np.savetxt(output_directory + config['datasetName'] + '_distance.csv', distance, delimiter=',')
@@ -99,8 +101,22 @@ def process_data(config):
                 embeddings.append({'name': emb.name, 'coordinates': embedding})
     output_config['embeddings'] = embeddings
 
+    if 'thumbnails' in config:
+        if config['thumbnails']['type'] == 'nano':
+            print('Generating thumbnails for Nanoparticles')
+            out = output_directory + 'images/'
+            if not os.path.exists(out):
+                os.makedirs(out)
+            generate_thumbnails(output_directory + config['datasetName'] + '_Parameters.csv', out, add_slices=False)
+        else:
+            print('We\'re sorry we only know how to make thumbnails for Nanoparticles right now.')
+        output_config['thumbnails'] = {'format': 'png', 'files':'images/?.png', 'offset': 1, 'padZeros': 'false'}
+
+    print('Writing Config')
     with open(config['outputDirectory'] + 'config.yaml', 'w') as file:
         yaml.dump(output_config, file, default_flow_style=False, sort_keys=False, line_break=2)
+    print('Data processing complete.')
+    print('When running the dSpaceX server set --datapath ' + output_directory)
 
 
 
