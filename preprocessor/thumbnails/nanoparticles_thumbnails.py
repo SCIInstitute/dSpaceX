@@ -38,6 +38,8 @@ def generate_thumbnails(parameter_csv, output_directory, add_slices=True):
     # render all the particles
     for sample in parameter_df.itertuples():
         print('shape %i / %i' % (sample.Index, len(parameter_df.index)), end='\r')
+        print('Thumbnail generation %.2f percent complete. Generating thumbnail %i of %i. ' %
+              ((100 * sample.Index / len(parameter_df.index)), sample.Index, len(parameter_df.index)), end='\r')
 
         X, Y, Z, tri_indices = nano_formula_3d(sample.m, sample.n1, sample.n2, sample.n3, sample.a, sample.b, 100000)
         vertices = np.column_stack((X, Y, Z))
