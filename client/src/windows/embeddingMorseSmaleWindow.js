@@ -7,6 +7,7 @@ import React from 'react';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import SizeMonitor from './sizeMonitor';
+//import ResponsiveDrawer from '../components/responsiveDrawer';
 
 const styles = (theme) => ({
   root: {
@@ -139,14 +140,20 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div style={{ background:'#808080', width:'100%', height:'5px' }} />
 
         {/* shape cards drawer */}
-        <div style={{ height:'20%', flex:'auto', display:'flex', flexDirection:'row', flexWrap:'nowrap', overflow:'hidden' }}>  {/* justifyContent:'space-around',  */}
-          {drawerImages.map((tile) => (
-          <div key={tile.id} style={{ width:'50px', flex:'auto' }} >
-            <img alt={'Image:' + tile.id}
-                 src={'data:image/png;base64, ' + tile.img.rawData} />
-          </div>
-          ))}
-        </div>
+        <Grid container
+              justify={'flex-end'}
+              spacing={8}
+              style={{ height:'20%', margin:'5px 0px 0px 0px' }}>
+          {drawerImages.map((tile, i) =>
+          <Grid key={i} item>
+            <Paper style={{ backgroundColor:'#D3D3D3' }}>
+              <img alt={'Image:' + tile.id}
+                   height='45'
+                   style={{ margin:'5px 5px 5px 5px' }}
+                   src={'data:image/png;base64, ' + tile.img.rawData}/>
+            </Paper>
+          </Grid>)}
+        </Grid>
       </div>
     );
   }
@@ -157,6 +164,22 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         //   <SizeMonitor />
         // </div>
 
+// responsivedrawer back and works just like before
+        // {/* shape cards drawer */}
+        // <div style={{ height:'20%', flex:'auto', display:'flex', flexDirection:'row', flexWrap:'nowrap', overflow:'hidden' }}>  {/* justifyContent:'space-around',  */}
+        //   <ResponsiveDrawer images={this.state.drawerImages}/>
+        // </div>
+
+// going to try to bring back responsivedrawer
+        // {/* shape cards drawer */}
+        // <div style={{ height:'20%', flex:'auto', display:'flex', flexDirection:'row', flexWrap:'nowrap', overflow:'hidden' }}>  {/* justifyContent:'space-around',  */}
+        //   {drawerImages.map((tile) => (
+        //   <div key={tile.id} style={{ height:'50px', height:'50px', flex:'auto' }} >
+        //     <img alt={'Image:' + tile.id}
+        //          src={'data:image/png;base64, ' + tile.img.rawData} />
+        //   </div>
+        //   ))}
+        // </div>
 
 //unfortunately, this still results in incorrect [increasing height] sizes on update. 
       // <div style={{ width:'100%', height:'100%', background:'#ffffff', display:'flex', flexDirection:'column' }}>
