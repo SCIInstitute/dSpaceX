@@ -13,6 +13,12 @@ const styles = (theme) => ({
   root: {
     flexGrow: 1,
   },
+  topPanels: {
+    height:'80%',
+    flex:'auto',
+    display:'flex',
+    flexDirection:'row'
+  },
   rightPanel: {
     backgroundColor: '#ffffff',
     lineHeight: 0,
@@ -108,10 +114,11 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       <div style={{ background:'#ffffff', display:'flex', flexDirection:'column' }}>
 
         {/* top panel: embedding and crystals */}
-        <div style={{ height:'80%', flex:'auto', display:'flex', flexDirection:'row' }}>
+        <div className={classes.topPanels} >
+        {/*<div className={classes.topPanels} style={{ height:'80%', flex:'auto', display:'flex', flexDirection:'row' }}>*/}
 
           {/* embedding */}
-          <div style={{ width:'100%', flex:'auto' }}>
+      {/*<div style={{ width:'100%', flex:'auto' }}>*/}
             <EmbeddingWindow
               dataset={this.props.dataset}
               decomposition={this.props.decomposition}
@@ -120,12 +127,13 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               onDesignSelection={this.props.onDesignSelection}
               activeDesigns={this.props.activeDesigns}
               numberOfWindows={this.props.numberOfWindows}/>
-          </div>
+        {/*</div>*/}
 
           {/* embedding/crystals vertical divider */}
           <div style={{ background:'#808080', width:'5px', height:'100%' }} />
 
           {/* crystals */}
+        {/*
           <div style={{ width:'100%', flex:'auto' }}>
             <MorseSmaleWindow
               dataset={this.props.dataset}
@@ -134,6 +142,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               onCrystalSelection={this.props.onCrystalSelection}
               evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
           </div>
+         */}
         </div>
 
         {/* drawer divider (todo: onMouseDown={this.onResizeDrawer})*/}

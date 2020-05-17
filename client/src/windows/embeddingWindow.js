@@ -164,11 +164,12 @@ class EmbeddingWindow extends React.Component {
     let height = canvas.clientHeight;
     let sx = 1;
     let sy = 1;
-    if (width > height) {
-      sx = width / height;
-    } else {
-      sy = height / width;
-    }
+    // if (width > height) {
+    //   sx = width / height;
+    // } else {
+    //   sy = height / width;
+    // }
+    sy = height / width;
     this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
     this.camera.position.set(0, 0, 1);
 
@@ -377,16 +378,19 @@ class EmbeddingWindow extends React.Component {
     // this.refs.embeddingCanvas.height = height;
 
     // Resize renderer
-    this.renderer.setSize(width, height, false);
-
+    this.renderer.setSize(width, height, false);  // <ctc> not updating renderer size doesn't make any different: changing window size quickly always breaks things
+                                                // ...so keep setting renderer size
     // Resize camera
     let sx = 1;
     let sy = 1;
-    if (width > height) {
-      sx = width / height;
-    } else {
-      sy = height / width;
-    }
+    // if (width > height) {
+    //   sx = width / height;
+    // } else {
+    //   sy = height / width;
+    // }
+
+    sy = height / width;  // <ctc> just setting sy instead of one or the other has better result, esp when window is *slowly* resized
+                            //       ...but keeping them both 1,1 doesn't stop the bug, so keep setting sy
     this.camera.left = -1*sx;
     this.camera.right = sx;
     this.camera.top = sy;
