@@ -54,7 +54,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    //window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -104,7 +104,7 @@ class MorseSmaleWindow extends React.Component {
     // this.controls.removeEventListener( 'change', this.renderScene );
     // this.controls.dispose();
 
-    //window.removeEventListener('resize', this.resizeCanvas);
+    window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.removeEventListener('mousedown', this.handleMouseRelease);
   }
@@ -556,12 +556,7 @@ class MorseSmaleWindow extends React.Component {
    * updateOrthoCamera
    */
   updateOrthoCamera(width, height) {
-    let sx = 1, sy = 1;
-    if (width > height) {
-      sx = width/height;
-    } else {
-      sy = height/width;
-    }
+    let sx = width / height, sy = 1;
     this.orthoCamera.left   = -4*sx;
     this.orthoCamera.right  = 4*sx;
     this.orthoCamera.top    = 4*sy;
@@ -574,7 +569,7 @@ class MorseSmaleWindow extends React.Component {
    * updatePerspCamera
    */
   updatePerspCamera(width, height) {
-    this.perspCamera.aspect = width / height;
+    this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
   }
   
   /**
