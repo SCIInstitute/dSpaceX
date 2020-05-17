@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import ScatterPlotWindow from './windows/scatterPlotWindow';
 import TableWindow from './windows/tableWindow.js';
+import SizeMonitor from './windows/sizeMonitor';
 import Toolbar from './toolbar.js';
 import WindowPanel from './panels/windowPanel.js';
 import Workspace from './workspace.js';
@@ -29,6 +30,7 @@ const styles = (theme) => ({
     overflow: 'hidden',
     position: 'relative',
     display: 'flex',
+    //height: '800px',//calc(100vh)',
     height: 'calc(100vh)',
   },
   drawerPaper: {
@@ -44,6 +46,7 @@ const styles = (theme) => ({
   },
   workspace: {
     display: 'grid',
+    //height: '640px', //calc(100vh - 64px)',
     height: 'calc(100vh - 64px)',
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
@@ -554,14 +557,9 @@ class Application extends React.Component {
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
-                        <ScatterPlotWindow key={i}
-                          config={windowConfig}
-                          dataset={this.state.currentDataset}
-                          selectedDesigns={this.state.selectedDesigns}
-                          onDesignSelection={this.onDesignSelection}
-                          onDesignLasso={this.onDesignLasso}
-                          activeDesigns={activeDesigns}
-                        />
+        <div key={i} >
+          <SizeMonitor key={i} />
+        </div>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (

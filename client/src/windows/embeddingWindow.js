@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import React from 'react';
-import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -39,7 +38,7 @@ class EmbeddingWindow extends React.Component {
     this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.resetScene = this.resetScene.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
+    //this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
     this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
     this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
@@ -85,7 +84,7 @@ class EmbeddingWindow extends React.Component {
 
     // New window has been added to application
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas(true);
+      //this.resizeCanvas(true);
     }
 
     // Decomposition is loaded for the first time
@@ -367,12 +366,15 @@ class EmbeddingWindow extends React.Component {
    * This can happen on a window resize or when another window is added to dSpaceX.
    * @param {boolean} newWindowAdded
    */
-  resizeCanvas(newWindowAdded = true) {
+  resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
-
-    this.refs.embeddingCanvas.width = width;
-    this.refs.embeddingCanvas.height = height;
+    //const canvas = this.renderer.domElement;
+    // const width = canvas.clientWidth;
+    // const height = canvas.clientHeight;
+    console.log('embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
+    // this.refs.embeddingCanvas.width = width;
+    // this.refs.embeddingCanvas.height = height;
 
     // Resize renderer
     this.renderer.setSize(width, height, false);
@@ -398,7 +400,7 @@ class EmbeddingWindow extends React.Component {
     //if (newWindowAdded) { //<ctc> trying to figure out why last render clears screen (or screen is cleared after last render) -> this isn't it, but I took it out of morseSmaleWindow, so maybe also not important here
       this.renderScene();
   //}
-  }
+  };
 
   /**
    * Handles when the mouse is scrolled for increasing and decreasing
@@ -558,9 +560,7 @@ class EmbeddingWindow extends React.Component {
       width: '100%',
     };
     return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
-        <canvas ref='embeddingCanvas' style={style}/>
-      </ReactResizeDetector>);
+        <canvas ref='embeddingCanvas' style={style}/>);
   }
 }
 

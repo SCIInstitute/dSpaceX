@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
-import ReactResizeDetector from 'react-resize-detector';
+//import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -42,7 +42,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.resetScene = this.resetScene.bind(this);
     this.resetBounds = this.resetBounds.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
+    //this.resizeCanvas = this.resizeCanvas.bind(this);
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
@@ -54,7 +54,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    //window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -73,7 +73,7 @@ class MorseSmaleWindow extends React.Component {
     }
 
     if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas(null);
+      //this.resizeCanvas(null);
     }
 
     if (prevProps.decomposition === null
@@ -104,7 +104,7 @@ class MorseSmaleWindow extends React.Component {
     // this.controls.removeEventListener( 'change', this.renderScene );
     // this.controls.dispose();
 
-    window.removeEventListener('resize', this.resizeCanvas);
+    //window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.removeEventListener('mousedown', this.handleMouseRelease);
   }
@@ -186,8 +186,10 @@ class MorseSmaleWindow extends React.Component {
    * This can happen on a window resize or when another window is added to dSpaceX.
    * @param {boolean} newWindowAdded
    */
-  resizeCanvas(event) {
+  resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+    console.log('morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
+    console.log('...except not really, just updating the renderer and camera without the check mentioned in stackoverflow');
 
     // update camera
     this.updateCamera(width, height);
@@ -644,9 +646,7 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
-        <canvas ref='msCanvas' style={style} />
-      </ReactResizeDetector>);
+        <canvas ref='msCanvas' style={style} />);
   }
 }
 
