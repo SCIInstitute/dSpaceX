@@ -10,9 +10,14 @@ import SizeMonitor from './sizeMonitor';
 //import ResponsiveDrawer from '../components/responsiveDrawer';
 
 const styles = (theme) => ({
-  root: {
-    flexGrow: 1,
+  embeddingMorseSmaleWorkspace: {
+    background:'#ffffff',
+    display:'flex',
+    flexDirection:'column'
   },
+  // root: {
+  //   flexGrow: 1,
+  // },
   topPanels: {
     height:'80%',
 //    width:'100%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
@@ -59,24 +64,38 @@ const styles = (theme) => ({
       //         spacing={8}
       //         style={{ height:'20%', margin:'5px 0px 0px 0px' }}>
   drawer: {
-    height:'20%',
+    height:'20%', //drawer still explodes
+//    height:'50px', //drawer still explodes
     display:'grid',
-    gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
-    gridGap:'1rem'
+//    display:'flex',
+    //flexDirection:'row',
+    gridTemplateColumns:'repeat(auto-fill, minmax(45px, 1fr))',
+    gap:'1rem',
+//    justifyItems:'start',
+//    justifyContent:'start',
+//    gridAutoFlow:'row',
+//    lineHeight: 0,
   },
-  gridlistRoot: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    overflow: 'hidden',
-    backgroundColor: theme.palette.background.paper,
-    borderTop: 'solid #A9A9A9',
+  drawerItem: {
+    //flex:'auto',
+    //width:'100%',
+    //width:'45px',  // doen't match image inside
+    width:'auto',
+//    height:'50px', //drawer still explodes
   },
-  gridList: {
-    flexWrap: 'nowrap',
-    width: '100%',
-    transform: 'translateZ(0)',
-  },
+  // gridlistRoot: {
+  //   display: 'flex',
+  //   flexWrap: 'wrap',
+  //   justifyContent: 'space-around',
+  //   overflow: 'hidden',
+  //   backgroundColor: theme.palette.background.paper,
+  //   borderTop: 'solid #A9A9A9',
+  // },
+  // gridList: {
+  //   flexWrap: 'nowrap',
+  //   width: '100%',
+  //   transform: 'translateZ(0)',
+  // },
   //add to paper: marginTop: '50%',
   paper: {
     display: 'flex',
@@ -147,7 +166,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     const { drawerImages } = this.state;
 
     return (
-      <div style={{ background:'#ffffff', display:'flex', flexDirection:'column' }}>
+        <div className={classes.embeddingMorseSmaleWorkspace} >
 
         {/* top panel: embedding and crystals */}
         <div className={classes.topPanels} >
@@ -182,16 +201,17 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div className={classes.drawerDivider} />
 
         {/* shape cards drawer */}
+      {/*        <div style={{ height:'100%', flex:'auto' }}>   /*}{/*add a div wrapper, div still explodes */}
         <div className={classes.drawer} >
           {drawerImages.map((tile, i) =>
-          <Grid key={i} item>
+          <div className={classes.drawerItem} key={i} >
             <Paper style={{ backgroundColor:'#D3D3D3' }}>
               <img alt={'Image:' + tile.id}
                    height='45'
                    style={{ margin:'5px 5px 5px 5px' }}
                    src={'data:image/png;base64, ' + tile.img.rawData}/>
             </Paper>
-          </Grid>)}
+          </div>)}
         </div>
       </div>
     );
