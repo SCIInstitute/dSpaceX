@@ -153,25 +153,29 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div className={classes.topPanels} >
 
           {/* embedding */}
-          <EmbeddingWindow className={classes.embedding}
-            dataset={this.props.dataset}
-            decomposition={this.props.decomposition}
-            embedding={this.props.embedding}
-            selectedDesigns={this.props.selectedDesigns}
-            onDesignSelection={this.props.onDesignSelection}
-            activeDesigns={this.props.activeDesigns}
-            numberOfWindows={this.props.numberOfWindows}/>
+          <div style={{ width:'100%', flex:'auto' }}>
+            <EmbeddingWindow className={classes.embedding}
+                             dataset={this.props.dataset}
+                             decomposition={this.props.decomposition}
+                             embedding={this.props.embedding}
+                             selectedDesigns={this.props.selectedDesigns}
+                             onDesignSelection={this.props.onDesignSelection}
+                             activeDesigns={this.props.activeDesigns}
+                             numberOfWindows={this.props.numberOfWindows}/>
+          </div>
 
           {/* embedding/crystals vertical divider */}
           <div className={classes.verticalDivider} />
 
           {/* crystals */}
-          <MorseSmaleWindow className={classes.crystals}
-            dataset={this.props.dataset}
-            decomposition={this.props.decomposition}
-            numberOfWindows={this.props.numberOfWindows}
-            onCrystalSelection={this.props.onCrystalSelection}
-            evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+          <div style={{ width:'100%', flex:'auto' }}>
+            <MorseSmaleWindow className={classes.crystals}
+                              dataset={this.props.dataset}
+                              decomposition={this.props.decomposition}
+                              numberOfWindows={this.props.numberOfWindows}
+                              onCrystalSelection={this.props.onCrystalSelection}
+                              evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+          </div>
         </div>
 
         {/* drawer divider (todo: onMouseDown={this.onResizeDrawer})*/}
