@@ -8,6 +8,7 @@ import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import SizeMonitor from './sizeMonitor';
 //import ResponsiveDrawer from '../components/responsiveDrawer';
+import GalleryWindow from './galleryWindow';
 
 const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
@@ -70,10 +71,20 @@ const styles = (theme) => ({
 //    display:'flex',
     //flexDirection:'row',
     gridTemplateColumns:'repeat(auto-fill, minmax(45px, 1fr))',
+    gridTemplateRows:'1fr 100px',
     gap:'1rem',
+    overflow:'hidden',
 //    justifyItems:'start',
 //    justifyContent:'start',
 //    gridAutoFlow:'row',
+//    lineHeight: 0,
+  },
+  flexdrawer: {
+//    height:'20%', //drawer still explodes
+    display:'flex',
+    height:'100px',
+    flexDirection:'row',
+    overflow:'hidden',
 //    lineHeight: 0,
   },
   drawerItem: {
@@ -168,55 +179,81 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     return (
         <div className={classes.embeddingMorseSmaleWorkspace} >
 
-        {/* top panel: embedding and crystals */}
-        <div className={classes.topPanels} >
+          {/* top panel: embedding and crystals */}
+          <div className={classes.topPanels} >
 
-          {/* embedding */}
-          <div style={{ width:'100%', flex:'auto' }}>
-            <EmbeddingWindow className={classes.embedding}
-                             dataset={this.props.dataset}
-                             decomposition={this.props.decomposition}
-                             embedding={this.props.embedding}
-                             selectedDesigns={this.props.selectedDesigns}
-                             onDesignSelection={this.props.onDesignSelection}
-                             activeDesigns={this.props.activeDesigns}
-                             numberOfWindows={this.props.numberOfWindows}/>
+            {/* embedding */}
+            <div style={{ width:'100%', flex:'auto' }}>
+              <EmbeddingWindow className={classes.embedding}
+                               dataset={this.props.dataset}
+                               decomposition={this.props.decomposition}
+                               embedding={this.props.embedding}
+                               selectedDesigns={this.props.selectedDesigns}
+                               onDesignSelection={this.props.onDesignSelection}
+                               activeDesigns={this.props.activeDesigns}
+                               numberOfWindows={this.props.numberOfWindows}/>
+            </div>
+
+            {/* embedding/crystals vertical divider */}
+            <div className={classes.verticalDivider} />
+
+            {/* crystals */}
+            <div style={{ width:'100%', flex:'auto' }}>
+              <MorseSmaleWindow className={classes.crystals}
+                                dataset={this.props.dataset}
+                                decomposition={this.props.decomposition}
+                                numberOfWindows={this.props.numberOfWindows}
+                                onCrystalSelection={this.props.onCrystalSelection}
+                                evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+            </div>
           </div>
 
-          {/* embedding/crystals vertical divider */}
-          <div className={classes.verticalDivider} />
+          {/* drawer divider (todo: onMouseDown={this.onResizeDrawer})*/}
+          <div className={classes.drawerDivider} />
 
-          {/* crystals */}
-          <div style={{ width:'100%', flex:'auto' }}>
-            <MorseSmaleWindow className={classes.crystals}
-                              dataset={this.props.dataset}
-                              decomposition={this.props.decomposition}
-                              numberOfWindows={this.props.numberOfWindows}
-                              onCrystalSelection={this.props.onCrystalSelection}
-                              evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-          </div>
-        </div>
+          {/* shape cards drawer */}
+          {/*        <div style={{ height:'100%', flex:'auto' }}>   /*}{/*add a div wrapper, div still explodes */}
+            {/*        <div className={classes.flexdrawer} >*/}
+              <Paper style={{ overflow:'hidden auto', border:'1px solid gray', height:'20%' }}>
+                <Grid container
+                      justify={'flex-start'}
+                      spacing={8}
+                      style={{ margin:'5px 0px 0px 0px' }}>
+                  {drawerImages.map((tile, i) =>
 
-        {/* drawer divider (todo: onMouseDown={this.onResizeDrawer})*/}
-        <div className={classes.drawerDivider} />
-
-        {/* shape cards drawer */}
-      {/*        <div style={{ height:'100%', flex:'auto' }}>   /*}{/*add a div wrapper, div still explodes */}
-        <div className={classes.drawer} >
-          {drawerImages.map((tile, i) =>
-          <div className={classes.drawerItem} key={i} >
-            <Paper style={{ backgroundColor:'#D3D3D3' }}>
-              <img alt={'Image:' + tile.id}
-                   height='45'
-                   style={{ margin:'5px 5px 5px 5px' }}
-                   src={'data:image/png;base64, ' + tile.img.rawData}/>
-            </Paper>
-          </div>)}
-        </div>
-      </div>
+                  <Grid key={i} item>
+                    <Paper
+                      style={{ backgroundColor:'#FFA500' }}>
+                      <img alt={'Image:' + tile.id} key={i}
+                           height='45'
+                           style={{ margin:'5px 5px 5px 5px' }}
+                           src={'data:image/png;base64, ' + tile.img.rawData}/>
+                    </Paper>
+                  </Grid>)}
+                </Grid>
+              </Paper>
+              {/*        <div style={{ height:'20%', flex:'auto' }} > */}
+                {/*        </div> */}
+            </div>
     );
   }
 }
+
+//argh! just going to use gallery instead
+        // <div className={classes.flexdrawer} >
+        //   {drawerImages.map((tile, i) =>
+        //                     <img alt={'Image:' + tile.id} key={i}
+        //            height='45'
+        //            style={{ margin:'5px 5px 5px 5px' }}
+        //                     src={'data:image/png;base64, ' + tile.img.rawData}/>)};
+
+
+//still problematic: no scrolling
+                        // <GalleryWindow style={{ height:'20%', flex:'auto' }} 
+                        //   dataset={this.props.dataset}
+                        //   selectedDesigns={this.props.selectedDesigns}
+                        //   onDesignSelection={this.onDesignSelection}
+                        //   activeDesigns={this.props.activeDesigns}/>);
 
 //handy test which finally helped identify ReactResizeDetector as the culprit for all this crap (well, maybe... yes, I double checked.)
         // <div style={{ width:'100%', height:'100%', background:'#ffffff' }}>
