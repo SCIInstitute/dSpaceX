@@ -15,9 +15,12 @@ const styles = (theme) => ({
   },
   topPanels: {
     height:'80%',
+//    width:'100%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
     flex:'auto',
     display:'flex',
-    flexDirection:'row'
+    flexDirection:'row',
+    justifyContent:'space-evenly',
+//    lineHeight: 0,
   },
   // rightPanel: {
   //   backgroundColor: '#ffffff',
@@ -35,10 +38,31 @@ const styles = (theme) => ({
     flex:'auto'
   },
   embedding: {
-    flex:'auto'
+    flex:'auto',
+//    width:'50%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
+//    lineHeight: 0,
   },
   crystals: {
-    flex:'auto'
+    flex:'auto',
+//    width:'50%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
+//    lineHeight: 0,
+  },
+  drawerDivider: {
+    background:'#808080',
+    width:'100%',
+    height:'5px',
+//    lineHeight: 0,
+  },
+  //material-ui version of now standard grid display
+      // <Grid container
+      //         justify{'flex-end'}
+      //         spacing={8}
+      //         style={{ height:'20%', margin:'5px 0px 0px 0px' }}>
+  drawer: {
+    height:'20%',
+    display:'grid',
+    gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))',
+    gridGap:'1rem'
   },
   gridlistRoot: {
     display: 'flex',
@@ -127,45 +151,34 @@ class EmbeddingMorseSmaleWindow extends React.Component {
 
         {/* top panel: embedding and crystals */}
         <div className={classes.topPanels} >
-        {/*<div className={classes.topPanels} style={{ height:'80%', flex:'auto', display:'flex', flexDirection:'row' }}>*/}
 
           {/* embedding */}
-      {/*<div style={{ width:'100%', flex:'auto' }}>*/}
-            <EmbeddingWindow
-              className={classes.embedding}
-              dataset={this.props.dataset}
-              decomposition={this.props.decomposition}
-              embedding={this.props.embedding}
-              selectedDesigns={this.props.selectedDesigns}
-              onDesignSelection={this.props.onDesignSelection}
-              activeDesigns={this.props.activeDesigns}
-              numberOfWindows={this.props.numberOfWindows}/>
-        {/*</div>*/}
+          <EmbeddingWindow className={classes.embedding}
+            dataset={this.props.dataset}
+            decomposition={this.props.decomposition}
+            embedding={this.props.embedding}
+            selectedDesigns={this.props.selectedDesigns}
+            onDesignSelection={this.props.onDesignSelection}
+            activeDesigns={this.props.activeDesigns}
+            numberOfWindows={this.props.numberOfWindows}/>
 
           {/* embedding/crystals vertical divider */}
-        <div className={classes.verticalDivider} />
+          <div className={classes.verticalDivider} />
 
           {/* crystals */}
-      {/*<div style={{ width:'100%', flex:'auto' }}>*/}
-            <MorseSmaleWindow
-              className={classes.crystals}
-              dataset={this.props.dataset}
-              decomposition={this.props.decomposition}
-              numberOfWindows={this.props.numberOfWindows}
-              onCrystalSelection={this.props.onCrystalSelection}
-              evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
-        {/*</div>*/}
-         */}
+          <MorseSmaleWindow className={classes.crystals}
+            dataset={this.props.dataset}
+            decomposition={this.props.decomposition}
+            numberOfWindows={this.props.numberOfWindows}
+            onCrystalSelection={this.props.onCrystalSelection}
+            evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
         </div>
 
         {/* drawer divider (todo: onMouseDown={this.onResizeDrawer})*/}
-        <div style={{ background:'#808080', width:'100%', height:'5px' }} />
+        <div className={classes.drawerDivider} />
 
         {/* shape cards drawer */}
-        <Grid container
-              justify={'flex-end'}
-              spacing={8}
-              style={{ height:'20%', margin:'5px 0px 0px 0px' }}>
+        <div className={classes.drawer} >
           {drawerImages.map((tile, i) =>
           <Grid key={i} item>
             <Paper style={{ backgroundColor:'#D3D3D3' }}>
@@ -175,7 +188,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                    src={'data:image/png;base64, ' + tile.img.rawData}/>
             </Paper>
           </Grid>)}
-        </Grid>
+        </div>
       </div>
     );
   }
