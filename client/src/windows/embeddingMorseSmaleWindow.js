@@ -7,7 +7,6 @@ import React from 'react';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import SizeMonitor from './sizeMonitor';
-//import ResponsiveDrawer from '../components/responsiveDrawer';
 import GalleryWindow from './galleryWindow';
 
 const styles = (theme) => ({
@@ -16,27 +15,13 @@ const styles = (theme) => ({
     display:'flex',
     flexDirection:'column'
   },
-  // root: {
-  //   flexGrow: 1,
-  // },
   topPanels: {
     height:'80%',
-//    width:'100%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
     flex:'auto',
     display:'flex',
     flexDirection:'row',
     justifyContent:'space-evenly',
-//    lineHeight: 0,
   },
-  // rightPanel: {
-  //   backgroundColor: '#ffffff',
-  //   lineHeight: 0,
-  // },
-  // leftPanel: {
-  //   backgroundColor: '#ffffff',
-  //   borderRight: 'solid #A9A9A9',
-  //   lineHeight: 0,
-  // },
   verticalDivider: {
     background:'#808080',
     width:'5px',
@@ -45,69 +30,32 @@ const styles = (theme) => ({
   },
   embedding: {
     flex:'auto',
-//    width:'50%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
-//    lineHeight: 0,
   },
   crystals: {
     flex:'auto',
-//    width:'50%',  // doesn't do anything to prevent embedding/crystal from staying wide when they grow (and where they start) 
-//    lineHeight: 0,
   },
   drawerDivider: {
     background:'#808080',
     width:'100%',
     height:'5px',
-//    lineHeight: 0,
   },
-  //material-ui version of now standard grid display
-      // <Grid container
-      //         justify{'flex-end'}
-      //         spacing={8}
-      //         style={{ height:'20%', margin:'5px 0px 0px 0px' }}>
   drawer: {
-    height:'20%', //drawer still explodes
-//    height:'50px', //drawer still explodes
+    height:'20%',
     display:'grid',
-//    display:'flex',
-    //flexDirection:'row',
     gridTemplateColumns:'repeat(auto-fill, minmax(45px, 1fr))',
     gridTemplateRows:'1fr 100px',
     gap:'1rem',
     overflow:'hidden',
-//    justifyItems:'start',
-//    justifyContent:'start',
-//    gridAutoFlow:'row',
-//    lineHeight: 0,
   },
   flexdrawer: {
-//    height:'20%', //drawer still explodes
     display:'flex',
     height:'100px',
     flexDirection:'row',
     overflow:'hidden',
-//    lineHeight: 0,
   },
   drawerItem: {
-    //flex:'auto',
-    //width:'100%',
-    //width:'45px',  // doen't match image inside
     width:'auto',
-//    height:'50px', //drawer still explodes
   },
-  // gridlistRoot: {
-  //   display: 'flex',
-  //   flexWrap: 'wrap',
-  //   justifyContent: 'space-around',
-  //   overflow: 'hidden',
-  //   backgroundColor: theme.palette.background.paper,
-  //   borderTop: 'solid #A9A9A9',
-  // },
-  // gridList: {
-  //   flexWrap: 'nowrap',
-  //   width: '100%',
-  //   transform: 'translateZ(0)',
-  // },
-  //add to paper: marginTop: '50%',
   paper: {
     display: 'flex',
     flexDirection: 'column',

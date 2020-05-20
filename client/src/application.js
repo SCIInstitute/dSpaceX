@@ -30,7 +30,6 @@ const styles = (theme) => ({
     overflow: 'hidden',
     position: 'relative',
     display: 'flex',
-    //height: '800px',//calc(100vh)',
     height: 'calc(100vh)',
   },
   drawerPaper: {
@@ -46,7 +45,6 @@ const styles = (theme) => ({
   },
   workspace: {
     display: 'grid',
-    //height: '640px', //calc(100vh - 64px)',
     height: 'calc(100vh - 64px)',
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
@@ -557,9 +555,9 @@ class Application extends React.Component {
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
-        <div key={i} >
-          <SizeMonitor key={i} />
-        </div>
+                        <div key={i} >
+                          <SizeMonitor key={i} />
+                        </div>
                       );
                     } else if (windowConfig.dataViewType === 'gallery') {
                       return (

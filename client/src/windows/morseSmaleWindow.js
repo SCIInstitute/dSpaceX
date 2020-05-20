@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
-//import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
+import _ from 'lodash';
 
 /**
  * Creates Morse-Smale decomposition
@@ -42,7 +41,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.resetScene = this.resetScene.bind(this);
     this.resetBounds = this.resetBounds.bind(this);
-    //this.resizeCanvas = this.resizeCanvas.bind(this);
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
@@ -54,7 +52,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -70,10 +68,6 @@ class MorseSmaleWindow extends React.Component {
   componentDidUpdate(prevProps, prevState, prevContext) {
     if (this.props.decomposition === null) {
       return;
-    }
-
-    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      //this.resizeCanvas(null);
     }
 
     if (prevProps.decomposition === null
@@ -143,6 +137,9 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the renderer, camera, and scene for Three.js.
    */
   init() {
+    //<ctc> debugging vars
+    this.nResizes = 0;
+
     // canvas
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
@@ -188,8 +185,7 @@ class MorseSmaleWindow extends React.Component {
    */
   resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
-    console.log('morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
-    console.log('...except not really, just updating the renderer and camera without the check mentioned in stackoverflow');
+    console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
 
     // update camera
     this.updateCamera(width, height);

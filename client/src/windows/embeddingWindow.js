@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import React from 'react';
 import { withDSXContext } from '../dsxContext';
+import _ from 'lodash';
 
 /**
  * Create Graph Window
@@ -38,7 +39,6 @@ class EmbeddingWindow extends React.Component {
     this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.resetScene = this.resetScene.bind(this);
-    //this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
     this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
     this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
@@ -52,7 +52,7 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
@@ -80,11 +80,6 @@ class EmbeddingWindow extends React.Component {
 
     if (this.props.embedding === undefined) {
       return;
-    }
-
-    // New window has been added to application
-    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      //this.resizeCanvas(true);
     }
 
     // Decomposition is loaded for the first time
@@ -153,6 +148,9 @@ class EmbeddingWindow extends React.Component {
    * Initialized the renderer, camera, and scene for Three.js
    */
   init() {
+    //<ctc> debugging vars
+    this.nResizes = 0;
+
     // canvas
     let canvas = this.refs.embeddingCanvas;
     let gl = canvas.getContext('webgl');
@@ -364,33 +362,21 @@ class EmbeddingWindow extends React.Component {
   resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
-    //const canvas = this.renderer.domElement;
-    // const width = canvas.clientWidth;
-    // const height = canvas.clientHeight;
-    console.log('embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
-    // this.refs.embeddingCanvas.width = width;
-    // this.refs.embeddingCanvas.height = height;
+    console.log('['+ this.nResizes++ +'] embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
 
     // Resize renderer
-    this.renderer.setSize(width, height, false);  // <ctc> not updating renderer size doesn't make any different: changing window size quickly always breaks things
-                                                // ...so keep setting renderer size
+    this.renderer.setSize(width, height, false);
+
     // Resize camera
     let sx = width / height;
-    let sy = 1;             // <ctc> just setting sx/sy consistently instead of switching them from w/h diff has better result, esp when window is *slowly* resized
-                            //       ...but keeping them both 1,1 doesn't look right or stop the fast resizing bug, so keep setting sy
+    let sy = 1;         // setting sx/sy consistently has most consistent result, esp when window is *slowly* resized
     this.camera.left = -1*sx;
     this.camera.right = sx;
     this.camera.top = sy;
     this.camera.bottom = -1*sy;
     this.camera.updateProjectionMatrix();
 
-    // By default (newWindowAdded = true in argument) redraws scene when new window is added.
-    // For the resizing event that comes from the ResizeablePanels in the embeddingMoreseSmaleWindows and is captured
-    // by the ReactResizeDetector in this window it is set to false. This is because of a race condition created by how
-    // quickly the scene would have to redraw when adjusting the panel size.
-    //if (newWindowAdded) { //<ctc> trying to figure out why last render clears screen (or screen is cleared after last render) -> this isn't it, but I took it out of morseSmaleWindow, so maybe also not important here
-      this.renderScene();
-  //}
+    this.renderScene();
   };
 
   /**
