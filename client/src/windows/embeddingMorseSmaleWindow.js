@@ -9,6 +9,7 @@ import { withStyles } from '@material-ui/core/styles';
 import SizeMonitor from './sizeMonitor';
 import GalleryWindow from './galleryWindow';
 
+const drawerHeight = 200;
 const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
     background:'#ffffff',
@@ -16,8 +17,12 @@ const styles = (theme) => ({
     flexDirection:'column'
   },
   topPanels: {
-    height:'1fr',
-    flex:'auto',
+    //height:'calc(1fr - '+drawerHeight+')',
+    //height:'500',
+    // minHeight: drawerHeight,
+    // maxHeight: drawerHeight,
+    flex:'auto',  // fills space, respects as window size is minimized, but always grows when size increases past initial size. Getting closer...
+                // removing auto starts with smaller top panels if window is wide, but adjusts vertical size on resize in both directions. 
     display:'flex',
     flexDirection:'row',
     justifyContent:'space-evenly',
@@ -66,7 +71,9 @@ const styles = (theme) => ({
   //from appication (since it manages to create a scrollable gallery)
   workspace: {  
     display: 'grid',
-    height: 'calc(100vh - 64px)',
+    //height: 'calc(100vh - 64px)',
+    //height:'200px',
+    height: drawerHeight,
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
@@ -175,7 +182,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawerDivider} />
 
           {/* shape cards drawer */}
-        <div className={classes.workspace} style={{gridTemplateColumns: '1fr', gridTemplateRows: '1fr', height:'200px' }} >  {/* 200px works! */}
+        <div className={classes.workspace} >  {/* 200px works! */}
 
               <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
                 <Grid container
