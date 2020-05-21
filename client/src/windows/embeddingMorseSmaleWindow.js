@@ -15,8 +15,8 @@ const styles = (theme) => ({
     background:'#ffffff',
     display:'flex',
     flexDirection:'column',
-    //height:'100%',
-    height:'100vh',
+    height:'100%',
+    //height:'100vh',
     //height:'calc(100vh - 200px)',               // holy cow this keeps things consistent! Too small top panels, but still consistent.
     //height:'calc(100vh - '+drawerHeight+'px)',    // ...and this lets me specify vars
                                                   // seems like vh is fixed at the start, but wrong, and when size changes it doesn't
@@ -208,8 +208,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawerDivider} />
 
           {/* shape cards drawer */}
-        <div className={classes.workspace} >  {/* 200px works! */}
+        <div className={classes.workspace} >
 
+      {/* very old but still extant issue, fix here: https://stackoverflow.com/a/55751683/207044 (probably need to use standard grid, not material-ui grid */}
               <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
                 <Grid container
                       justify={'flex-start'}
