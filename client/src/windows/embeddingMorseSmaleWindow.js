@@ -16,7 +16,7 @@ const styles = (theme) => ({
     flexDirection:'column'
   },
   topPanels: {
-    height:'80%',
+    height:'1fr',
     flex:'auto',
     display:'flex',
     flexDirection:'row',
@@ -61,6 +61,21 @@ const styles = (theme) => ({
     flexDirection: 'column',
     alignItems: 'center',
     border: 'solid #D3D3D3'
+  },
+
+  //from appication (since it manages to create a scrollable gallery)
+  workspace: {  
+    display: 'grid',
+    height: 'calc(100vh - 64px)',
+    gridTemplateColumns: '1fr',
+    gridTemplateRows: '1fr',
+    gridGap: '0em',
+  },
+  content: {
+    flexGrow: 1,
+    minWidth: 0,
+    backgroundColor: '#eef',
+    position: 'relative',
   },
 });
 
@@ -160,9 +175,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawerDivider} />
 
           {/* shape cards drawer */}
-          {/*        <div style={{ height:'100%', flex:'auto' }}>   /*}{/*add a div wrapper, div still explodes */}
-            {/*        <div className={classes.flexdrawer} >*/}
-              <Paper style={{ overflow:'hidden auto', border:'1px solid gray', height:'20%' }}>
+        <div className={classes.workspace} style={{gridTemplateColumns: '1fr', gridTemplateRows: '1fr', height:'200px' }} >  {/* 200px works! */}
+
+              <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
                 <Grid container
                       justify={'flex-start'}
                       spacing={8}
@@ -180,12 +195,32 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                   </Grid>)}
                 </Grid>
               </Paper>
-              {/*        <div style={{ height:'20%', flex:'auto' }} > */}
-                {/*        </div> */}
-            </div>
+        </div>
+      </div>
     );
   }
 }
+
+// works, but unscrollable
+          // {/* shape cards drawer */}
+          //     <Paper style={{ overflow:'hidden auto', border:'1px solid gray', height:'20%' }}>
+          //       <Grid container
+          //             justify={'flex-start'}
+          //             spacing={8}
+          //             style={{ margin:'5px 0px 0px 0px' }}>
+          //         {drawerImages.map((tile, i) =>
+
+          //         <Grid key={i} item>
+          //           <Paper
+          //             style={{ backgroundColor:'#FFA500' }}>
+          //             <img alt={'Image:' + tile.id} key={i}
+          //                  height='45'
+          //                  style={{ margin:'5px 5px 5px 5px' }}
+          //                  src={'data:image/png;base64, ' + tile.img.rawData}/>
+          //           </Paper>
+          //         </Grid>)}
+          //       </Grid>
+          //     </Paper>
 
 //argh! just going to use gallery instead
         // <div className={classes.flexdrawer} >
