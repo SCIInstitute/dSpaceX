@@ -14,18 +14,42 @@ const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
     background:'#ffffff',
     display:'flex',
-    flexDirection:'column'
+    flexDirection:'column',
+    //height:'100%',
+    height:'100vh',
+    //height:'calc(100vh - 200px)',               // holy cow this keeps things consistent! Too small top panels, but still consistent.
+    //height:'calc(100vh - '+drawerHeight+'px)',    // ...and this lets me specify vars
+                                                  // seems like vh is fixed at the start, but wrong, and when size changes it doesn't
+                                    // ...and expands top items, maybe flex-end? yes, but that's good. Just need to have something like vh that works dynamically
+    // minHeight: 'calc(100vh - '+drawerHeight+'px)',  // same as just height:'calc...
+    // maxHeight: 'calc(100vh - '+drawerHeight+'px)',
+    //height:'calc(1fr - '+drawerHeight+'px)',    // ...but this doesn't work, back to expanding
+    //height:'calc(100% - '+drawerHeight+')',      // starts good, but still gets bigger on expanding window size
+    //height:'1000',             // doesn't make a difference to have height of any sort
+    // minHeight: 1000,  // doesn't make a difference to have min/max -- wait! It made a difference to have it be small (I accidentally tried drawerHeight)
+    // maxHeight: 1000,
+    // minHeight: 'calc(1fr - '+drawerHeight+')',  // 1fr doesn't make a difference
+    // maxHeight: 'calc(1fr - '+drawerHeight+')',
+    // minHeight: 'calc(100% - '+drawerHeight+')',  // 100% doesn't make a difference
+    // maxHeight: 'calc(100% - '+drawerHeight+')',
+    // minHeight: 'calc(100vh - '+drawerHeight+')',  // 100vh doesn't make a difference
+    // maxHeight: 'calc(100vh - '+drawerHeight+')',
+    // minHeight: 'calc('+drawerHeight+')',  // just using drawerHeight doesn't make a difference, so probably the calc doesn't work
+    // maxHeight: 'calc('+drawerHeight+')',
+    // height:`1fr-drawerHeight`,   // no difference
+    // minHeight:`1fr-drawerHeight`,
+    // maxHeight:`1fr-drawerHeight`,
+    justifyContent:'flex-end',  // doesn't make a difference from space-evenly
   },
   topPanels: {
-    //height:'calc(1fr - '+drawerHeight+')',
-    //height:'500',
-    // minHeight: drawerHeight,
-    // maxHeight: drawerHeight,
     flex:'auto',  // fills space, respects as window size is minimized, but always grows when size increases past initial size. Getting closer...
-                // removing auto starts with smaller top panels if window is wide, but adjusts vertical size on resize in both directions. 
+                    // removing auto starts with smaller top panels if window is wide, but adjusts vertical size on resize in both directions.
+    //flex:'0 0 1000',  // nothing here makes a different, 1 1 auto is just like auto
     display:'flex',
     flexDirection:'row',
-    justifyContent:'space-evenly',
+    //justifyContent:'space-evenly',
+    height:'calc(100vh - '+drawerHeight+'px)',    // ...and this lets me specify vars
+    justifyContent:'flex-end',  // doesn't make a difference from space-evenly
   },
   verticalDivider: {
     background:'#808080',
@@ -74,16 +98,18 @@ const styles = (theme) => ({
     //height: 'calc(100vh - 64px)',
     //height:'200px',
     height: drawerHeight,
+    minHeight: drawerHeight,  // doesn't make a difference to have min/max
+    maxHeight: drawerHeight,
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
   },
-  content: {
-    flexGrow: 1,
-    minWidth: 0,
-    backgroundColor: '#eef',
-    position: 'relative',
-  },
+  // content: {
+  //   flexGrow: 1,
+  //   minWidth: 0,
+  //   backgroundColor: '#eef',
+  //   position: 'relative',
+  // },
 });
 
 /**
