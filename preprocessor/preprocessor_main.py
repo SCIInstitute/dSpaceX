@@ -1,7 +1,10 @@
+from glob import glob
+from PIL import Image
 import json
 import numpy as np
 import os
 import pandas as pd
+import re
 import sys
 from sklearn.manifold import TSNE, Isomap, MDS
 import yaml
@@ -34,15 +37,24 @@ def process_data(config):
 
     # THUMBNAILS
     if 'thumbnails' in config:
+        # Make sure output directory exists
+        out = output_directory + 'images/'
+        if not os.path.exists(out):
+            os.makedirs(out)
+        # Generate thumbnails
         if config['thumbnails']['type'] == 'nano':
             print('Generating thumbnails for Nanoparticles.')
-            out = output_directory + 'images/'
-            if not os.path.exists(out):
-                os.makedirs(out)
-            # generate_thumbnails(output_directory + config['datasetName'] + '_Parameters.csv', out, add_slices=False)
-            output_config['thumbnails'] = {'format': 'png', 'files': 'images/?.png', 'offset': 1, 'padZeros': 'false'}
+            generate_thumbnails(output_directory + config['datasetName'] + '_Parameters.csv', out, add_slices=False)
+        elif config['thumbnails']['type'] == 'png':
+            print('Generating png thumbnails.')
+            image_files = glob(config['shapeDirectory'] + '*.png')
+            for file in image_files:
+                image_id = list(map(int, re.findall(r'\d+', file)))[-1]
+                img = Image.open(file)
+                img.save(output_directory + 'images/' + str(image_id) + '.png')
         else:
-            print('Sorry I only know how to make thumbnails for Nanoparticles right now. Skipping Thumbnails.')
+            print('Sorry I only know how to make thumbnails for Nanoparticles and png images. Skipping Thumbnails.')
+        output_config['thumbnails'] = {'format': 'png', 'files': 'images/?.png', 'offset': 1, 'padZeros': 'false'}
 
     # DISTANCES
     distance_type = config['distance']['type'].lower()
@@ -69,7 +81,7 @@ def process_data(config):
     else:
         print('Calculating L2 distance.')
         if config['shapeFormat'] == 'nrrd':
-            # distance = calculate_l2_distance_block(config['shapeDirectory'])
+            distance = calculate_l2_distance_block(config['shapeDirectory'])
             print('test')
         elif config['shapeFormat'] == 'png':
             distance = calculate_l2_distance_png(config['shapeDirectory'])
@@ -77,18 +89,18 @@ def process_data(config):
             print('We\'re sorry we do not currently support ' + config['shapeFormat'] +
                   '. Supported formats include nrrd and png.')
             sys.exit()
-    # np.savetxt(output_directory + config['datasetName'] + '_distance.csv', distance, delimiter=',')
+    np.savetxt(output_directory + config['datasetName'] + '_distance.csv', distance, delimiter=',')
     output_config['distances'] = {'format': 'csv', 'file': config['datasetName'] + '_distance.csv',
                                   'metric': distance_type}
 
     # EMBEDDINGS
     print('Calculating default 2D embeddings for entire dataset.')
-    # tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
-    # mds = MDS(n_components=2, dissimilarity='precomputed').fit_transform(distance)
-    # isomap = Isomap(n_components=2, metric='precomputed').fit_transform(distance)
-    # np.savetxt(output_directory + config['datasetName'] + '_tsne.csv', tsne, delimiter=',')
-    # np.savetxt(output_directory + config['datasetName'] + '_mds.csv', mds, delimiter=',')
-    # np.savetxt(output_directory + config['datasetName'] + '_isomap.csv', isomap, delimiter=',')
+    tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
+    mds = MDS(n_components=2, dissimilarity='precomputed').fit_transform(distance)
+    isomap = Isomap(n_components=2, metric='precomputed').fit_transform(distance)
+    np.savetxt(output_directory + config['datasetName'] + '_tsne.csv', tsne, delimiter=',')
+    np.savetxt(output_directory + config['datasetName'] + '_mds.csv', mds, delimiter=',')
+    np.savetxt(output_directory + config['datasetName'] + '_isomap.csv', isomap, delimiter=',')
 
     embeddings = [{'name': 't-SNE', 'format': 'csv', 'file': config['datasetName'] + '_tsne.csv'},
                   {'name': 'MDS', 'format': 'csv', 'file': config['datasetName'] + '_mds.csv'},
