@@ -6,7 +6,7 @@ import sys
 from sklearn.manifold import TSNE, Isomap, MDS
 import yaml
 
-from distances.nrrd_distances import calculate_l1_distance_nrrd, calculate_l2_distance_nrrd
+from distances.nrrd_distances import calculate_l1_distance_nrrd, calculate_l2_distance_block
 from distances.png_distances import calculate_l1_distance_png, calculate_l2_distance_png
 from thumbnails.nanoparticles_thumbnails import generate_thumbnails
 from utils import run_external_script
@@ -31,6 +31,18 @@ def process_data(config):
     # TODO calculate summary statistics for each qoi (mean, mode, variance, these could be displayed in client)
     qois_df.to_csv(output_directory + config['datasetName'] + '_QoIs.csv', index=False)
     output_config['qois'] = {'format': 'csv', 'file': config['datasetName'] + '_QoIs.csv'}
+
+    # THUMBNAILS
+    if 'thumbnails' in config:
+        if config['thumbnails']['type'] == 'nano':
+            print('Generating thumbnails for Nanoparticles.')
+            out = output_directory + 'images/'
+            if not os.path.exists(out):
+                os.makedirs(out)
+            # generate_thumbnails(output_directory + config['datasetName'] + '_Parameters.csv', out, add_slices=False)
+            output_config['thumbnails'] = {'format': 'png', 'files': 'images/?.png', 'offset': 1, 'padZeros': 'false'}
+        else:
+            print('Sorry I only know how to make thumbnails for Nanoparticles right now. Skipping Thumbnails.')
 
     # DISTANCES
     distance_type = config['distance']['type'].lower()
@@ -57,28 +69,29 @@ def process_data(config):
     else:
         print('Calculating L2 distance.')
         if config['shapeFormat'] == 'nrrd':
-            distance = calculate_l2_distance_nrrd(config['shapeDirectory'])
+            # distance = calculate_l2_distance_block(config['shapeDirectory'])
+            print('test')
         elif config['shapeFormat'] == 'png':
             distance = calculate_l2_distance_png(config['shapeDirectory'])
         else:
             print('We\'re sorry we do not currently support ' + config['shapeFormat'] +
                   '. Supported formats include nrrd and png.')
             sys.exit()
-    np.savetxt(output_directory + config['datasetName'] + '_distance.csv', distance, delimiter=',')
+    # np.savetxt(output_directory + config['datasetName'] + '_distance.csv', distance, delimiter=',')
     output_config['distances'] = {'format': 'csv', 'file': config['datasetName'] + '_distance.csv',
                                   'metric': distance_type}
 
     # EMBEDDINGS
     print('Calculating default 2D embeddings for entire dataset.')
-    tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
-    mds = MDS(n_components=2, dissimilarity='precomputed').fit_transform(distance)
-    isomap = Isomap(n_components=2, metric='precomputed').fit_transform(distance)
-    np.savetxt(output_directory + config['datasetName'] + '_tsne.csv', tsne, delimiter=',')
-    np.savetxt(output_directory + config['datasetName'] + '_mds.csv', mds, delimiter=',')
-    np.savetxt(output_directory + config['datasetName'] + '_isomap.csv', isomap, delimiter=',')
+    # tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
+    # mds = MDS(n_components=2, dissimilarity='precomputed').fit_transform(distance)
+    # isomap = Isomap(n_components=2, metric='precomputed').fit_transform(distance)
+    # np.savetxt(output_directory + config['datasetName'] + '_tsne.csv', tsne, delimiter=',')
+    # np.savetxt(output_directory + config['datasetName'] + '_mds.csv', mds, delimiter=',')
+    # np.savetxt(output_directory + config['datasetName'] + '_isomap.csv', isomap, delimiter=',')
 
     embeddings = [{'name': 't-SNE', 'format': 'csv', 'file': config['datasetName'] + '_tsne.csv'},
-                  {'name': 'MDS', 'format': 'csv', 'file': config['datasetName'] + '_distance.csv'},
+                  {'name': 'MDS', 'format': 'csv', 'file': config['datasetName'] + '_mds.csv'},
                   {'name': 'Isomap', 'format': 'csv', 'file': config['datasetName'] + '_isomap.csv'}]
 
     if 'embeddings' in config:
@@ -106,18 +119,6 @@ def process_data(config):
                                    'format': 'csv',
                                    'file': config['datasetName'] + '_' + emb['name'] + '.csv'})
     output_config['embeddings'] = embeddings
-
-    # THUMBNAILS
-    if 'thumbnails' in config:
-        if config['thumbnails']['type'] == 'nano':
-            print('Generating thumbnails for Nanoparticles.')
-            out = output_directory + 'images/'
-            if not os.path.exists(out):
-                os.makedirs(out)
-            generate_thumbnails(output_directory + config['datasetName'] + '_Parameters.csv', out, add_slices=False)
-            output_config['thumbnails'] = {'format': 'png', 'files': 'images/?.png', 'offset': 1, 'padZeros': 'false'}
-        else:
-            print('Sorry I only know how to make thumbnails for Nanoparticles right now. Skipping Thumbnails.')
 
     print('Generating config.yaml for dataset.')
     with open(config['outputDirectory'] + 'config.yaml', 'w') as file:
