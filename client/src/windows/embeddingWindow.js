@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
-import _ from 'lodash';
 import { withDSXContext } from '../dsxContext';
-
 
 /**
  * Create Graph Window
@@ -55,7 +53,7 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });

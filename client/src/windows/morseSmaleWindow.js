@@ -4,7 +4,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
 import ReactResizeDetector from 'react-resize-detector';
-import _ from 'lodash';
 import { withDSXContext } from '../dsxContext';
 
 /**
@@ -55,7 +54,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', this.resizeCanvas);
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -188,8 +187,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {boolean} newWindowAdded
    */
   resizeCanvas(event) {
-    let width = this.refs.msCanvas.clientWidth;
-    let height = this.refs.msCanvas.clientHeight;
+    let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
     // update camera
     this.updateCamera(width, height);
@@ -576,7 +574,7 @@ class MorseSmaleWindow extends React.Component {
   updatePerspCamera(width, height) {
     this.perspCamera.aspect = width / height;
   }
-
+  
   /**
    * updateCamera
    */
@@ -585,10 +583,11 @@ class MorseSmaleWindow extends React.Component {
     this.updatePerspCamera(width, height);
 
     if (resetPos) {
-      this.controls.reset(); // resets camera to original position (also calls updateProjectionMatrix)
-    } else {
+      this.controls.reset();   // resets camera to original position (also calls updateProjectionMatrix)
+    }
+    else {
       this.camera.updateProjectionMatrix();
-      this.controls.update(); // it's necessary to call this when the camera is manually changed
+      this.controls.update();  // it's necessary to call this when the camera is manually changed
     }
   }
 

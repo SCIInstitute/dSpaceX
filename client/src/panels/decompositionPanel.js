@@ -46,10 +46,9 @@ class DecompositionPanel extends React.Component {
     this.fetchDecomposition = this.fetchDecomposition.bind(this);
 
     this.state = {
-      datasetId: this.props.dataset.datasetId,
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
-      decompositionField: this.props.dataset.qoiNames[0],
+      decompositionField: null,
       persistenceLevel: '',
       minPersistence: null,
       maxPersistence: null,
@@ -91,7 +90,7 @@ class DecompositionPanel extends React.Component {
    */
   async fetchDecomposition() {
     let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-    let datasetId = this.state.datasetId;
+    let datasetId = this.props.dataset.datasetId;
     let category = this.state.decompositionCategory;
     let field = this.state.decompositionField;
     let result = await this.client.fetchMorseSmalePersistence(datasetId, category, field, k);
@@ -103,32 +102,6 @@ class DecompositionPanel extends React.Component {
       persistenceLevel: ('' + result.maxPersistenceLevel),
     });
     this.updateDataModel('' + result.maxPersistenceLevel);
-  }
-
-  componentDidMount() {
-    if (this.state.decompositionMode == 'Morse-Smale') {
-      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
-      let category = this.state.decompositionCategory;
-      let field = this.state.decompositionField;
-      this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
-          .then(function(result) {
-            this.setState({
-              minPersistence: result.minPersistenceLevel,
-              maxPersistence: result.maxPersistenceLevel,
-              complexSizes: result.complexSizes,
-              sliderPersistence: result.maxPersistenceLevel,
-              persistenceLevel: ('' + result.maxPersistenceLevel),
-            });
-            this.updateDataModel('' + result.maxPersistenceLevel);
-          }.bind(this));
-    } else {
-      this.setState({
-        minPersistence: null,
-        maxPersistence: null,
-        crystals: [],
-      });
-    }
   }
 
   /**
@@ -366,7 +339,7 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value='Morse-Smale'>
                   <em>Morse-Smale</em>
                 </MenuItem>
-                <MenuItem value='Shared-GP' disabled={true}>
+                <MenuItem value='Shared-GP' disabled={false}>
                   <em>Shared-GP</em>
                 </MenuItem>
                 <MenuItem value='Shape-Odds' disabled={true}>
@@ -388,7 +361,7 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={true}>
+                <MenuItem value="parameter" disabled={false}>
                   <em>Parameter</em>
                 </MenuItem>
                 <MenuItem value="geometry" disabled={true}>

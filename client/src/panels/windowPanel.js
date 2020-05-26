@@ -29,7 +29,7 @@ class WindowPanel extends React.Component {
       dataViewType: this.props.config.dataViewType,
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
-      embeddingAlgorithm: this.props.embeddings[0].name.trim(),
+      embeddingAlgorithm: this.props.config.embeddingAlgorithm,
       visualizationQoi: null,
       xAttributeGroup: this.props.config.xAttributeGroup,
       xAttribute: this.props.config.xAttribute,
@@ -213,7 +213,7 @@ class WindowPanel extends React.Component {
           disabled={!this.props.enabled || !this.props.dataset}>
           <InputLabel htmlFor='algorithm-input'>Embedding Algorithm</InputLabel>
           <Select ref="algorithmCombo"
-            value={this.state.embeddingAlgorithm}
+            value={this.state.embeddingAlgorithm || ''}
             onChange={this.handleEmbeddingAlgorithmChange} inputProps={{
               name: 'algorithm',
               id: 'algorithm-input',
