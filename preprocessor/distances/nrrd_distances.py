@@ -13,7 +13,7 @@ def calculate_l1_distance_nrrd(directory, number_of_blocks=15, offset=1):
     Calculates the l1 distance between volumes saved as .nrrd files.
     For two vector p and q the l1 distance is
     l1 = sum |p_i - q_i| for i to n
-    :param directory: directory that contains volumes
+    :param directory: The directory that contains the volumes.
     :param number_of_blocks: Because volumes require significant memory this computation is done by loading
     a portion of the volumes into memory and performing the computation. The "portion of the volumes" are called blocks,
     the number_of_blocks specifies how many blocks to use to perform the calculation
@@ -60,8 +60,8 @@ def calculate_l2_distance_nrrd(directory, number_of_blocks=15, offset=1):
     """
     Calculates the l2 distance between volumes saved as .nrrd files.
     For two vector p and q the l2 distance is
-    l1 = sqrt(sum (p_i - q_i)^2) for i to n
-    :param directory: The directory that contains volumes.
+    l2 = sqrt(sum (p_i - q_i)^2) for i to n
+    :param directory: The directory that contains the volumes.
     :param number_of_blocks: Because volumes require significant memory this computation is done by loading
     a portion of the volumes into memory and performing the computation. The "portion of the volumes" are called blocks,
     the number_of_blocks specifies how many blocks to use to perform the calculation

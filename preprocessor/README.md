@@ -9,8 +9,7 @@ input and outputs the files that the dSpaceX server and UI require which include
 - (TODO) The interpolation models for design prediction. 
 
 The JSON file needs to specify the location of the original data, including, the input parameters, the quantities of interest,
-and the design shape representation (usually these are images or volumes). Below we describe how to use the tool and the 
-functionality a long with helpful examples.
+and the design shape representation (usually these are images or volumes). Below we describe how to use the tool and provide helpful examples.
 
 This README assumes you have already cloned the dSpaceX repository.
 
@@ -40,7 +39,7 @@ for the tool, below we provide detailed examples of the JSON files.
 
 ## The JSON file
 With the JSON file you can specify as little or as much as you want. There are intelligent defaults that will get your
-data processed and ready to use in the tool quickly. However, we recognize the defaults may not provide all the functionality 
+data processed and ready to use in the dSpaceX server and UI quickly. However, we recognize the defaults may not provide all the functionality 
 you might desire and have provided hooks that you can leverage to extend the functionality of the pre-processing tool.
 
 ### The Minimum

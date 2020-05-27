@@ -10,7 +10,7 @@ import pyrender
 import trimesh
 
 
-def generate_thumbnails(parameter_csv, output_directory, add_slices=True):
+def generate_nano_thumbnails(parameter_csv, output_directory, add_slices=True):
     parameter_df = pd.read_csv(parameter_csv)
 
     # Initialize scene and set-up static objects
