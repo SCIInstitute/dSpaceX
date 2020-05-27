@@ -1,8 +1,17 @@
 # dSpaceX Pre-processing Tool
 The dSpaceX pre-processing tool is intended to make dSpaceX more user friendly. The pre-processing tool takes a JSON file as
-input and outputs the files that the dSpaceX server and UI require. The JSON file needs to specify the location of the
-original data, including, the input parameters, the quantities of interest, and the design shape representation (usually
-these are images or volumes). Below we describe how to use the tool and the functionality a long with helpful examples.
+input and outputs the files that the dSpaceX server and UI require which includes:
+- The config.yaml which specifics the location and format of the processed data.
+- A distance matrix between the design shape representations.
+- The 2D embeddings of the design shape representations. The default embeddings are t-SNE, MDS, and Isomap.
+- Thumbnails of the design shape representations.
+- (TODO) The Morse-Smale decomposition.
+- (TODO) The interpolation models for design prediction. 
+
+The JSON file needs to specify the location of the original data, including, the input parameters, the quantities of interest,
+and the design shape representation (usually these are images or volumes). Below we describe how to use the tool and the 
+functionality a long with helpful examples.
+
 This README assumes you have already cloned the dSpaceX repository.
 
 ## Setup
@@ -21,22 +30,22 @@ already set up the server and/or the client then the conda environment should be
    ```
 2. In the terminal, navigate to the pre-processing tool directory.
 ```bash
-   cd [your dSpaceX directory]/preprocessor
+   cd [your dSpaceX directory]/preprocessor/
    ```
 3. Run the preprocess_main.py python script, this takes one argument a JSON file which specifies data locations and settings
-for the tool, below we provide detailed examples.
+for the tool, below we provide detailed examples of the JSON files.
 ```bash
-   <.../dSpaceX/preprocessor>$ python preprocessor_main.py [your config file].json 
+   <.../dSpaceX/preprocessor>$ python preprocessor_main.py <path_to_your_config_file>/<file_name>.json 
    ```
 
 ## The JSON file
 With the JSON file you can specify as little or as much as you want. There are intelligent defaults that will get your
-data processed and ready to use in the tool, or we have provided hooks for you to have greater control and customization 
-over how your data is processed.
+data processed and ready to use in the tool quickly. However, we recognize the defaults may not provide all the functionality 
+you might desire and have provided hooks that you can leverage to extend the functionality of the pre-processing tool.
 
 ### The Minimum
-The tool will not work if these fields are not specified. Here is an example outline of a minimum JSON, below each field
-is explained.
+The following fields shown below in the example JSON must be specified for the pre-processing tool to work. 
+We explain each field below.
 ```json
 {
   "datasetName": "My Design Data",
@@ -49,20 +58,27 @@ is explained.
   "distance": {
     "type": "L1 or L2"
   },
-  "thumbnails": {
-    "type": "png or nano"
-  }
+  "thumbnails": "png or nano"
 }
 ```
 
 - *datasetName:* [String] The name used to identify your data set.
 - *numberSamples:* [Number] The number of samples in your data set.
 - *outputDirectory:* [Path] Where the processed data should be saved.
-- *parametersFile:* [Path to csv] The input parameters for your designs. Headers are expected.
-| Parameter 1 | Parameter 2 | Parameter 3 |
-| ----------- | ----------- | ___________ |
-| 0.25 | 0.234 | 0.124 |
-| ----------- | ----------- | ___________ |
-| 0.54 | 0.324 | 0.478 |
-| ----------- | ----------- | ___________ |
-| ... | ... | ... |
+- *parametersFile:* [Path to CSV] The input parameters for your designs. Headers are expected.
+- *qoisFile:* [Path to CSV] The quantities of interest for your designs. Headers are expected.
+- *shapeDirectory:* [Path to Shape Representations] The shape representations for your designs.
+- *shapeFormat:* [String] Currently, we support "png" or "nrrd" shape representations
+- *distance:* [Object] Depending on how you want to calculate distances this object will look different. For the minimum JSON
+it will only have one field 'type' explained next.
+- *distance.type:* [String] For the minimum JSON you need to specify if you want the 'L1' or the 'L2' distance calculated.
+- *thumbnails:* [String] Type of thumbnails to generate. You must specify either 'png' or 'nano'. Currently, we only generate
+thumbnails for 3D volumes if it is the Nanoparticles data set. 
+
+**A Note on Embeddings:**
+
+Earlier, we mentioned that one of the jobs of the pre-processing tool is to calculate the 2D embeddings. However, you may have
+noticed that we didn't specify anything in the minimum JSON for embeddings. This is because by default the tool calculates the
+t-SNE, MDS, and Isomap embedding for the data set. There is the ability to have the pre-processing tool include additional user
+defined embeddings; we will provide an example of this later. 
+
