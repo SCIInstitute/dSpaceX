@@ -81,4 +81,3 @@ Earlier, we mentioned that one of the jobs of the pre-processing tool is to calc
 noticed that we didn't specify anything in the minimum JSON for embeddings. This is because by default the tool calculates the
 t-SNE, MDS, and Isomap embedding for the data set. There is the ability to have the pre-processing tool include additional user
 defined embeddings; we will provide an example of this later. 
-
