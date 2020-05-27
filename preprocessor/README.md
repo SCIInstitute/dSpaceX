@@ -59,6 +59,7 @@ is explained.
 - *numberSamples:* [Number] The number of samples in your data set.
 - *outputDirectory:* [Path] Where the processed data should be saved.
 - *parametersFile:* [Path to csv] The input parameters for your designs. Headers are expected.
+
 | Parameter 1 | Parameter 2 | Parameter 3 |
 | ----------- | ----------- | ___________ |
 | 0.25 | 0.234 | 0.124 |
