@@ -13,9 +13,11 @@ import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
+import {Button} from "@material-ui/core";
 
 /**
  * The Decomposition Panel component provides a display of the
@@ -44,8 +46,17 @@ class DecompositionPanel extends React.Component {
         this._getDecompositionFieldMenuItems.bind(this);
     this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
     this.fetchDecomposition = this.fetchDecomposition.bind(this);
+    this.handleNearestNeighborChange = this.handleNearestNeighborChange.bind(this);
+    // this.handleSigmaChange = this.handleSigmaChange.bind(this);
 
     this.state = {
+      ms: {
+        knn: 15,
+        persistence: -1,
+        noise: false,
+        sigma: 0.25,
+        smoothing: 15.0,
+      },
       datasetId: this.props.dataset.datasetId,
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
@@ -112,16 +123,16 @@ class DecompositionPanel extends React.Component {
       let category = this.state.decompositionCategory;
       let field = this.state.decompositionField;
       this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
-          .then(function(result) {
-            this.setState({
-              minPersistence: result.minPersistenceLevel,
-              maxPersistence: result.maxPersistenceLevel,
-              complexSizes: result.complexSizes,
-              sliderPersistence: result.maxPersistenceLevel,
-              persistenceLevel: ('' + result.maxPersistenceLevel),
-            });
-            this.updateDataModel('' + result.maxPersistenceLevel);
-          }.bind(this));
+        .then(function(result) {
+          this.setState({
+            minPersistence: result.minPersistenceLevel,
+            maxPersistence: result.maxPersistenceLevel,
+            complexSizes: result.complexSizes,
+            sliderPersistence: result.maxPersistenceLevel,
+            persistenceLevel: ('' + result.maxPersistenceLevel),
+          });
+          this.updateDataModel('' + result.maxPersistenceLevel);
+        }.bind(this));
     } else {
       this.setState({
         minPersistence: null,
@@ -189,6 +200,32 @@ class DecompositionPanel extends React.Component {
         this.props.onDatasetChange(null);
       }
     }
+  }
+
+  handleNearestNeighborChange(event) {
+    let neighborhoodSize = event.target.value;
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, knn:neighborhoodSize },
+    }));
+  }
+
+  handleSigmaChange(event) {
+    let sigma = event.target.value;
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, sigma:sigma },
+    }));
+  }
+
+  handleSmoothingChange(event) {
+    let smooth = event.target.value;
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, smoothing:smooth },
+    }));
+  }
+
+  handleRecomputeMorseSmale() {
+    console.log('The ms object');
+    console.log(this.state.ms);
   }
 
   /**
@@ -353,7 +390,7 @@ class DecompositionPanel extends React.Component {
               style={{ width: '100%',
                 boxSizing: 'border-box',
                 paddingRight: '10px' }}>
-              <InputLabel htmlFor='mode-field'>Mode</InputLabel>
+              <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
               <Select ref="decompositionCombo"
                 disabled={!this.props.enabled || !this.props.dataset}
                 value={this.state.decompositionMode}
@@ -366,14 +403,40 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value='Morse-Smale'>
                   <em>Morse-Smale</em>
                 </MenuItem>
-                <MenuItem value='Shared-GP' disabled={true}>
-                  <em>Shared-GP</em>
-                </MenuItem>
-                <MenuItem value='Shape-Odds' disabled={true}>
-                  <em>Infinite Shape-Odds</em>
-                </MenuItem>
               </Select>
             </FormControl>
+
+            {/* K Nearest Neighbors */}
+            <TextField
+              label="Neighborhood Size"
+              id="ms-knn"
+              defaultValue={this.state.ms.knn}
+              size="small"
+              type="number"
+              onChange={this.handleNearestNeighborChange}
+            />
+
+            {/* Sigma */}
+            <TextField
+              label="Sigma"
+              id="ms-sigma"
+              defaultValue={this.state.ms.sigma}
+              size="small"
+              onChange={this.handleSigmaChange.bind(this)}
+            />
+
+            {/* Smooth */}
+            <TextField
+              label="Smoothing"
+              id="ms-smooth"
+              defaultValue={this.state.ms.smoothing}
+              size="small"
+              onChange={this.handleSmoothingChange.bind(this)}
+            />
+
+            { /* Button to dump crystal partitions to disk */}
+            <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button>
+            <Button size="small">Export Crystal Partitions</Button>
 
             { /* Decomposition Category Dropdown */ }
             <FormControl className={classes.formControl}
@@ -388,7 +451,7 @@ class DecompositionPanel extends React.Component {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={true}>
+                <MenuItem value="parameter">
                   <em>Parameter</em>
                 </MenuItem>
                 <MenuItem value="geometry" disabled={true}>
