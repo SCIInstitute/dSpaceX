@@ -47,9 +47,9 @@ class DecompositionPanel extends React.Component {
     this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
     this.fetchDecomposition = this.fetchDecomposition.bind(this);
     this.handleNearestNeighborChange = this.handleNearestNeighborChange.bind(this);
-    // this.handleSigmaChange = this.handleSigmaChange.bind(this);
 
     this.state = {
+      devMode: true,
       ms: {
         knn: 15,
         persistence: -1,
@@ -436,7 +436,7 @@ class DecompositionPanel extends React.Component {
 
             { /* Button to dump crystal partitions to disk */}
             <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button>
-            <Button size="small">Export Crystal Partitions</Button>
+            { this.state.devMode && <Button size="small">Export Crystal Partitions</Button> }
 
             { /* Decomposition Category Dropdown */ }
             <FormControl className={classes.formControl}
