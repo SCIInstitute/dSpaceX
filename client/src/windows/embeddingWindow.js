@@ -54,7 +54,7 @@ class EmbeddingWindow extends React.Component {
     this.init();
     window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
     window.addEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent); // intentionally non-passive
     this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
     this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
@@ -385,6 +385,7 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseScrollEvent(event) {
+    event.preventDefault(); // combined with non-passive event binding, doesn't scroll window when zooming
     if (event.deltaY > 0 && this.camera.zoom > -this.maxScale) {
       this.camera.zoom = this.camera.zoom / this.zoomRate;
     }
