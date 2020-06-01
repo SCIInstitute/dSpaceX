@@ -6,7 +6,6 @@ import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
-import SizeMonitor from './sizeMonitor';
 import GalleryWindow from './galleryWindow';
 
 const drawerHeight = 250;
