@@ -14,7 +14,7 @@ HDProcessor::HDProcessor() = default;
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] d Distances Matrix containing pairwise distances between samples.
- * @param[in] qoi Vector containing quantity of interest values for each sample.
+ * @param[in] field Vector containing field values for each sample.
  * @param[in] knn Number of nearest neighbor for Morse-Samle complex computation.
  * @param[in] nSamples Number of samples for regression curve. 
  * @param[in] persistence Number of persistence levels to compute.
@@ -23,10 +23,10 @@ HDProcessor::HDProcessor() = default;
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
 HDProcessResult* HDProcessor::processOnMetric(
-    DenseMatrix<Precision> d, DenseVector<Precision> qoi,
+    DenseMatrix<Precision> d, DenseVector<Precision> field,
     int knn, int nSamples, int persistenceArg, bool random,
     Precision sigmaArg, Precision sigmaSmooth) {
-  // TODO: Assert(qoi.N() == d.M() && d.M() == d.N())
+  // TODO: Assert(field.N() == d.M() && d.M() == d.N())
 
   // Initialize processing result output object.
   m_result = new HDProcessResult();
@@ -39,7 +39,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   // make copy of distances so embedder won't trash data.
   auto dd = Linalg<Precision>::Copy(d);
   Xall = mds.embed(dd, 3); // TODO why 3?
-  yall = qoi;
+  yall = field;
   
   // Add noise to yall in case of equivalent values 
   if (random) {
@@ -47,7 +47,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   }
      
   // Compute Morse-Smale complex    
-  NNMSComplex<Precision> msComplex(d, qoi, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true);
+  NNMSComplex<Precision> msComplex(d, field, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
@@ -56,7 +56,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   m_result->knn = msComplex.getNearestNeighbors();
   
   
-  // Save QoI function values  
+  // Save Field function values  
   m_result->X = Linalg<Precision>::Copy(Xall);
   m_result->Y = Linalg<Precision>::Copy(yall);  
 
@@ -137,7 +137,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   return result;
 }
 
-#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.  // NOTE: we think the function above is for distance matrices, and this one is for QoIs and Design Params
+#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.  // NOTE: we think the function above is for distance matrices, and this one is for Field and Design Params
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.
