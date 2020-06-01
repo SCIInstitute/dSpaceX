@@ -22,7 +22,7 @@ const styles = (theme) => ({
     flex:'auto',
     display:'flex',
     flexDirection:'row',
-    height:'calc(100vh - '+drawerHeight+'px)',
+    //height:'calc(100vh - '+drawerHeight+'px)',
     justifyContent:'flex-end',
   },
   verticalDivider: {
@@ -42,7 +42,7 @@ const styles = (theme) => ({
     width:'100%',
     height:'5px',
   },
-  workspace: {  
+  drawer: {  
     display: 'grid',
     height: drawerHeight,
     gridTemplateColumns: '1fr',
@@ -153,8 +153,8 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawerDivider} />
 
           {/* scrollable shape cards drawer */}
-          <div className={classes.workspace} >
-            <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
+          <div className={classes.drawer} >
+            <Paper style={{ overflow:'hidden auto', border:'0' }}>
               <Grid container
                     justify={'flex-start'}
                     spacing={8}
