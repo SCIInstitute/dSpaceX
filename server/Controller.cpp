@@ -883,7 +883,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     double fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
-    Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval, sigma);
+    Eigen::RowVectorXd z_coord = model.getNewLatentSpaceValue(fieldval, sigma);  //<ctc> this will get the sigma from Model's form control item (see notes)
 
     // evaluate model at this coordinate
     Eigen::MatrixXd I = dspacex::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
@@ -1162,25 +1162,58 @@ void Controller::maybeProcessData(Fieldtype category, std::string fieldname, int
 
   // <ctc> TODO: change [Vector|Matrix]Xd to [Vector|Matrix]<Precision> rather than hardcode double
 
-  std::cout << "fieldname: " << fieldname << std::endl;
-  Precision minval = fieldvals.minCoeff();
-  Precision maxval = fieldvals.maxCoeff();
-  Precision meanval = fieldvals.mean();
-  std::cout << "min: " << minval << std::endl;
-  std::cout << "max: " << maxval << std::endl;
-  std::cout << "avg: " << meanval << std::endl;
+  auto showStats(true);
+  if (showStats) {
+    std::cout << "computing nnmscomplex for fieldname: " << fieldname << std::endl;
+    auto minval(fieldvals.minCoeff());
+    auto maxval(fieldvals.maxCoeff());
+    auto meanval(fieldvals.mean());
+    std::cout << "\tmin: " << minval << std::endl;
+    std::cout << "\tmax: " << maxval << std::endl;
+    std::cout << "\tavg: " << meanval << std::endl;
 
-  //compute variance
-  {
-    Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(fieldvals);
-    copyvals.array() -= meanval;
-    copyvals.array() = copyvals.array().square();
-    Precision variance = copyvals.sum() / (copyvals.size()-1);
-    std::cout << "var: " << variance << std::endl;
-    std::cout << "sdv: " << sqrt(variance) << std::endl;
+    //compute variance
+    {
+      Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(fieldvals);
+      copyvals.array() -= meanval;
+      copyvals.array() = copyvals.array().square();
+      auto variance(copyvals.sum() / (copyvals.size()-1));
+      std::cout << "\tvar: " << variance << std::endl;
+      std::cout << "\tsdv: " << sqrt(variance) << std::endl;
+    }
   }
   
-  fieldvals.normalize();
+  auto normalize(true);
+  if (normalize) {
+#if 0
+    fieldvals.normalize(); // Frobenius normalize... not the one we want.
+#else if 1
+    // scale normalize so that all values are in range [0,1]. For each member X: X = (X - min) / (max - min).
+    auto minval(fieldvals.minCoeff());
+    auto maxval(fieldvals.maxCoeff());
+    fieldvals.array() -= minval;
+    fieldvals.array() /= (maxval - minval);
+#endif
+    
+    if (showStats) {
+      auto minval(fieldvals.minCoeff());
+      auto maxval(fieldvals.maxCoeff());
+      auto meanval(fieldvals.mean());
+      std::cout << "scale normalized min: " << minval << std::endl;
+      std::cout << "scale normalized max: " << maxval << std::endl;
+      std::cout << "scale normalized avg: " << meanval << std::endl;
+
+      //compute variance
+      {
+        Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(fieldvals);
+        copyvals.array() -= meanval;
+        copyvals.array() = copyvals.array().square();
+        auto variance(copyvals.sum() / (copyvals.size()-1));
+        std::cout << "\tscale normalized var: " << variance << std::endl;
+        std::cout << "\tscale normalized sdv: " << sqrt(variance) << std::endl;
+      }
+    }
+  }
   
   m_currentField = fieldname;
   m_currentKNN = knn;
