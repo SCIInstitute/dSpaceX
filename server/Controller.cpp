@@ -859,7 +859,8 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     return fetchAllImagesForCrystal_Shapeodds(request, response);
 
   int numZ = request["numSamples"].asInt();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<")\n";
+  double percent = request["percent"].asDouble();
+  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalid<<" of persistence level "<<persistenceLevel<<" (datasetId is "<<datasetId<<", fieldname is "<<fieldname<<", percent is "<<percent<<")\n";
   
   dspacex::Model &model(mscomplex.getModel(persistenceLevel_idx, crystalid).second);  
 
@@ -877,6 +878,13 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   double maxval = model.maxFieldValue();
   double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
   double sigma = delta * 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
+
+  // if numZ == 1, evaluate at given percent along crystal
+  if (numZ == 1) {
+    delta = 1.0;
+    minval = minval + (maxval - minval) * percent;  // only getting the single value at this percent along crystal
+    sigma = 0.05; // 5% of fieldrange, because continuous sampling should be smaller? Maybe that's true, but still should probably be user-specifiable (TODO)
+  }
   
   for (unsigned i = 0; i < numZ; i++)
   {
@@ -1214,7 +1222,7 @@ void Controller::maybeProcessData(Fieldtype category, std::string fieldname, int
       }
     }
   }
-  
+
   m_currentField = fieldname;
   m_currentKNN = knn;
   
