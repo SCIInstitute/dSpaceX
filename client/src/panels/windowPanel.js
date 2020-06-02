@@ -29,7 +29,7 @@ class WindowPanel extends React.Component {
       dataViewType: this.props.config.dataViewType,
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
-      embeddingAlgorithm: this.props.embeddings[0].name.trim(),
+      embeddingAlgorithm: this.props.embeddings[0] ? this.props.embeddings[0].name.trim() : 'None',
       visualizationQoi: null,
       xAttributeGroup: this.props.config.xAttributeGroup,
       xAttribute: this.props.config.xAttribute,
