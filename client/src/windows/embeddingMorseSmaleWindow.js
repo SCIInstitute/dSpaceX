@@ -126,15 +126,25 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     let images = this.state.drawerImages;
     if (images && images.length > 0) {
       let img = images[0].img;
-      let width = 1650;  // TODO: how to get actual width
-      let img_width = img.width;
-      let tile_width = Math.max(80, img.width + 20); // 5+5 image margin + 5+5 paper margin (ugh)
+      let width = 1492;  // TODO: how to get actual width
+      let tile_width = Math.max(80, img.width + 20); // 5+5 image margin + 5+5 paper margin (ugh) 
       return width / tile_width;
     }
 
     return 10;
   }
+
+  /**
+   * Return best guess at tile height
+   */
   getTileHeight() {
+    let images = this.state.drawerImages;
+    if (images && images.length > 0) {
+      let img = images[0].img;
+      let tile_height = Math.max(60, img.height + 40); // 5+5 image margin + 5+5 paper margin + 20 text (ugh)
+      return tile_height;
+    }
+
     return drawerHeight;
   }
 
@@ -150,7 +160,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div className={classes.embeddingMorseSmaleWorkspace} >
 
           {/* top panel: embedding and crystals */}
-        <div className={classes.topPanels} style={{ height:'300px' }} >
+        <div className={classes.topPanels} style={{ height:'150px' }} >
 
             {/* embedding */}
         <div style={{ width:'100%', flex:'auto' }}>
