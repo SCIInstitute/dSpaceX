@@ -38,11 +38,11 @@ const styles = (theme) => ({
   drawerDivider: {
     background:'#808080',
     width:'100%',
-    height:'5px',
+    height:'1px',
   },
   drawer: {  
     display: 'grid',
-    height: drawerHeight,
+    //height: drawerHeight,
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
@@ -134,6 +134,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
 
     return 10;
   }
+  getTileHeight() {
+    return drawerHeight;
+  }
 
   /**
    * Renders EmbeddingMorseSmaleWindow to screen
@@ -150,7 +153,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.topPanels} >
 
             {/* embedding */}
-            <div style={{ width:'100%', flex:'auto' }}>
+        <div style={{ width:'100%', flex:'auto', height:'300px' }}>
               <EmbeddingWindow className={classes.embedding}
                                dataset={this.props.dataset}
                                decomposition={this.props.decomposition}
@@ -165,7 +168,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             <div className={classes.verticalDivider} />
 
             {/* crystals */}
-            <div style={{ width:'100%', flex:'auto' }}>
+        <div style={{ width:'100%', flex:'auto', height:'300px' }}>
               <MorseSmaleWindow className={classes.crystals}
                                 dataset={this.props.dataset}
                                 decomposition={this.props.decomposition}
@@ -182,7 +185,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawer} >      
             <GridList className={classes.gridList} cols={this.numCols()}>
               {drawerImages.map((tile) => (
-              <GridListTile key={tile.id}>
+                  <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
                 <Paper className={classes.paper}>
                   <Typography>{'Design: ' + tile.id}</Typography>
 
