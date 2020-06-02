@@ -8,7 +8,12 @@ import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import GalleryWindow from './galleryWindow';
 
-const drawerHeight = 140;
+const drawerHeight      = 140;
+const minTileWidth      = 80;
+const minTileHeight     = 60;
+const tileWidthMargins  = 20;  // 5+5 image margin + 5+5 paper margin (ugh) 
+const tileHeightMargins = 40;  // 5+5 image margin + 5+5 paper margin + 20 text (ugh) 
+
 const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
     background:'#ffffff',
@@ -42,7 +47,6 @@ const styles = (theme) => ({
   },
   drawer: {  
     display: 'grid',
-    //height: drawerHeight,
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
@@ -123,15 +127,23 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * Return best number of columms for the drawer shape cards.
    */
   numCols() {
+    let width = 1650;  // TODO: how to get actual width (this is good for single workspace window at fullscreen 1920x1200)
+    if (this.props.screenWidthHack) width /= 2;
+    return width / this.getTileWidth(); 
+  }
+
+  /**
+   * Return best guess at tile width
+   */
+  getTileWidth() {
     let images = this.state.drawerImages;
     if (images && images.length > 0) {
       let img = images[0].img;
-      let width = 1492;  // TODO: how to get actual width
-      let tile_width = Math.max(80, img.width + 20); // 5+5 image margin + 5+5 paper margin (ugh) 
-      return width / tile_width;
+      let tile_width = Math.max(minTileWidth, img.width + tileWidthMargins);
+      return tile_width;
     }
 
-    return 10;
+    return minTileWidth;
   }
 
   /**
@@ -141,11 +153,40 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     let images = this.state.drawerImages;
     if (images && images.length > 0) {
       let img = images[0].img;
-      let tile_height = Math.max(60, img.height + 40); // 5+5 image margin + 5+5 paper margin + 20 text (ugh)
+      let tile_height = Math.max(minTileHeight, img.height + tileHeightMargins);
       return tile_height;
     }
 
-    return drawerHeight;
+    return minTileHeight;
+  }
+
+  /**
+   * Return scaled image width that fits in this tile (aspect ratio considered)
+   */
+  scaledImageWidth() {
+    let images = this.state.drawerImages;
+    if (images && images.length > 0) {
+      let img = images[0].img;
+      let aspect_ratio = img.width / img.height;
+      let img_height = Math.min(img.height, this.getTileHeight() - tileHeightMargins);
+      return img_height * aspect_ratio;
+    }
+
+    return this.getTileWidth() - tileWidthMargins;
+  }
+
+  /**
+   * Return scaled image height that fits in this tile 
+   */
+  scaledImageHeight() {
+    let images = this.state.drawerImages;
+    if (images && images.length > 0) {
+      let img = images[0].img;
+      let img_height = Math.min(img.height, this.getTileHeight() - tileHeightMargins);
+      return img_height;
+    }
+
+    return this.getTileHeight() - tileHeightMargins;
   }
 
   /**
@@ -160,10 +201,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div className={classes.embeddingMorseSmaleWorkspace} >
 
           {/* top panel: embedding and crystals */}
-        <div className={classes.topPanels} style={{ height:'150px' }} >
+          <div className={classes.topPanels} style={{ height:'150px' }} >
 
             {/* embedding */}
-        <div style={{ width:'100%', flex:'auto' }}>
+            <div style={{ width:'100%', flex:'auto' }}>
               <EmbeddingWindow className={classes.embedding}
                                dataset={this.props.dataset}
                                decomposition={this.props.decomposition}
@@ -178,7 +219,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             <div className={classes.verticalDivider} />
 
             {/* crystals */}
-        <div style={{ width:'100%', flex:'auto' }}>
+            <div style={{ width:'100%', flex:'auto' }}>
               <MorseSmaleWindow className={classes.crystals}
                                 dataset={this.props.dataset}
                                 decomposition={this.props.decomposition}
@@ -195,13 +236,13 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawer} >      
             <GridList className={classes.gridList} cols={this.numCols()}>
               {drawerImages.map((tile) => (
-                  <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
+              <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
                 <Paper className={classes.paper}>
                   <Typography>{'Design: ' + tile.id}</Typography>
 
                   <img alt={'Image:' + tile.id} key={tile.id}
-                       height={tile.img.height}
-                       width={tile.img.width}
+                       height={this.scaledImageHeight()}
+                       width={this.scaledImageWidth()}
                        style={{ margin:'5px 5px 5px 5px' }}
                        src={'data:image/png;base64, ' + tile.img.rawData}/>
                 </Paper>
