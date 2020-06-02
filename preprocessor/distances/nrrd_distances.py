@@ -76,7 +76,7 @@ def calculate_l2_distance_nrrd(directory, number_of_blocks=15, offset=1):
     # get shapes to load per block
     number_of_shapes = len(shapes)
     shapes_per_block = math.ceil(number_of_shapes / number_of_blocks)
-    block_files = [shapes[i:i+shapes_per_block] for i in range(0, len(shapes), shapes_per_block)]
+    block_files = [shapes[i:i+shapes_per_block] for i in range(0, number_of_shapes, shapes_per_block)]
 
     pool = Pool(6)  # pool to facilitate multiprocessing of file loading
     distances = np.zeros((number_of_shapes, number_of_shapes))  # results

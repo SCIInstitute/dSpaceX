@@ -56,8 +56,8 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
         partitions = partitions.reshape((1, -1))
     # create model for each crystal
     all_pca_models = []
-    for pLevel, crystal_memberships in enumerate(partitions):
-        pca_model_for_persistence = {'pLevel': pLevel, 'crystalIDs': crystal_memberships, 'models': []}
+    for p_level, crystal_memberships in enumerate(partitions):
+        pca_model_for_persistence = {'pLevel': p_level, 'crystalIDs': crystal_memberships, 'models': []}
         crystal_ids = np.unique(crystal_memberships)
         for c_id in crystal_ids:
             crystal_samples_index = (crystal_memberships == c_id)
