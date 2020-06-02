@@ -73,7 +73,7 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
     return all_pca_models
 
 
-def write_to_file(model_data, output_directory):
+def write_to_file(model_data, output_directory, output_file_name='pca_model'):
     """
     Write pca model to output directory
     :param model_data: Data to write
@@ -81,7 +81,7 @@ def write_to_file(model_data, output_directory):
     :return:
     """
     # create output directory
-    model_output_directory = os.path.join(output_directory, 'pca_model')
+    model_output_directory = os.path.join(output_directory, output_file_name)
     if not os.path.exists(model_output_directory):
         os.makedirs(model_output_directory)
     for p_level, p_level_data in enumerate(model_data):
@@ -101,3 +101,12 @@ def write_to_file(model_data, output_directory):
             np.savetxt(os.path.join(crystal_output_directory, 'W.csv'), crystal_data['W'], delimiter=',')
             np.savetxt(os.path.join(crystal_output_directory, 'w0.csv'), crystal_data['w0'], delimiter=',')
             np.savetxt(os.path.join(crystal_output_directory, 'z.csv'), crystal_data['z'], delimiter=',')
+
+
+shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/images/'
+partition_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/crystal_partitions/cantilever_crystal_partitions_Position.csv'
+output_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/pca_models/'
+output_filename_ = 'pca_model_param_Position'
+
+out = generate_png_pca_model(shape_directory_, partition_directory_)
+write_to_file(out, output_directory_, output_filename_)
