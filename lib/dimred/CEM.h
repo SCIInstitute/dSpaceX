@@ -765,7 +765,7 @@ class CEM{
 
 
 
-    //update nearest nieghbors of f(Y) for faster gradient computation
+    //update nearest neighbors of f(Y) for faster gradient computation
     void updateKNNX(){
       unsigned int N = Y.N();
       Geometry<TPrecision>::computeKNN(fY, KNNX, KNNXD, sl2metric);

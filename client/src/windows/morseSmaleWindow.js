@@ -52,7 +52,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -567,7 +567,7 @@ class MorseSmaleWindow extends React.Component {
   updatePerspCamera(width, height) {
     this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
   }
-  
+
   /**
    * updateCamera
    */

@@ -60,7 +60,7 @@ class DecompositionPanel extends React.Component {
       datasetId: this.props.dataset.datasetId,
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
-      decompositionField: null,
+      decompositionField: this.props.dataset.qoiNames[0],
       persistenceLevel: '',
       minPersistence: null,
       maxPersistence: null,
@@ -102,7 +102,7 @@ class DecompositionPanel extends React.Component {
    */
   async fetchDecomposition() {
     let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-    let datasetId = this.props.dataset.datasetId;
+    let datasetId = this.state.datasetId;
     let category = this.state.decompositionCategory;
     let field = this.state.decompositionField;
     let result = await this.client.fetchMorseSmalePersistence(datasetId, category, field, k);
@@ -119,7 +119,7 @@ class DecompositionPanel extends React.Component {
   componentDidMount() {
     if (this.state.decompositionMode == 'Morse-Smale') {
       let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
+      let datasetId = this.state.datasetId;
       let category = this.state.decompositionCategory;
       let field = this.state.decompositionField;
       this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
@@ -176,7 +176,7 @@ class DecompositionPanel extends React.Component {
 
     if (mode == 'Morse-Smale') {
       let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
+      let datasetId = this.state.datasetId;
       let category = this.state.decompositionCategory;
       let field = this.state.decompositionField;
       this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
@@ -257,7 +257,7 @@ class DecompositionPanel extends React.Component {
   async updateDataModel(level) {
     if (level != '') {
       let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
+      let datasetId = this.state.datasetId;
       let persistenceLevel = parseInt(level);
       let category = this.state.decompositionCategory;
       let field = this.state.decompositionField;

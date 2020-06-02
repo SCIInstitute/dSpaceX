@@ -1,3 +1,4 @@
+import { Grid, GridList, GridListTile } from '@material-ui/core';
 import EmbeddingWindow from './embeddingWindow';
 import MorseSmaleWindow from './morseSmaleWindow';
 import Paper from '@material-ui/core/Paper';
@@ -193,6 +194,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @return {JSX}
    */
   render() {
+    const { classes } = this.props;
+    const { drawerImages } = this.state;
+
     return (
         <div className={classes.embeddingMorseSmaleWorkspace} >
 
@@ -250,4 +254,4 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   }
 }
 
-export default withDSXContext(EmbeddingMorseSmaleWindow);
+export default withDSXContext(withStyles(styles)(EmbeddingMorseSmaleWindow));

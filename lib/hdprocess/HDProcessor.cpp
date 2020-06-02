@@ -142,7 +142,7 @@ HDProcessResult* HDProcessor::processOnMetric(
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] x Matrix containing input sample domain.
  * @param[in] y Vector containing input function values.
- * @param[in] knn Number of nearest nieghbor for Morse-Samle complex computation.
+ * @param[in] knn Number of nearest neighbor for Morse-Samle complex computation.
  * @param[in] nSamples Number of samples for regression curve. 
  * @param[in] persistenceArg Number of persistence levels to compute.
  * @param[in] randArg Whether to apply random noise to input function.
