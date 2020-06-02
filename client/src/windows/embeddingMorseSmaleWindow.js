@@ -150,10 +150,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         <div className={classes.embeddingMorseSmaleWorkspace} >
 
           {/* top panel: embedding and crystals */}
-          <div className={classes.topPanels} >
+        <div className={classes.topPanels} style={{ height:'300px' }} >
 
             {/* embedding */}
-        <div style={{ width:'100%', flex:'auto', height:'300px' }}>
+        <div style={{ width:'100%', flex:'auto' }}>
               <EmbeddingWindow className={classes.embedding}
                                dataset={this.props.dataset}
                                decomposition={this.props.decomposition}
@@ -168,7 +168,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
             <div className={classes.verticalDivider} />
 
             {/* crystals */}
-        <div style={{ width:'100%', flex:'auto', height:'300px' }}>
+        <div style={{ width:'100%', flex:'auto' }}>
               <MorseSmaleWindow className={classes.crystals}
                                 dataset={this.props.dataset}
                                 decomposition={this.props.decomposition}
