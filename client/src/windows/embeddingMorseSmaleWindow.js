@@ -48,6 +48,18 @@ const styles = (theme) => ({
     gridTemplateRows: '1fr',
     gridGap: '0em',
   },
+  gridlistRoot: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    overflow: 'hidden',
+    backgroundColor: theme.palette.background.paper,
+    borderTop: 'solid #A9A9A9',
+  },
+  gridList: {
+    flexWrap: 'nowrap',
+    transform: 'translateZ(0)',
+  },
   paper: {
     display: 'flex',
     flexDirection: 'column',
@@ -152,23 +164,24 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           <div className={classes.drawerDivider} />
 
           {/* scrollable shape cards drawer */}
-          <div className={classes.drawer} >
+{/*          <div className={classes.gridlistRoot}> */}
+{/*          <div className={classes.drawer} >      */}
+          <div className={classes.drawer} >      
             <Paper style={{ overflow:'hidden auto', border:'0' }}>
-              <Grid container
-                    justify={'flex-start'}
-                    spacing={8}
-                    style={{ margin:'5px 0px 0px 0px' }}>
-                {drawerImages.map((tile, i) =>
-
-                <Grid key={i} item>
+              <GridList className={classes.gridList} cols={10}>
+                {drawerImages.map((tile) => (
+                <GridListTile key={tile.id}>
                   <Paper className={classes.paper}>
-                    <img alt={'Image:' + tile.id} key={i}
-                         height='45'
+                    <Typography>{'Design: ' + tile.id}</Typography>
+
+                    <img alt={'Image:' + tile.id} key={tile.id}
+                  height={tile.img.height}
+                  width={tile.img.width}
                          style={{ margin:'5px 5px 5px 5px' }}
                          src={'data:image/png;base64, ' + tile.img.rawData}/>
                   </Paper>
-                </Grid>)}
-              </Grid>
+                </GridListTile>))}
+              </GridList>
             </Paper>
           </div>
         </div>
@@ -177,3 +190,19 @@ class EmbeddingMorseSmaleWindow extends React.Component {
 }
 
 export default withDSXContext(withStyles(styles) (EmbeddingMorseSmaleWindow));
+
+              // <Grid container
+              //       justify={'flex-start'}
+              //       spacing={8}
+              //       style={{ margin:'5px 0px 0px 0px' }}>
+              //   {drawerImages.map((tile, i) =>
+
+              //   <Grid key={i} item>
+              //     <Paper className={classes.paper}>
+              //       <img alt={'Image:' + tile.id} key={i}
+              //            height='45'
+              //            style={{ margin:'5px 5px 5px 5px' }}
+              //            src={'data:image/png;base64, ' + tile.img.rawData}/>
+              //     </Paper>
+              //   </Grid>)}
+              // </Grid>
