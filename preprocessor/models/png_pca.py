@@ -1,10 +1,11 @@
 from glob import glob
 import functools
 import numpy as np
-import os
 from PIL import Image
 from sklearn.decomposition import PCA
 import re
+
+from export_model import write_to_file
 
 
 def sort_by_sample_id(file_1, file_2):
@@ -67,46 +68,17 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
             W = transformer.components_
             w0 = np.mean(crystal_samples, axis=0)
             z = np.matmul((crystal_samples - w0), W.T)
-            model = {'crystalID': c_id, 'W':W, 'w0': w0, 'z':z}
+            model = {'crystalID': c_id, 'W': W, 'w0': w0, 'z': z}
             pca_model_for_persistence['models'].append(model)
         all_pca_models.append(pca_model_for_persistence)
     return all_pca_models
 
 
-def write_to_file(model_data, output_directory, output_file_name='pca_model'):
-    """
-    Write pca model to output directory
-    :param model_data: Data to write
-    :param output_directory: place to write the data
-    :return:
-    """
-    # create output directory
-    model_output_directory = os.path.join(output_directory, output_file_name)
-    if not os.path.exists(model_output_directory):
-        os.makedirs(model_output_directory)
-    for p_level, p_level_data in enumerate(model_data):
-        # create directory for persistence level
-        p_level_output_directory = os.path.join(model_output_directory, 'persistence-' + str(p_level))
-        if not os.path.exists(p_level_output_directory):
-            os.makedirs(p_level_output_directory)
-        # export crystal ids for that persistence level
-        np.savetxt(os.path.join(p_level_output_directory, 'crystalID.csv'), p_level_data['crystalIDs'], fmt='%i',
-                   delimiter=',')
-        for c_id, crystal_data in enumerate(p_level_data['models']):
-            # create directory for crystal
-            crystal_output_directory = os.path.join(p_level_output_directory, 'crystal-' + str(c_id))
-            if not os.path.exists(crystal_output_directory):
-                os.makedirs(crystal_output_directory)
-            # export W, w0, and z
-            np.savetxt(os.path.join(crystal_output_directory, 'W.csv'), crystal_data['W'], delimiter=',')
-            np.savetxt(os.path.join(crystal_output_directory, 'w0.csv'), crystal_data['w0'], delimiter=',')
-            np.savetxt(os.path.join(crystal_output_directory, 'z.csv'), crystal_data['z'], delimiter=',')
-
-
-shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/images/'
-partition_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/crystal_partitions/cantilever_crystal_partitions_Position.csv'
-output_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/pca_models/'
-output_filename_ = 'pca_model_param_Position'
-
-out = generate_png_pca_model(shape_directory_, partition_directory_)
-write_to_file(out, output_directory_, output_filename_)
+# Here is an example of using this code - for now it requires a human-in-the-loop
+# shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/images/'
+# partition_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/crystal_partitions/cantilever_crystal_partitions_Position.csv'
+# output_directory_ = '/Users/kylimckay-bishop/downloads/'
+# output_filename_ = 'pca_model_param_Position'
+#
+# out = generate_png_pca_model(shape_directory_, partition_directory_)
+# write_to_file(out, output_directory_, output_filename_)
