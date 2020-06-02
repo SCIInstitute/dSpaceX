@@ -185,7 +185,7 @@ class MorseSmaleWindow extends React.Component {
    */
   resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
-    console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
+    //console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
 
     // update camera
     this.updateCamera(width, height);
@@ -567,7 +567,7 @@ class MorseSmaleWindow extends React.Component {
   updatePerspCamera(width, height) {
     this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
   }
-  
+
   /**
    * updateCamera
    */
@@ -576,11 +576,10 @@ class MorseSmaleWindow extends React.Component {
     this.updatePerspCamera(width, height);
 
     if (resetPos) {
-      this.controls.reset();   // resets camera to original position (also calls updateProjectionMatrix)
-    }
-    else {
+      this.controls.reset(); // resets camera to original position (also calls updateProjectionMatrix)
+    } else {
       this.camera.updateProjectionMatrix();
-      this.controls.update();  // it's necessary to call this when the camera is manually changed
+      this.controls.update(); // it's necessary to call this when the camera is manually changed
     }
   }
 

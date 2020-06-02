@@ -213,4 +213,4 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   }
 }
 
-export default withDSXContext(withStyles(styles) (EmbeddingMorseSmaleWindow));
+export default withDSXContext(withStyles(styles)(EmbeddingMorseSmaleWindow));
