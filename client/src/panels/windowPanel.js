@@ -29,7 +29,7 @@ class WindowPanel extends React.Component {
       dataViewType: this.props.config.dataViewType,
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
-      embeddingAlgorithm: this.props.config.embeddingAlgorithm,
+      embeddingAlgorithm: this.props.embeddings[0] ? this.props.embeddings[0].name.trim() : 'None',
       visualizationQoi: null,
       xAttributeGroup: this.props.config.xAttributeGroup,
       xAttribute: this.props.config.xAttribute,
@@ -246,17 +246,6 @@ class WindowPanel extends React.Component {
             </MenuItem>
           </Select>
         </FormControl>
-
-        {/* Neighborhood (k) */}
-        <TextField
-          id="neighborhood"
-          label="Neighborhood Size"
-          type="number"
-          defaultValue="15"
-          disabled={true}
-          InputLabelProps={{
-            shrink: true,
-          }}/>
 
         {/* Decomposition Panel */}
         <div style={{ height:'8px' }}/>

@@ -550,7 +550,8 @@ class Application extends React.Component {
                           numberOfWindows={this.state.windows.length}
                           onDesignSelection={this.onDesignSelection}
                           onCrystalSelection={this.onCrystalSelection}
-                          activeDesigns={activeDesigns}/>
+                          activeDesigns={activeDesigns}
+                          screenWidthHack={this.state.windows.length>1}/>
                       );
                     } else if (windowConfig.dataViewType === 'scatter_plot') {
                       return (
