@@ -59,7 +59,7 @@ int main(int argc, char **argv){
   cmd.add(randArg);
 
   TCLAP::ValueArg<double> smoothArg("" /* flag */, "smooth" /* name */,
-      "Smooth function values to nearest nieghbor averages" /* description */,
+      "Smooth function values to nearest neighbor averages" /* description */,
       false /* required */, 0 /* default */, "double" /* type */);
   cmd.add(smoothArg);
 

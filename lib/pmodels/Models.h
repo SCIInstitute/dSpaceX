@@ -123,7 +123,7 @@ public:
     using namespace Eigen;
 
     // calculate difference
-    RowVectorXd fieldvals(fieldvalues);
+    RowVectorXd fieldvals(fieldvalues); // <ctc> convert this to a static function and just pass in z_coords
     fieldvals *= -1.0;
     fieldvals.array() += new_fieldval;
     //std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;
@@ -144,7 +144,7 @@ public:
     double summation = fieldvals.sum();
     //std::cout << "sum of Gaussian vector of difference:\n" << summation << std::endl;
 
-    MatrixXd output = fieldvals * z_coords;
+    MatrixXd output = fieldvals * z_coords; // <ctc> convert this to a static function and just pass in z_coords (for evaluation of multiple model types (PCA or ShapeOdds) for DARPA June meeting)
     //std::cout << "output before division:\n" << output << std::endl;
     output /= summation;
     //RowVectorXd output = (fieldvals * z_coords) / summation;
