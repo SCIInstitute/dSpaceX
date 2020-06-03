@@ -52,7 +52,7 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 175));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent); // intentionally non-passive
     this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
@@ -362,7 +362,7 @@ class EmbeddingWindow extends React.Component {
   resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
-    console.log('['+ this.nResizes++ +'] embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
+    //console.log('['+ this.nResizes++ +'] embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
 
     // Resize renderer
     this.renderer.setSize(width, height, false);

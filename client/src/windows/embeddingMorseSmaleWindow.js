@@ -8,7 +8,6 @@ import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import GalleryWindow from './galleryWindow';
 
-const drawerHeight      = 140;
 const minTileWidth      = 80;
 const minTileHeight     = 60;
 const tileWidthMargins  = 20;  // 5+5 image margin + 5+5 paper margin (ugh) 
@@ -92,6 +91,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
   }
 
+  componentDidMount() {
+    console.log("EmbeddingMorseSmaleWindow just mounted");
+  }
+
   /**
    * Computes new samples using shapeodds model
    * @param {number} datasetId
@@ -127,7 +130,11 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * Return best number of columms for the drawer shape cards.
    */
   numCols() {
-    let width = 1650;  // TODO: how to get actual width (this is good for single workspace window at fullscreen 1920x1200)
+    let width = 1650;
+    if (this.refs.window) {
+      width = this.refs.window.getBoundingClientRect().width;
+    }
+    console.log("embeddingmorsesmalewindow width is " + width);
     if (this.props.screenWidthHack) width /= 2;
     return width / this.getTileWidth(); 
   }
@@ -198,7 +205,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     const { drawerImages } = this.state;
 
     return (
-        <div className={classes.embeddingMorseSmaleWorkspace} >
+        <div ref='window' className={classes.embeddingMorseSmaleWorkspace} >
 
           {/* top panel: embedding and crystals */}
           <div className={classes.topPanels} style={{ height:'150px' }} >

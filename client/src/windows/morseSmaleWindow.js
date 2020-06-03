@@ -52,7 +52,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
   }
@@ -208,7 +208,7 @@ class MorseSmaleWindow extends React.Component {
     if (event.button === 0) {
       const position = this.getPickPosition(event);
       if (this.pick(position, event.ctrlKey)) // click w/ ctrl held down to produce model's original samples
-        event.stopPropagation(); // release the event if this picks something // todo: doesn't seem to work as event still goes to controller
+        event.stopPropagation(); // release the event if this picks something // todo: doesn't seem to work as event still goes to controller -> <ctc> it's because it's already rotating at this point and only selects on release
     }
   }
 
@@ -637,7 +637,8 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-        <canvas ref='msCanvas' style={style} />);
+          <canvas ref='msCanvas' style={style} />
+    );
   }
 }
 
