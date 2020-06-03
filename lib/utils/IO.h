@@ -13,25 +13,17 @@
 #include <iomanip>
 #include <list>
 #include <vector>
+#include <sys/stat.h>
 
-class IO{
+class IO {
+public:
 
-
-  public:
-
-  static bool fileExists(const std::string& fileName){
-    std::fstream fin;
-    fin.open(fileName.c_str(),std::ios::in);
-    if( fin.is_open() )
-    {
-      fin.close();
-      return true;
-    }
-    fin.close();
-    return false;
+  static bool fileExists(const std::string& filename)
+  {
+    struct stat buf;
+    return stat(filename.c_str(), &buf) != -1;
   }
-
-
+  
   //read string list text file
   static void writeStringList(const std::string &filename, std::vector< std::string > list){
     std::ofstream file;
@@ -43,8 +35,6 @@ class IO{
     }
     file.close();
   };
-
-
 
   //read string list text file
   static std::vector<std::string> readStringList(const std::string &filename, int lo = -1){

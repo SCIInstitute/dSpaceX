@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 using namespace dspacex;
 
@@ -455,10 +456,15 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
      throw std::runtime_error("Missing 'embeddings' field (name of global embeddings for each persistence level's models).");
   }
   std::string embeddings = modelNode["embeddings"].as<std::string>();
-  std::string embeddings_suffix = embeddings.substr(embeddings.rfind('.')+1);
-  InputFormat embeddings_format = InputFormat(embeddings_suffix);
-  std::cout << "Global embeddings for each persistence level file format: " << embeddings_format << std::endl;
-
+  if (embeddings.empty() || embeddings == "None") {
+    std::cout << "No global embeddings for this model\n";
+    embeddings.clear();
+  } else {
+    std::string embeddings_suffix = embeddings.substr(embeddings.rfind('.')+1);
+    InputFormat embeddings_format = InputFormat(embeddings_suffix);
+    std::cout << "Global embeddings for each persistence level file format: " << embeddings_format << std::endl;
+  }
+  
   if (!modelNode["root"]) {
     throw std::runtime_error("Model missing 'root' field.");
   }
@@ -526,10 +532,13 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
       crystalIndexPadding = paddedStringWidth(ncrystals);
     }
 
-    // read global embeddings for the set of models (one per crystal) at this persistence level
     std::string persistenceIndexStr(shouldPadZeroes ? paddedIndexString(persistence, persistenceIndexPadding) : std::to_string(persistence));
     std::string persistencePath(persistencesBasePath + persistenceIndexStr);
-    P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
+
+    // read global embeddings for the set of models (one per crystal) at this persistence level
+    if (!embeddings.empty()) {
+      P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
+    }
     
     // read the model for each crystal at this persistence level
     std::string modelPath;
@@ -545,6 +554,15 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     }
 
     // read crystalIds (same for every model at this plevel, so only need to read/set them once)
+    if (!IO::fileExists(modelPath + "/crystalID.csv")) {
+      if (!IO::fileExists(modelPath + "/../crystalID.csv")) {
+        std::stringstream err;
+        err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
+        throw std::runtime_error(err.str());
+      }
+      modelPath += "/..";
+    }
+    
     Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
   
     // FIXME: until fixed in data (produced by MATLAB), crystal ids are 1-based, so adjust them right away to be 0-based
