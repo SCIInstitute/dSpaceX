@@ -20,6 +20,10 @@ class MorseSmaleWindow extends React.Component {
     this.unselectedOpacity = 0.80;
     this.numInterpolants = 51; // how many samples to generate using current model [to fill drawer]
 
+    this.state = {
+      selectingCrystal: false,
+    };
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
@@ -30,7 +34,9 @@ class MorseSmaleWindow extends React.Component {
     this.toggleCamera = this.toggleCamera.bind(this);
 
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
-    this.handleMouseRelease = this.handleMouseRelease.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
 
     this.pick = this.pick.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -54,7 +60,7 @@ class MorseSmaleWindow extends React.Component {
     this.init();
     window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
     window.addEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
+    this.refs.msCanvas.addEventListener('mousedown', this.onMouseDown);
   }
 
   /**
@@ -100,8 +106,42 @@ class MorseSmaleWindow extends React.Component {
 
     window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.msCanvas.removeEventListener('mousedown', this.handleMouseRelease);
+    this.refs.msCanvas.removeEventListener('mousedown', this.onMouseDown);
   }
+
+  /**
+   * mousedown starts a potential crystal select
+   */
+  onMouseDown(event) {
+    this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
+
+    this.setState({ selectingCrystal:true });
+  }
+  
+  /**
+   * mousemove ends a potential crystal so rotations don't accidentally select a crystal
+   */
+  onMouseMove(event) {
+    this.setState({ selectingCrystal:false });
+
+    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+  }
+
+  /**
+   * mouseup potentially selects a crystal
+   */
+  onMouseUp(event) {
+    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+    
+    // Handle left click release
+    if (this.state.selectingCrystal && event.button === 0) {
+      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/);
+    }
+  }
+
 
   /**
    * If any of the decomposition settings have changed returns true
@@ -195,21 +235,6 @@ class MorseSmaleWindow extends React.Component {
 
     // Redraw scene with updates
     this.renderScene();
-  }
-
-  /**
-   * Event handling for mouse click
-   * @param {Event} event
-   *
-   * // todo: selection/rotation conflict -> should listen for mouseup, but currently tied to mousedown.
-   */
-  handleMouseRelease(event) {
-    // Handle left click release
-    if (event.button === 0) {
-      const position = this.getPickPosition(event);
-      if (this.pick(position, event.ctrlKey)) // click w/ ctrl held down to produce model's original samples
-        event.stopPropagation(); // release the event if this picks something // todo: doesn't seem to work as event still goes to controller
-    }
   }
 
   /**
