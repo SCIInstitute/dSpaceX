@@ -221,17 +221,21 @@ class Application extends React.Component {
    */
   onDesignSelection(event, id) {
     event.stopPropagation();
+
+    // append this design to current selection if holding ctrl/meta
     if (event.ctrlKey || event.metaKey) { // Works for mac and linux - need to test windows
       let selectedDesigns = new Set(this.state.selectedDesigns);
       selectedDesigns.add(id);
       this.setState({ selectedDesigns });
-    } else {
+    } else { 
       let selectedDesigns = new Set();
-      selectedDesigns.add(id);
+      if (id !== -1) {
+        selectedDesigns.add(id);
+      }
       this.setState({ selectedDesigns });
     }
   }
-
+  
   /**
    * Handles lasso of design from ScatterPlotWindow
    * @param {Array<object>} selection selected designs

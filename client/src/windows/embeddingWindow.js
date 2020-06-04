@@ -19,13 +19,13 @@ class EmbeddingWindow extends React.Component {
       renderThumbnails: false,
       colorThumbnails: false,
       thumbnailScale: 1,
+      selectingDesign: false,
     };
 
     // Used to zoom and translate embedding
     this.maxScale = 10;
     this.minScale = 1;
     this.zoomRate = 1.1;
-    this.rightMouseDown = false;
     this.previousX = 0;
     this.previousY = 0;
 
@@ -41,7 +41,8 @@ class EmbeddingWindow extends React.Component {
     this.resetScene = this.resetScene.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
     this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
-    this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
+    this.catchMouseMoveEvent = this.catchMouseMoveEvent.bind(this);
+    this.handleMouseMoveForPanning = this.handleMouseMoveForPanning.bind(this);
     this.handleMouseReleaseEvent = this.handleMouseReleaseEvent.bind(this);
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -52,12 +53,10 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent); // intentionally non-passive
-    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
-    this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
-    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent);
     this.refs.embeddingCanvas.addEventListener('contextmenu', (e) => e.preventDefault(), false);
   }
 
@@ -402,35 +401,55 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseDownEvent(event) {
-    let rightClick = 2;
-    if (event.button === rightClick) {
-      this.rightMouseDown = true;
-      this.previousX = event.offsetX;
-      this.previousY = event.offsetY;
+    this.refs.embeddingCanvas.addEventListener('mousemove', this.catchMouseMoveEvent);
+    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+
+    // if mouse gets released without moving, we'll try to select a design
+    this.setState({ selectingDesign:true });
+
+    // if mouse moves, translate viewpoint until released
+    this.previousX = event.offsetX;
+    this.previousY = event.offsetY;
+  }
+
+  /**
+   * Catches first mouse move event after mouse down to disable selection and enable panning
+   * If mouse is moving with a button down, don't try to select a design on mouseup.
+   */
+  catchMouseMoveEvent(event) {
+    // let some teeeeny movement slide
+    const allowed = 2;
+    let dx = this.previousX - event.offsetX;
+    let dy = this.previousY - event.offsetY;
+    if (Math.abs(dx + dy) > allowed) { 
+      this.setState({ selectingDesign:false });
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
+
+      // now we're panning, so let that function be used to (passively) handle mouse moves events after this
+      this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveForPanning, { passive:true });
+      this.handleMouseMoveForPanning(event);
     }
   }
 
   /**
-   * Handles mouse move event.
+   * Handles (passive) mouse move event for panning
    * Part of the embedding translation pipeline.
    * @param {object} event
    */
-  handleMouseMoveEvent(event) {
+  handleMouseMoveForPanning(event) {
     let canvas = this.refs.embeddingCanvas;
     let x = event.offsetX;
     let y = event.offsetY;
 
-    if (this.rightMouseDown) {
-      let dx = this.previousX - x;
-      let dy = y - this.previousY;
-      let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
-      let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
-      this.camera.translateX(scaleX * dx);
-      this.camera.translateY(scaleY * dy);
+    let dx = this.previousX - x;
+    let dy = y - this.previousY;
+    let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
+    let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
+    this.camera.translateX(scaleX * dx);
+    this.camera.translateY(scaleY * dy);
 
-      this.camera.updateProjectionMatrix();
-      this.renderScene();
-    }
+    this.camera.updateProjectionMatrix();
+    this.renderScene();
 
     this.previousX = x;
     this.previousY = y;
@@ -442,23 +461,28 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseReleaseEvent(event) {
+    this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
+    if (this.state.selectingDesign)
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
+    else
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveForPanning);
+
+    // handle left click release if we're selecting
     const leftClick = 0;
-    const rightClick = 2;
+    if (this.state.selectingDesign && event.button === leftClick) {
+      this.setState({ selectingDesign:false });
 
-    if (event.button === rightClick) {
-      this.rightMouseDown = false;
-    }
-
-    if (event.button === leftClick) {
       const pickPosition = this.getPickPosition(event);
       const pickedObject = this.pickHelper.pick(pickPosition,
         this.pickingScene,
         this.camera,
         this.renderer,
         this.idToObject);
+      let selectedDesignId = -1;
       if (pickedObject) {
-        this.props.onDesignSelection(event, pickedObject.name);
+        selectedDesignId = pickedObject.name;
       }
+      this.props.onDesignSelection(event, selectedDesignId);
     }
   }
 

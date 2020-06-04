@@ -58,7 +58,7 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', _.debounce(this.resizeCanvas, 500));
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
     this.refs.msCanvas.addEventListener('mousedown', this.onMouseDown);
   }
@@ -116,7 +116,9 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
 
-    this.setState({ selectingCrystal:true });
+    // if left button clicked start a potential crystal selection action
+    if (event.button === 0)
+      this.setState({ selectingCrystal:true });
   }
   
   /**
@@ -125,6 +127,7 @@ class MorseSmaleWindow extends React.Component {
   onMouseMove(event) {
     this.setState({ selectingCrystal:false });
 
+    // can release these event handlers now since orbit controls handles camera
     this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
   }
