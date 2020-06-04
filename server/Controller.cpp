@@ -765,6 +765,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
     imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getRawData()[0]),
                                            image.getRawData().size());
     response["thumbnails"].append(imageObject);
+    //response["fieldvals"].append(sample.val);  //<ctc> I don't think this function associates fieldvals with samples, and fetching this is awkward right now, so just putting this in as a placeholder in case it's desired 
   }
 }
 
@@ -903,6 +904,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     imageObject["height"] = image.getHeight();
     imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getConstRawData()[0]), image.getConstRawData().size());
     response["thumbnails"].append(imageObject);
+    response["fieldvals"].append(fieldval);
   }
 
   response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
@@ -1005,6 +1007,7 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
     //imageObject["data"] = base64_encode(image.getConstData(), 4 * image.getWidth() * image.getHeight());  //<ctc> not used by client
     imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getConstRawData()[0]), image.getConstRawData().size());
     response["thumbnails"].append(imageObject);
+    response["fieldvals"].append(sample.val);
   }
 
   response["msg"] = std::string("returning " + std::to_string(sample_indices.size()) + " images for model at crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
@@ -1067,6 +1070,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
     imageObject["height"] = sample_image.getHeight();
     imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&sample_image.getConstRawData()[0]), sample_image.getConstRawData().size());
     response["thumbnails"].append(imageObject);
+    response["fieldvals"].append(sample.val);
   }
 
   response["msg"] = std::string("returning " + std::to_string(fieldvalues_and_indices.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));

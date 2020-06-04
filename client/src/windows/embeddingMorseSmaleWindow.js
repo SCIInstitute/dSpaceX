@@ -8,11 +8,10 @@ import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import GalleryWindow from './galleryWindow';
 
-const drawerHeight      = 140;
-const minTileWidth      = 80;
-const minTileHeight     = 60;
-const tileWidthMargins  = 20;  // 5+5 image margin + 5+5 paper margin (ugh) 
-const tileHeightMargins = 40;  // 5+5 image margin + 5+5 paper margin + 20 text (ugh) 
+const minTileWidth      = 100;
+const minTileHeight     = 80;
+const tileWidthMargins  = 40;  // 5+5 image margin + 5+5 paper margin + 20 text (ugh) 
+const tileHeightMargins = 60;  // 5+5 image margin + 5+5 paper margin + 40 text (ugh) 
 
 const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
@@ -100,7 +99,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {number} persistenceLevel
    * @param {number} crystalID
    * @param {number} numSamples
-   * @param {bool} showOrig
+   * @param {bool} showOrig This doesn't compute new samples, but provides _original_ samples instead.
    */
   computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel,
     crystalID, numSamples, showOrig) {
@@ -114,6 +113,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
             img: thumbnail,
+            val: result.fieldvals[i],
             id: i,
           };
         });
@@ -239,6 +239,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
                 <Paper className={classes.paper}>
                   <Typography>{'Design: ' + tile.id}</Typography>
+                  <Typography>{tile.val.toFixed(5)}</Typography>
 
                   <img alt={'Image:' + tile.id} key={tile.id}
                        height={this.scaledImageHeight()}
