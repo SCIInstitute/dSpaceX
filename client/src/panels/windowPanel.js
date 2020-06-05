@@ -218,6 +218,10 @@ class WindowPanel extends React.Component {
               name: 'algorithm',
               id: 'algorithm-input',
             }}>
+            {!this.props.embeddings &&
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>}
             {this.props.embeddings.map((embedding) =>
               <MenuItem key={embedding.id} value={embedding.name.trim()}>
                 <em>{embedding.name}</em>

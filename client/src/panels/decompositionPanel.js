@@ -50,6 +50,15 @@ class DecompositionPanel extends React.Component {
 
     this.state = {
       devMode: false,
+
+      datasetId: this.props.dataset.datasetId,
+
+      interpolationModel: 'None',
+      model: {
+        sigma: 0.15,
+      },
+
+      decompositionMode: 'Morse-Smale',
       ms: {
         knn: 15,
         persistence: -1,
@@ -57,8 +66,7 @@ class DecompositionPanel extends React.Component {
         sigma: 0.25,
         smoothing: 15.0,
       },
-      datasetId: this.props.dataset.datasetId,
-      decompositionMode: 'Morse-Smale',
+
       decompositionCategory: 'qoi',
       decompositionField: this.props.dataset.qoiNames[0],
       persistenceLevel: '',
@@ -224,8 +232,20 @@ class DecompositionPanel extends React.Component {
   }
 
   handleRecomputeMorseSmale() {
-    console.log('The ms object');
+    console.log('Computing the ms object');
     console.log(this.state.ms);
+  }
+
+  handleExportMorseSmale() {
+    console.log('Dumping the ms object');
+    console.log(this.state.ms);
+  }
+
+  handleModelSigmaChange(event) {
+    let sigma = event.target.value;
+    this.setState((prevState) => ({
+      model: { ...prevState.model, sigma:sigma },
+    }));
   }
 
   /**
@@ -385,6 +405,56 @@ class DecompositionPanel extends React.Component {
           boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', flexDirection: 'column',
             width: '100%', boxSizing: 'border-box' }}>
+
+            { /* Field Category (Decomposition) Dropdown */ }
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled || !this.props.dataset}>
+              <InputLabel htmlFor='category-input'>Field Category</InputLabel>
+              <Select ref="categoryCombo"
+                value={this.state.decompositionCategory || ''}
+                onChange={this.handleDecompositionCategoryChange} inputProps={{
+                  name: 'category',
+                  id: 'category-input',
+                }}>
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                <MenuItem value="parameter">
+                  <em>Parameter</em>
+                </MenuItem>
+                <MenuItem value="geometry" disabled={true}>
+                  <em>Geometry</em>
+                </MenuItem>
+                <MenuItem value="qoi">
+                  <em>QoI</em>
+                </MenuItem>
+                <MenuItem value="precomputed" disabled={true}>
+                  <em>Precomputed</em>
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            { /* Field Dropdown */ }
+            <FormControl className={classes.formControl}
+              disabled={ !this.props.enabled || !this.props.dataset
+                || !this.state.decompositionCategory}>
+              <InputLabel htmlFor='field-input'>Field</InputLabel>
+              <Select ref="fieldCombo"
+                value={this.state.decompositionField || ''}
+                onChange={this.handleDecompositionFieldChange} inputProps={{
+                  name: 'field',
+                  id: 'field-input',
+                }}>
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {
+                  this._getDecompositionFieldMenuItems()
+                }
+              </Select>
+            </FormControl>
+
+            {/* Partitioning Algorithm */ }
             <FormControl className={classes.formControl}
               disabled={!this.props.enabled}
               style={{ width: '100%',
@@ -436,56 +506,49 @@ class DecompositionPanel extends React.Component {
 
             { /* Button to dump crystal partitions to disk */}
             { this.state.devMode && <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button> }
-            { this.state.devMode && <Button size="small">Export Crystal Partitions</Button> }
+            { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export Crystal Partitions</Button> }
 
-            { /* Decomposition Category Dropdown */ }
+            { /* Interpolation Model Selection */}
             <FormControl className={classes.formControl}
-              disabled={!this.props.enabled || !this.props.dataset}>
-              <InputLabel htmlFor='category-input'>Field Category</InputLabel>
-              <Select ref="categoryCombo"
-                value={this.state.decompositionCategory || ''}
-                onChange={this.handleDecompositionCategoryChange} inputProps={{
-                  name: 'category',
-                  id: 'category-input',
+              disabled={!this.props.enabled}
+              style={{ width: '100%',
+                boxSizing: 'border-box',
+                paddingRight: '10px' }}>
+              <InputLabel htmlFor='model-field'>Interpolation Model</InputLabel>
+              <Select ref="interpolationCombo"
+                disabled={!this.props.enabled || !this.props.dataset}
+                value={this.state.interpolationModel || ''}
+                style={{ width:'100%' }}
+                onChange={this.handleInterpolationModelChange} 
+                inputProps={{
+                  name: 'model',
+                  id: 'model-field',
                 }}>
-                <MenuItem value="">
+                <MenuItem value='None'>
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter">
-                  <em>Parameter</em>
+                <MenuItem value='pca'>
+                  <em>PCA</em>
                 </MenuItem>
-                <MenuItem value="geometry" disabled={true}>
-                  <em>Geometry</em>
+                <MenuItem value='shapeodds'>
+                  <em>ShapeOdds</em>
                 </MenuItem>
-                <MenuItem value="qoi">
-                  <em>QoI</em>
-                </MenuItem>
-                <MenuItem value="precomputed" disabled={true}>
-                  <em>Precomputed</em>
+                <MenuItem value='sharedgp' disabled={true}>
+                  <em>Shared-GP</em>
                 </MenuItem>
               </Select>
             </FormControl>
 
-            { /* Decomposition Field Dropdown */ }
-            <FormControl className={classes.formControl}
-              disabled={ !this.props.enabled || !this.props.dataset
-                || !this.state.decompositionCategory}>
-              <InputLabel htmlFor='field-input'>Field</InputLabel>
-              <Select ref="fieldCombo"
-                value={this.state.decompositionField || ''}
-                onChange={this.handleDecompositionFieldChange} inputProps={{
-                  name: 'field',
-                  id: 'field-input',
-                }}>
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {
-                  this._getDecompositionFieldMenuItems()
-                }
-              </Select>
-            </FormControl>
+            { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
+            <TextField
+              label="sigma bandwidth percent"
+              id="model-sigma"
+              defaultValue={this.state.model.sigma}
+              size="small"
+              onChange={this.handleModelSigmaChange.bind(this)}
+            />
 
+            { /* Histogram of data partitions (each consisting of n subpartitions) */ }
             <div style={{ height:'15px' }}></div>
             {
               persistenceLevels.length > 0 ? [
