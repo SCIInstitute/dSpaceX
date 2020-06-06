@@ -857,6 +857,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // if user requests original images, show predicted images for the crystal's samples' z_coords
   bool showOrig = request["showOrig"].asBool();
   if (showOrig)
+    // <ctc> ALERT: this doesn't seem to be fetching original images, just evaluating the model at original z_coords
     return fetchAllImagesForCrystal_Shapeodds(request, response);
 
   int numZ = request["numSamples"].asInt();
@@ -887,7 +888,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     sigma = 0.05; // 5% of fieldrange, because continuous sampling should be smaller? Maybe that's true, but still should probably be user-specifiable (TODO)
   }
   
-  for (unsigned i = 0; i < numZ; i++)
+  for (unsigned i = 0; i < numZ && i < 60; i++)
   {
     double fieldval = minval + delta * i;
 
@@ -898,7 +899,9 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     Eigen::MatrixXd I = dspacex::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
     
     // add result image to response
-    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    //Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    // <ctc> maybe PCA models are sending images in row-major order, so try swapping width/height
+    Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
@@ -974,8 +977,11 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
 
   //z coords are sorted by fieldvalue in Model::setFieldValues
   //for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
+  int i=0;
   for (auto sample: sample_indices)
   {
+    if (i++ >= 69) break;
+
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
     extern Controller *controller;
     if (!controller || !controller->m_currentDataset)
@@ -1000,7 +1006,9 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
               << persistenceLevel << ", crystalid " << crystalid << ": " << quality << std::endl;
 
     // add image to response
-    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    //Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    // <ctc> maybe PCA models are sending images in row-major order, so try swapping width/height
+    Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();

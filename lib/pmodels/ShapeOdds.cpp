@@ -106,6 +106,7 @@ void testEigen()
 Eigen::MatrixXd ShapeOdds::evaluateModel(const Model &model, const Eigen::VectorXd &z_coord,
                                          const bool writeToDisk, const std::string outpath, unsigned w, unsigned h)
 {
+#if 0 //<ctc> super duper hack to test evaluation of PCA model without updated dataset loading (which has been started but is a wip)
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
@@ -140,6 +141,25 @@ Eigen::MatrixXd ShapeOdds::evaluateModel(const Model &model, const Eigen::Vector
       throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
     } 
   }
+#else
+  //evaluate this as a PCA model:
+  // z = (x - w0)W^t  // computed using Model::getNewLatentSpaceValue (and not like this says)
+  // x = zW + w0
+  // where z is the latent space (the passed in z_coord)
+  // and x is the data space (the new image)
+
+  Eigen::MatrixXd Wt(model.W);
+  Wt.transposeInPlace();
+  Eigen::MatrixXd I((Wt * z_coord) + model.w0);
+
+  // test pca model by returning w0 directly
+  //I = model.w0;
+
+  // test pca model by returning Eigen vectors in W directly (they're image-like)
+  // static int i=0;
+  // if (i>=355) i=0;
+  // I = Wt.col(i++);
+#endif
 
   return I;
 }
