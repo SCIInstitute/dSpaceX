@@ -42,6 +42,7 @@ class DecompositionPanel extends React.Component {
     this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
     this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
     this.fetchDecomposition = this.fetchDecomposition.bind(this);
+    this.clearDecompositionState = this.clearDecompositionState.bind(this);
 
     this.state = {
       devMode: false,
@@ -67,7 +68,8 @@ class DecompositionPanel extends React.Component {
         normalize: true,
       },
 
-      persistenceLevel: '',
+      // decomposition state
+      persistenceLevel: -1,
       minPersistence: null,
       maxPersistence: null,
       complexSizes: [],
@@ -76,6 +78,20 @@ class DecompositionPanel extends React.Component {
     };
 
     this.client = this.props.dsxContext.client;
+  }
+
+  /**
+   * Clear decomposition state
+   */
+  clearDecompositionState() {
+    this.setState({
+      persistenceLevel: -1,
+      minPersistence: null,
+      maxPersistence: null,
+      complexSizes: [],
+      crystals: [],
+      sliderPersistence: null,
+    });
   }
 
   /**
@@ -141,33 +157,31 @@ class DecompositionPanel extends React.Component {
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        this.client.fetchMorseSmalePersistence(datasetId, category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+        await this.client.fetchMorseSmaleDecomposition(datasetId, category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
-            this.setState({
-              minPersistence: result.minPersistenceLevel,
-              maxPersistence: result.maxPersistenceLevel,
-              complexSizes: result.complexSizes,
-              sliderPersistence: result.maxPersistenceLevel,
-              persistenceLevel: ('' + result.maxPersistenceLevel),
-            });
-            this.updateDataModel('' + result.maxPersistenceLevel);
+            if (!result.error) {
+              this.setState({
+                minPersistence: result.minPersistenceLevel,
+                maxPersistence: result.maxPersistenceLevel,
+                complexSizes: result.complexSizes,
+                sliderPersistence: result.maxPersistenceLevel,
+                persistenceLevel: result.maxPersistenceLevel});
+              this.updateDataModel();
+            }
+            else {
+              console.log('decompositionPanel.fetchDecomposition: fetch decomposition from server failed:\n\t'+result.error_msg);
+            }
           }.bind(this));
-        return;
       }
       else {
         console.log('decompositionPanel.fetchDecomposition: \n\tunknown decomposition mode: '+this.state.decompositionMode);
+        this.clearDecompositionState();
       }
     }
     else {
       console.log('decompositionPanel.fetchDecomposition: \n\tinvalid decomposition parameters');
+      this.clearDecompositionState();
     }
-    
-    // unknown decomposition or invalid parameters
-    this.setState({
-      minPersistence: null,
-      maxPersistence: null,
-      crystals: [],
-    });
   }
   
   componentDidMount() {
@@ -181,15 +195,41 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
+    // overview: - when component state updates, fetch the new decomposition only if the mode, category, or field changes
+    //             todo <ctc> (category should trigger a field change, so really doesn't need to be checked explicitly)
+    //           - if ms params change, don't recompute unless user clicks the button to do so
+
     if (prevState.decompositionMode !== this.state.decompositionMode ||
-        prevState.decompositionCategory !== this.state.decompositionCategory ||
+        //prevState.decompositionCategory !== this.state.decompositionCategory ||
         prevState.decompositionField !== this.state.decompositionField) {
-      console.log('decompositionPanel.componentDidUpdate:\n\tstate changed, fetching new decomposition...');
+      console.log('decompositionPanel.componentDidUpdate:\n\tdecomposition state (i.e., field) changed, fetching new decomposition...');
       this.fetchDecomposition();
     }
-    console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
+    else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
+      console.log('Persistence level changed, updating data model...');
+      this.updateDataModel();
+    }
+    else {
+      console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
+    }
   }
 
+  /**
+   * Passes config changes up the line.
+   */
+  updatePropsConfig() {
+    this.props.onDecompositionChange({
+      datasetId: this.state.datasetId,
+      decompositionMode: this.state.decompositionMode,
+      decompositionCategory: this.state.decompositionCategory,
+      decompositionField: this.state.decompositionField,
+      k: this.state.ms.knn,
+      persistenceLevel: this.state.persistenceLevel,
+    });
+  }
+  
+  // <ctc> todo: convert the following handle*Change to inline lambdas
+  
   /**
    * Handles when the decomposition combo is changed.
    * @param {Event} event
@@ -200,7 +240,9 @@ class DecompositionPanel extends React.Component {
       decompositionMode: mode,
     });
 
-    this.fetchDecomposition();
+    // <ctc> this should already be called by componentDidUpdate
+    //this.fetchDecomposition();
+    console.log('decompositionPanel.handleDecompositionModeChange (should updated automatically)');
   }
 
   handleMSknnChange(event) {
@@ -277,6 +319,8 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionCategory: category,
     });
+
+    // <ctc> see! This one updates the field list automatically, right? But maybe that's in render...
   }
 
   /**
@@ -288,6 +332,8 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionField: field,
     });
+
+    // <ctc> But this one *must* call componentDidUpdate
   }
 
   /**
@@ -295,30 +341,35 @@ class DecompositionPanel extends React.Component {
    * @param {string} level
    */
   async updateDataModel(level) {
-    if (level != '') {
-      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.state.datasetId;
-      let persistenceLevel = parseInt(level);
-      let category = this.state.decompositionCategory;
-      let field = this.state.decompositionField;
-      let result = await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, k, persistenceLevel);
-
-      this.setState({
-        crystals: result.complex.crystals,
-      });
-
-      this.props.onDecompositionChange({
-        datasetId: result.datasetId,
-        decompositionMode: this.state.decompositionMode,
-        decompositionCategory: this.state.decompositionCategory,
-        decompositionField: this.state.decompositionField,
-        k: result.k,
-        persistenceLevel: result.persistenceLevel,
-      });
-    } else {
-      this.setState({
-        crystals: [],
-      });
+    let persistenceLevel = this.state.persistenceLevel;
+    if (persistenceLevel >= this.minPersistence && persistenceLevel <= this.maxPersistence) {
+      if (this.state.decompositionMode == 'Morse-Smale') {
+        // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition
+        let datasetId = this.state.datasetId;
+        let category = this.state.decompositionCategory;
+        let field = this.state.decompositionField;
+        const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+          .then(function(result) {
+            if (!result.error) {
+              this.setState({
+                crystals: result.complex.crystals,
+              });
+              this.updatePropsConfig();
+            }
+            else {
+              this.setState({ crystals: [] });
+              console.log('decompositionPanel.updateDataModel failed: \n\t'+result.error_msg);
+            }
+          });
+      }
+      else {
+        console.log('decompositionPanel.updateDataModel: \n\tunknown decomposition mode');
+      }
+    }
+    else {
+      console.log('decompositionPanel.updateDataModel: \n\tpersistenceLevel ('+persistenceLevel+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
+      this.setState({ crystals: [] });
     }
   }
 
@@ -327,13 +378,15 @@ class DecompositionPanel extends React.Component {
    * @param {Event} event
    */
   handlePersistenceLevelChange(event) {
-    let level = event.target.value;
+    let level = parseInt(event.target.value);
     this.setState({
       persistenceLevel: level,
       sliderPersistence: level,
     });
 
-    this.updateDataModel(level);
+    // <ctc> this should already be called by componentDidUpdate
+    //this.updateDataModel(level);
+    console.log('decompositionPanel.handlePersistenceLevelChange (should updated automatically)');
   }
 
   /**
@@ -345,6 +398,7 @@ class DecompositionPanel extends React.Component {
     this.setState({
       sliderPersistence: value,
     });
+    // <ctc> todo: verify this returns an int and not a string ... not sure this callback is even necessary w/ handleSliderRelease
   }
 
   /**
@@ -354,9 +408,11 @@ class DecompositionPanel extends React.Component {
   handlePersistenceSliderRelease(event) {
     if (this.state.sliderPersistence != this.state.persistenceLevel) {
       this.setState({
-        persistenceLevel: '' + this.state.sliderPersistence,
+        persistenceLevel: this.state.sliderPersistence,
       });
-      this.updateDataModel('' + this.state.sliderPersistence);
+
+      //this.updateDataModel(this.state.sliderPersistence);
+      console.log('decompositionPanel.handlePersistenceLevelChange (should updated automatically)');
     }
   }
 

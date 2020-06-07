@@ -58,7 +58,6 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
   m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
-  m_commandMap.insert({"fetchMorseSmalePersistence", std::bind(&Controller::fetchMorseSmalePersistence, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
@@ -234,9 +233,10 @@ void Controller::fetchKNeighbors(const Json::Value &request, Json::Value &respon
 }
 
 /**
- * Handle the command to fetch the morse smale persistence levels of a dataset.
+ * Handle the command to fetch the morse smale decomposition of a dataset.
+ * Returns min/max persistences and num crystals for each one.
  */
-void Controller::fetchMorseSmalePersistence(const Json::Value &request, Json::Value &response)
+void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
 {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
@@ -267,7 +267,7 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -306,7 +306,7 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -340,46 +340,6 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
 }
 
 /**
- * Handle the command to fetch the full morse smale decomposition of a dataset.
- */
-// TODO: NOT USED BY ANYTHING!
-void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response) {
-  if (!maybeLoadDataset(request, response))
-    return setError(response, "invalid datasetId");
-
-  if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
-
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-
-  response["datasetId"] = m_currentDatasetId;
-  response["decompositionMode"] = "Morse-Smale";
-  response["minPersistenceLevel"] = minLevel;
-  response["maxPersistenceLevel"] = maxLevel;
-  response["complexes"] = Json::Value(Json::arrayValue);
-  for (unsigned int level = minLevel; level <= maxLevel; level++) {
-    std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(level);
-    Json::Value complexObject(Json::objectValue);
-    complexObject["crystals"] = Json::Value(Json::arrayValue);
-    for (unsigned int c = 0; c < complex->getCrystals().size(); c++) {
-      std::shared_ptr<Crystal> crystal = complex->getCrystals()[c];
-      Json::Value crystalObject(Json::objectValue);
-      crystalObject["minIndex"] = crystal->getMinSample();
-      crystalObject["maxIndex"] = crystal->getMaxSample();
-      crystalObject["sampleIndexes"] = Json::Value(Json::arrayValue);
-      for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
-        unsigned int index = crystal->getAllSamples()[i];
-        crystalObject["sampleIndexes"].append(index);
-      }
-      complexObject["crystals"].append(crystalObject);
-    }
-    // TODO: Add adjacency to the complex json object.
-    response["complexes"].append(complexObject);
-  }
-}
-
-/**
  * This fetches the graph embedding layout for a given persistence level
  * @param request
  * @param response
@@ -392,7 +352,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -474,7 +434,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -530,7 +490,7 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -568,7 +528,7 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return setError(response, "\n\tfailed to process data");
+    return false; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -1086,16 +1046,16 @@ bool Controller::verifyProcessDataParams(const Json::Value &request, Json::Value
   if (request["knn"].asInt() < 0) {
     setError(response, "knn must be >= 0");
     return false;
-  } else if (request["sigma"].asFloat() >= 0) {
+  } else if (request["sigma"].asFloat() < 0) {
     setError(response, "sigma must be >= 0");
     return false;
   } else if (request["smooth"].asFloat() < 0) {
     setError(response, "smooth must be >= 0");
     return false;
-  } else if (request["depth"].asInt() <= 0) {
-    setError(response, "must compute at least one persistence level (depth > 0");
+  } else if (request["depth"].asInt() <= 0 && request["depth"].asInt() != -1) {
+    setError(response, "must compute at least one (depth > 0) or all (depth = -1) persistence levels");
     return false;
-  } else if (request["curvepoints"].asInt() <= 0) {
+  } else if (request["curvepoints"].asInt() < 3) {
     setError(response, "regression curves must have at least 3 points");
     return false;
   }

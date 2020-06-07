@@ -201,7 +201,8 @@ class Application extends React.Component {
   }
 
   /**
-   * Handles the user changing the configuration for a window.
+   * Handles the user changing the configuration for a window in the workspace
+   * by broadcasting that change to the other windows.
    * @param {object} config
    */
   onWindowConfigChange(config) {

@@ -42,7 +42,6 @@ class Controller {
   void fetchDatasetList(const Json::Value &request, Json::Value &response);
   void fetchDataset(const Json::Value &request, Json::Value &response);
   void fetchKNeighbors(const Json::Value &request, Json::Value &response);
-  void fetchMorseSmalePersistence(const Json::Value &request, Json::Value &response);
   void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
