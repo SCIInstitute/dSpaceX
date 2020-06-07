@@ -12,8 +12,7 @@ const int k_defaultSamplesCount = 50;
 /**
  * SimpleHDVizDataImpl constuctor
  */
-SimpleHDVizDataImpl::SimpleHDVizDataImpl(HDProcessResult *result) : m_data(result) {
-  // <ctc> m_data is a memory leak since there's no destructor (use a std::shared_ptr<>)
+SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result) : m_data(result) {
   m_numberOfSamples = k_defaultSamplesCount;
 
   // TEMP DEBUG CODE

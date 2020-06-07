@@ -22,14 +22,14 @@ HDProcessor::HDProcessor() = default;
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
-HDProcessResult* HDProcessor::processOnMetric(
+std::shared_ptr<HDProcessResult>  HDProcessor::processOnMetric(
     DenseMatrix<Precision> d, DenseVector<Precision> field,
     int knn, int nSamples, int persistenceArg, bool random,
     Precision sigmaArg, Precision sigmaSmooth) {
   // TODO: Assert(field.N() == d.M() && d.M() == d.N())
 
   // Initialize processing result output object.
-  m_result = new HDProcessResult();
+  m_result.reset(new HDProcessResult());
 
   // Embed Distance Metric into 3D space
   EuclideanMetric<Precision> metric;
@@ -47,7 +47,7 @@ HDProcessResult* HDProcessor::processOnMetric(
   }
      
   // Compute Morse-Smale complex    
-  NNMSComplex<Precision> msComplex(d, field, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true);
+  NNMSComplex<Precision> msComplex(d, field, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true /*compute distances version*/);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
@@ -127,19 +127,24 @@ HDProcessResult* HDProcessor::processOnMetric(
   {
     bool exportCrystalPartitions = false;  // TODO: add these as a parameters to the function
     std::string partitionsName("crystalpartitions.csv");
-    if (exportCrystalPartitions)
+    if (exportCrystalPartitions) {
       DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, partitionsName);
+      // TODO: need to also export...
+      //   - original data range so it can be used for later analyses
+      //   - parameters used for computation: knn, sigma, smooth, noise, num_levels (depth)
+      //   - num_levels needs to know how many levels there would be in total so they can be properly numbered
+    }
   }
   
   // detach and return processed result
-  HDProcessResult *result = m_result;
+  std::shared_ptr<HDProcessResult> result = m_result;
   m_result = nullptr;
   return result;
 }
 
-#if 0 //<ctc> this function seems identical to above ::processOnMetric, and both have bugs, so just commenting it out for now, purposely not fixing anything herein.  // NOTE: we think the function above is for distance matrices, and this one is for Field and Design Params
 /**
  * Process the input data and generate all data files necessary for visualization.
+ * NOTE: the function above is for distance matrices, and this one is for Field and Design Params
  * @param[in] x Matrix containing input sample domain.
  * @param[in] y Vector containing input function values.
  * @param[in] knn Number of nearest neighbor for Morse-Samle complex computation.
@@ -149,13 +154,13 @@ HDProcessResult* HDProcessor::processOnMetric(
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
-HDProcessResult* HDProcessor::process(  
+std::shared_ptr<HDProcessResult>  HDProcessor::process(  
   DenseMatrix<Precision> x, DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
   bool randArg, Precision sigma, Precision sigmaSmooth) {
 
   // Initialize processing result output object.
-  m_result = new HDProcessResult();
+  m_result.reset(new HDProcessResult());
 
   // Store input data as member variables.
   Xall = x;
@@ -246,11 +251,10 @@ HDProcessResult* HDProcessor::process(
   }
 
   // detach and return processed result
-  HDProcessResult *result = m_result;
+  std::shared_ptr<HDProcessResult> result = m_result;
   m_result = nullptr;
   return result;
 }
-#endif
 
 /**
  * Compute analysis for a single persistence level.

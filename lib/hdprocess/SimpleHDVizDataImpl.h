@@ -12,7 +12,7 @@
 
 class SimpleHDVizDataImpl : public HDVizData {
   public:
-    SimpleHDVizDataImpl(HDProcessResult *result);    
+    SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result);
 
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<Precision>& getX();
@@ -72,7 +72,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     int getMaxPersistenceLevel();
         
   private:
-    HDProcessResult *m_data;
+    std::shared_ptr<HDProcessResult> m_data;
     
     int m_numberOfSamples;
 

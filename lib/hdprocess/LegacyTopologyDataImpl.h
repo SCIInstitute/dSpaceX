@@ -9,14 +9,14 @@
  */
 class LegacyTopologyDataImpl : public TopologyData {
  public:
-  LegacyTopologyDataImpl(HDVizData *data);
+  LegacyTopologyDataImpl(std::shared_ptr<HDVizData> data);
   virtual unsigned int getMinPersistenceLevel();
   virtual unsigned int getMaxPersistenceLevel();
-  virtual MorseSmaleComplex* getComplex(unsigned int persistenceLevel);
+  virtual std::shared_ptr<MorseSmaleComplex> getComplex(unsigned int persistenceLevel);
 
  private:
-  HDVizData *m_data;
-  std::vector<MorseSmaleComplex*> m_morseSmaleComplexes;
+  std::shared_ptr<HDVizData> m_data;
+  std::vector<std::shared_ptr<MorseSmaleComplex>> m_morseSmaleComplexes;
 };
 
 
@@ -25,16 +25,16 @@ class LegacyTopologyDataImpl : public TopologyData {
  */
 class LegacyMorseSmaleComplexImpl : public MorseSmaleComplex {
  public:
-  LegacyMorseSmaleComplexImpl(std::vector<Crystal*> &crystals) {
+  LegacyMorseSmaleComplexImpl(std::vector<std::shared_ptr<Crystal>> &crystals) {
     m_crystals = crystals;
   }
-  virtual std::vector<Crystal*>& getCrystals() { return m_crystals;  }
+  virtual std::vector<std::shared_ptr<Crystal>>& getCrystals() { return m_crystals;  }
   virtual std::vector<std::pair<unsigned int, unsigned int>> getAdjacency() {
     return std::vector<std::pair<unsigned int, unsigned int>>();
   } 
   
  private:
-  std::vector<Crystal*> m_crystals;
+  std::vector<std::shared_ptr<Crystal>> m_crystals;
 };
 
 

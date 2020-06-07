@@ -2,12 +2,12 @@
 #include <stdexcept>
 
 
-LegacyTopologyDataImpl::LegacyTopologyDataImpl(HDVizData *data) : m_data(data) {
+LegacyTopologyDataImpl::LegacyTopologyDataImpl(std::shared_ptr<HDVizData> data) : m_data(data) {
   // Construct DSpaceXData Object Hierarchy
 
   // TODO: Convert to Iterator Range Loop
   for (unsigned int level = getMinPersistenceLevel(); level <= getMaxPersistenceLevel(); level++) {
-    std::vector<Crystal*> crystals;
+    std::vector<std::shared_ptr<Crystal>> crystals;
     auto crystalPartitions = data->getCrystalPartitions(level);
 
     for (unsigned int crystalIndex = 0; crystalIndex < m_data->getCrystals(level).N(); crystalIndex++) {
@@ -21,11 +21,11 @@ LegacyTopologyDataImpl::LegacyTopologyDataImpl(HDVizData *data) : m_data(data) {
         }
       }
       
-      Crystal *crystal = new LegacyCrystalImpl(minIndex, maxIndex, samples); 
+      std::shared_ptr<Crystal> crystal(new LegacyCrystalImpl(minIndex, maxIndex, samples));
       crystals.push_back(crystal);
     }
 
-    MorseSmaleComplex *complex = new LegacyMorseSmaleComplexImpl(crystals);
+    std::shared_ptr<MorseSmaleComplex> complex(new LegacyMorseSmaleComplexImpl(crystals));
     m_morseSmaleComplexes.push_back(complex);
   }
 }
@@ -38,7 +38,7 @@ unsigned int LegacyTopologyDataImpl::getMaxPersistenceLevel() {
   return m_data->getMaxPersistenceLevel();
 }
 
-MorseSmaleComplex* LegacyTopologyDataImpl::getComplex(unsigned int persistenceLevel) {
+std::shared_ptr<MorseSmaleComplex> LegacyTopologyDataImpl::getComplex(unsigned int persistenceLevel) {
   int index = persistenceLevel - getMinPersistenceLevel();
   // unsigned int index = persistenceLevel;
   if (index < 0 || index >= m_morseSmaleComplexes.size()) {

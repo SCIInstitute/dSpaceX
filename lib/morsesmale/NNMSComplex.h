@@ -120,7 +120,7 @@ class NNMSComplex {
 
     NNMSComplex(FortranLinalg::DenseMatrix<TPrecision> &distances,                
                 FortranLinalg::DenseVector<TPrecision> &yin,
-                int knn, bool smooth = false, double sigma2=0, bool test=true) : y(yin) {
+                int knn, bool smooth = false, double sigma2=0, bool distances_version=true) : y(yin) {
       m_sampleCount = distances.N();
       if (knn > (int) m_sampleCount) {
         knn = m_sampleCount;
