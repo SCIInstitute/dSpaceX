@@ -53,7 +53,7 @@ class DecompositionPanel extends React.Component {
 
       datasetId: this.props.dataset.datasetId,
 
-      interpolationModel: 'PCA',  /*hardcoded for darpa demo -> TODO: use actual models that are read*/
+      interpolationModel: 'pca',  /*hardcoded for darpa demo -> TODO: use actual models that are read*/
       model: {
         sigma: 0.15,
       },
