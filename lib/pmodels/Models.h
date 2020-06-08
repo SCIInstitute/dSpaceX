@@ -97,7 +97,10 @@ public:
       unsigned i = 0;
       for (auto idx : sample_indices)
       {
-        z_coords.row(i++) = Z.row(idx);
+//        z_coords.row(i++) = Z.row(idx);
+       // the PCA models only have a z_coord for shapes used to construct them, so this is simpler:
+        z_coords.row(i) = Z.row(i);
+        i++;
       }
     }
   }
@@ -112,8 +115,10 @@ public:
     return fieldvalues.maxCoeff();
   }
 
+  /// computes new z_coord at this field value
   const Eigen::RowVectorXd getNewLatentSpaceValue(double new_fieldval, double sigma = 0.25) const
   {
+#if 1 //<ctc> super duper hack to test evaluation of PCA model without updated dataset loading (which has been started but is a wip) -- but as Kyli said this should just do the same thing. 
     //debug: hardcode new fieldval
     //new_fieldval = 0.62341;
     //std::cout << "num_samples: " << sample_indices.size() << std::endl;
@@ -123,7 +128,7 @@ public:
     using namespace Eigen;
 
     // calculate difference
-    RowVectorXd fieldvals(fieldvalues); // <ctc> convert this to a static function and just pass in z_coords
+    RowVectorXd fieldvals(fieldvalues); // <ctc> convert this to a static function and just pass in z_coords (or fieldvalues?) (for evaluation of multiple model types (PCA or ShapeOdds) for DARPA June meeting)
     fieldvals *= -1.0;
     fieldvals.array() += new_fieldval;
     //std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;
@@ -144,13 +149,26 @@ public:
     double summation = fieldvals.sum();
     //std::cout << "sum of Gaussian vector of difference:\n" << summation << std::endl;
 
-    MatrixXd output = fieldvals * z_coords; // <ctc> convert this to a static function and just pass in z_coords (for evaluation of multiple model types (PCA or ShapeOdds) for DARPA June meeting)
+    MatrixXd output = fieldvals * z_coords;
     //std::cout << "output before division:\n" << output << std::endl;
     output /= summation;
     //RowVectorXd output = (fieldvals * z_coords) / summation;
     //std::cout << "new z_coord:\n" << output << std::endl;
     //std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
 
+#else
+    //evaluate this as a PCA model:
+    // z = (x - w0)W^t; i.e., z = (new_fieldval+fieldvalues - w0)W^t, W^t is transpose(W)
+
+    Eigen::RowVectorXd fieldvals(fieldvalues);
+    fieldvals.array() += new_fieldval;
+
+    Eigen::MatrixXd Wt(W);
+    Wt.transposeInPlace();
+
+    Eigen::MatrixXd output((fieldvals - w0) * Wt);
+
+#endif
     return output;
   }
 

@@ -506,15 +506,15 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     out << partitions_format;
     throw std::runtime_error(out.str());
   }
-  unsigned npersistences = crystalPartitions_eigen.rows();
-  unsigned nsamples = crystalPartitions_eigen.cols();
+  auto npersistences = crystalPartitions_eigen.rows();
+  auto nsamples = crystalPartitions_eigen.cols();
   std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
             << nsamples << " samples." << std::endl;
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
-  {
+  for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
+  //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
     unsigned persistence_idx = persistence;
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
@@ -566,7 +566,7 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
   
     // FIXME: until fixed in data (produced by MATLAB), crystal ids are 1-based, so adjust them right away to be 0-based
-    crystal_ids.array() -= 1.0;
+    //crystal_ids.array() -= 1.0;
       
     // set group of samples for each model at this persistence level
     P.setCrystalSamples(crystal_ids);
@@ -586,7 +586,7 @@ void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
   auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
+  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");  // TODO: this is handily functional on case-insensitive OSes, but shapeodds and pca models have different case 'z' in the name of this file, so it'll fail on linux
 
   m.setModel(W, w0, Z);
 }
