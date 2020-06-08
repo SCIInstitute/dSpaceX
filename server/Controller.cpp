@@ -899,9 +899,10 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     Eigen::MatrixXd I = dspacex::ShapeOdds::evaluateModel(model, z_coord, false /*writeToDisk*/);
     
     // add result image to response
-    //Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
-    // <ctc> maybe PCA models are sending images in row-major order, so try swapping width/height
-    Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
+    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    // <ctc> our preprocessing pca models are sending images in row-major order, so try swapping width/height,
+    // but Shireen's PCA models aren't. Pick one and be happy or specify it in the config.yaml
+    //Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();
@@ -976,12 +977,8 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
   std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
 
   //z coords are sorted by fieldvalue in Model::setFieldValues
-  //for (unsigned zidx = 0; zidx < sample_indices.size(); zidx++)
-  int i=0;
   for (auto sample: sample_indices)
   {
-    if (i++ >= 69) break;
-
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
     extern Controller *controller;
     if (!controller || !controller->m_currentDataset)
@@ -1006,9 +1003,10 @@ void Controller::fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, 
               << persistenceLevel << ", crystalid " << crystalid << ": " << quality << std::endl;
 
     // add image to response
-    //Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
-    // <ctc> maybe PCA models are sending images in row-major order, so try swapping width/height
-    Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
+    Image image = Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight());
+    // <ctc> our preprocessing pca models are sending images in row-major order, so try swapping width/height,
+    // but Shireen's PCA models aren't. Pick one and be happy or specify it in the config.yaml
+    //Image image = Image::convertToImage(I, sample_image.getHeight(), sample_image.getWidth());
     Json::Value imageObject = Json::Value(Json::objectValue);
     imageObject["width"] = image.getWidth();
     imageObject["height"] = image.getHeight();

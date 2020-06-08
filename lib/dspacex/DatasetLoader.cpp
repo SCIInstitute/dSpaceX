@@ -513,8 +513,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (auto persistence = npersistences-1; persistence >= 0; persistence-=npersistences)//persistence++) //<ctc> hack to load just a couple lvls for testing
-  {
+  for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
+  //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
     unsigned persistence_idx = persistence;
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
@@ -586,7 +586,7 @@ void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
   auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
+  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");  // TODO: this is handily functional on case-insensitive OSes, but shapeodds and pca models have different case 'z' in the name of this file, so it'll fail on linux
 
   m.setModel(W, w0, Z);
 }

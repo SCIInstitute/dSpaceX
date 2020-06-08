@@ -151,14 +151,29 @@ Eigen::MatrixXd ShapeOdds::evaluateModel(const Model &model, const Eigen::Vector
   Eigen::MatrixXd Wt(model.W);
   Wt.transposeInPlace();
   Eigen::MatrixXd I((Wt * z_coord) + model.w0);
-
+  
   // test pca model by returning w0 directly
-  //I = model.w0;
+  //I = model.w0;// /255.0; (the scale normalization below does the same thing)
 
   // test pca model by returning Eigen vectors in W directly (they're image-like)
-  // static int i=0;
-  // if (i>=355) i=0;
-  // I = Wt.col(i++);
+//  static int i=0;
+//  if (i>=50) i=0;
+//  I = Wt.col(i++);
+
+  //I /= 255.0;
+
+  // Ross said to get rid of anything below 0 and scale normalize the rest 2020.06.07
+  for (unsigned i = 0; i < I.size(); i++) {
+    I(i) = std::max(0.0, I(i));
+  }
+  
+  // scale normalize so that all values are in range [0,1]. For each member X: X = (X - min) / (max - min).
+  auto minval(I.minCoeff());
+  //auto minval(0.0);  
+  // to be consistent, we probably want to scale all images together so we have proper min/max (TODO)
+  auto maxval(I.maxCoeff());
+  I.array() -= minval;
+  I.array() /= (maxval - minval);
 #endif
 
   return I;

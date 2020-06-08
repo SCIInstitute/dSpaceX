@@ -97,7 +97,10 @@ public:
       unsigned i = 0;
       for (auto idx : sample_indices)
       {
-        z_coords.row(i++) = Z.row(idx);
+//        z_coords.row(i++) = Z.row(idx);
+       // the PCA models only have a z_coord for shapes used to construct them, so this is simpler:
+        z_coords.row(i) = Z.row(i);
+        i++;
       }
     }
   }
