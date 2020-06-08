@@ -857,8 +857,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // if user requests original images, show predicted images for the crystal's samples' z_coords
   bool showOrig = request["showOrig"].asBool();
   if (showOrig)
-    // <ctc> ALERT: this doesn't seem to be fetching original images, just evaluating the model at original z_coords
-    return fetchAllImagesForCrystal_Shapeodds(request, response);
+    return fetchCrystalOriginalSampleImages(request, response);
 
   int numZ = request["numSamples"].asInt();
   double percent = request["percent"].asDouble();
@@ -879,7 +878,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   double minval = model.minFieldValue();
   double maxval = model.maxFieldValue();
   double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
-  double sigma = delta * 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
+  double sigma = 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
 
   // if numZ == 1, evaluate at given percent along crystal
   if (numZ == 1) {
