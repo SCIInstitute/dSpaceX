@@ -531,93 +531,107 @@ class DecompositionPanel extends React.Component {
             </FormControl>
 
             {/* Partitioning Algorithm */ }
-            <FormControl className={classes.formControl}
-              disabled={!this.props.enabled}
-              style={{ width: '100%',
-                boxSizing: 'border-box',
-                paddingRight: '10px' }}>
-              <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
-              <Select ref="decompositionCombo"
-                disabled={!this.props.enabled || !this.props.dataset}
-                value={this.state.decompositionMode}
-                style={{ width:'100%' }}
-                onChange={this.handleDecompositionModeChange}
-                inputProps={{
-                  name: 'mode',
-                  id: 'mode-field',
-                }}>
-                <MenuItem value='Morse-Smale'>
-                  <em>Morse-Smale</em>
-                </MenuItem>
-              </Select>
-            </FormControl>
+            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={true}
+                            style={{ paddingLeft:'0px', margin:'1px' }}>
+              <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
+                <Typography>Partitioning</Typography>
+              </ExpansionPanelSummary>
+              <ExpansionPanelDetails style={{ paddingLeft: '0px',
+                                     paddingRight: '10px', margin: '1px', width: '100%',
+                                     boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column',
+                     width: '100%', boxSizing: 'border-box' }}>
 
-            {/* K Nearest Neighbors */}
-            <TextField
-              label="Neighborhood Size"
-              id="ms-knn"
-              defaultValue={this.state.ms.knn}
-              size="small"
-              type="number"
-              onChange={this.handleMSknnChange}
-            />
+                  <FormControl className={classes.formControl}
+                               disabled={!this.props.enabled}
+                               style={{ width: '100%',
+                               boxSizing: 'border-box',
+                               paddingRight: '10px' }}>
+                    <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
+                    <Select ref="decompositionCombo"
+                            disabled={!this.props.enabled || !this.props.dataset}
+                            value={this.state.decompositionMode}
+                            style={{ width:'100%' }}
+                            onChange={this.handleDecompositionModeChange}
+                            inputProps={{
+                            name: 'mode',
+                            id: 'mode-field',
+                            }}>
+                      <MenuItem value='Morse-Smale'>
+                        <em>Morse-Smale</em>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
 
-            {/* Sigma */}
-            <TextField
-              label="Smooth Curves"
-              id="ms-sigma"
-              defaultValue={this.state.ms.sigma}
-              size="small"
-              onChange={this.handleMSSigmaChange.bind(this)}
-            />
+                  {/* K Nearest Neighbors */}
+                  <TextField
+                    label="Neighborhood Size"
+                    id="ms-knn"
+                    defaultValue={this.state.ms.knn}
+                    size="small"
+                    type="number"
+                    onChange={this.handleMSknnChange}
+                    />
 
-            {/* Smooth */}
-            <TextField
-              label="Smooth Topology"
-              id="ms-smooth"
-              defaultValue={this.state.ms.smooth}
-              size="small"
-              onChange={this.handleMSSmoothChange.bind(this)}
-            />
+                  {/* Sigma */}
+                  <TextField
+                    label="Smooth Curves"
+                    id="ms-sigma"
+                    defaultValue={this.state.ms.sigma}
+                    size="small"
+                    onChange={this.handleMSSigmaChange.bind(this)}
+                    />
 
-            {/* Depth */}
-            <TextField
-              label="Persistence Depth"
-              id="ms-depth"
-              defaultValue={this.state.ms.depth}
-              size="small"
-              type="number"
-              onChange={this.handleMSDepthChange.bind(this)}
-            />
+                  {/* Smooth */}
+                  <TextField
+                    label="Smooth Topology"
+                    id="ms-smooth"
+                    defaultValue={this.state.ms.smooth}
+                    size="small"
+                    onChange={this.handleMSSmoothChange.bind(this)}
+                    />
 
-            {/* Add noise */}
-            <FormControlLabel
-              control={<Checkbox checked={this.state.ms.noise} 
-                                 onChange={this.handleMSNoiseChange}
-                                 name="msNoiseCheckbox" />}
-              label="Add noise"
-            />
+                  {/* Depth */}
+                  <TextField
+                    label="Persistence Depth"
+                    id="ms-depth"
+                    defaultValue={this.state.ms.depth}
+                    size="small"
+                    type="number"
+                    onChange={this.handleMSDepthChange.bind(this)}
+                    />
 
-            {/* Scale normalize */}
-            <FormControlLabel
-              control={<Checkbox checked={this.state.ms.normalize} 
-                                 onChange={this.handleMSNormalizeChange}
-                                 name="msNormalizeCheckbox" />}
-              label="Scale normalize field"
-            />
+                  {/* Add noise */}
+                  <FormControlLabel
+                    control={<Checkbox checked={this.state.ms.noise} 
+                                       onChange={this.handleMSNoiseChange}
+                                       name="msNoiseCheckbox" />}
+                    label="Add noise"
+                    />
 
-            {/* Curve points */}
-            <TextField
-              label="Crystal curve points"
-              id="ms-curvepoints"
-              defaultValue={this.state.ms.curvepoints}
-              size="small"
-              onChange={this.handleMSCurvePointsChange.bind(this)}
-            />
+                  {/* Scale normalize */}
+                  <FormControlLabel
+                    control={<Checkbox checked={this.state.ms.normalize} 
+                                       onChange={this.handleMSNormalizeChange}
+                                       name="msNormalizeCheckbox" />}
+                    label="Scale normalize field"
+                    />
 
-            { /* Buttons to recompute M-S and dump crystal partitions to disk */}
-            { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button> }
-            { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export Crystal Partitions</Button> }
+                  {/* Curve points */}
+                  <TextField
+                    label="Crystal curve points"
+                    id="ms-curvepoints"
+                    defaultValue={this.state.ms.curvepoints}
+                    size="small"
+                    onChange={this.handleMSCurvePointsChange.bind(this)}
+                    />
+
+                  { /* Buttons to recompute M-S and dump crystal partitions to disk */}
+                  { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button> }
+                  { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export Crystal Partitions</Button> }
+                </div>
+              </ExpansionPanelDetails>
+            </ExpansionPanel>
 
             { /* Interpolation Model Selection */}
             <FormControl className={classes.formControl}
