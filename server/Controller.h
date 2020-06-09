@@ -31,12 +31,12 @@ class Controller {
                                bool normalize, Json::Value &response);
   bool processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
                                 double sigma, double smoothing, bool add_noise,
-                                unsigned num_persistences, bool normalize);
+                                int num_persistences, bool normalize);
   bool maybeProcessData(const Json::Value &request, Json::Value &response);
   bool processData(Fieldtype category, std::string fieldname, int knn,
                    int num_samples = 55, double sigma = 0.25, double smoothing = 15.0,
                    bool add_noise = true /* duplicate values risk erroroneous M-S */,
-                   unsigned num_persistences = -1 /* generates all persistence levels */,
+                   int num_persistences = -1 /* generates all persistence levels */,
                    bool normalize = true /* scale normalize field values */);
 
 
@@ -87,6 +87,6 @@ class Controller {
   double m_currentSigma;
   double m_currentSmoothing;
   bool m_currentAddNoise;
-  unsigned m_currentNumPersistences;
+  int m_currentNumPersistences;
   bool m_currentNormalize;
 };

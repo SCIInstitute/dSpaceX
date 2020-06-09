@@ -243,7 +243,7 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
@@ -268,7 +268,7 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -307,7 +307,7 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -353,7 +353,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -435,7 +435,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -491,7 +491,7 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -529,7 +529,7 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
     return setError(response, "invalid datasetId");
 
   if (!maybeProcessData(request, response))
-    return false; // response will contain the error
+    return; // response will contain the error
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -1108,16 +1108,16 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
 /// Avoid regeneration of data if parameters haven't changed
 bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
                                           double sigma, double smoothing, bool add_noise,
-                                          unsigned num_persistences, bool normalize) {
-  return (m_currentCategory        == category         &&
-          m_currentField           == fieldname        &&
-          m_currentKNN             == knn              &&
-          m_currentNumSamples      == num_samples      &&
-          m_currentSigma           == sigma            &&
-          m_currentSmoothing       == smoothing        &&
-          m_currentAddNoise        == add_noise        &&
-          m_currentNumPersistences == num_persistences &&
-          m_currentNormalize       == normalize);
+                                          int num_persistences, bool normalize) {
+  return !(m_currentCategory        == category         &&
+           m_currentField           == fieldname        &&
+           m_currentKNN             == knn              &&
+           m_currentNumSamples      == num_samples      &&
+           m_currentSigma           == sigma            &&
+           m_currentSmoothing       == smoothing        &&
+           m_currentAddNoise        == add_noise        &&
+           m_currentNumPersistences == num_persistences &&
+           m_currentNormalize       == normalize);
 }
 
 ///display the min, max, avg, var, sdv for this array
@@ -1150,10 +1150,10 @@ void displayFieldStats(const T& arr) {
  * false if processing failed.
  */
 bool Controller::processData(Fieldtype category, std::string fieldname, int knn, int num_samples,
-                             double sigma, double smoothing, bool add_noise, unsigned num_persistences,
+                             double sigma, double smoothing, bool add_noise, int num_persistences,
                              bool normalize) {
-  if (!processDataParamsChanged(category, fieldname, knn, num_samples, sigma, smoothing,
-                                add_noise, num_persistences, normalize))
+  if (m_currentTopoData && !processDataParamsChanged(category, fieldname, knn, num_samples, sigma, smoothing,
+                                                     add_noise, num_persistences, normalize))
     return true;
 
   std::cout << "computing nnmscomplex for fieldname: " << fieldname << "..." << std::endl;
@@ -1205,7 +1205,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
     std::shared_ptr<HDProcessResult> result(
       genericProcessor.processOnMetric(m_currentDistanceMatrix,
                                        FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
-                                       m_currentKNN,     /* k nearest neighbors to consider */
+                                       knn,              /* k nearest neighbors to consider */
                                        num_samples,      /* points along each crystal regression curve */
                                        num_persistences, /* -1 generates all of 'em */
                                        add_noise,        /* adds very slight noise to field values */

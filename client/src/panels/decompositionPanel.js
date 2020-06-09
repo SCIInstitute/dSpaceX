@@ -56,7 +56,7 @@ class DecompositionPanel extends React.Component {
 
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
-      decompositionField: this.props.dataset.qoiNames[0],
+      decompositionField: this.props.dataset.qoiNames ? this.props.dataset.qoiNames[0] : '',
 
       ms: {
         knn: 15,
@@ -70,11 +70,11 @@ class DecompositionPanel extends React.Component {
 
       // decomposition state
       persistenceLevel: -1,
-      minPersistence: null,
-      maxPersistence: null,
+      minPersistence: -1,
+      maxPersistence: -1,
       complexSizes: [],
       crystals: [],
-      sliderPersistence: null,
+      sliderPersistence: null,  // just some bogus thing to keep around to handle slider and pulldown updates
     };
 
     this.client = this.props.dsxContext.client;
@@ -86,8 +86,8 @@ class DecompositionPanel extends React.Component {
   clearDecompositionState() {
     this.setState({
       persistenceLevel: -1,
-      minPersistence: null,
-      maxPersistence: null,
+      minPersistence: -1,
+      maxPersistence: -1,
       complexSizes: [],
       crystals: [],
       sliderPersistence: null,
@@ -157,16 +157,21 @@ class DecompositionPanel extends React.Component {
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        console.log('decompositionPanel.fetchDecomposition: fetching decomposition from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId, category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
+              console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
+                          +result.minPersistenceLevel+',Mp:'+result.maxPersistenceLevel+',cs:'+result.complexSizes+'...\n');
               this.setState({
                 minPersistence: result.minPersistenceLevel,
                 maxPersistence: result.maxPersistenceLevel,
                 complexSizes: result.complexSizes,
                 sliderPersistence: result.maxPersistenceLevel,
                 persistenceLevel: result.maxPersistenceLevel});
+              console.log('calling updateDataModel...');
               this.updateDataModel();
+              console.log('Done!');
             }
             else {
               console.log('decompositionPanel.fetchDecomposition: fetch decomposition from server failed:\n\t'+result.error_msg);
@@ -206,7 +211,7 @@ class DecompositionPanel extends React.Component {
       this.fetchDecomposition();
     }
     else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
-      console.log('Persistence level changed, updating data model...');
+      console.log('Persistence level changed from '+prevState.persistenceLevel+' to '+this.state.persistenceLevel+', updating data model...');
       this.updateDataModel();
     }
     else {
@@ -342,13 +347,14 @@ class DecompositionPanel extends React.Component {
    */
   async updateDataModel(level) {
     let persistenceLevel = this.state.persistenceLevel;
-    if (persistenceLevel >= this.minPersistence && persistenceLevel <= this.maxPersistence) {
+    if (persistenceLevel >= this.state.minPersistence && persistenceLevel <= this.state.maxPersistence) {
       if (this.state.decompositionMode == 'Morse-Smale') {
         // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistenceLevel+' of decomposition...\n');
         await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
@@ -361,14 +367,15 @@ class DecompositionPanel extends React.Component {
               this.setState({ crystals: [] });
               console.log('decompositionPanel.updateDataModel failed: \n\t'+result.error_msg);
             }
-          });
+          }.bind(this));
       }
       else {
-        console.log('decompositionPanel.updateDataModel: \n\tunknown decomposition mode');
+        console.log('decompositionPanel.updateDataModel failed: \n\tunknown decomposition mode');
+        this.setState({ crystals: [] });
       }
     }
     else {
-      console.log('decompositionPanel.updateDataModel: \n\tpersistenceLevel ('+persistenceLevel+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
+      console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel ('+persistenceLevel+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
       this.setState({ crystals: [] });
     }
   }
@@ -378,15 +385,15 @@ class DecompositionPanel extends React.Component {
    * @param {Event} event
    */
   handlePersistenceLevelChange(event) {
-    let level = parseInt(event.target.value);
+    let level = event.target.value;
     this.setState({
-      persistenceLevel: level,
+      persistenceLevel: parseInt(level),
       sliderPersistence: level,
     });
 
     // <ctc> this should already be called by componentDidUpdate
     //this.updateDataModel(level);
-    console.log('decompositionPanel.handlePersistenceLevelChange (should updated automatically)');
+    console.log('decompositionPanel.handlePersistenceLevelChange: '+level);
   }
 
   /**
@@ -398,9 +405,9 @@ class DecompositionPanel extends React.Component {
     this.setState({
       sliderPersistence: value,
     });
-    // <ctc> todo: verify this returns an int and not a string ... not sure this callback is even necessary w/ handleSliderRelease
+    console.log('decompositionPanel.handlePersistenceSliderChange: '+value);
   }
-
+  
   /**
    * Handles when the user releases control of the persistence slider.
    * @param {Event} event
@@ -408,7 +415,7 @@ class DecompositionPanel extends React.Component {
   handlePersistenceSliderRelease(event) {
     if (this.state.sliderPersistence != this.state.persistenceLevel) {
       this.setState({
-        persistenceLevel: this.state.sliderPersistence,
+        persistenceLevel: parseInt(this.state.sliderPersistence),
       });
 
       //this.updateDataModel(this.state.sliderPersistence);
@@ -462,10 +469,8 @@ class DecompositionPanel extends React.Component {
   render() {
     const { classes } = this.props;
     let persistenceLevels = [];
-    if (this.state.minPersistence != null
-        && this.state.maxPersistence != null) {
-      for (let i=this.state.maxPersistence;
-        i >= this.state.minPersistence; i--) {
+    if (this.state.minPersistence >= 0 && this.state.maxPersistence >= this.state.minPersistence) {
+      for (let i=this.state.maxPersistence; i >= this.state.minPersistence; i--) {
         persistenceLevels.push(i);
       }
     }

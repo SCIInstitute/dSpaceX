@@ -88,10 +88,16 @@ class MorseSmaleWindow extends React.Component {
         this.client.fetchMorseSmaleExtrema(datasetId, category, field, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
-        this.regressionCurves = regressionResponse;
-        this.addRegressionCurvesToScene(regressionResponse);
-        this.addExtremaToScene(extremaResponse.extrema);
-        this.renderScene();
+        if (!regressionResponse.error && !extremaResponse.error) {
+          this.regressionCurves = regressionResponse;
+          this.addRegressionCurvesToScene(regressionResponse);
+          this.addExtremaToScene(extremaResponse.extrema);
+          this.renderScene();
+        }
+        else {
+          console.log('morseSmaleWindow.componentDidUpdate error:\n\t regressionResponse: '
+                      +regressionResponse.error_msg+'\n\t extremaResponse: '+extremaResponse.error_msg);
+        }
       });
     }
   }
@@ -436,11 +442,12 @@ class MorseSmaleWindow extends React.Component {
    */
   addRegressionCurvesToScene(regressionData) {
     regressionData.curves.forEach((rCurve, index) => {
+      // Use midpoint as curve position to ensure transparency sorting has better odds of working,
+      // since conflicts arise when using first or last point, bounding box, etc.
       let numPts = rCurve.points.length;
-
-      // Use this as curve position to ensure transparency sorting has better odds of working.
-      // NOTE: conflicts arise when using first or last point, bounding box, the most extreme point, etc, so midpoint is the compromise.
-      let midPoint = new THREE.Vector3(rCurve.points[numPts/2][0], rCurve.points[numPts/2][1], rCurve.points[numPts/2][2]);
+      let midPoint = new THREE.Vector3(rCurve.points[Math.floor(numPts/2)][0],
+                                       rCurve.points[Math.floor(numPts/2)][1],
+                                       rCurve.points[Math.floor(numPts/2)][2]);
 
       let curvePoints = [];
       rCurve.points.forEach((regressionPoint) => {
