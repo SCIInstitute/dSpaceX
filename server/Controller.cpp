@@ -887,7 +887,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     sigma = 0.05; // 5% of fieldrange, because continuous sampling should be smaller? Maybe that's true, but still should probably be user-specifiable (TODO)
   }
   
-  for (unsigned i = 0; i < numZ && i < 60; i++)
+  for (unsigned i = 0; i < numZ; i++)
   {
     double fieldval = minval + delta * i;
 
