@@ -173,8 +173,9 @@ class Application extends React.Component {
       this.getParameters(datasetId, parameterNames),
       this.getQois(datasetId, qoiNames),
       this.client.fetchEmbeddingsList(datasetId),
+      this.client.fetchModelsList(datasetId),
     ]).then((results) => {
-      const [parameters, qois, embeddingList] = results;
+      const [parameters, qois, embeddingList, modelList] = results;
       this.setState({
         currentDataset: dataset,
         windows: [],
@@ -184,6 +185,7 @@ class Application extends React.Component {
         parameters: parameters,
         qois: qois,
         embeddings: embeddingList.embeddings,
+        models: modelList.models,
       });
     });
   }

@@ -344,7 +344,7 @@ class DecompositionPanel extends React.Component {
     let persistenceLevel = this.state.persistenceLevel;
     if (persistenceLevel >= this.minPersistence && persistenceLevel <= this.maxPersistence) {
       if (this.state.decompositionMode == 'Morse-Smale') {
-        // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition
+        // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;

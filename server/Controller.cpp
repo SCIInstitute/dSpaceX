@@ -64,6 +64,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
+  m_commandMap.insert({"fetchModelsList", std::bind(&Controller::fetchModelsList, this, _1, _2)});
   m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
@@ -550,8 +551,19 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
   }
 }
 
-// TODO: add this when we can load multiple models (see stashed changes that start this process)
-//void Controller::fetchModelsList(const Json::Value &request, Json::Value &response) {
+void Controller::fetchModelsList(const Json::Value &request, Json::Value &response) {
+  if (!maybeLoadDataset(request, response))
+    return setError(response, "invalid datasetId");
+
+  auto modelTypes = m_currentDataset->getModelTypes();
+  response["models"] = Json::Value(Json::arrayValue);
+  for (unsigned int i = 0; i < modelTypes.size(); ++i) {
+    Json::Value modelObject(Json::objectValue);
+    modelObject["name"] = modelTypes[i];
+    modelObject["id"] = i;
+    response["models"].append(modelObject);
+  }
+}
 
 void Controller::fetchEmbeddingsList(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
@@ -678,7 +690,6 @@ void Controller::fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &requ
  *   persistenceId - persistence level of the M-S for this field of the dataset
  *   crystalId     - crystal of the given persistence level
  *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
- *                   <ctc> for now, just calling fetchAllImageForCrystal_Shapeodds
  */
 void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response)
 {
@@ -984,7 +995,7 @@ bool Controller::loadDataset(int datasetId) {
  * false if invalid dataset id or load failed.
  */
 bool Controller::maybeLoadDataset(const Json::Value &request, Json::Value &response) {
-  auto datasetId = request["datasetId"].asInt();
+  auto datasetId = request.isMember("datasetId") ? request["datasetId"].asInt() : m_currentDatasetId;
 
   if (datasetId < 0 || datasetId >= m_availableDatasets.size()) {
     setError(response, "datasetId does not exist");
@@ -1032,35 +1043,36 @@ const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, con
 /**
  * Check to see if parameters of request are valid to process data
  */
-bool Controller::verifyProcessDataParams(const Json::Value &request, Json::Value &response) {
+bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, int curvepoints,
+                                         double sigma, double smoothing, bool addnoise, int depth,
+                                         bool normalize, Json::Value &response) {
+
   // category of the passed fieldname (design param or qoi)
-  Fieldtype category = Fieldtype(request["category"].asString());
   if (!category.valid()) {
     setError(response, "invalid category");
     return false;
   }
 
   // desired fieldname (one of the design params or qois)
-  std::string fieldname = request["fieldname"].asString();
   if (!verifyFieldname(category, fieldname)) {
     setError(response, "invalid fieldname");
     return false;
   }
   
   // M-S computation params
-  if (request["knn"].asInt() < 0) {
+  if (knn < 0) {
     setError(response, "knn must be >= 0");
     return false;
-  } else if (request["sigma"].asFloat() < 0) {
+  } else if (sigma < 0) {
     setError(response, "sigma must be >= 0");
     return false;
-  } else if (request["smooth"].asFloat() < 0) {
+  } else if (smoothing < 0) {
     setError(response, "smooth must be >= 0");
     return false;
-  } else if (request["depth"].asInt() <= 0 && request["depth"].asInt() != -1) {
+  } else if (depth <= 0 && depth != -1) {
     setError(response, "must compute at least one (depth > 0) or all (depth = -1) persistence levels");
     return false;
-  } else if (request["curvepoints"].asInt() < 3) {
+  } else if (curvepoints < 3) {
     setError(response, "regression curves must have at least 3 points");
     return false;
   }
@@ -1072,18 +1084,22 @@ bool Controller::verifyProcessDataParams(const Json::Value &request, Json::Value
  * try to process this request to compute M-S
  */
 bool Controller::maybeProcessData(const Json::Value &request, Json::Value &response) {
-  if (!verifyProcessDataParams(request, response))
+
+  // read all parameters that can exist in request, defaulting to current value
+  auto category    = request.isMember("category")    ? Fieldtype(request["category"].asString()) : m_currentCategory;
+  auto fieldname   = request.isMember("fieldname")   ? request["fieldname"].asString()           : m_currentField;
+  auto knn         = request.isMember("knn")         ? request["knn"].asInt()                    : m_currentKNN;
+  auto curvepoints = request.isMember("curvepoints") ? request["curvepoints"].asInt()            : m_currentNumSamples;
+  auto sigma       = request.isMember("sigma")       ? request["sigma"].asFloat()                : m_currentSigma;
+  auto smoothing   = request.isMember("smooth")      ? request["smooth"].asFloat()               : m_currentSmoothing;
+  auto addnoise    = request.isMember("noise")       ? request["noise"].asBool()                 : m_currentAddNoise;
+  auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentNumPersistences;
+  auto normalize   = request.isMember("normalize")   ? request["normalize"].asInt()              : m_currentNormalize;  
+
+  if (!verifyProcessDataParams(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize, response))
     return false; // response will contain the error
 
-  if (!processData(Fieldtype(request["category"].asString()),
-                   request["fieldname"].asString(),
-                   request["knn"].asInt(),
-                   request["curvepoints"].asInt(),
-                   request["sigma"].asFloat(),
-                   request["smooth"].asFloat(),
-                   request["noise"].asBool(),
-                   request["depth"].asInt(),
-                   request["normalize"].asInt())) {
+  if (!processData(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize)) {
     setError(response, "failed to process data");
     return false;
   }

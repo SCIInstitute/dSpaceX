@@ -8,16 +8,12 @@
 
 namespace dspacex {
 
-// Probabilistic (predictive) models such as ShapeOdds, InfShapeOdds, GP, SharedGP, etc
-//
-// There is a model for each crystal at each persistence level for a given M-S topology. It is
-// constructed from a given number of input images (samples), and consists of L necessary
-// values that make the model able to compute new images for a given point, z, in the latent
-// space.
-//
-// TODO: provide common interface for ShapeOdds, InfiniteShapeOdds, and SharedGP models
-// TODO: a model and its associated crystal should know to which fieldname it belongs, right?
-// todo: rename to PredictiveModel
+/// Probabilistic interpolation models such as ShapeOdds, InfShapeOdds, SharedGP, and PCA.
+/// They are learned from a set of input designs (images/samples, parameters, and qois), and
+/// consist of L necessary values that enable the model to compute new samples for a given
+/// point, z, in its latent space.
+
+/// Common interface to evaluate a probablistic model given a new field value or z coordinate.
 class Model
 {
 public:
@@ -97,8 +93,10 @@ public:
       unsigned i = 0;
       for (auto idx : sample_indices)
       {
-//        z_coords.row(i++) = Z.row(idx);
-       // the PCA models only have a z_coord for shapes used to construct them, so this is simpler:
+        // ShapeOdds store a latent space coord per sample in the entire dataset
+        //z_coords.row(i++) = Z.row(idx); // ...so not reading them like this breaks ShapeOdds (fixme)
+
+        // PCA models only have a z_coord for shapes used to construct them, so this is simpler:
         z_coords.row(i) = Z.row(i);
         i++;
       }

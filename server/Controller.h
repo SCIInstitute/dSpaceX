@@ -26,7 +26,9 @@ class Controller {
 
   bool maybeLoadDataset(const Json::Value &request, Json::Value &response);
   bool loadDataset(int datasetId);
-  bool verifyProcessDataParams(const Json::Value &request, Json::Value &response);
+  bool verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, int curvepoints,
+                               double sigma, double smoothing, bool addnoise, int depth,
+                               bool normalize, Json::Value &response);
   bool processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
                                 double sigma, double smoothing, bool add_noise,
                                 unsigned num_persistences, bool normalize);
@@ -49,6 +51,7 @@ class Controller {
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
+  void fetchModelsList(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);

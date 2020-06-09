@@ -397,6 +397,14 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchModelsList(datasetId) {
+    const command = {
+      name: 'fetchModelsList',
+      datasetId: datasetId,
+    };
+    return this._createCommandPromise(command);
+  }
+
   fetchEmbeddingsList(datasetId) {
     const command = {
       name: 'fetchEmbeddingsList',
@@ -404,6 +412,7 @@ class Client {
     };
     return this._createCommandPromise(command);
   }
+
   /**
    * Grab the parameter values for the given parameter
    * @param {string} datasetId
