@@ -742,7 +742,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   double minval = model.minFieldValue();
   double maxval = model.maxFieldValue();
   double delta = (maxval - minval) / static_cast<double>(numZ-1);  // / (numZ - 1) so it will generate samples for the crystal min and max
-  double sigma = delta * 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
+  double sigma = 0.15; // ~15% of fieldrange // TODO: this should be user-specifiable; it's not the same as M-S computation
 
   // if numZ == 1, evaluate at given percent along crystal
   if (numZ == 1) {
@@ -751,7 +751,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     sigma = 0.05; // 5% of fieldrange, because continuous sampling should be smaller? Maybe that's true, but still should probably be user-specifiable (TODO)
   }
   
-  for (unsigned i = 0; i < numZ && i < 60; i++)
+  for (unsigned i = 0; i < numZ; i++)
   {
     double fieldval = minval + delta * i;
 
