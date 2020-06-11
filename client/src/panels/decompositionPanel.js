@@ -536,7 +536,7 @@ class DecompositionPanel extends React.Component {
             </FormControl>
 
             {/* Partitioning Algorithm */ }
-            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={true}
+            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={false}
                             style={{ paddingLeft:'0px', margin:'1px' }}>
               <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
                 <Typography>Partitioning</Typography>
