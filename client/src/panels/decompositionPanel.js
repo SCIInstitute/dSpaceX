@@ -33,24 +33,14 @@ class DecompositionPanel extends React.Component {
   constructor(props) {
     super(props);
 
-    this.handleDecompositionModeChange = this.handleDecompositionModeChange.bind(this);
-    this.handleDecompositionCategoryChange = this.handleDecompositionCategoryChange.bind(this);
-    this.handleDecompositionFieldChange = this.handleDecompositionFieldChange.bind(this);
-    this.handlePersistenceLevelChange = this.handlePersistenceLevelChange.bind(this);
-    this.handlePersistenceSliderChange = this.handlePersistenceSliderChange.bind(this);
-    this.handlePersistenceSliderRelease = this.handlePersistenceSliderRelease.bind(this);
-    this.handleCrystalToggle = this.handleCrystalToggle.bind(this);
     this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
-    this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
-    this.fetchDecomposition = this.fetchDecomposition.bind(this);
-    this.clearDecompositionState = this.clearDecompositionState.bind(this);
 
     this.state = {
-      devMode: false,
+      devMode: true,
 
       datasetId: this.props.dataset.datasetId,
 
-      interpolationModel: 'pca',  /*hardcoded for darpa demo -> TODO: use actual models that are read*/
+      interpolationModel: 'pca',  /*hardcoded for darpa demo -> TODO: use actual models that are read just like decompositionField*/
       model: {
         sigma: 0.15,
       },
@@ -232,8 +222,6 @@ class DecompositionPanel extends React.Component {
     });
   }
   
-  // <ctc> todo: convert the following handle*Change to inline lambdas
-  
   /**
    * Handles when the decomposition combo is changed.
    * @param {Event} event
@@ -247,37 +235,42 @@ class DecompositionPanel extends React.Component {
 
   handleMSknnChange(event) {
     let neighborhoodSize = parseInt(event.target.value);
-    this.setState((prevState) => ({
-      ms: { ...prevState.ms, knn:neighborhoodSize },
-    }));
+    if (!isNaN(neighborhoodSize))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, knn:neighborhoodSize },
+      }));
   }
 
   handleMSSigmaChange(event) {
     let sigma = parseFloat(event.target.value);
-    this.setState((prevState) => ({
-      ms: { ...prevState.ms, sigma:sigma },
-    }));
+    if (!isNaN(sigma))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, sigma:sigma },
+      }));
   }
 
   handleMSSmoothChange(event) {
     let smooth = parseFloat(event.target.value);
-    this.setState((prevState) => ({
-      ms: { ...prevState.ms, smooth:smooth },
-    }));
+    if (!isNaN(smooth))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, smooth:smooth },
+      }));
   }
 
   handleMSCurvePointsChange(event) {
     let curvepoints = event.target.value;
-    this.setState((prevState) => ({
-      ms: { ...prevState.ms, curvepoints:curvepoints },
-    }));
+    if (!isNaN(curvepoints))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, curvepoints:curvepoints },
+      }));
   }
 
   handleMSDepthChange(event) {
     let persistenceDepth = event.target.value;
-    this.setState((prevState) => ({
-      ms: { ...prevState.ms, depth:persistenceDepth },
-    }));
+    if (!isNaN(persistenceDepth))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, depth:persistenceDepth },
+      }));
   }
 
   handleMSNoiseChange(event) {
@@ -295,7 +288,6 @@ class DecompositionPanel extends React.Component {
   }
 
   handleRecomputeMorseSmale() {
-    console.log('recomputing the ms object (TODO)...');
     this.fetchDecomposition();
   }
 
@@ -305,9 +297,10 @@ class DecompositionPanel extends React.Component {
 
   handleModelSigmaChange(event) {
     let sigma = event.target.value;
-    this.setState((prevState) => ({
-      model: { ...prevState.model, sigma:sigma },
-    }));
+    if (!isNaN(sigma))
+      this.setState((prevState) => ({
+        model: { ...prevState.model, sigma:sigma },
+      }));
   }
 
   /**
@@ -329,6 +322,17 @@ class DecompositionPanel extends React.Component {
     let field = event.target.value;
     this.setState({
       decompositionField: field,
+    });
+  }
+
+  /**
+   * Handle the interpolation model changing.
+   * @param {object} event
+   */
+  handleInterpolationModelChange(event) {
+    let model = event.target.value;
+    this.setState({
+      interpolationModel: model,
     });
   }
 
@@ -477,7 +481,7 @@ class DecompositionPanel extends React.Component {
               <InputLabel htmlFor='category-input'>Field Category</InputLabel>
               <Select ref="categoryCombo"
                 value={this.state.decompositionCategory || ''}
-                onChange={this.handleDecompositionCategoryChange} inputProps={{
+                onChange={this.handleDecompositionCategoryChange.bind(this)} inputProps={{
                   name: 'category',
                   id: 'category-input',
                 }}>
@@ -506,7 +510,7 @@ class DecompositionPanel extends React.Component {
               <InputLabel htmlFor='field-input'>Field</InputLabel>
               <Select ref="fieldCombo"
                 value={this.state.decompositionField || ''}
-                onChange={this.handleDecompositionFieldChange} inputProps={{
+                onChange={this.handleDecompositionFieldChange.bind(this)} inputProps={{
                   name: 'field',
                   id: 'field-input',
                 }}>
@@ -541,7 +545,7 @@ class DecompositionPanel extends React.Component {
                             disabled={!this.props.enabled || !this.props.dataset}
                             value={this.state.decompositionMode}
                             style={{ width:'100%' }}
-                            onChange={this.handleDecompositionModeChange}
+                            onChange={this.handleDecompositionModeChange.bind(this)}
                             inputProps={{
                             name: 'mode',
                             id: 'mode-field',
@@ -559,7 +563,8 @@ class DecompositionPanel extends React.Component {
                     defaultValue={this.state.ms.knn}
                     size="small"
                     type="number"
-                    onChange={this.handleMSknnChange}
+                    InputProps={{ inputProps: { min: 1 } }}
+                    onChange={this.handleMSknnChange.bind(this)}
                     />
 
                   {/* Sigma */}
@@ -587,13 +592,14 @@ class DecompositionPanel extends React.Component {
                     defaultValue={this.state.ms.depth}
                     size="small"
                     type="number"
+                    InputProps={{ inputProps: { min: -1 } }}
                     onChange={this.handleMSDepthChange.bind(this)}
                     />
 
                   {/* Add noise */}
                   <FormControlLabel
                     control={<Checkbox checked={this.state.ms.noise} 
-                                       onChange={this.handleMSNoiseChange}
+                                       onChange={this.handleMSNoiseChange.bind(this)}
                                        name="msNoiseCheckbox" />}
                     label="Add noise"
                     />
@@ -601,7 +607,7 @@ class DecompositionPanel extends React.Component {
                   {/* Scale normalize */}
                   <FormControlLabel
                     control={<Checkbox checked={this.state.ms.normalize} 
-                                       onChange={this.handleMSNormalizeChange}
+                                       onChange={this.handleMSNormalizeChange.bind(this)}
                                        name="msNormalizeCheckbox" />}
                     label="Scale normalize field"
                     />
@@ -635,7 +641,7 @@ class DecompositionPanel extends React.Component {
                 disabled={!this.props.enabled || !this.props.dataset}
                 value={this.state.interpolationModel || ''}
                 style={{ width:'100%' }}
-                onChange={this.handleInterpolationModelChange} 
+                onChange={this.handleInterpolationModelChange.bind(this)} 
                 inputProps={{
                   name: 'model',
                   id: 'model-field',
@@ -674,8 +680,8 @@ class DecompositionPanel extends React.Component {
                   min={this.state.minPersistence}
                   max={this.state.maxPersistence}
                   value={this.state.sliderPersistence}
-                  onChange={this.handlePersistenceSliderChange}
-                  onMouseUp={this.handlePersistenceSliderRelease}
+                  onChange={this.handlePersistenceSliderChange.bind(this)}
+                  onMouseUp={this.handlePersistenceSliderRelease.bind(this)}
                   style={{ width: '190px', height: '15px', borderRadius: '5px',
                     background: '#d3d3d3', outline: 'none', opacity: '0.7',
                     transition: 'opacity .2s', paddingLeft: '0px',
@@ -694,7 +700,7 @@ class DecompositionPanel extends React.Component {
                   <Select ref="persistenceCombo"
                     style={{ width:'100%' }}
                     value={this.state.persistenceLevel}
-                    onChange={this.handlePersistenceLevelChange}
+                    onChange={this.handlePersistenceLevelChange.bind(this)}
                     inputProps={{
                       name: 'persistence',
                       id: 'persistence-field',
@@ -722,7 +728,7 @@ class DecompositionPanel extends React.Component {
                 this.state.crystals.map((crystal, i) => (
                   <ListItem key={i} style={{ padding:'1px' }}
                     dense button
-                    onClick={() => this.handleCrystalToggle(i)}>
+                    onClick={() => this.handleCrystalToggle(i).bind(this)}>
                     <Checkbox checked={!this.state.crystals[i].isDisabled}
                       tabIndex={-1} disableRipple
                       color="primary" style={{ paddingLeft:0 }}/>
