@@ -116,7 +116,6 @@ public:
   /// computes new z_coord at this field value
   const Eigen::RowVectorXd getNewLatentSpaceValue(double new_fieldval, double sigma = 0.25) const
   {
-#if 1 //<ctc> super duper hack to test evaluation of PCA model without updated dataset loading (which has been started but is a wip) -- but as Kyli said this should just do the same thing. 
     //debug: hardcode new fieldval
     //new_fieldval = 0.62341;
     //std::cout << "num_samples: " << sample_indices.size() << std::endl;
@@ -154,19 +153,6 @@ public:
     //std::cout << "new z_coord:\n" << output << std::endl;
     //std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;
 
-#else
-    //evaluate this as a PCA model:
-    // z = (x - w0)W^t; i.e., z = (new_fieldval+fieldvalues - w0)W^t, W^t is transpose(W)
-
-    Eigen::RowVectorXd fieldvals(fieldvalues);
-    fieldvals.array() += new_fieldval;
-
-    Eigen::MatrixXd Wt(W);
-    Wt.transposeInPlace();
-
-    Eigen::MatrixXd output((fieldvals - w0) * Wt);
-
-#endif
     return output;
   }
 
