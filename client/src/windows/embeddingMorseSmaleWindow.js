@@ -10,7 +10,7 @@ import GalleryWindow from './galleryWindow';
 
 const minTileWidth      = 100;
 const minTileHeight     = 80;
-const tileWidthMargins  = 40;  // 5+5 image margin + 5+5 paper margin + 20 text (ugh) 
+const tileWidthMargins  = 58;  // 5+5 image margin + 5+5 paper margin + 20 text + 18 fluff (ugh) 
 const tileHeightMargins = 60;  // 5+5 image margin + 5+5 paper margin + 40 text (ugh) 
 
 const styles = (theme) => ({

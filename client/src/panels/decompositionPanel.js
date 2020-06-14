@@ -19,6 +19,7 @@ import Typography from '@material-ui/core/Typography';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import {Button} from "@material-ui/core";
+import {ButtonGroup} from '@material-ui/core';
 
 /**
  * The Decomposition Panel component provides a display of the
@@ -157,21 +158,19 @@ class DecompositionPanel extends React.Component {
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        console.log('decompositionPanel.fetchDecomposition: fetching decomposition from server...\n');
+        console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+field+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId, category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
-              console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
-                          +result.minPersistenceLevel+',Mp:'+result.maxPersistenceLevel+',cs:'+result.complexSizes+'...\n');
+              // console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
+              //             +result.minPersistenceLevel+',Mp:'+result.maxPersistenceLevel+',cs:'+result.complexSizes+')\n');
               this.setState({
                 minPersistence: result.minPersistenceLevel,
                 maxPersistence: result.maxPersistenceLevel,
                 complexSizes: result.complexSizes,
                 sliderPersistence: result.maxPersistenceLevel,
                 persistenceLevel: result.maxPersistenceLevel});
-              console.log('calling updateDataModel...');
-              this.updateDataModel();
-              console.log('Done!');
+              // not calling updateDataModel since componentDidUpdate calls it
             }
             else {
               console.log('decompositionPanel.fetchDecomposition: fetch decomposition from server failed:\n\t'+result.error_msg);
@@ -190,6 +189,7 @@ class DecompositionPanel extends React.Component {
   }
   
   componentDidMount() {
+    // console.log('decompositionPanel component mounted: fetching decomposition');
     this.fetchDecomposition();
   }
 
@@ -200,14 +200,13 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
-    // overview: - when component state updates, fetch the new decomposition only if the mode, category, or field changes
-    //             todo <ctc> (category should trigger a field change, so really doesn't need to be checked explicitly)
+    // overview: - when component state updates, fetch the new decomposition only if the mode or field changes
+    //           - category triggers a field change, so doesn't need to be checked here
     //           - if ms params change, don't recompute unless user clicks the button to do so
 
     if (prevState.decompositionMode !== this.state.decompositionMode ||
-        //prevState.decompositionCategory !== this.state.decompositionCategory ||
         prevState.decompositionField !== this.state.decompositionField) {
-      console.log('decompositionPanel.componentDidUpdate:\n\tdecomposition state (i.e., field) changed, fetching new decomposition...');
+      //console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
       this.fetchDecomposition();
     }
     else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
@@ -215,7 +214,7 @@ class DecompositionPanel extends React.Component {
       this.updateDataModel();
     }
     else {
-      console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
+      //console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
     }
   }
 
@@ -244,14 +243,10 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionMode: mode,
     });
-
-    // <ctc> this should already be called by componentDidUpdate
-    //this.fetchDecomposition();
-    console.log('decompositionPanel.handleDecompositionModeChange (should updated automatically)');
   }
 
   handleMSknnChange(event) {
-    let neighborhoodSize = event.target.value;
+    let neighborhoodSize = parseInt(event.target.value);
     this.setState((prevState) => ({
       ms: { ...prevState.ms, knn:neighborhoodSize },
     }));
@@ -265,7 +260,7 @@ class DecompositionPanel extends React.Component {
   }
 
   handleMSSmoothChange(event) {
-    let smooth = event.target.value;
+    let smooth = parseFloat(event.target.value);
     this.setState((prevState) => ({
       ms: { ...prevState.ms, smooth:smooth },
     }));
@@ -300,12 +295,12 @@ class DecompositionPanel extends React.Component {
   }
 
   handleRecomputeMorseSmale() {
-    console.log('recomputing the ms object...');
+    console.log('recomputing the ms object (TODO)...');
     this.fetchDecomposition();
   }
 
   handleExportMorseSmale() {
-    console.log('Dumping the ms object (TODO)');
+    console.log('Dumping the ms object (TODO)...');
   }
 
   handleModelSigmaChange(event) {
@@ -324,8 +319,6 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionCategory: category,
     });
-
-    // <ctc> see! This one updates the field list automatically, right? But maybe that's in render...
   }
 
   /**
@@ -337,8 +330,6 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionField: field,
     });
-
-    // <ctc> But this one *must* call componentDidUpdate
   }
 
   /**
@@ -362,6 +353,7 @@ class DecompositionPanel extends React.Component {
                 crystals: result.complex.crystals,
               });
               this.updatePropsConfig();
+              //console.log('decompositionPanel.updateDataModel succeeded. Props config updated.');
             }
             else {
               this.setState({ crystals: [] });
@@ -390,10 +382,6 @@ class DecompositionPanel extends React.Component {
       persistenceLevel: parseInt(level),
       sliderPersistence: level,
     });
-
-    // <ctc> this should already be called by componentDidUpdate
-    //this.updateDataModel(level);
-    console.log('decompositionPanel.handlePersistenceLevelChange: '+level);
   }
 
   /**
@@ -405,7 +393,6 @@ class DecompositionPanel extends React.Component {
     this.setState({
       sliderPersistence: value,
     });
-    console.log('decompositionPanel.handlePersistenceSliderChange: '+value);
   }
   
   /**
@@ -417,9 +404,6 @@ class DecompositionPanel extends React.Component {
       this.setState({
         persistenceLevel: parseInt(this.state.sliderPersistence),
       });
-
-      //this.updateDataModel(this.state.sliderPersistence);
-      console.log('decompositionPanel.handlePersistenceLevelChange (should updated automatically)');
     }
   }
 
@@ -632,8 +616,10 @@ class DecompositionPanel extends React.Component {
                     />
 
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
-                  { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute Morse-Smale</Button> }
-                  { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export Crystal Partitions</Button> }
+                  { /* <ButtonGroup orientation="vertical" >  (available in material-ui v4) */ }
+                    { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute</Button> }
+                    { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export</Button> }
+                  { /* </ButtonGroup> */ }
                 </div>
               </ExpansionPanelDetails>
             </ExpansionPanel>
