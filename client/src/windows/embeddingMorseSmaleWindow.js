@@ -106,6 +106,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
                 +crystalID+','+numSamples+','+showOrig+')');
 
+    // TODO: add decompositionPanel's state.model.sigma to this computation... except it's not in there. Stuff like k is still there, so figure out how that gets set and add it.
+    //console.log("computeNewSamplesUsingShapeoddsModel: this.props.decomposition: "+this.props.decomposition);
+    //console.log("computeNewSamplesUsingShapeoddsModel: decomposition's model sigma: "+this.props.decomposition.state.model.sigma);
+
     // Ask server to compute the N new images for this crystal and add them to the drawer
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel,
       crystalID, numSamples, showOrig)

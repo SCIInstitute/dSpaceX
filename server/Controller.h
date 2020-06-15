@@ -47,6 +47,7 @@ class Controller {
   void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
+  void writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
@@ -61,6 +62,7 @@ class Controller {
   void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
+
 
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 

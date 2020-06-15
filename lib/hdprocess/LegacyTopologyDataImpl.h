@@ -10,9 +10,10 @@
 class LegacyTopologyDataImpl : public TopologyData {
  public:
   LegacyTopologyDataImpl(std::shared_ptr<HDVizData> data);
-  virtual unsigned int getMinPersistenceLevel();
-  virtual unsigned int getMaxPersistenceLevel();
-  virtual std::shared_ptr<MorseSmaleComplex> getComplex(unsigned int persistenceLevel);
+  unsigned int getMinPersistenceLevel() const override;
+  unsigned int getMaxPersistenceLevel() const override;
+  std::shared_ptr<MorseSmaleComplex> getComplex(unsigned int persistenceLevel) override;
+  nlohmann::json& asJson() const override; 
 
  private:
   std::shared_ptr<HDVizData> m_data;

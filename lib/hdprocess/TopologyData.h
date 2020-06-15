@@ -2,6 +2,7 @@
 #pragma once
 
 #include "HDVizData.h"
+#include <nlohmann/json.hpp>
 
 class Crystal {
  public:
@@ -21,9 +22,10 @@ class MorseSmaleComplex {
 
 class TopologyData {
  public:
-  virtual unsigned int getMinPersistenceLevel() = 0;
-  virtual unsigned int getMaxPersistenceLevel() = 0;
+  virtual unsigned int getMinPersistenceLevel() const = 0;
+  virtual unsigned int getMaxPersistenceLevel() const = 0;
   virtual std::shared_ptr<MorseSmaleComplex> getComplex(unsigned int persistenceLevel) = 0;
+  virtual nlohmann::json& asJson() const = 0;
 };
 
 

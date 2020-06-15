@@ -525,14 +525,14 @@ ColorMapper<Precision>& SimpleHDVizDataImpl::getDColorMap(int persistenceLevel) 
 /**
  *
  */
-int SimpleHDVizDataImpl::getMinPersistenceLevel() { 
-  return m_data->minLevel(0);
+int SimpleHDVizDataImpl::getMinPersistenceLevel() const { 
+  return const_cast<SimpleHDVizDataImpl*>(this)->m_data->minLevel(0);
 }
 
 /**
  *
  */
-int SimpleHDVizDataImpl::getMaxPersistenceLevel() { 
+int SimpleHDVizDataImpl::getMaxPersistenceLevel() const { 
   // TODO: Move into HDProcessResult as 'maxLevel'.
   return m_data->scaledPersistence.N() - 1;
 }

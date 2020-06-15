@@ -201,6 +201,17 @@ class Client {
   }
 
   /**
+   * Write current M-S decomposition to /tmp on server.
+   */
+  writeCurrentMorseSmaleDecomposition() {
+    let command = {
+      name: 'writeCurrentMorseSmaleDecomposition',
+      basePath: "/tmp/",
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
    * Fetch the crystal indexes composing a single morse smale persistence level.
    * (also maybe-computes decomposition
    * @param {string} datasetId

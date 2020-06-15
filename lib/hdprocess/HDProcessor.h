@@ -25,12 +25,11 @@
  */
 class HDProcessor {
  public:
-  HDProcessor();
-  std::shared_ptr<HDProcessResult>  process(FortranLinalg::DenseMatrix<Precision> x,
+  std::unique_ptr<HDProcessResult>  process(FortranLinalg::DenseMatrix<Precision> x,
       FortranLinalg::DenseVector<Precision> y,  
       int knn, int nSamples, int persistenceArg, bool randArg, 
       Precision sigmaArg, Precision sigmaSmooth);
-  std::shared_ptr<HDProcessResult>  processOnMetric(FortranLinalg::DenseMatrix<Precision> distances,
+  std::unique_ptr<HDProcessResult>  processOnMetric(FortranLinalg::DenseMatrix<Precision> distances,
     FortranLinalg::DenseVector<Precision> qoi,
     int knn, int nSamples, int persistence, bool random,
     Precision sigmaArg, Precision sigmaSmooth);
@@ -78,7 +77,7 @@ class HDProcessor {
   std::string m_path;
 
   // Member variable storing process result as its built;
-  std::shared_ptr<HDProcessResult> m_result;
+  std::unique_ptr<HDProcessResult> m_result;
 
   // List of extrema and extrema of previous persistence level used to align low
   // dimensional mappings to previous level

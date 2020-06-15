@@ -8,9 +8,6 @@ int globalMin = -1;
 
 using namespace FortranLinalg;
 
-HDProcessor::HDProcessor() = default;
-
-
 /**
  * Process the input data and generate all data files necessary for visualization.
  * @param[in] d Distances Matrix containing pairwise distances between samples.
@@ -22,7 +19,7 @@ HDProcessor::HDProcessor() = default;
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
-std::shared_ptr<HDProcessResult>  HDProcessor::processOnMetric(
+std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
     DenseMatrix<Precision> d, DenseVector<Precision> field,
     int knn, int nSamples, int persistenceArg, bool random,
     Precision sigmaArg, Precision sigmaSmooth) {
@@ -123,23 +120,8 @@ std::shared_ptr<HDProcessResult>  HDProcessor::processOnMetric(
     computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
   }
 
-  // Export crystal partitions for shapeodds
-  {
-    bool exportCrystalPartitions = false;  // TODO: add these as a parameters to the function
-    std::string partitionsName("crystalpartitions.csv");
-    if (exportCrystalPartitions) {
-      DataExport::exportCrystalPartitions(m_result->crystalPartitions, start, partitionsName);
-      // TODO: need to also export...
-      //   - original data range so it can be used for later analyses
-      //   - parameters used for computation: knn, sigma, smooth, noise, num_levels (depth)
-      //   - num_levels needs to know how many levels there would be in total so they can be properly numbered
-    }
-  }
-  
   // detach and return processed result
-  std::shared_ptr<HDProcessResult> result = m_result;
-  m_result = nullptr;
-  return result;
+  return std::move(m_result);
 }
 
 /**
@@ -154,7 +136,7 @@ std::shared_ptr<HDProcessResult>  HDProcessor::processOnMetric(
  * @param[in] sigma Bandwidth for inverse regression.
  * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
  */
-std::shared_ptr<HDProcessResult>  HDProcessor::process(  
+std::unique_ptr<HDProcessResult>  HDProcessor::process(  
   DenseMatrix<Precision> x, DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
   bool randArg, Precision sigma, Precision sigmaSmooth) {
@@ -251,9 +233,7 @@ std::shared_ptr<HDProcessResult>  HDProcessor::process(
   }
 
   // detach and return processed result
-  std::shared_ptr<HDProcessResult> result = m_result;
-  m_result = nullptr;
-  return result;
+  return std::move(m_result);
 }
 
 /**

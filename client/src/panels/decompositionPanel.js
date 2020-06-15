@@ -5,6 +5,9 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormGroup from '@material-ui/core/FormGroup';
 import Histogram from './histogram';
 import InputLabel from '@material-ui/core/InputLabel';
 import List from '@material-ui/core/List';
@@ -53,7 +56,7 @@ class DecompositionPanel extends React.Component {
         knn: 15,
         sigma: 0.25,
         smooth: 15.0,
-        curvepoints: 55,
+        curvepoints: 50,
         depth: -1,
         noise: true,
         normalize: true,
@@ -120,7 +123,7 @@ class DecompositionPanel extends React.Component {
         console.log('current M-S configuration is invalid:\n\tsmooth must be >= 0');
         return false;
       }
-      if (depth <= 0.0 && depth != -1) {
+      if (depth <= 0 && depth != -1) {
         console.log('current M-S configuration is invalid:\n\must compute at least one (depth > 0) or all (-1) persistence levels');
         return false;
       }
@@ -258,7 +261,7 @@ class DecompositionPanel extends React.Component {
   }
 
   handleMSCurvePointsChange(event) {
-    let curvepoints = event.target.value;
+    let curvepoints = parseInt(event.target.value);
     if (!isNaN(curvepoints))
       this.setState((prevState) => ({
         ms: { ...prevState.ms, curvepoints:curvepoints },
@@ -266,7 +269,7 @@ class DecompositionPanel extends React.Component {
   }
 
   handleMSDepthChange(event) {
-    let persistenceDepth = event.target.value;
+    let persistenceDepth = parseInt(event.target.value);
     if (!isNaN(persistenceDepth))
       this.setState((prevState) => ({
         ms: { ...prevState.ms, depth:persistenceDepth },
@@ -596,30 +599,39 @@ class DecompositionPanel extends React.Component {
                     onChange={this.handleMSDepthChange.bind(this)}
                     />
 
-                  {/* Add noise */}
-                  <FormControlLabel
-                    control={<Checkbox checked={this.state.ms.noise} 
-                                       onChange={this.handleMSNoiseChange.bind(this)}
-                                       name="msNoiseCheckbox" />}
-                    label="Add noise"
-                    />
-
-                  {/* Scale normalize */}
-                  <FormControlLabel
-                    control={<Checkbox checked={this.state.ms.normalize} 
-                                       onChange={this.handleMSNormalizeChange.bind(this)}
-                                       name="msNormalizeCheckbox" />}
-                    label="Scale normalize field"
-                    />
-
                   {/* Curve points */}
                   <TextField
                     label="Crystal curve points"
                     id="ms-curvepoints"
                     defaultValue={this.state.ms.curvepoints}
                     size="small"
+                    type="number"
+                    InputProps={{ inputProps: { min: 3 } }}
                     onChange={this.handleMSCurvePointsChange.bind(this)}
                     />
+
+                  {/* checkboxes */}
+                  <FormControl component="fieldset" >
+                    {/* <FormLabel component="legend">Field</FormLabel> */}
+                    <FormGroup>
+                      {/* Add noise */}
+                      <FormControlLabel
+                        control={<Checkbox checked={this.state.ms.noise} 
+                                           onChange={this.handleMSNoiseChange.bind(this)}
+                                           name="msNoiseCheckbox" />}
+                        label="Add noise"
+                        />
+
+                      {/* Scale normalize */}
+                      <FormControlLabel
+                        control={<Checkbox checked={this.state.ms.normalize} 
+                                           onChange={this.handleMSNormalizeChange.bind(this)}
+                                           name="msNormalizeCheckbox" />}
+                        label="Normalize"
+                        />
+                    </FormGroup>
+                    <FormHelperText>Field</FormHelperText>
+                  </FormControl>
 
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
                   { /* <ButtonGroup orientation="vertical" >  (available in material-ui v4) */ }

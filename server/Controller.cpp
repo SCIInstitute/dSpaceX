@@ -247,6 +247,7 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
 
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
   unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+  std::cout << "Controller::fetchMorseSmaleDecomposition persistence range: [" << minLevel << "," << maxLevel << "]\n";
 
   response["datasetId"] = m_currentDatasetId;
   response["decompositionMode"] = "Morse-Smale";
@@ -257,6 +258,29 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
     std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(level);
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
+    std::cout << "Controller::fetchMorseSmaleDecomposition persistence " << level << " num crystals: " << size << std::endl;
+  }
+}
+
+/**
+ * Write the current morse smale decomposition of a dataset.
+ */
+void Controller::writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
+{
+  using json = nlohmann::json;
+
+//  if (m_currentVizData->m_data) // if there is a current decomposition and it's valid
+  {
+//    auto filename(uniqueFilename(request["basePath"].asString() + "crystalpartitions", ".csv"));
+//
+//    std::ofstream outfile;
+//    outfile.open(filename);
+//
+//    json ms(m_currentVizData->m_data->asJson());
+//    std::cout << "M-S crystal partitions:\n" << ms << std::endl;
+
+    // fixme: for now just do this
+//    DataExport::exportCrystalPartitions(m_currentVizData->m_data->crystalPartitions, start, filename);
   }
 }
 

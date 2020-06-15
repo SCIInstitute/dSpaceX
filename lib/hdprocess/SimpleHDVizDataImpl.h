@@ -68,8 +68,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     ColorMapper<Precision>& getColorMap(int persistenceLevel);
     ColorMapper<Precision>& getDColorMap(int persistenceLevel);
 
-    int getMinPersistenceLevel(); 
-    int getMaxPersistenceLevel();
+    int getMinPersistenceLevel() const override; 
+    int getMaxPersistenceLevel() const override;
         
   private:
     std::shared_ptr<HDProcessResult> m_data;
