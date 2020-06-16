@@ -57,7 +57,7 @@ class DecompositionPanel extends React.Component {
         sigma: 0.25,
         smooth: 15.0,
         curvepoints: 50,
-        depth: -1,
+        depth: 20,
         noise: true,
         normalize: true,
       },
@@ -643,44 +643,60 @@ class DecompositionPanel extends React.Component {
             </ExpansionPanel>
 
             { /* Interpolation Model Selection */}
-            <FormControl className={classes.formControl}
-              disabled={!this.props.enabled}
-              style={{ width: '100%',
-                boxSizing: 'border-box',
-                paddingRight: '10px' }}>
-              <InputLabel htmlFor='model-field'>Interpolation Model</InputLabel>
-              <Select ref="interpolationCombo"
-                disabled={!this.props.enabled || !this.props.dataset}
-                value={this.state.interpolationModel || ''}
-                style={{ width:'100%' }}
-                onChange={this.handleInterpolationModelChange.bind(this)} 
-                inputProps={{
-                  name: 'model',
-                  id: 'model-field',
-                }}>
-                <MenuItem value='None'>
-                  <em>None</em>
-                </MenuItem>
-                <MenuItem value='pca'>
-                  <em>PCA</em>
-                </MenuItem>
-                <MenuItem value='shapeodds'>
-                  <em>ShapeOdds</em>
-                </MenuItem>
-                <MenuItem value='sharedgp' disabled={true}>
-                  <em>Shared-GP</em>
-                </MenuItem>
-              </Select>
-            </FormControl>
+            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={false}
+                            style={{ paddingLeft:'0px', margin:'1px' }}>
+              <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
+                <Typography>Interpolation</Typography>
+              </ExpansionPanelSummary>
+              <ExpansionPanelDetails style={{ paddingLeft: '0px',
+                                     paddingRight: '10px', margin: '1px', width: '100%',
+                                     boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column',
+                     width: '100%', boxSizing: 'border-box' }}>
 
-            { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
-            <TextField
-              label="sigma bandwidth percent"
-              id="model-sigma"
-              defaultValue={this.state.model.sigma}
-              size="small"
-              onChange={this.handleModelSigmaChange.bind(this)}
-            />
+
+                  <FormControl className={classes.formControl}
+                               disabled={!this.props.enabled}
+                               style={{ width: '100%',
+                               boxSizing: 'border-box',
+                               paddingRight: '10px' }}>
+                    <InputLabel htmlFor='model-field'>Model</InputLabel>
+                    <Select ref="interpolationCombo"
+                            disabled={!this.props.enabled || !this.props.dataset}
+                            value={this.state.interpolationModel || ''}
+                            style={{ width:'100%' }}
+                            onChange={this.handleInterpolationModelChange.bind(this)} 
+                            inputProps={{
+                            name: 'model',
+                            id: 'model-field',
+                            }}>
+                      <MenuItem value='None'>
+                        <em>None</em>
+                      </MenuItem>
+                      <MenuItem value='pca'>
+                        <em>PCA</em>
+                      </MenuItem>
+                      <MenuItem value='shapeodds'>
+                        <em>ShapeOdds</em>
+                      </MenuItem>
+                      <MenuItem value='sharedgp' disabled={true}>
+                        <em>Shared-GP</em>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
+                  <TextField
+                    label="sigma bandwidth"
+                    id="model-sigma"
+                    defaultValue={this.state.model.sigma}
+                    size="small"
+                    onChange={this.handleModelSigmaChange.bind(this)}
+                    />
+
+                </div>
+              </ExpansionPanelDetails>
+            </ExpansionPanel>
 
             { /* Histogram of data partitions (each consisting of n subpartitions) */ }
             <div style={{ height:'15px' }}></div>
