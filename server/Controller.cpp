@@ -1127,6 +1127,8 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
     setError(response, "failed to process data");
     return false;
   }
+
+  return true;
 }
 
 /// Avoid regeneration of data if parameters haven't changed
@@ -1238,7 +1240,10 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
     m_currentVizData.reset(new SimpleHDVizDataImpl(result));
     m_currentTopoData.reset(new LegacyTopologyDataImpl(m_currentVizData));
   } catch (const char *err) {
-    std::cerr << err << std::endl;
+    std::cerr << "Controller::processData: processOnMetric failed: " << err << std::endl;
+    return false;
+  } catch (...) {
+    std::cerr << "Controller::processData: processOnMetric failed with unknown exception." << std::endl;
     return false;
   }
 
