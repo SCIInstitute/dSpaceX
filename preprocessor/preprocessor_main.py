@@ -7,7 +7,7 @@ import pandas as pd
 import re
 import shutil
 import sys
-from sklearn.manifold import TSNE, Isomap, MDS, LocallyLinearEmbedding
+from sklearn.manifold import TSNE, Isomap, MDS
 import yaml
 
 from distances.nrrd_distances import calculate_l1_distance_nrrd, calculate_l2_distance_nrrd
