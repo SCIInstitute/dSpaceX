@@ -1,6 +1,6 @@
 # dSpaceX Pre-processing Tool
 The dSpaceX pre-processing tool is intended to make dSpaceX more user friendly. The pre-processing tool takes a JSON file as
-input and outputs the files that the dSpaceX server and UI require which includes:
+input and outputs the files that the dSpaceX server and UI require, including:
 - The config.yaml which specifics the location and format of the processed data.
 - A distance matrix between the design shape representations.
 - The 2D embeddings of the design shape representations. The default embeddings are t-SNE, MDS, and Isomap.
@@ -9,7 +9,8 @@ input and outputs the files that the dSpaceX server and UI require which include
 - (TODO) The interpolation models for design prediction. 
 
 The JSON file needs to specify the location of the original data, including, the input parameters, the quantities of interest,
-and the design shape representation (usually these are images or volumes). Below we describe how to use the tool and provide helpful examples.
+and the design shape representation — usually these are images or volumes.
+Below we describe how to use the tool and provide helpful examples.
 
 This README assumes you have already cloned the dSpaceX repository.
 
@@ -23,7 +24,7 @@ already set up the server and/or the client then the conda environment should be
    ```
 
 ## Running the Pre-processing Tool
-1. Activate the dSpaceX conda environment (Notice that the dSpaceX conda environment is all lower case).
+1. Activate the dSpaceX conda environment — note that the dSpaceX conda environment is all lower case).
 ```bash
    conda activate dspacex
    ```
@@ -40,7 +41,7 @@ for the tool, below we provide detailed examples of the JSON files.
 ## The JSON file
 With the JSON file you can specify as little or as much as you want. There are intelligent defaults that will get your
 data processed and ready to use in the dSpaceX server and UI quickly. However, we recognize the defaults may not provide all the functionality 
-you might desire and have provided hooks that you can leverage to extend the functionality of the pre-processing tool.
+you might desire and have provided extensions to the pre-processing tool.
 
 ### The Minimum
 The following fields shown below in the example JSON must be specified for the pre-processing tool to work. 
@@ -67,7 +68,7 @@ We explain each field below.
 - *parametersFile:* [Path to CSV] The input parameters for your designs. Headers are expected.
 - *qoisFile:* [Path to CSV] The quantities of interest for your designs. Headers are expected.
 - *shapeDirectory:* [Path to Shape Representations] The shape representations for your designs.
-- *shapeFormat:* [String] Currently, we support "png" or "nrrd" shape representations
+- *shapeFormat:* [String] Currently, we support "png" or "nrrd" shape representations.
 - *distance:* [Object] Depending on how you want to calculate distances this object will look different. For the minimum JSON
 it will only have one field 'type' explained next.
 - *distance.type:* [String] For the minimum JSON you need to specify if you want the 'L1' or the 'L2' distance calculated.
@@ -80,3 +81,93 @@ Earlier, we mentioned that one of the jobs of the pre-processing tool is to calc
 noticed that we didn't specify anything in the minimum JSON for embeddings. This is because by default the tool calculates the
 t-SNE, MDS, and Isomap embedding for the data set. There is the ability to have the pre-processing tool include additional user
 defined embeddings; we will provide an example of this later. 
+
+### Using Precomputed Distances or Scripts for Distances
+If the L1 or L2 distance do not fulfill your needs there are two possible options for extending the distance
+functionality. You can either provides a precomputed distance matrix in the form of a csv or provide a 
+Python script that the pre-processing tool will call when calculating distances.
+
+#### Example JSON for Precomputed Distance
+To use a precomputed distance matrix set the distance.type to "precomputed" and provide the
+path to the csv file.
+```json
+{
+  "datasetName": "My Design Data",
+  "numberSamples": 20,
+  "outputDirectory": "<path>",
+  "parametersFile": "<path>/<file_name>.csv",
+  "qoisFile": "<path>/<file_name>.csv",
+  "shapeDirectory": "<path>",
+  "shapeFormat": "png or nrrd",
+  "distance": {
+    "type": "precomputed",
+    "file": "<path>/<file_name>.csv"
+  },
+  "thumbnails": "png or nano"
+}
+```
+
+#### Example JSON for Python Distance Script
+To use a Python script that is called when the distance matrix is calculated set the distance.type
+to "script". You will also need to provide the module name and the method name. If your method takes
+any arguments please provide them as a field called "arguments". If your method does not take any
+arguments then exclude the "arguments" field from the JSON. Please note, the method you create and that the preprocessor calls
+should take a list of arguments and not individual arguments. The pre-processing tool is simply passing
+the list from the JSON file to your method, the list can be heterogeneous.
+```json
+{
+  "datasetName": "My Design Data",
+  "numberSamples": 20,
+  "outputDirectory": "<path>",
+  "parametersFile": "<path>/<file_name>.csv",
+  "qoisFile": "<path>/<file_name>.csv",
+  "shapeDirectory": "<path>",
+  "shapeFormat": "png or nrrd",
+  "distance": {
+    "type": "script",
+    "script": "<path>/<file_name>.py",
+    "moduleName": "<module_name> (this is likely the <file_name>",
+    "methodName": "<method_name>",
+    "arguments": ["<list of arguments - if your method does not take arguments exclude this field)>"]
+  },
+  "thumbnails": "png or nano"
+}
+```
+
+### Adding your own embeddings
+By default the pre-processing tool calculates the t-SNE, MDS, and Isomap embeddings for every data set.
+If you have an additional embedding (or embeddings) you would like to include you have two options: First, you 
+can provide a precomputed embedding, or second, you can provide a Python script that the pre-processing tool
+will call. This functionality is the same as the extension for distance calculations with one exception,
+you can provide as many embeddings as you want. As you will see in the example JSON below the value for the
+embeddings field is a list of objects, each object describes the type of embedding you want to provide.
+```json
+{
+  "datasetName": "My Design Data",
+  "numberSamples": 20,
+  "outputDirectory": "<path>",
+  "parametersFile": "<path>/<file_name>.csv",
+  "qoisFile": "<path>/<file_name>.csv",
+  "shapeDirectory": "<path>",
+  "shapeFormat": "png or nrrd",
+  "distance": {
+    "type": "L1"
+  },
+  "thumbnails": "png or nano",
+  "embeddings": [
+    {
+      "type": "script",
+      "name": "<Name of Embedding - the client will display this>",
+      "script": "<path>/<file_name>.py",
+      "moduleName": "<module_name> (this is likely the <file_name>)",
+      "methodName": "<method_name>",
+      "arguments": ["<list of arguments - if your method does not take arguments exclude this field)>"]
+    },
+    {
+      "type": "precomputed",
+      "name": "<Name of Embedding - the client will display this>",
+      "file": "<path>/<file_name>.csv"
+    }
+  ]
+}
+```
