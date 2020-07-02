@@ -2,6 +2,7 @@
 #pragma once
 
 #include "HDVizData.h"
+#include <nlohmann/json.hpp>
 
 class Crystal {
  public:
@@ -14,16 +15,17 @@ class Crystal {
 class MorseSmaleComplex {
  public:  
   // TODO replace with Iterator and getCrystalCount() method.
-  virtual std::vector<Crystal*>& getCrystals() = 0;
+  virtual std::vector<std::shared_ptr<Crystal>>& getCrystals() = 0;
   virtual std::vector<std::pair<unsigned int, unsigned int>> getAdjacency() = 0;
 };
 
 
 class TopologyData {
  public:
-  virtual unsigned int getMinPersistenceLevel() = 0;
-  virtual unsigned int getMaxPersistenceLevel() = 0;
-  virtual MorseSmaleComplex* getComplex(unsigned int persistenceLevel) = 0;
+  virtual unsigned int getMinPersistenceLevel() const = 0;
+  virtual unsigned int getMaxPersistenceLevel() const = 0;
+  virtual std::shared_ptr<MorseSmaleComplex> getComplex(unsigned int persistenceLevel) = 0;
+  virtual nlohmann::json& asJson() const = 0;
 };
 
 

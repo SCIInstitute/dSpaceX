@@ -50,7 +50,7 @@ namespace FortranLinalg {
          * Returns number of rows
          * @return (int) number of rows
          */
-        unsigned int N() {
+        unsigned int N() const {
             return n;
         };
 

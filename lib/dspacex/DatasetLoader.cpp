@@ -104,11 +104,8 @@ std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &filePath)
 
   if (config["models"]) {
     auto ms_models = DatasetLoader::parseMSModels(config, filePath);
-    for (auto ms_model : ms_models) { //<ctc> this one i'm less understanding... maybe because it's part of a pair, which is an lvalue
+    for (auto ms_model : ms_models) {
       builder.withMSModel(ms_model.first, ms_model.second);
-      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
-    // for (auto ms_model : DatasetLoader::parseMSModels(config, filePath)) {
-    //   builder.withMSModel(ms_model.getFieldname(), /*std::move(ms_model)*/ ms_model); // it just passes it right along. Still needs move?
     }
   }
 
@@ -415,11 +412,7 @@ std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config,
     std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
     for (std::size_t i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-      MSModelsPair ms_model = DatasetLoader::parseMSModelsForField(modelNode, filePath);
-      ms_models.push_back(ms_model);
-      //<ctc> getting there, just putting this part on hold while I fix the indexing bug
-      // MSModelsPair ms_model("Max Stress", DatasetLoader::parseMSModelsForField(modelNode, filePath));
-      // ms_models.push_back(std::move(ms_model));
+      ms_models.push_back(DatasetLoader::parseMSModelsForField(modelNode, filePath));
     }
   } else {
     throw std::runtime_error("Config 'models' field is not a list.");
@@ -506,15 +499,15 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     out << partitions_format;
     throw std::runtime_error(out.str());
   }
-  unsigned npersistences = crystalPartitions_eigen.rows();
-  unsigned nsamples = crystalPartitions_eigen.cols();
+  auto npersistences = crystalPartitions_eigen.rows();
+  auto nsamples = crystalPartitions_eigen.cols();
   std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
             << nsamples << " samples." << std::endl;
 
   // Now read all the models
   MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (unsigned persistence = 0; persistence < npersistences; /*persistence+=10)//*/persistence++) //<ctc> hack to load just a couple lvls for testing
-  {
+  for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
+  //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
     unsigned persistence_idx = persistence;
     MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
 
@@ -540,40 +533,28 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
       P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
     }
     
+    // read crystalIds indicating to which persistence level each crystal belongs at this persistence
+    if (IO::fileExists(persistencePath + "/crystalID.csv")) {
+      Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(persistencePath + "/crystalID.csv" );
+      P.setCrystalSamples(crystal_ids);
+    } else {
+      std::stringstream err;
+      err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
+      throw std::runtime_error(err.str());
+    }
+
     // read the model for each crystal at this persistence level
-    std::string modelPath;
     for (unsigned crystal = 0; crystal < ncrystals; crystal++)
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
       dspacex::MSCrystal &c = P.getCrystal(crystal);
       c.getModel().setFieldname(fieldname); // <ctc> see TODOs in dspacex::Model
-      parseModel(crystalPath, c.getModel());
-
-      modelPath = crystalPath;  // outside this scope because we need to use it to read crystalIds
+      parseModel(crystalPath, c.getModel());// todo: just store path here and read model on demand
     }
-
-    // read crystalIds (same for every model at this plevel, so only need to read/set them once)
-    if (!IO::fileExists(modelPath + "/crystalID.csv")) {
-      if (!IO::fileExists(modelPath + "/../crystalID.csv")) {
-        std::stringstream err;
-        err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
-        throw std::runtime_error(err.str());
-      }
-      modelPath += "/..";
-    }
-    
-    Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(modelPath + "/crystalID.csv" );
-  
-    // FIXME: until fixed in data (produced by MATLAB), crystal ids are 1-based, so adjust them right away to be 0-based
-    crystal_ids.array() -= 1.0;
-      
-    // set group of samples for each model at this persistence level
-    P.setCrystalSamples(crystal_ids);
   }
 
-  return MSModelsPair(fieldname, std::move(ms_of_models) /* must explicitly move b/c it's being added to a struct and still could be used locally*/);
-  //return ms_of_models;
+  return MSModelsPair(fieldname, std::move(ms_of_models));
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
@@ -586,7 +567,7 @@ void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
   auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
+  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");  // TODO: this is handily functional on case-insensitive OSes, but shapeodds and pca models have different case 'z' in the name of this file, so it'll fail on linux
 
   m.setModel(W, w0, Z);
 }

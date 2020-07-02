@@ -6,24 +6,12 @@
 
 namespace dspacex {
 
-//
-// A set of probabilistic models are learned using the samples associated with the crystals at
-// each persistenve level of a Morse-Smale complex. While a Model can
-// exist independently, these structures help organize the group of models for a given M-S:
-//
-//  MSModelContainer knows the total number of samples for this M-S, contains its set of Persistence levels
-//   - Persistences contains set of Crystals and their global embeddings (common 2d latent space for all crystals at that level)
-//     - Crystal contains its model, which contains indices of its samples and its local embedding (latent space), along with W and w0.
-//
-// Looking forward...
-//      There could be different models associated with a given crystal (e.g., ShapeOdds or SharedGP of various types),
-//      so we could either provide access to a vector of Models or allow them to be queried by type. The latter might
-//      not be easy since there could be multiple versions of a single type (ex: using different parameters for learning).
-//
-//      At least for ShapeOdds, persistences also contain a global embedding (latent space) for evaulation in a common
-//      space for all of its crystals. 
-//      
-//
+/// When a Morse-Smale complex is used to decompose/partition a dataset, the samples associated
+/// with each crystal at each persistence level can be used to learn a probabilistic
+/// interpolation model (e.g., ShapeOdds, PCA, SharedGP). These classes provide access to such
+/// sets of models.
+
+/// Crystal contains the models constructed from this set of samples
 class MSCrystal
 {
 public:
@@ -58,6 +46,9 @@ private:
   Model model;
 };
 
+
+/// Persistence contains the set of Crystals and their global embeddings (common 2d latent
+/// space for all crystals at that level)
 class MSPersistenceLevel
 {
 public:
@@ -101,7 +92,9 @@ private:
 // Associates a model with it's name (pXXcYY) // todo: this is an issue because there could be more than one model with the same name (in another MSComplex)
 typedef std::pair<std::string, Model&> ModelPair;
 
-// Morse-Smale model container, a M-S complex for a given field and the models learned for each of its crystals.
+/// MSComplex is a model container that inclues the parameters used to compute the M-S using
+/// NNMSComplex, as well as sub-containers of persistince levels and their crystals, which
+/// ultimately store the models of this complex.
 class MSComplex
 {
 public:
@@ -132,7 +125,12 @@ public:
   bool hasModel(unsigned p, unsigned c) const;
   ModelPair getModel(unsigned p, unsigned c);
   std::vector<ModelPair> getAllModels();
-  
+
+  // TODO: add parameters used by NNMSComplex to create this so the complex can be predictively recomputed
+  //void addParams(...); //e.g., fieldname, persistenceLevel, knn, sigma, smooth, noise, numPersistences, numSamples, normalize
+  //Params getParams() const;
+  // TODO: store persistence range for this complex since not all levels have to be computed
+
 private:
   static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
   {

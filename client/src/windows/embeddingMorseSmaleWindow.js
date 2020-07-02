@@ -10,7 +10,7 @@ import GalleryWindow from './galleryWindow';
 
 const minTileWidth      = 100;
 const minTileHeight     = 80;
-const tileWidthMargins  = 40;  // 5+5 image margin + 5+5 paper margin + 20 text (ugh) 
+const tileWidthMargins  = 58;  // 5+5 image margin + 5+5 paper margin + 20 text + 18 fluff (ugh) 
 const tileHeightMargins = 60;  // 5+5 image margin + 5+5 paper margin + 40 text (ugh) 
 
 const styles = (theme) => ({
@@ -105,6 +105,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     crystalID, numSamples, showOrig) {
     console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
                 +crystalID+','+numSamples+','+showOrig+')');
+
+    // TODO: add decompositionPanel's state.model.sigma to this computation... except it's not in there. Stuff like k is still there, so figure out how that gets set and add it.
+    //console.log("computeNewSamplesUsingShapeoddsModel: this.props.decomposition: "+this.props.decomposition);
+    //console.log("computeNewSamplesUsingShapeoddsModel: decomposition's model sigma: "+this.props.decomposition.state.model.sigma);
 
     // Ask server to compute the N new images for this crystal and add them to the drawer
     this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel,

@@ -254,7 +254,7 @@ class WindowPanel extends React.Component {
         {/* Decomposition Panel */}
         <div style={{ height:'8px' }}/>
         <DecompositionPanel
-          enabled={true}
+          enabled={this.props.enabled}
           dataset={this.props.dataset}
           onDecompositionChange={this.handleDecompositionChange}
           client={this.client}/>
