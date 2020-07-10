@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { SpriteMaterial } from 'three/src/materials/SpriteMaterial.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
 import { withDSXContext } from '../dsxContext';
