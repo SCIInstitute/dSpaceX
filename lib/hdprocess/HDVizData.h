@@ -73,6 +73,6 @@ class HDVizData {
     virtual ColorMapper<Precision>& getColorMap(int persistenceLevel) = 0;
     virtual ColorMapper<Precision>& getDColorMap(int persistenceLevel) = 0;
 
-    virtual int getMinPersistenceLevel() = 0;
-    virtual int getMaxPersistenceLevel() = 0;
+    virtual int getMinPersistenceLevel() const = 0;
+    virtual int getMaxPersistenceLevel() const = 0;
 };

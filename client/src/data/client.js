@@ -175,48 +175,45 @@ class Client {
   }
 
   /**
-   * Compute Morse-Smale Decomposition
+   * Compute Morse-Smale Decomposition, return the persistence range (i.e. min
+   * and max) and number of crystals at each level.
    * @param {string} datasetId
    * @param {string} category design parameter or qoi
    * @param {string} fieldname
    * @param {number} k number of neighbors.
    * @return {Promise}
    */
-  // TODO: NOT USED BY ANYTHING!
-  fetchMorseSmaleDecomposition(datasetId, category, fieldname, k) {
+  fetchMorseSmaleDecomposition(datasetId, category, fieldname, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
     let command = {
-      name: 'fetchMorseSmaleDecomposition', //but there's a server function with this name
+      name: 'fetchMorseSmaleDecomposition',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
-      k: k,
+      knn: knn,
+      sigma: sigma,
+      smooth: smooth,
+      noise: noise,
+      depth: depth,
+      curvepoints: curvepoints,
+      normalize: normalize,
     };
     return this._createCommandPromise(command);
   }
 
   /**
-   * Compute Morse-Smale Decomposition, return
-   * only the persistence range (i.e. min and max).
-   * @param {string} datasetId
-   * @param {string} category design parameter or qoi
-   * @param {string} fieldname
-   * @param {number} k number of neighbors.
-   * @return {Promise}
+   * Write current M-S decomposition to /tmp on server.
    */
-  fetchMorseSmalePersistence(datasetId, category, fieldname, k) {
-    console.log('creating promise to call fetchMorseSmalePersistence');
+  writeCurrentMorseSmaleDecomposition() {
     let command = {
-      name: 'fetchMorseSmalePersistence',
-      datasetId: datasetId,
-      category: category,
-      fieldname: fieldname,
-      k: k,
+      name: 'writeCurrentMorseSmaleDecomposition',
+      basePath: "/tmp/",
     };
     return this._createCommandPromise(command);
   }
 
   /**
    * Fetch the crystal indexes composing a single morse smale persistence level.
+   * (also maybe-computes decomposition
    * @param {string} datasetId
    * @param {string} category design parameter or qoi
    * @param {string} fieldname
@@ -224,14 +221,20 @@ class Client {
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmalePersistenceLevel(datasetId, category, fieldname, k, persistenceLevel) {
+  fetchMorseSmalePersistenceLevel(datasetId, category, fieldname, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmalePersistenceLevel',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
-      k: k,
       persistenceLevel: persistenceLevel,
+      knn: knn,
+      sigma: sigma,
+      smooth: smooth,
+      noise: noise,
+      depth: depth,
+      curvepoints: curvepoints,
+      normalize: normalize,
     };
     return this._createCommandPromise(command);
   }
@@ -406,6 +409,14 @@ class Client {
     return this._createCommandPromise(command);
   }
 
+  fetchModelsList(datasetId) {
+    const command = {
+      name: 'fetchModelsList',
+      datasetId: datasetId,
+    };
+    return this._createCommandPromise(command);
+  }
+
   fetchEmbeddingsList(datasetId) {
     const command = {
       name: 'fetchEmbeddingsList',
@@ -413,6 +424,7 @@ class Client {
     };
     return this._createCommandPromise(command);
   }
+
   /**
    * Grab the parameter values for the given parameter
    * @param {string} datasetId

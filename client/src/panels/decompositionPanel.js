@@ -4,6 +4,10 @@ import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormGroup from '@material-ui/core/FormGroup';
 import Histogram from './histogram';
 import InputLabel from '@material-ui/core/InputLabel';
 import List from '@material-ui/core/List';
@@ -13,9 +17,12 @@ import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Select from '@material-ui/core/Select';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
+import {Button} from "@material-ui/core";
+import {ButtonGroup} from '@material-ui/core';
 
 /**
  * The Decomposition Panel component provides a display of the
@@ -29,59 +36,107 @@ class DecompositionPanel extends React.Component {
   constructor(props) {
     super(props);
 
-    this.handleDecompositionModeChange =
-        this.handleDecompositionModeChange.bind(this);
-    this.handleDecompositionCategoryChange =
-        this.handleDecompositionCategoryChange.bind(this);
-    this.handleDecompositionFieldChange =
-        this.handleDecompositionFieldChange.bind(this);
-    this.handlePersistenceLevelChange =
-        this.handlePersistenceLevelChange.bind(this);
-    this.handleSliderChange = this.handleSliderChange.bind(this);
-    this.handleSliderRelease = this.handleSliderRelease.bind(this);
-    this.handleCrystalToggle = this.handleCrystalToggle.bind(this);
-    this._getDecompositionFieldMenuItems =
-        this._getDecompositionFieldMenuItems.bind(this);
-    this.decompositionConfigValid = this.decompositionConfigValid.bind(this);
-    this.fetchDecomposition = this.fetchDecomposition.bind(this);
+    this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
 
     this.state = {
+      devMode: true,
+
+      datasetId: this.props.dataset.datasetId,
+
+      interpolationModel: 'pca',  /*hardcoded for darpa demo -> TODO: use actual models that are read just like decompositionField*/
+      model: {
+        sigma: 0.15,
+      },
+
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
-      decompositionField: null,
-      persistenceLevel: '',
-      minPersistence: null,
-      maxPersistence: null,
+      decompositionField: this.props.dataset.qoiNames ? this.props.dataset.qoiNames[0] : '',
+
+      ms: {
+        knn: 15,
+        sigma: 0.25,
+        smooth: 15.0,
+        curvepoints: 50,
+        depth: 20,
+        noise: true,
+        normalize: true,
+      },
+
+      // decomposition state
+      persistenceLevel: -1,
+      minPersistence: -1,
+      maxPersistence: -1,
       complexSizes: [],
       crystals: [],
-      sliderPersistence: null,
+      sliderPersistence: null,  // just some bogus thing to keep around to handle slider and pulldown updates
     };
 
     this.client = this.props.dsxContext.client;
   }
 
   /**
-   * Returns true if the configuration set is valid.
-   * @param {object} config
+   * Clear decomposition state
+   */
+  clearDecompositionState() {
+    this.setState({
+      persistenceLevel: -1,
+      minPersistence: -1,
+      maxPersistence: -1,
+      complexSizes: [],
+      crystals: [],
+      sliderPersistence: null,
+    });
+  }
+
+  /**
+   * Returns true if the current decomposoition configuration state is valid.
    * @return {boolean}
    */
-  decompositionConfigValid(config) {
-    // Currently only Morse-Smale is supported.
-    if (config.decompositionMode != 'Morse-Smale') {
-      if (config.decompositionMode == 'Shared-GP') {
-        console.log('validating Shared-GP decomposition model (even though it\'s not yet valid)');
-        return true;
+  decompositionConfigValid() {
+    const { decompositionMode, decompositionCategory, decompositionField } = this.state;
+
+    // Verify category (geometry and precomputed not yet supported)
+    if (!(decompositionCategory == 'parameter' ||
+          decompositionCategory == 'qoi')) {
+      console.log('decompositionPanel current configuration is invalid:\n\tcategory '+decompositionCategory+' not yet supported');
+      return false;
+    }
+
+    // Ensure a field is selected
+    if (!decompositionField) {
+      console.log('decompositionPanel current configuration is invalid:\n\tno field selected');
+      return false;
+    }
+
+    // validate current decomposition mode and its parameters
+    if (decompositionMode === 'Morse-Smale') {
+      const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+      if (knn < 0) {
+        console.log('current M-S configuration is invalid:\n\tknn must be >= 0');
+        return false;
       }
+      if (sigma < 0.0) {
+        console.log('current M-S configuration is invalid:\n\tsigma must be >= 0');
+        return false;
+      }
+      if (smooth < 0.0) {
+        console.log('current M-S configuration is invalid:\n\tsmooth must be >= 0');
+        return false;
+      }
+      if (depth <= 0 && depth != -1) {
+        console.log('current M-S configuration is invalid:\n\must compute at least one (depth > 0) or all (-1) persistence levels');
+        return false;
+      }
+      if (curvepoints < 3) {
+        console.log('current M-S configuration is invalid:\n\curvepoints must be >= 3');
+        return false;
+      }
+    }
+    else {
+      console.log('decompositionPanel current configuration is invalid:\n\tunknown mode: '+decompositionMode);
       return false;
     }
-    // Geometry and Precomputation not yet supported.
-    if (!(config.decompositionCategory == 'parameter' ||
-          config.decompositionCategory == 'qoi')) {
-      return false;
-    }
-    if (!config.decompositionField) {
-      return false;
-    }
+
     return true;
   }
 
@@ -89,19 +144,46 @@ class DecompositionPanel extends React.Component {
    * Fetch the morse smale complex persistence for the given options.
    */
   async fetchDecomposition() {
-    let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-    let datasetId = this.props.dataset.datasetId;
-    let category = this.state.decompositionCategory;
-    let field = this.state.decompositionField;
-    let result = await this.client.fetchMorseSmalePersistence(datasetId, category, field, k);
-    this.setState({
-      minPersistence: result.minPersistenceLevel,
-      maxPersistence: result.maxPersistenceLevel,
-      complexSizes: result.complexSizes,
-      sliderPersistence: result.maxPersistenceLevel,
-      persistenceLevel: ('' + result.maxPersistenceLevel),
-    });
-    this.updateDataModel('' + result.maxPersistenceLevel);
+    if (this.decompositionConfigValid())
+    {
+      if (this.state.decompositionMode == 'Morse-Smale') {
+        let datasetId = this.state.datasetId;
+        let category = this.state.decompositionCategory;
+        let field = this.state.decompositionField;
+        const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+field+' from server...\n');
+        await this.client.fetchMorseSmaleDecomposition(datasetId, category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+          .then(function(result) {
+            if (!result.error) {
+              // console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
+              //             +result.minPersistenceLevel+',Mp:'+result.maxPersistenceLevel+',cs:'+result.complexSizes+')\n');
+              this.setState({
+                minPersistence: result.minPersistenceLevel,
+                maxPersistence: result.maxPersistenceLevel,
+                complexSizes: result.complexSizes,
+                sliderPersistence: result.maxPersistenceLevel,
+                persistenceLevel: result.maxPersistenceLevel});
+              // not calling updateDataModel since componentDidUpdate calls it
+            }
+            else {
+              console.log('decompositionPanel.fetchDecomposition: fetch decomposition from server failed:\n\t'+result.error_msg);
+            }
+          }.bind(this));
+      }
+      else {
+        console.log('decompositionPanel.fetchDecomposition: \n\tunknown decomposition mode: '+this.state.decompositionMode);
+        this.clearDecompositionState();
+      }
+    }
+    else {
+      console.log('decompositionPanel.fetchDecomposition: \n\tinvalid decomposition parameters');
+      this.clearDecompositionState();
+    }
+  }
+  
+  componentDidMount() {
+    // console.log('decompositionPanel component mounted: fetching decomposition');
+    this.fetchDecomposition();
   }
 
   /**
@@ -111,21 +193,38 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
+    // overview: - when component state updates, fetch the new decomposition only if the mode or field changes
+    //           - category triggers a field change, so doesn't need to be checked here
+    //           - if ms params change, don't recompute unless user clicks the button to do so
+
     if (prevState.decompositionMode !== this.state.decompositionMode ||
-        prevState.decompositionCategory !== this.state.decompositionCategory ||
         prevState.decompositionField !== this.state.decompositionField) {
-      let config = {
-        decompositionMode: this.state.decompositionMode,
-        decompositionCategory: this.state.decompositionCategory,
-        decompositionField: this.state.decompositionField,
-      };
-      if (this.decompositionConfigValid(config)) {
-        console.log('ready to fetch decomposition');
-        this.fetchDecomposition();
-      }
+      //console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
+      this.fetchDecomposition();
+    }
+    else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
+      console.log('Persistence level changed from '+prevState.persistenceLevel+' to '+this.state.persistenceLevel+', updating data model...');
+      this.updateDataModel();
+    }
+    else {
+      //console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
     }
   }
 
+  /**
+   * Passes config changes up the line.
+   */
+  updatePropsConfig() {
+    this.props.onDecompositionChange({
+      datasetId: this.state.datasetId,
+      decompositionMode: this.state.decompositionMode,
+      decompositionCategory: this.state.decompositionCategory,
+      decompositionField: this.state.decompositionField,
+      k: this.state.ms.knn,
+      persistenceLevel: this.state.persistenceLevel,
+    });
+  }
+  
   /**
    * Handles when the decomposition combo is changed.
    * @param {Event} event
@@ -135,33 +234,76 @@ class DecompositionPanel extends React.Component {
     this.setState({
       decompositionMode: mode,
     });
+  }
 
-    if (mode == 'Morse-Smale') {
-      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
-      let category = this.state.decompositionCategory;
-      let field = this.state.decompositionField;
-      this.client.fetchMorseSmalePersistence(datasetId, category, field, k)
-        .then(function(result) {
-          this.setState({
-            minPersistence: result.minPersistenceLevel,
-            maxPersistence: result.maxPersistenceLevel,
-            complexSizes: result.complexSizes,
-            sliderPersistence: result.maxPersistenceLevel,
-            persistenceLevel: ('' + result.maxPersistenceLevel),
-          });
-          this.updateDataModel('' + result.maxPersistenceLevel);
-        }.bind(this));
-    } else {
-      this.setState({
-        minPersistence: null,
-        maxPersistence: null,
-        crystals: [],
-      });
-      if (this.props.onDatasetChange) {
-        this.props.onDatasetChange(null);
-      }
-    }
+  handleMSknnChange(event) {
+    let neighborhoodSize = parseInt(event.target.value);
+    if (!isNaN(neighborhoodSize))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, knn:neighborhoodSize },
+      }));
+  }
+
+  handleMSSigmaChange(event) {
+    let sigma = parseFloat(event.target.value);
+    if (!isNaN(sigma))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, sigma:sigma },
+      }));
+  }
+
+  handleMSSmoothChange(event) {
+    let smooth = parseFloat(event.target.value);
+    if (!isNaN(smooth))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, smooth:smooth },
+      }));
+  }
+
+  handleMSCurvePointsChange(event) {
+    let curvepoints = parseInt(event.target.value);
+    if (!isNaN(curvepoints))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, curvepoints:curvepoints },
+      }));
+  }
+
+  handleMSDepthChange(event) {
+    let persistenceDepth = parseInt(event.target.value);
+    if (!isNaN(persistenceDepth))
+      this.setState((prevState) => ({
+        ms: { ...prevState.ms, depth:persistenceDepth },
+      }));
+  }
+
+  handleMSNoiseChange(event) {
+    let addNoise = event.target.checked;
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, noise:addNoise },
+    }));
+  }
+
+  handleMSNormalizeChange(event) {
+    let normalize = event.target.checked;
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, normalize:normalize },
+    }));
+  }
+
+  handleRecomputeMorseSmale() {
+    this.fetchDecomposition();
+  }
+
+  handleExportMorseSmale() {
+    console.log('Dumping the ms object (TODO)...');
+  }
+
+  handleModelSigmaChange(event) {
+    let sigma = event.target.value;
+    if (!isNaN(sigma))
+      this.setState((prevState) => ({
+        model: { ...prevState.model, sigma:sigma },
+      }));
   }
 
   /**
@@ -187,34 +329,53 @@ class DecompositionPanel extends React.Component {
   }
 
   /**
+   * Handle the interpolation model changing.
+   * @param {object} event
+   */
+  handleInterpolationModelChange(event) {
+    let model = event.target.value;
+    this.setState({
+      interpolationModel: model,
+    });
+  }
+
+  /**
    * Updates state when active persistence level changes.
    * @param {string} level
    */
   async updateDataModel(level) {
-    if (level != '') {
-      let k = 15; // num nearest neighbors to consider when generating M-S complex for a dataset
-      let datasetId = this.props.dataset.datasetId;
-      let persistenceLevel = parseInt(level);
-      let category = this.state.decompositionCategory;
-      let field = this.state.decompositionField;
-      let result = await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, k, persistenceLevel);
-
-      this.setState({
-        crystals: result.complex.crystals,
-      });
-
-      this.props.onDecompositionChange({
-        datasetId: result.datasetId,
-        decompositionMode: this.state.decompositionMode,
-        decompositionCategory: this.state.decompositionCategory,
-        decompositionField: this.state.decompositionField,
-        k: result.k,
-        persistenceLevel: result.persistenceLevel,
-      });
-    } else {
-      this.setState({
-        crystals: [],
-      });
+    let persistenceLevel = this.state.persistenceLevel;
+    if (persistenceLevel >= this.state.minPersistence && persistenceLevel <= this.state.maxPersistence) {
+      if (this.state.decompositionMode == 'Morse-Smale') {
+        // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition (fixme)
+        let datasetId = this.state.datasetId;
+        let category = this.state.decompositionCategory;
+        let field = this.state.decompositionField;
+        const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistenceLevel+' of decomposition...\n');
+        await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+          .then(function(result) {
+            if (!result.error) {
+              this.setState({
+                crystals: result.complex.crystals,
+              });
+              this.updatePropsConfig();
+              //console.log('decompositionPanel.updateDataModel succeeded. Props config updated.');
+            }
+            else {
+              this.setState({ crystals: [] });
+              console.log('decompositionPanel.updateDataModel failed: \n\t'+result.error_msg);
+            }
+          }.bind(this));
+      }
+      else {
+        console.log('decompositionPanel.updateDataModel failed: \n\tunknown decomposition mode');
+        this.setState({ crystals: [] });
+      }
+    }
+    else {
+      console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel ('+persistenceLevel+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
+      this.setState({ crystals: [] });
     }
   }
 
@@ -225,34 +386,31 @@ class DecompositionPanel extends React.Component {
   handlePersistenceLevelChange(event) {
     let level = event.target.value;
     this.setState({
-      persistenceLevel: level,
+      persistenceLevel: parseInt(level),
       sliderPersistence: level,
     });
-
-    this.updateDataModel(level);
   }
 
   /**
    * Handles when the persistence slider is changed.
    * @param {Event} event
    */
-  handleSliderChange(event) {
+  handlePersistenceSliderChange(event) {
     let value = event.target.value;
     this.setState({
       sliderPersistence: value,
     });
   }
-
+  
   /**
    * Handles when the user releases control of the persistence slider.
    * @param {Event} event
    */
-  handleSliderRelease(event) {
+  handlePersistenceSliderRelease(event) {
     if (this.state.sliderPersistence != this.state.persistenceLevel) {
       this.setState({
-        persistenceLevel: '' + this.state.sliderPersistence,
+        persistenceLevel: parseInt(this.state.sliderPersistence),
       });
-      this.updateDataModel('' + this.state.sliderPersistence);
     }
   }
 
@@ -302,10 +460,8 @@ class DecompositionPanel extends React.Component {
   render() {
     const { classes } = this.props;
     let persistenceLevels = [];
-    if (this.state.minPersistence != null
-        && this.state.maxPersistence != null) {
-      for (let i=this.state.maxPersistence;
-        i >= this.state.minPersistence; i--) {
+    if (this.state.minPersistence >= 0 && this.state.maxPersistence >= this.state.minPersistence) {
+      for (let i=this.state.maxPersistence; i >= this.state.minPersistence; i--) {
         persistenceLevels.push(i);
       }
     }
@@ -321,47 +477,21 @@ class DecompositionPanel extends React.Component {
           boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', flexDirection: 'column',
             width: '100%', boxSizing: 'border-box' }}>
-            <FormControl className={classes.formControl}
-              disabled={!this.props.enabled}
-              style={{ width: '100%',
-                boxSizing: 'border-box',
-                paddingRight: '10px' }}>
-              <InputLabel htmlFor='mode-field'>Mode</InputLabel>
-              <Select ref="decompositionCombo"
-                disabled={!this.props.enabled || !this.props.dataset}
-                value={this.state.decompositionMode}
-                style={{ width:'100%' }}
-                onChange={this.handleDecompositionModeChange}
-                inputProps={{
-                  name: 'mode',
-                  id: 'mode-field',
-                }}>
-                <MenuItem value='Morse-Smale'>
-                  <em>Morse-Smale</em>
-                </MenuItem>
-                <MenuItem value='Shared-GP' disabled={false}>
-                  <em>Shared-GP</em>
-                </MenuItem>
-                <MenuItem value='Shape-Odds' disabled={true}>
-                  <em>Infinite Shape-Odds</em>
-                </MenuItem>
-              </Select>
-            </FormControl>
 
-            { /* Decomposition Category Dropdown */ }
+            { /* Field Category (Decomposition) Dropdown */ }
             <FormControl className={classes.formControl}
               disabled={!this.props.enabled || !this.props.dataset}>
               <InputLabel htmlFor='category-input'>Field Category</InputLabel>
               <Select ref="categoryCombo"
                 value={this.state.decompositionCategory || ''}
-                onChange={this.handleDecompositionCategoryChange} inputProps={{
+                onChange={this.handleDecompositionCategoryChange.bind(this)} inputProps={{
                   name: 'category',
                   id: 'category-input',
                 }}>
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="parameter" disabled={false}>
+                <MenuItem value="parameter">
                   <em>Parameter</em>
                 </MenuItem>
                 <MenuItem value="geometry" disabled={true}>
@@ -376,14 +506,14 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
 
-            { /* Decomposition Field Dropdown */ }
+            { /* Field Dropdown */ }
             <FormControl className={classes.formControl}
               disabled={ !this.props.enabled || !this.props.dataset
                 || !this.state.decompositionCategory}>
               <InputLabel htmlFor='field-input'>Field</InputLabel>
               <Select ref="fieldCombo"
                 value={this.state.decompositionField || ''}
-                onChange={this.handleDecompositionFieldChange} inputProps={{
+                onChange={this.handleDecompositionFieldChange.bind(this)} inputProps={{
                   name: 'field',
                   id: 'field-input',
                 }}>
@@ -396,6 +526,179 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
 
+            {/* Partitioning Algorithm */ }
+            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={false}
+                            style={{ paddingLeft:'0px', margin:'1px' }}>
+              <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
+                <Typography>Partitioning</Typography>
+              </ExpansionPanelSummary>
+              <ExpansionPanelDetails style={{ paddingLeft: '0px',
+                                     paddingRight: '10px', margin: '1px', width: '100%',
+                                     boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column',
+                     width: '100%', boxSizing: 'border-box' }}>
+
+                  <FormControl className={classes.formControl}
+                               disabled={!this.props.enabled}
+                               style={{ width: '100%',
+                               boxSizing: 'border-box',
+                               paddingRight: '10px' }}>
+                    <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
+                    <Select ref="decompositionCombo"
+                            disabled={!this.props.enabled || !this.props.dataset}
+                            value={this.state.decompositionMode}
+                            style={{ width:'100%' }}
+                            onChange={this.handleDecompositionModeChange.bind(this)}
+                            inputProps={{
+                            name: 'mode',
+                            id: 'mode-field',
+                            }}>
+                      <MenuItem value='Morse-Smale'>
+                        <em>Morse-Smale</em>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* K Nearest Neighbors */}
+                  <TextField
+                    label="Neighborhood Size"
+                    id="ms-knn"
+                    defaultValue={this.state.ms.knn}
+                    size="small"
+                    type="number"
+                    InputProps={{ inputProps: { min: 1 } }}
+                    onChange={this.handleMSknnChange.bind(this)}
+                    />
+
+                  {/* Sigma */}
+                  <TextField
+                    label="Smooth Curves"
+                    id="ms-sigma"
+                    defaultValue={this.state.ms.sigma}
+                    size="small"
+                    onChange={this.handleMSSigmaChange.bind(this)}
+                    />
+
+                  {/* Smooth */}
+                  <TextField
+                    label="Smooth Topology"
+                    id="ms-smooth"
+                    defaultValue={this.state.ms.smooth}
+                    size="small"
+                    onChange={this.handleMSSmoothChange.bind(this)}
+                    />
+
+                  {/* Depth */}
+                  <TextField
+                    label="Persistence Depth"
+                    id="ms-depth"
+                    defaultValue={this.state.ms.depth}
+                    size="small"
+                    type="number"
+                    InputProps={{ inputProps: { min: -1 } }}
+                    onChange={this.handleMSDepthChange.bind(this)}
+                    />
+
+                  {/* Curve points */}
+                  <TextField
+                    label="Crystal curve points"
+                    id="ms-curvepoints"
+                    defaultValue={this.state.ms.curvepoints}
+                    size="small"
+                    type="number"
+                    InputProps={{ inputProps: { min: 3 } }}
+                    onChange={this.handleMSCurvePointsChange.bind(this)}
+                    />
+
+                  {/* checkboxes */}
+                  <FormControl component="fieldset" >
+                    {/* <FormLabel component="legend">Field</FormLabel> */}
+                    <FormGroup>
+                      {/* Add noise */}
+                      <FormControlLabel
+                        control={<Checkbox checked={this.state.ms.noise} 
+                                           onChange={this.handleMSNoiseChange.bind(this)}
+                                           name="msNoiseCheckbox" />}
+                        label="Add noise"
+                        />
+
+                      {/* Scale normalize */}
+                      <FormControlLabel
+                        control={<Checkbox checked={this.state.ms.normalize} 
+                                           onChange={this.handleMSNormalizeChange.bind(this)}
+                                           name="msNormalizeCheckbox" />}
+                        label="Normalize"
+                        />
+                    </FormGroup>
+                    <FormHelperText>Field</FormHelperText>
+                  </FormControl>
+
+                  { /* Buttons to recompute M-S and dump crystal partitions to disk */}
+                  { /* <ButtonGroup orientation="vertical" >  (available in material-ui v4) */ }
+                    { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute</Button> }
+                    { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export</Button> }
+                  { /* </ButtonGroup> */ }
+                </div>
+              </ExpansionPanelDetails>
+            </ExpansionPanel>
+
+            { /* Interpolation Model Selection */}
+            <ExpansionPanel disabled={!this.props.enabled} defaultExpanded={false}
+                            style={{ paddingLeft:'0px', margin:'1px' }}>
+              <ExpansionPanelSummary expandIcon={ <ExpandMoreIcon/> }>
+                <Typography>Interpolation</Typography>
+              </ExpansionPanelSummary>
+              <ExpansionPanelDetails style={{ paddingLeft: '0px',
+                                     paddingRight: '10px', margin: '1px', width: '100%',
+                                     boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column',
+                     width: '100%', boxSizing: 'border-box' }}>
+
+
+                  <FormControl className={classes.formControl}
+                               disabled={!this.props.enabled}
+                               style={{ width: '100%',
+                               boxSizing: 'border-box',
+                               paddingRight: '10px' }}>
+                    <InputLabel htmlFor='model-field'>Model</InputLabel>
+                    <Select ref="interpolationCombo"
+                            disabled={!this.props.enabled || !this.props.dataset}
+                            value={this.state.interpolationModel || ''}
+                            style={{ width:'100%' }}
+                            onChange={this.handleInterpolationModelChange.bind(this)} 
+                            inputProps={{
+                            name: 'model',
+                            id: 'model-field',
+                            }}>
+                      <MenuItem value='None'>
+                        <em>None</em>
+                      </MenuItem>
+                      <MenuItem value='pca'>
+                        <em>PCA</em>
+                      </MenuItem>
+                      <MenuItem value='shapeodds'>
+                        <em>ShapeOdds</em>
+                      </MenuItem>
+                      <MenuItem value='sharedgp' disabled={true}>
+                        <em>Shared-GP</em>
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
+                  <TextField
+                    label="sigma bandwidth"
+                    id="model-sigma"
+                    defaultValue={this.state.model.sigma}
+                    size="small"
+                    onChange={this.handleModelSigmaChange.bind(this)}
+                    />
+
+                </div>
+              </ExpansionPanelDetails>
+            </ExpansionPanel>
+
+            { /* Histogram of data partitions (each consisting of n subpartitions) */ }
             <div style={{ height:'15px' }}></div>
             {
               persistenceLevels.length > 0 ? [
@@ -405,8 +708,8 @@ class DecompositionPanel extends React.Component {
                   min={this.state.minPersistence}
                   max={this.state.maxPersistence}
                   value={this.state.sliderPersistence}
-                  onChange={this.handleSliderChange}
-                  onMouseUp={this.handleSliderRelease}
+                  onChange={this.handlePersistenceSliderChange.bind(this)}
+                  onMouseUp={this.handlePersistenceSliderRelease.bind(this)}
                   style={{ width: '190px', height: '15px', borderRadius: '5px',
                     background: '#d3d3d3', outline: 'none', opacity: '0.7',
                     transition: 'opacity .2s', paddingLeft: '0px',
@@ -425,7 +728,7 @@ class DecompositionPanel extends React.Component {
                   <Select ref="persistenceCombo"
                     style={{ width:'100%' }}
                     value={this.state.persistenceLevel}
-                    onChange={this.handlePersistenceLevelChange}
+                    onChange={this.handlePersistenceLevelChange.bind(this)}
                     inputProps={{
                       name: 'persistence',
                       id: 'persistence-field',
@@ -453,7 +756,7 @@ class DecompositionPanel extends React.Component {
                 this.state.crystals.map((crystal, i) => (
                   <ListItem key={i} style={{ padding:'1px' }}
                     dense button
-                    onClick={() => this.handleCrystalToggle(i)}>
+                    onClick={() => this.handleCrystalToggle(i).bind(this)}>
                     <Checkbox checked={!this.state.crystals[i].isDisabled}
                       tabIndex={-1} disableRipple
                       color="primary" style={{ paddingLeft:0 }}/>

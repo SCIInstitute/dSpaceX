@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { SpriteMaterial } from 'three/src/materials/SpriteMaterial.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
-import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
+import _ from 'lodash';
 
 /**
  * Creates Morse-Smale decomposition
@@ -21,6 +20,10 @@ class MorseSmaleWindow extends React.Component {
     this.unselectedOpacity = 0.80;
     this.numInterpolants = 51; // how many samples to generate using current model [to fill drawer]
 
+    this.state = {
+      selectingCrystal: false,
+    };
+
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
@@ -31,8 +34,10 @@ class MorseSmaleWindow extends React.Component {
     this.toggleCamera = this.toggleCamera.bind(this);
 
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
-    this.handleMouseRelease = this.handleMouseRelease.bind(this);
-    this.handleMouseMove = this.handleMouseMove.bind(this);
+    // this.handleMouseMove = this.handleMouseMove.bind(this); // todo: need to consolidate with onMouseMove
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
 
     this.pick = this.pick.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -43,7 +48,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.resetScene = this.resetScene.bind(this);
     this.resetBounds = this.resetBounds.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
@@ -56,9 +60,9 @@ class MorseSmaleWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.msCanvas.addEventListener('mousedown', this.handleMouseRelease, { passive:true }); // todo: selection/rotation conflict
+    this.refs.msCanvas.addEventListener('mousedown', this.onMouseDown);
   }
 
   /**
@@ -74,10 +78,6 @@ class MorseSmaleWindow extends React.Component {
       return;
     }
 
-    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas(null);
-    }
-
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
@@ -90,10 +90,16 @@ class MorseSmaleWindow extends React.Component {
         this.client.fetchMorseSmaleExtrema(datasetId, category, field, k, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
-        this.regressionCurves = regressionResponse;
-        this.addRegressionCurvesToScene(regressionResponse);
-        this.addExtremaToScene(extremaResponse.extrema);
-        this.renderScene();
+        if (!regressionResponse.error && !extremaResponse.error) {
+          this.regressionCurves = regressionResponse;
+          this.addRegressionCurvesToScene(regressionResponse);
+          this.addExtremaToScene(extremaResponse.extrema);
+          this.renderScene();
+        }
+        else {
+          console.log('morseSmaleWindow.componentDidUpdate error:\n\t regressionResponse: '
+                      +regressionResponse.error_msg+'\n\t extremaResponse: '+extremaResponse.error_msg);
+        }
       });
     }
   }
@@ -108,8 +114,45 @@ class MorseSmaleWindow extends React.Component {
 
     window.removeEventListener('resize', this.resizeCanvas);
     window.removeEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.msCanvas.removeEventListener('mousedown', this.handleMouseRelease);
+    this.refs.msCanvas.removeEventListener('mousedown', this.onMouseDown);
   }
+
+  /**
+   * mousedown starts a potential crystal select
+   */
+  onMouseDown(event) {
+    this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
+
+    // if left button clicked start a potential crystal selection action
+    if (event.button === 0)
+      this.setState({ selectingCrystal:true });
+  }
+  
+  /**
+   * mousemove ends a potential crystal so rotations don't accidentally select a crystal
+   */
+  onMouseMove(event) {
+    this.setState({ selectingCrystal:false });
+
+    // can release these event handlers now since orbit controls handles camera
+    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+  }
+
+  /**
+   * mouseup potentially selects a crystal
+   */
+  onMouseUp(event) {
+    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+    
+    // Handle left click release
+    if (this.state.selectingCrystal && event.button === 0) {
+      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/);
+    }
+  }
+
 
   /**
    * If any of the decomposition settings have changed returns true
@@ -145,6 +188,9 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the renderer, camera, and scene for Three.js.
    */
   init() {
+    //<ctc> debugging vars
+    this.nResizes = 0;
+
     // canvas
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
@@ -216,8 +262,9 @@ class MorseSmaleWindow extends React.Component {
    * This can happen on a window resize or when another window is added to dSpaceX.
    * @param {boolean} newWindowAdded
    */
-  resizeCanvas(event) {
+  resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+    //console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
 
     // update camera
     this.updateCamera(width, height);
@@ -227,21 +274,6 @@ class MorseSmaleWindow extends React.Component {
 
     // Redraw scene with updates
     this.renderScene();
-  }
-
-  /**
-   * Event handling for mouse click
-   * @param {Event} event
-   *
-   * // todo: selection/rotation conflict -> should listen for mouseup, but currently tied to mousedown.
-   */
-  handleMouseRelease(event) {
-    // Handle left click release
-    if (event.button === 0) {
-      const position = this.getPickPosition(event);
-      if (this.pick(position, event.ctrlKey)) // click w/ ctrl held down to produce model's original samples
-        event.stopPropagation(); // release the event if this picks something // todo: doesn't seem to work as event still goes to controller
-    }
   }
 
   /**
@@ -501,11 +533,12 @@ class MorseSmaleWindow extends React.Component {
    */
   addRegressionCurvesToScene(regressionData) {
     regressionData.curves.forEach((rCurve, index) => {
+      // Use midpoint as curve position to ensure transparency sorting has better odds of working,
+      // since conflicts arise when using first or last point, bounding box, etc.
       let numPts = rCurve.points.length;
-
-      // Use this as curve position to ensure transparency sorting has better odds of working.
-      // NOTE: conflicts arise when using first or last point, bounding box, the most extreme point, etc, so midpoint is the compromise.
-      let midPoint = new THREE.Vector3(rCurve.points[numPts/2][0], rCurve.points[numPts/2][1], rCurve.points[numPts/2][2]);
+      let midPoint = new THREE.Vector3(rCurve.points[Math.floor(numPts/2)][0],
+                                       rCurve.points[Math.floor(numPts/2)][1],
+                                       rCurve.points[Math.floor(numPts/2)][2]);
 
       let curvePoints = [];
       rCurve.points.forEach((regressionPoint) => {
@@ -645,12 +678,7 @@ class MorseSmaleWindow extends React.Component {
    * updateOrthoCamera
    */
   updateOrthoCamera(width, height) {
-    let sx = 1, sy = 1;
-    if (width > height) {
-      sx = width/height;
-    } else {
-      sy = height/width;
-    }
+    let sx = width / height, sy = 1;
     this.orthoCamera.left   = -4*sx;
     this.orthoCamera.right  = 4*sx;
     this.orthoCamera.top    = 4*sy;
@@ -663,9 +691,9 @@ class MorseSmaleWindow extends React.Component {
    * updatePerspCamera
    */
   updatePerspCamera(width, height) {
-    this.perspCamera.aspect = width / height;
+    this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
   }
-  
+
   /**
    * updateCamera
    */
@@ -738,9 +766,7 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(null)}>
-        <canvas ref='msCanvas' style={style} />
-      </ReactResizeDetector>);
+        <canvas ref='msCanvas' style={style} />);
   }
 }
 

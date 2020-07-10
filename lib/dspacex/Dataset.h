@@ -28,6 +28,10 @@ class Dataset {
     return m_embeddings.size();
   }
 
+  int numberOfModels() {
+    return m_msModels.size();
+  }
+
   bool hasSamplesMatrix() {
     return m_hasSamplesMatrix;
   }
@@ -58,6 +62,10 @@ class Dataset {
 
   std::vector<std::string>& getEmbeddingNames() {
     return m_embeddingNames;
+  }
+
+  std::vector<std::string>& getModelTypes() {
+    return m_modelTypes;
   }
 
   FortranLinalg::DenseVector<Precision>& getParameterVector(int i) {
@@ -98,7 +106,7 @@ class Dataset {
     Builder& withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter);
     Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi);
     Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding);
-    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model);  // <ctc> auto ms_model?
+    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model);
     Builder& withName(std::string name);
     Builder& withThumbnails(std::vector<Image> thumbnails);
     
@@ -116,10 +124,8 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  // todo: they're not msModels, just msComplexes (one per field, image, and parameter) whose crystals might have predictive models (e.g., ShapeOdds, SharedGP).
-  // todo: there may even be predictive models not associated with any m-s complex
-  // todo: maybe these should be renamed to EmbeddingModel or something like that... except a model just happens to be associated with a m-s embedding, so PredictiveModel is better
-  std::vector<dspacex::MSComplex> m_msModels;  
+  std::vector<std::string> m_modelTypes;      // PCA, ShapeOdds, SharedGP, etc                                 
+  std::vector<dspacex::MSComplex> m_msModels; // models associated with crystals in a Morse-Smale decomposition 
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

@@ -26,7 +26,7 @@ let config = {
     compress: true,
     hot: true,
     host,
-    port: 3000,
+    port: 3000, // select a different port by adding `-- --port <num>` (ex: `npm start -- --port 3001`)
     publicPath: '/build/',
   },
   module: {

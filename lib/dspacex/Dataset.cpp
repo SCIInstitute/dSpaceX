@@ -1,5 +1,7 @@
 #include "Dataset.h"
 
+#include <algorithm>
+
 using namespace dspacex;
 
 bool Dataset::valid() const
@@ -85,7 +87,18 @@ Dataset::Builder& Dataset::Builder::withEmbedding(std::string name, FortranLinal
   return (*this);
 }
 
-Dataset::Builder& Dataset::Builder::withMSModel(std::string name, dspacex::MSComplex ms_model) {  // <ctc> auto ms_model?
+Dataset::Builder& Dataset::Builder::withMSModel(std::string name, dspacex::MSComplex ms_model) {
+
+  // TODO: add model types as they're read rather than hardcoding them here
+
+  // only add model type if it doesn't already exist
+  std::vector<std::string> types{"ShapeOdds", "PCA", "SharedGP"};
+  for (auto type : types) {
+    auto it = std::find(m_dataset->m_modelTypes.begin(), m_dataset->m_modelTypes.end(), type);
+    if (it != m_dataset->m_modelTypes.end())
+      m_dataset->m_modelTypes.push_back(type);
+  }
+  
   m_dataset->m_msModelFields.push_back(name);
   m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
   return (*this);

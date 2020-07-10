@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import React from 'react';
-import ReactResizeDetector from 'react-resize-detector';
 import { withDSXContext } from '../dsxContext';
+import _ from 'lodash';
 
 /**
  * Create Graph Window
@@ -19,13 +19,13 @@ class EmbeddingWindow extends React.Component {
       renderThumbnails: false,
       colorThumbnails: false,
       thumbnailScale: 1,
+      selectingDesign: false,
     };
 
     // Used to zoom and translate embedding
     this.maxScale = 10;
     this.minScale = 1;
     this.zoomRate = 1.1;
-    this.rightMouseDown = false;
     this.previousX = 0;
     this.previousY = 0;
 
@@ -39,10 +39,10 @@ class EmbeddingWindow extends React.Component {
     this.addThumbnailsToScene = this.addThumbnailsToScene.bind(this);
     this.renderScene = this.renderScene.bind(this);
     this.resetScene = this.resetScene.bind(this);
-    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.handleMouseScrollEvent = this.handleMouseScrollEvent.bind(this);
     this.handleMouseDownEvent = this.handleMouseDownEvent.bind(this);
-    this.handleMouseMoveEvent = this.handleMouseMoveEvent.bind(this);
+    this.catchMouseMoveEvent = this.catchMouseMoveEvent.bind(this);
+    this.handleMouseMoveForPanning = this.handleMouseMoveForPanning.bind(this);
     this.handleMouseReleaseEvent = this.handleMouseReleaseEvent.bind(this);
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -53,12 +53,10 @@ class EmbeddingWindow extends React.Component {
    */
   componentDidMount() {
     this.init();
-    window.addEventListener('resize', this.resizeCanvas);
+    window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
-    this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent, { passive:true });
-    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent, { passive:true });
-    this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveEvent, { passive:true });
-    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+    this.refs.embeddingCanvas.addEventListener('wheel', this.handleMouseScrollEvent); // intentionally non-passive
+    this.refs.embeddingCanvas.addEventListener('mousedown', this.handleMouseDownEvent);
     this.refs.embeddingCanvas.addEventListener('contextmenu', (e) => e.preventDefault(), false);
   }
 
@@ -81,11 +79,6 @@ class EmbeddingWindow extends React.Component {
 
     if (this.props.embedding === undefined) {
       return;
-    }
-
-    // New window has been added to application
-    if (this.props.numberOfWindows !== prevProps.numberOfWindows) {
-      this.resizeCanvas(true);
     }
 
     // Decomposition is loaded for the first time
@@ -154,6 +147,9 @@ class EmbeddingWindow extends React.Component {
    * Initialized the renderer, camera, and scene for Three.js
    */
   init() {
+    //<ctc> debugging vars
+    this.nResizes = 0;
+
     // canvas
     let canvas = this.refs.embeddingCanvas;
     let gl = canvas.getContext('webgl');
@@ -163,13 +159,8 @@ class EmbeddingWindow extends React.Component {
     // camera
     let width = canvas.clientWidth;
     let height = canvas.clientHeight;
-    let sx = 1;
+    let sx = width / height;
     let sy = 1;
-    if (width > height) {
-      sx = width / height;
-    } else {
-      sy = height / width;
-    }
     this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
     this.camera.position.set(0, 0, 1);
 
@@ -367,38 +358,25 @@ class EmbeddingWindow extends React.Component {
    * This can happen on a window resize or when another window is added to dSpaceX.
    * @param {boolean} newWindowAdded
    */
-  resizeCanvas(newWindowAdded = true) {
+  resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
-
-    this.refs.embeddingCanvas.width = width;
-    this.refs.embeddingCanvas.height = height;
+    console.log('['+ this.nResizes++ +'] embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
 
     // Resize renderer
     this.renderer.setSize(width, height, false);
 
     // Resize camera
-    let sx = 1;
-    let sy = 1;
-    if (width > height) {
-      sx = width / height;
-    } else {
-      sy = height / width;
-    }
+    let sx = width / height;
+    let sy = 1;         // setting sx/sy consistently has most consistent result, esp when window is *slowly* resized
     this.camera.left = -1*sx;
     this.camera.right = sx;
     this.camera.top = sy;
     this.camera.bottom = -1*sy;
     this.camera.updateProjectionMatrix();
 
-    // By default (newWindowAdded = true in argument) redraws scene when new window is added.
-    // For the resizing event that comes from the ResizeablePanels in the embeddingMoreseSmaleWindows and is captured
-    // by the ReactResizeDetector in this window it is set to false. This is because of a race condition created by how
-    // quickly the scene would have to redraw when adjusting the panel size.
-    //if (newWindowAdded) { //<ctc> trying to figure out why last render clears screen (or screen is cleared after last render) -> this isn't it, but I took it out of morseSmaleWindow, so maybe also not important here
-      this.renderScene();
-  //}
-  }
+    this.renderScene();
+  };
 
   /**
    * Handles when the mouse is scrolled for increasing and decreasing
@@ -406,6 +384,7 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseScrollEvent(event) {
+    event.preventDefault(); // combined with non-passive event binding, doesn't scroll window when zooming
     if (event.deltaY > 0 && this.camera.zoom > -this.maxScale) {
       this.camera.zoom = this.camera.zoom / this.zoomRate;
     }
@@ -422,35 +401,55 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseDownEvent(event) {
-    let rightClick = 2;
-    if (event.button === rightClick) {
-      this.rightMouseDown = true;
-      this.previousX = event.offsetX;
-      this.previousY = event.offsetY;
+    this.refs.embeddingCanvas.addEventListener('mousemove', this.catchMouseMoveEvent);
+    this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
+
+    // if mouse gets released without moving, we'll try to select a design
+    this.setState({ selectingDesign:true });
+
+    // if mouse moves, translate viewpoint until released
+    this.previousX = event.offsetX;
+    this.previousY = event.offsetY;
+  }
+
+  /**
+   * Catches first mouse move event after mouse down to disable selection and enable panning
+   * If mouse is moving with a button down, don't try to select a design on mouseup.
+   */
+  catchMouseMoveEvent(event) {
+    // let some teeeeny movement slide
+    const allowed = 2;
+    let dx = this.previousX - event.offsetX;
+    let dy = this.previousY - event.offsetY;
+    if (Math.abs(dx + dy) > allowed) { 
+      this.setState({ selectingDesign:false });
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
+
+      // now we're panning, so let that function be used to (passively) handle mouse moves events after this
+      this.refs.embeddingCanvas.addEventListener('mousemove', this.handleMouseMoveForPanning, { passive:true });
+      this.handleMouseMoveForPanning(event);
     }
   }
 
   /**
-   * Handles mouse move event.
+   * Handles (passive) mouse move event for panning
    * Part of the embedding translation pipeline.
    * @param {object} event
    */
-  handleMouseMoveEvent(event) {
+  handleMouseMoveForPanning(event) {
     let canvas = this.refs.embeddingCanvas;
     let x = event.offsetX;
     let y = event.offsetY;
 
-    if (this.rightMouseDown) {
-      let dx = this.previousX - x;
-      let dy = y - this.previousY;
-      let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
-      let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
-      this.camera.translateX(scaleX * dx);
-      this.camera.translateY(scaleY * dy);
+    let dx = this.previousX - x;
+    let dy = y - this.previousY;
+    let scaleX = (this.camera.right - this.camera.left) / this.camera.zoom / canvas.clientWidth;
+    let scaleY = (this.camera.top - this.camera.bottom) / this.camera.zoom / canvas.clientHeight;
+    this.camera.translateX(scaleX * dx);
+    this.camera.translateY(scaleY * dy);
 
-      this.camera.updateProjectionMatrix();
-      this.renderScene();
-    }
+    this.camera.updateProjectionMatrix();
+    this.renderScene();
 
     this.previousX = x;
     this.previousY = y;
@@ -462,23 +461,28 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleMouseReleaseEvent(event) {
+    this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
+    if (this.state.selectingDesign)
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
+    else
+      this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveForPanning);
+
+    // handle left click release if we're selecting
     const leftClick = 0;
-    const rightClick = 2;
+    if (this.state.selectingDesign && event.button === leftClick) {
+      this.setState({ selectingDesign:false });
 
-    if (event.button === rightClick) {
-      this.rightMouseDown = false;
-    }
-
-    if (event.button === leftClick) {
       const pickPosition = this.getPickPosition(event);
       const pickedObject = this.pickHelper.pick(pickPosition,
         this.pickingScene,
         this.camera,
         this.renderer,
         this.idToObject);
+      let selectedDesignId = -1;
       if (pickedObject) {
-        this.props.onDesignSelection(event, pickedObject.name);
+        selectedDesignId = pickedObject.name;
       }
+      this.props.onDesignSelection(event, selectedDesignId);
     }
   }
 
@@ -558,9 +562,7 @@ class EmbeddingWindow extends React.Component {
       width: '100%',
     };
     return (
-      <ReactResizeDetector handleWidth handleHeight onResize={() => this.resizeCanvas(false)}>
-        <canvas ref='embeddingCanvas' style={style}/>
-      </ReactResizeDetector>);
+        <canvas ref='embeddingCanvas' style={style}/>);
   }
 }
 
