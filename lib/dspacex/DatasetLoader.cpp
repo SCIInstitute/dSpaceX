@@ -103,10 +103,10 @@ std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &filePath)
   }
 
   if (config["models"]) {
-    auto ms_models = DatasetLoader::parseMSModels(config, filePath);
-    for (auto ms_model : ms_models) {
-      builder.withMSModel(ms_model.first, ms_model.second);
-    }
+    auto modelmap = DatasetLoader::parseModels(config, filePath);
+    for (auto models : modelmap)
+      for (auto model : models.second)
+        builder.withModel(models.first, model);
   }
 
   if (config["thumbnails"]) {
@@ -382,63 +382,62 @@ EmbeddingPair DatasetLoader::parseEmbedding(
   return EmbeddingPair(name, embedding);
 }
 
-// There is a model for each crystal of each persistence level of a M-S complex... maybe too
-// much to read all at once, so only read them on demand? Anyway, for now just read them all.
+// There is a model for each crystal of each persistence level of a M-S complex...
+// TODO: too much to read all at once, so only read them on demand.
 //
-// This was the addition to the config.yaml for the dataset:
-//
-// models:  # seems a little tedious to write out list of models, or even a list of persistences. The latter can be determined from the CrystalPartitions csv, which can also indicate how many crystals each level contains (0-based in this file, but 1-based in each model's crystalIds.csv)
-//   - fieldname: maxStress
+// In the config.yaml for the dataset:
+//   - fieldname: Max Stress
 //     type: shapeodds                                            # could be shapeodds or sharedgp
 //     root: shapeodds_models_maxStress                           # directory of models for this field
 //     persistences: persistence-?                                # persistence files
 //     crystals: crystal-?                                        # in each persistence dir are its crystals
 //     padZeroes: false                                           # for both persistence and crystal dirs/files
-//     #format: csv   (just use extension of most files to determine format) # lots of csv files in each crystal: Z, crystalIds, W, wo
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
-//     embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
+//     embeddings: shapeodds_global_embedding.csv                 # global for each p-lvl, and local for each crystal
 //
-std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
+ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string &filePath)
 {
-  std::vector<MSModelsPair> ms_models;
+  ModelMap models;
 
-  if (!config["models"]) {
-    throw std::runtime_error("Dataset config missing 'models' field.");
-  }
-  const YAML::Node &modelsNode = config["models"];
+  if (config["models"] && config["models"].IsSequence()) {
+    const YAML::Node &modelsNode = config["models"];
+    std::cout << "Reading " << modelsNode.size() << " model sets..." << std::endl;
 
-  if (modelsNode.IsSequence()) {
-    // Parse Models one field at a time if in list form:
-    std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
-    for (std::size_t i = 0; i < modelsNode.size(); i++) {
+    for (auto i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-      ms_models.push_back(DatasetLoader::parseMSModelsForField(modelNode, filePath));
-    }
-  } else {
-    throw std::runtime_error("Config 'models' field is not a list.");
-  }
 
-  return ms_models;
+      auto modelset(DatasetLoader::parseModel(modelNode, filePath));  // TODO: only call this when model is requested
+      if (modelset)
+        models[modelset->getFieldname()].push_back(std::move(modelset));
+      else
+        std::cerr << "Unknown error reading " << i <<"th modelNode. Skipping it.\n";
+    }
+  }
+  else
+    std::cerr << "Config 'models' field missing or not a list.\n";
+
+  return models;
 }
 
-MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
-///*dspacex::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
+std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
 {
-  using namespace dspacex;
-
   if (!modelNode["fieldname"]) {
-    throw std::runtime_error("Model missing 'fieldname' field.");
+    std::cerr << "Model entry missing 'fieldname'.\n";
+    return nullptr;
   }
   std::string fieldname = modelNode["fieldname"].as<std::string>();
 
-  if (!modelNode["type"]) {
-    throw std::runtime_error("Model missing 'type' field.");
+  if (!modelNode["type"] || !modelNode["name"]) {
+    std::cerr << "Models must have 'name' and 'type' fields.\n";
+    return nullptr;
   }
-  std::string modelsType = modelNode["type"].as<std::string>();
-  std::cout << "Reading '" << modelsType << "' models for '" << fieldname << "' field." << std::endl;
+  Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
+  std::string modelName = modelNode["name"].as<std::string>();
+  std::cout << "Reading '" << modelName << "' " << modelType << " models for '" << fieldname << "' field." << std::endl;
 
   if (!modelNode["partitions"]) {
-     throw std::runtime_error("Model missing 'partitions' field (specifyies samples for the crystals at each persistence level) .");
+    std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
+    return nullptr;
   }
   std::string partitions = modelNode["partitions"].as<std::string>();
   std::string partitions_suffix = partitions.substr(partitions.rfind('.')+1);
@@ -446,7 +445,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
   std::cout << "Partitions file format: " << partitions_format << std::endl;
 
   if (!modelNode["embeddings"]) {
-     throw std::runtime_error("Missing 'embeddings' field (name of global embeddings for each persistence level's models).");
+    std::cerr << "Missing 'embeddings' field (name of global embeddings for each persistence level's models).\n";
+    return nullptr;
   }
   std::string embeddings = modelNode["embeddings"].as<std::string>();
   if (embeddings.empty() || embeddings == "None") {
@@ -459,19 +459,22 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
   }
   
   if (!modelNode["root"]) {
-    throw std::runtime_error("Model missing 'root' field.");
+    std::cerr << "Model missing 'root' field.\n";
+    return nullptr;
   }
   std::string modelsBasePath = basePathOf(filePath) + modelNode["root"].as<std::string>();
 
   if (!modelNode["persistences"]) {
-    throw std::runtime_error("Model missing 'persistences' field specifying base filename for persistence levels.");
+    std::cerr << "Model missing 'persistences' field specifying base filename for persistence levels.\n";
+    return nullptr;
   }
   std::string persistencesBase = modelNode["persistences"].as<std::string>();
   int persistenceNameLoc = persistencesBase.find('?');
   std::string persistencesBasePath = modelsBasePath + '/' + persistencesBase.substr(0, persistenceNameLoc);
 
   if (!modelNode["crystals"]) {
-    throw std::runtime_error("Model missing 'crystals' field specifying base filename for the crystals at each level.");
+    std::cerr << "Model missing 'crystals' field specifying base filename for the crystals at each level.\n";
+    return nullptr;
   }
   std::string crystalsBasename = modelNode["crystals"].as<std::string>();
   int crystalIndexLoc = crystalsBasename.find('?');
@@ -483,7 +486,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     if (padZeroes == "true") {
       shouldPadZeroes = true;
     } else if (padZeroes != "false") {
-      throw std::runtime_error("Model's padZeroes contains invalid value: " + padZeroes);
+      std::cerr << "Model's padZeroes contains invalid value: " << padZeroes << std::endl;
+      return nullptr;
     }
   }
 
@@ -497,7 +501,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
   {
     std::stringstream out("Crystal partitions file should be a csv, but it's a ");
     out << partitions_format;
-    throw std::runtime_error(out.str());
+    std::cerr << out.str() << std::endl;
+    return nullptr;
   }
   auto npersistences = crystalPartitions_eigen.rows();
   auto nsamples = crystalPartitions_eigen.cols();
@@ -505,11 +510,12 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
             << nsamples << " samples." << std::endl;
 
   // Now read all the models
-  MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
+  auto ms_of_models(std::make_unique<MSModelSet>(modelType, modelName, fieldname, nsamples, npersistences));
+  //for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
   //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
+  for (auto persistence = npersistences-1; false; ) { // just get the highest plvl
     unsigned persistence_idx = persistence;
-    MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
+    MSPersistenceLevel &P = ms_of_models->getPersistenceLevel(persistence_idx);
 
     // compute ncrystals for this persistence level using crystalPartitions
     unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
@@ -540,7 +546,8 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     } else {
       std::stringstream err;
       err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
-      throw std::runtime_error(err.str());
+      std::cerr << err.str() << std::endl;
+      return nullptr;
     }
 
     // read the model for each crystal at this persistence level
@@ -548,17 +555,17 @@ MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, c
     {
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      dspacex::MSCrystal &c = P.getCrystal(crystal);
-      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in dspacex::Model
-      parseModel(crystalPath, c.getModel());// todo: just store path here and read model on demand
+      MSCrystal &c = P.getCrystal(crystal);
+      c.getModel()->setFieldname(fieldname); // <ctc> see TODOs in Model
+      parseModel(crystalPath, *c.getModel());// todo: just store path here and read model on demand
     }
   }
 
-  return MSModelsPair(fieldname, std::move(ms_of_models));
+  return ms_of_models;
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
+void DatasetLoader::parseModel(const std::string &modelPath, Model &m)
 {
   // read W
   auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");

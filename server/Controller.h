@@ -52,22 +52,19 @@ class Controller {
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
-  void fetchModelsList(const Json::Value &request, Json::Value &response);
+  //  void fetchModelsList(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
-  void fetchAllForLatentSpaceUsingSharedGP(const Json::Value &request, Json::Value &response);
-  void fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
-  void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void regenOriginalImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
 
   const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
 
-  // todo: user shouldn't need this: a plvl is a plvl, so bury the details
-  int getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
+  int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSModelSet &mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;

@@ -7,6 +7,7 @@ SET(PMODELS_SOURCE_FILES
   ShapeOdds.cpp
   SharedGP.cpp
   MorseSmale.cpp
+  Models.cpp
 )
 
 ADD_LIBRARY(pmodels ${PMODELS_HEADER_FILES} ${PMODELS_SOURCE_FILES})

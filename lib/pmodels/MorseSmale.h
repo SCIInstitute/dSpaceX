@@ -4,7 +4,12 @@
 #include "utils/StringUtils.h"
 #include "Models.h"
 
+#include <map>
+
 namespace dspacex {
+
+class MSModelSet;
+using ModelMap = std::map<std::string, std::vector<std::shared_ptr<MSModelSet>>>;
 
 /// When a Morse-Smale complex is used to decompose/partition a dataset, the samples associated
 /// with each crystal at each persistence level can be used to learn a probabilistic
@@ -15,35 +20,18 @@ namespace dspacex {
 class MSCrystal
 {
 public:
-  void addSample(unsigned n)
-  {
-    model.addSample(n);
-  }
-
-  unsigned numSamples() const
-  {
-    return model.numSamples();
-  }
+  void addSample(unsigned n) { model->addSample(n); }          // TODO: fail gracefully if model doesn't exist
+  unsigned numSamples() const { return model->numSamples(); }
 
   const std::vector<Model::ValueIndexPair>& getSampleIndices() const
   {
-    return model.getSampleIndices();
+    return model->getSampleIndices();
   }
 
-  Model& getModel() //todo: return by model type since a crystal can have more than one model. Maybe have to return a pointer in case model doesn't exist. Could a crystal have more than one of the same type of model? Seems possible since differently-constructed models may want to be compared.
-  {
-    return model;  //todo: which model?
-  }
+  std::shared_ptr<Model> getModel() { return model; }
   
-  // void addModel(Model &m)
-  // {
-  //   models.append(m)
-  // }
-
 private:
-  // todo: there can be more than one model per crystal (say, one per qoi and one per design param and one per image/dt
-  // todo: the crystal probably shouldn't own the model(s) since they're technically independent of the crystal
-  Model model;
+  std::shared_ptr<Model> model;
 };
 
 
@@ -52,25 +40,11 @@ private:
 class MSPersistenceLevel
 {
 public:
-  void setNumCrystals(unsigned nCrystals)
-  {
-    crystals.resize(nCrystals);
-  }
-
-  unsigned numCrystals() const
-  {
-    return crystals.size();
-  }
-
-  MSCrystal& getCrystal(unsigned i)
-  {
-    return crystals[i];
-  }
+  void setNumCrystals(unsigned nCrystals) { crystals.resize(nCrystals); }
+  unsigned numCrystals() const { return crystals.size(); }
+  MSCrystal& getCrystal(unsigned i) { return crystals[i]; }
   
-  void setGlobalEmbeddings(const Eigen::MatrixXd &embeddings)
-  {
-    global_embeddings = embeddings;
-  }
+  void setGlobalEmbeddings(const Eigen::MatrixXd &embeddings) { global_embeddings = embeddings; }
 
   // each crystal is composed of a non-intersecting set of samples, read from this vector
   void setCrystalSamples(Eigen::MatrixXi &crystal_ids)
@@ -89,44 +63,39 @@ private:
 };
 
 
-// Associates a model with it's name (pXXcYY) // todo: this is an issue because there could be more than one model with the same name (in another MSComplex)
-typedef std::pair<std::string, Model&> ModelPair;
+// Associates a model with it's name (pXXcYY) // todo: this is an issue because there could be more than one model with the same name (in another MSModelSet)
+typedef std::pair<std::string, std::shared_ptr<Model>> ModelPair;
 
-/// MSComplex is a model container that inclues the parameters used to compute the M-S using
-/// NNMSComplex, as well as sub-containers of persistince levels and their crystals, which
-/// ultimately store the models of this complex.
-class MSComplex
+/// MSModelSet is a model container that stores one set of models for a given field and inclues
+/// the parameters used to compute the M-S using NNMSComplex, as well as sub-containers of
+/// persistince levels and their crystals, which ultimately store the models of this
+/// complex.
+class MSModelSet
 {
 public:
-  MSComplex(std::string &field, unsigned nSamples, unsigned nPersistences)
-    : fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
+  MSModelSet(Model::Type mtype, const std::string& mname, const std::string& field, unsigned nSamples, unsigned nPersistences)
+    : modeltype(mtype), modelname(mname), fieldname(field), num_samples(nSamples), persistence_levels(nPersistences)
   {}
 
-  std::string getFieldname() const
-  {
-    return fieldname;
-  }
+  auto modelType() const { return modeltype; }
+  auto modelName() const { return modelname; }
+  auto getFieldname() const { return fieldname; }
+  auto numSamples() const { return num_samples; }
+  auto numPersistenceLevels() const { return persistence_levels.size(); }
+  
+  MSPersistenceLevel& getPersistenceLevel(unsigned idx) { return persistence_levels[idx]; }
 
-  unsigned numSamples() const
-  {
-    return num_samples;
-  }
-
-  unsigned numPersistenceLevels() const
-  {
-    return persistence_levels.size();
-  }
-
-  MSPersistenceLevel& getPersistenceLevel(unsigned idx)
-  {
-    return persistence_levels[idx];
-  }
-
+  /// indicates the existence of a model at the specified crystal of the specified persistence level
   bool hasModel(unsigned p, unsigned c) const;
+
+  /// returns the model at the specified crystal of the specified persistence level
   ModelPair getModel(unsigned p, unsigned c);
+
+  /// returns all models
   std::vector<ModelPair> getAllModels();
 
   // TODO: add parameters used by NNMSComplex to create this so the complex can be predictively recomputed
+  //       this is especially important for the new preprocessed data pipeline
   //void addParams(...); //e.g., fieldname, persistenceLevel, knn, sigma, smooth, noise, numPersistences, numSamples, normalize
   //Params getParams() const;
   // TODO: store persistence range for this complex since not all levels have to be computed
@@ -137,8 +106,11 @@ private:
     return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
   }
 
+  Model::Type modeltype;            // type of models in this complex (pca, shapeodds, sharedgp, etc)
+  std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S
+        // TODO: add the other parameters used by NNMSComplex to create this so the complex can be recomputed
   std::vector<MSPersistenceLevel> persistence_levels;
 };
 

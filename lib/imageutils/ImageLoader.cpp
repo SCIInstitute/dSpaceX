@@ -19,8 +19,7 @@ Image ImageLoader::loadImage(const std::string &filename, ImageLoader::Format fo
   }
 }
 
-//<ctc> change this to use lodepng since it fails in some cases (Kyli has experienced these issues and had to manually convert images to a loadable form)
-
+// TODO: use lodepng since it fails in some cases, forcing devs to manually convert images to a loadable form
 Image ImageLoader::loadPNG(const std::string &filename) {
   int x, y;
   

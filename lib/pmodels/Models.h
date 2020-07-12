@@ -18,6 +18,16 @@ class Model
 {
 public:
 
+  enum Type { PCA, ShapeOdds, InfShapeOdds, SharedGP, None = 0 };
+  static Type strToType(const std::string& type)
+  {
+    if (type == "pca")          return PCA;
+    if (type == "shapeodds")    return ShapeOdds;
+    if (type == "infshapeodds") return InfShapeOdds;
+    if (type == "sharedgp")     return SharedGP;
+    return None;
+  }
+  
   // fieldvalue and the index of its sample in the full set of samples for this dataset
   struct ValueIndexPair
   {
@@ -157,6 +167,8 @@ public:
   }
 
 private:
+  Type type{None};
+
   // Shapeodds model 
   std::vector<unsigned> sample_indices;        // indices of images used to construct this model
   Eigen::MatrixXd z_coords;                 // latent space coordinates of samples used to learn this model
@@ -205,5 +217,7 @@ private:
   Eigen::MatrixXi my_F_matrix;
 
 };
+
+std::ostream& operator<<(std::ostream &os, const Model::Type& type);
 
 } // dspacex

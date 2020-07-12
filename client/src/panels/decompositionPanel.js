@@ -43,7 +43,7 @@ class DecompositionPanel extends React.Component {
 
       datasetId: this.props.dataset.datasetId,
 
-      interpolationModel: 'pca',  /*hardcoded for darpa demo -> TODO: use actual models that are read just like decompositionField*/
+      interpolationModel: this.props.dataset.models ? this.props.dataset.models[0].name.trim() : 'None',
       model: {
         sigma: 0.15,
       },
@@ -541,8 +541,7 @@ class DecompositionPanel extends React.Component {
                   <FormControl className={classes.formControl}
                                disabled={!this.props.enabled}
                                style={{ width: '100%',
-                               boxSizing: 'border-box',
-                               paddingRight: '10px' }}>
+                               boxSizing: 'border-box' }}>
                     <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
                     <Select ref="decompositionCombo"
                             disabled={!this.props.enabled || !this.props.dataset}
@@ -654,34 +653,24 @@ class DecompositionPanel extends React.Component {
                 <div style={{ display: 'flex', flexDirection: 'column',
                      width: '100%', boxSizing: 'border-box' }}>
 
-
+                  {/* Interpolation Model Dropdown */}
                   <FormControl className={classes.formControl}
                                disabled={!this.props.enabled}
                                style={{ width: '100%',
-                               boxSizing: 'border-box',
-                               paddingRight: '10px' }}>
+                               boxSizing: 'border-box' }}>
                     <InputLabel htmlFor='model-field'>Model</InputLabel>
                     <Select ref="interpolationCombo"
-                            disabled={!this.props.enabled || !this.props.dataset}
-                            value={this.state.interpolationModel || ''}
+                            value={this.state.interpolationModel}
                             style={{ width:'100%' }}
                             onChange={this.handleInterpolationModelChange.bind(this)} 
-                            inputProps={{
-                            name: 'model',
-                            id: 'model-field',
-                            }}>
+                            inputProps={{ name: 'model', id: 'model-field' }}>
                       <MenuItem value='None'>
                         <em>None</em>
                       </MenuItem>
-                      <MenuItem value='pca'>
-                        <em>PCA</em>
-                      </MenuItem>
-                      <MenuItem value='shapeodds'>
-                        <em>ShapeOdds</em>
-                      </MenuItem>
-                      <MenuItem value='sharedgp' disabled={true}>
-                        <em>Shared-GP</em>
-                      </MenuItem>
+                      {this.props.dataset.models.map((model) =>
+                        <MenuItem key={model.id} value={model.name.trim()}>
+                          <em>{model.name}</em>
+                        </MenuItem>)}
                     </Select>
                   </FormControl>
 
