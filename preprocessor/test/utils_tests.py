@@ -5,7 +5,7 @@ from preprocessor.utils import run_external_script
 
 class TestUtils(unittest.TestCase):
 
-    def load_script_no_args_test(self):
+    def test_load_script_no_args(self):
         directory = './test_resources/external_script.py'
         module = 'external_script'
         method_name = 'test_sum'
@@ -13,7 +13,7 @@ class TestUtils(unittest.TestCase):
         answer = run_external_script(directory, module, method_name)
         self.assertEqual(answer, 0)
 
-    def load_script_with_args_test(self):
+    def test_load_script_with_args(self):
         directory = './test_resources/external_script.py'
         module = 'external_script'
         method_name = 'test_sum'
