@@ -6,16 +6,23 @@ import nrrd
 import numpy as np
 import re
 from sklearn.metrics import pairwise_distances
+from scipy.spatial.distance import pdist, squareform
 
 
 def calculate_hamming_distance_nrrd(directory):
     shapes = glob(directory + '*.nrrd')
     shapes.sort(key=functools.cmp_to_key(sort_by_sample_id))
     array = []
+    count = 1
     for s in shapes:
+        print('Opening volume number %i' % count)
+        count += 1
         data, header = nrrd.read(s)
         data = data.flatten()
         array.append(data)
+    print('Calculating Distance')
+    array = np.array(array)
+    # distance = squareform(pdist(array, metric='hamming'))
     distance = pairwise_distances(array, metric='hamming')
     return distance
 
