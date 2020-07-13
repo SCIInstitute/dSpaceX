@@ -57,6 +57,7 @@ ADD_SUBDIRECTORY(ExternalLibs/tinyply)
 ADD_SUBDIRECTORY(lib/utils)
 ADD_SUBDIRECTORY(lib/pmodels)
 ADD_SUBDIRECTORY(lib/dspacex)
+ADD_SUBDIRECTORY(preprocessor/cpp_bindings)
 
 if(BUILD_SERVER_LIB)
   INCLUDE_DIRECTORIES(ExternalLibs/boost)
