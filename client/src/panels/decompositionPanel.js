@@ -213,6 +213,7 @@ class DecompositionPanel extends React.Component {
 
   /**
    * Passes config changes up the line.
+   * These get used by parallel components such as the EmbeddingMorseSmaleWindow.
    */
   updatePropsConfig() {
     this.props.onDecompositionChange({
@@ -220,8 +221,10 @@ class DecompositionPanel extends React.Component {
       decompositionMode: this.state.decompositionMode,
       decompositionCategory: this.state.decompositionCategory,
       decompositionField: this.state.decompositionField,
-      k: this.state.ms.knn,
       persistenceLevel: this.state.persistenceLevel,
+      interpolationModel: this.state.interpolationModel,      
+      modelSigma: this.state.model.sigma,
+      ms: this.state.ms,
     });
   }
   
@@ -667,7 +670,7 @@ class DecompositionPanel extends React.Component {
                       <MenuItem value='None'>
                         <em>None</em>
                       </MenuItem>
-                      {this.props.dataset.models.map((model) =>
+                      {this.props.dataset.models && this.props.dataset.models.map((model) =>
                         <MenuItem key={model.id} value={model.name.trim()}>
                           <em>{model.name}</em>
                         </MenuItem>)}

@@ -386,6 +386,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 // TODO: too much to read all at once, so only read them on demand.
 //
 // In the config.yaml for the dataset:
+// models:
 //   - fieldname: Max Stress
 //     type: shapeodds                                            # could be shapeodds or sharedgp
 //     root: shapeodds_models_maxStress                           # directory of models for this field
@@ -394,6 +395,16 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 //     padZeroes: false                                           # for both persistence and crystal dirs/files
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
 //     embeddings: shapeodds_global_embedding.csv                 # global for each p-lvl, and local for each crystal
+//     ms:                                                        # Morse-Smale parameters used to compute partitions
+//      - knn: 15                                                 # k-nearest neighbors
+//      - sigma: 0.25                                             # 
+//      - smooth: 15.0                                            # 
+//      - depth: 20                                               # num persistence levels; -1 means compute them all
+//      - noise: true                                             # add mild noise to the field to ensure inequality
+//      - curvepoints: 50                                         # vis only? Not sure if this matters for crystal partitions 
+//      - normalize: false                                        # vis only? Not sure if this matters for crystal partitions
+//     params:                                                    # model interpolation parameters used
+//      - sigma: 0.15                                             # Gaussian width
 //
 ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string &filePath)
 {
@@ -407,8 +418,12 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
       const YAML::Node &modelNode = modelsNode[i];
 
       auto modelset(DatasetLoader::parseModel(modelNode, filePath));  // TODO: only call this when model is requested
-      if (modelset)
-        models[modelset->getFieldname()].push_back(std::move(modelset));
+      if (modelset) {
+        // ensure modelset has a unique name in the set of modelsets for this field and add it (TODO: better name, see issue)
+        modelset->setModelName(modelset->modelName() + std::to_string(models[modelset->fieldName()].size() + 1));
+
+        models[modelset->fieldName()].push_back(std::move(modelset));
+      }
       else
         std::cerr << "Unknown error reading " << i <<"th modelNode. Skipping it.\n";
     }
@@ -419,6 +434,32 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
   return models;
 }
 
+/*
+ * Sets the parameters used to compute the M-S in which these models reside.
+ * (technically, the M-S that partitioned the data with which these models were learned)
+ */
+bool setMSParams(MSModelSet& modelset, const YAML::Node& ms) {
+  if (ms["ms_knn"] && ms["ms_sigma"] && ms["ms_smooth"] && ms["ms_curvepoints"] && ms["ms_depth"] && ms["ms_noise"] && ms["ms_normalize"]) {
+    auto knn         = ms["knn"].as<int>();
+    auto sigma       = ms["sigma"].as<double>();
+    auto smooth      = ms["smooth"].as<double>();
+    auto curvepoints = ms["curvepoints"].as<int>();
+    auto depth       = ms["depth"].as<int>();
+    auto noise       = ms["noise"].as<bool>();
+    auto normalize   = ms["normalize"].as<bool>();
+    std::cout << "\tknn:         " << knn         << std::endl
+              << "\tsigma:       " << sigma       << std::endl
+              << "\tsmooth:      " << smooth      << std::endl
+              << "\tcurvepoints: " << curvepoints << std::endl
+              << "\tdepth:       " << depth       << std::endl
+              << "\tnoise:       " << noise       << std::endl
+              << "\tnormalize:   " << normalize   << std::endl;
+    modelset.setParams(knn, sigma, smooth, curvepoints, depth, noise, normalize);
+    return true;
+  }
+  return false;
+}
+
 std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
 {
   if (!modelNode["fieldname"]) {
@@ -427,13 +468,12 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
   }
   std::string fieldname = modelNode["fieldname"].as<std::string>();
 
-  if (!modelNode["type"] || !modelNode["name"]) {
-    std::cerr << "Models must have 'name' and 'type' fields.\n";
+  if (!modelNode["type"]) {
+    std::cerr << "Models entry missing 'type' field.\n";
     return nullptr;
   }
   Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
-  std::string modelName = modelNode["name"].as<std::string>();
-  std::cout << "Reading '" << modelName << "' " << modelType << " models for '" << fieldname << "' field." << std::endl;
+  std::cout << "Reading " << modelType << " models for '" << fieldname << "' field." << std::endl;
 
   if (!modelNode["partitions"]) {
     std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
@@ -507,13 +547,22 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
   auto npersistences = crystalPartitions_eigen.rows();
   auto nsamples = crystalPartitions_eigen.cols();
   std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
-            << nsamples << " samples." << std::endl;
+            << nsamples << " samples using these M-S parameters:\n";
+
+  // create the modelset
+  auto ms_of_models(std::make_unique<MSModelSet>(modelType, fieldname, nsamples, npersistences));
+
+  // Read M-S computation parameters.
+  if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
+    // These MUST be specified because crashes due to misalignment with UI are likely.\n";
+    std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
+    return nullptr;
+  } 
 
   // Now read all the models
-  auto ms_of_models(std::make_unique<MSModelSet>(modelType, modelName, fieldname, nsamples, npersistences));
   //for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
   //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
-  for (auto persistence = npersistences-1; false; ) { // just get the highest plvl
+  for (auto persistence = npersistences-1; persistence >= npersistences-1; persistence--) { // just get the highest plvl
     unsigned persistence_idx = persistence;
     MSPersistenceLevel &P = ms_of_models->getPersistenceLevel(persistence_idx);
 
@@ -556,8 +605,7 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
       std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
       std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
       MSCrystal &c = P.getCrystal(crystal);
-      c.getModel()->setFieldname(fieldname); // <ctc> see TODOs in Model
-      parseModel(crystalPath, *c.getModel());// todo: just store path here and read model on demand
+      c.setModelPath(crystalPath);    // for faster load times, parses model only when requested by UI
     }
   }
 
@@ -574,7 +622,7 @@ void DatasetLoader::parseModel(const std::string &modelPath, Model &m)
   auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");  // TODO: this is handily functional on case-insensitive OSes, but shapeodds and pca models have different case 'z' in the name of this file, so it'll fail on linux
+  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
 
   m.setModel(W, w0, Z);
 }

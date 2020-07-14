@@ -22,6 +22,8 @@ public:
   static std::unique_ptr<Dataset> loadDataset(const std::string &filePath);
   static std::string getDatasetName(const std::string &filePath);
 
+  static void parseModel(const std::string &modelPath, Model &m);
+
 private:
   // Disallow creating an instance of this object (reinforces its purpose)
   DatasetLoader() {}
@@ -56,8 +58,6 @@ private:
 
   static std::unique_ptr<MSModelSet> parseModel(const YAML::Node& modelNode,
                                                  const std::string& filePath);
-
-  static void parseModel(const std::string &modelPath, Model &m);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

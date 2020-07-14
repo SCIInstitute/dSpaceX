@@ -1,4 +1,5 @@
 #include "MorseSmale.h"
+#include "DatasetLoader.h"
 
 namespace dspacex {
 
@@ -32,6 +33,12 @@ std::vector<ModelPair> MSModelSet::getAllModels()
     }
   }
   return models;
+}
+
+std::shared_ptr<Model> MSCrystal::getModel() {
+  if (!model)
+    DatasetLoader::parseModel(modelPath, *(model = std::make_shared<Model>()));
+  return model;
 }
 
 } // dspacex

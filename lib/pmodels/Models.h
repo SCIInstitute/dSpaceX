@@ -19,14 +19,8 @@ class Model
 public:
 
   enum Type { PCA, ShapeOdds, InfShapeOdds, SharedGP, None = 0 };
-  static Type strToType(const std::string& type)
-  {
-    if (type == "pca")          return PCA;
-    if (type == "shapeodds")    return ShapeOdds;
-    if (type == "infshapeodds") return InfShapeOdds;
-    if (type == "sharedgp")     return SharedGP;
-    return None;
-  }
+  static std::string typeToStr(const Type& type);
+  static Type strToType(const std::string& type);
   
   // fieldvalue and the index of its sample in the full set of samples for this dataset
   struct ValueIndexPair
@@ -70,15 +64,15 @@ public:
   }
 
   // note: fieldname is part of the mscomplex in which this crystal lives, so maybe "getparent" would be better...
-  void setFieldname(const std::string name)
-  {
-    fieldname = name;
-  }
+  // void setFieldname(const std::string name)
+  // {
+  //   fieldname = name;
+  // }
 
-  const std::string& getFieldname() const
-  {
-    return fieldname;
-  }
+  // const std::string& getFieldname() const
+  // {
+  //   return fieldname;
+  // }
 
   void setFieldValues(Eigen::Map<Eigen::VectorXd> values)
   {
@@ -176,7 +170,7 @@ private:
   Eigen::MatrixXd W;
   Eigen::MatrixXd w0;
 
-  std::string fieldname;
+  //std::string fieldname;
   Eigen::RowVectorXd fieldvalues;  
   std::vector<ValueIndexPair> fieldvalues_and_indices;  //TODO: this feels pretty hokey...
 

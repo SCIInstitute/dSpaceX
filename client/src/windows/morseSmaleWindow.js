@@ -309,7 +309,7 @@ class MorseSmaleWindow extends React.Component {
     }
 
     // Get intersected object
-    const { datasetId, decompositionCategory, decompositionField, persistenceLevel, interpolationModel, model } = this.props.decomposition;
+    const { datasetId, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
@@ -346,15 +346,16 @@ class MorseSmaleWindow extends React.Component {
         //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
       }
 
-      this.renderScene();
-
-      // Get crystal partitions
-      let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-                                              crystalID, interpolationModel, this.numInterpolants, model.sigma, showOrig);
+      // highlights samples from this crystal in other views (e.g., embedding window)
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
+
+      // Get crystal partitions (parent component updates drawer once they arrive)
+      let crystalID = this.pickedObject.name;
+      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig);
+
+      this.renderScene();
 
       return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
     }

@@ -88,7 +88,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
 
     this.client = this.props.dsxContext.client;
 
-    this.computeNewSamplesUsingShapeoddsModel = this.computeNewSamplesUsingShapeoddsModel.bind(this);
+    this.evalModelForCrystal = this.evalModelForCrystal.bind(this);
   }
 
   /**
@@ -101,18 +101,18 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {number} numSamples
    * @param {bool} showOrig This doesn't compute new samples, but provides _original_ samples instead.
    */
-  computeNewSamplesUsingShapeoddsModel(datasetId, category, fieldname, persistenceLevel,
-                                       crystalID, modelname, numSamples, sigma, showOrig) {
-    console.log('computeNewSamplesUsingShapeoddsModel('+datasetId+','+fieldname+','+persistenceLevel+','
-                +crystalID+','+modelname+','+numSamples+','+sigma+','+showOrig+')');
-
-    //console.log("computeNewSamplesUsingShapeoddsModel: this.props.decomposition: "+this.props.decomposition);
-    //console.log("computeNewSamplesUsingShapeoddsModel: decomposition's model sigma: "+this.props.decomposition.state.model.sigma);
-
-    // Ask server to compute the N new images for this crystal and add them to the drawer
-    this.client.fetchNImagesForCrystal_Shapeodds(datasetId, category,
-                                                 fieldname, persistenceLevel, crystalID, modelname,
-                                                 numSamples, sigma, showOrig)
+  evalModelForCrystal(crystalID, numSamples, showOrig) {
+    // Ask server to compute the N new images for this crystal using the requested model, then add them to the drawer
+    // If model doesn't exist or showOrig is true, returns original samples for this crystal.
+    this.client.fetchNImagesForCrystal_Shapeodds(this.props.decomposition.datasetId,
+                                                 this.props.decomposition.decompositionCategory, /* does this even matter? */
+                                                 this.props.decomposition.decompositionField,
+                                                 this.props.decomposition.persistenceLevel,
+                                                 crystalID,
+                                                 this.props.decomposition.interpolationModel,
+                                                 numSamples,
+                                                 this.props.decomposition.modelSigma,
+                                                 showOrig)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
@@ -229,7 +229,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                                 decomposition={this.props.decomposition}
                                 numberOfWindows={this.props.numberOfWindows}
                                 onCrystalSelection={this.props.onCrystalSelection}
-                                evalShapeoddsModelForCrystal={this.computeNewSamplesUsingShapeoddsModel}/>
+                                evalModelForCrystal={this.evalModelForCrystal}/>
             </div>
           </div>
 

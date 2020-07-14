@@ -200,7 +200,8 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
     response["qoiNames"].append(qoiName);
   }
   auto modelNames = m_currentDataset->getModelNames();
-  response["models"] = Json::Value(Json::arrayValue);
+  if (modelNames.size() > 0)
+    response["models"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < modelNames.size(); ++i) {
     Json::Value modelObject(Json::objectValue);
     modelObject["name"] = modelNames[i];

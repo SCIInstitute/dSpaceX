@@ -17,4 +17,5 @@ TARGET_INCLUDE_DIRECTORIES(pmodels PUBLIC
   $<INSTALL_INTERFACE:include>)
 TARGET_LINK_LIBRARIES(pmodels
   dspacex_utils
+  dspacex
   lodepng)

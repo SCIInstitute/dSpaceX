@@ -81,11 +81,11 @@ class Controller {
   // current processing state
   std::string m_currentField;
   Fieldtype m_currentCategory{Fieldtype::Invalid};
-  int m_currentKNN{-1};
-  int m_currentNumSamples;
-  double m_currentSigma;
-  double m_currentSmoothing;
-  bool m_currentAddNoise;
-  int m_currentNumPersistences;
-  bool m_currentNormalize;
+  int m_currentKNN{15};
+  int m_currentNumSamples{50};
+  double m_currentSigma{0.25};
+  double m_currentSmoothing{15.0};
+  bool m_currentAddNoise{true};
+  int m_currentNumPersistences{20};
+  bool m_currentNormalize{true};
 };
