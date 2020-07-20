@@ -52,7 +52,7 @@ class FirstOrderKernelRegression {
      };
 
       void evaluate( FortranLinalg::DenseVector<TPrecision> &x, FortranLinalg::Vector<TPrecision> &out,
-FortranLinalg::Matrix<TPrecision> &J, double *sse=NULL){
+FortranLinalg::Matrix<TPrecision> &J, TPrecision *sse=NULL){
         FortranLinalg::DenseMatrix<TPrecision> sol = ls(x, sse);
         for(unsigned int i=0; i<Y.M(); i++){
           out(i) = sol(0, i);

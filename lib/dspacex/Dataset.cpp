@@ -25,7 +25,7 @@ std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std
     if (modelset->modelName() == modelname)
       if (p < modelset->numPersistenceLevels() && p >= 0)
         if (c < modelset->getPersistenceLevel(p).numCrystals() && c >= 0)
-          return modelset->getPersistenceLevel(p).getCrystal(c).getModel();
+          return modelset->getPersistenceLevel(p).getCrystal(c).model;
 
   return nullptr;
 }

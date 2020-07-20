@@ -43,7 +43,7 @@ class Linalg{
   
   //least squares with svd
   static DenseMatrix<TPrecision> LeastSquares(DenseMatrix<TPrecision> &a,
-      DenseMatrix<TPrecision> &b, double *sse = NULL){
+      DenseMatrix<TPrecision> &b, TPrecision *sse = NULL){
 
 
     FL_INT m = a.M();
@@ -558,8 +558,8 @@ class Linalg{
           &lda, (double*)b.data(), &ldb, (double*)&beta, (double*)c.data(), &m);
     }
     else{
-      lapack::sgemm_(&transa, &transb, &m, &n, &k, (float*)&alpha, (float*)a.data(), &m,
-                   (float*)b.data(), &ldb, (float*)&beta, (float*)c.data(), &m);
+      lapack::sgemm_(&transa, &transb, &m, &n, &k, (float*)&alpha, (float*)a.data(),
+          &lda, (float*)b.data(), &ldb, (float*)&beta, (float*)c.data(), &m);
     }
   }; 
    

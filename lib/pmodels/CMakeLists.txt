@@ -5,7 +5,6 @@ SET(PMODELS_HEADER_FILES
 
 SET(PMODELS_SOURCE_FILES
   ShapeOdds.cpp
-  SharedGP.cpp
   MorseSmale.cpp
   Models.cpp
 )
@@ -16,6 +15,6 @@ TARGET_INCLUDE_DIRECTORIES(pmodels PUBLIC
   $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>)
 TARGET_LINK_LIBRARIES(pmodels
-  dspacex_utils
   dspacex
+  dspacex_utils
   lodepng)

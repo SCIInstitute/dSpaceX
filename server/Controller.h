@@ -10,6 +10,7 @@
 #include <map>
 #include <functional>
 
+namespace dspacex {
 
 class Controller {
  public:
@@ -57,12 +58,14 @@ class Controller {
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
-  void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
-  void regenOriginalImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchNImagesForCrystal(const Json::Value &request, Json::Value &response);
+  void regenOriginalImagesForCrystal(const Json::Value &request, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
+  std::vector<ValueIndexPair> getSamples(Fieldtype category, const std::string &fieldname,
+                                         unsigned persistenceLevel, unsigned crystalid, bool sort = true);
 
-  const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
+  const Eigen::Map<Eigen::VectorXf> getFieldvalues(Fieldtype type, const std::string &name);
 
   int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSModelSet &mscomplex) const;
 
@@ -71,7 +74,7 @@ class Controller {
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;
   std::shared_ptr<HDVizData> m_currentVizData;
-  std::shared_ptr<TopologyData> m_currentTopoData;
+  std::unique_ptr<TopologyData> m_currentTopoData;
   std::string datapath;
 
   // current loaded dataset
@@ -89,3 +92,5 @@ class Controller {
   int m_currentNumPersistences{20};
   bool m_currentNormalize{true};
 };
+
+} // dspacex

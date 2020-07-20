@@ -8,7 +8,7 @@
 const int kDefaultPort = 7681;
 const std::string kDefaultDatapath("../../examples");
  
-Controller *controller = nullptr;
+dspacex::Controller *controller = nullptr;
 
 extern "C" void browserData(void *wsi, void *data) {
   controller->handleData(wsi, data);
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   std::string datapath = options["datapath"];
   
   try {
-    controller = new Controller(datapath);
+    controller = new dspacex::Controller(datapath);
   } catch (const std::exception &e) {
     std::cout << e.what() << std::endl;
     return 1;

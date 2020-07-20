@@ -332,9 +332,9 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchAllImagesForCrystal_Shapeodds(datasetId, persistenceLevel, crystalID) {
+  fetchAllImagesForCrystal(datasetId, persistenceLevel, crystalID) {
     let command = {
-      name: 'fetchAllImagesForCrystal_Shapeodds',
+      name: 'fetchAllImagesForCrystal',
       datasetId: datasetId,
       persistenceLevel: persistenceLevel,
       crystalID: crystalID,
@@ -342,9 +342,9 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal_Shapeodds(datasetId, category, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
+  fetchNImagesForCrystal(datasetId, category, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
     let command = {
-      name: 'fetchNImagesForCrystal_Shapeodds',
+      name: 'fetchNImagesForCrystal',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,

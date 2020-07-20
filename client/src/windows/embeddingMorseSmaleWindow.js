@@ -104,7 +104,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
   evalModelForCrystal(crystalID, numSamples, showOrig) {
     // Ask server to compute the N new images for this crystal using the requested model, then add them to the drawer
     // If model doesn't exist or showOrig is true, returns original samples for this crystal.
-    this.client.fetchNImagesForCrystal_Shapeodds(this.props.decomposition.datasetId,
+    this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
                                                  this.props.decomposition.decompositionCategory, /* does this even matter? */
                                                  this.props.decomposition.decompositionField,
                                                  this.props.decomposition.persistenceLevel,

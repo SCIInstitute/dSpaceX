@@ -28,7 +28,7 @@
 #include <fstream>
 #include <string>
 
-using namespace dspacex;
+namespace dspacex {
 
 // Simplify namespace access to _1, _2 for std::bind parameter binding.
 using namespace std::placeholders;
@@ -68,8 +68,8 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
-  m_commandMap.insert({"fetchNImagesForCrystal_Shapeodds", std::bind(&Controller::fetchNImagesForCrystal_Shapeodds, this, _1, _2)});
-  m_commandMap.insert({"regenOriginalImagesForCrystal_Shapeodds", std::bind(&Controller::regenOriginalImagesForCrystal_Shapeodds, this, _1, _2)});
+  m_commandMap.insert({"fetchNImagesForCrystal", std::bind(&Controller::fetchNImagesForCrystal, this, _1, _2)});
+  m_commandMap.insert({"regenOriginalImagesForCrystal", std::bind(&Controller::regenOriginalImagesForCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchCrystalOriginalSampleImages", std::bind(&Controller::fetchCrystalOriginalSampleImages, this, _1, _2)});
 }
 
@@ -443,7 +443,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   }
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(m_currentCategory, m_currentField);
+  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(m_currentCategory, m_currentField);
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
 
@@ -604,7 +604,7 @@ void Controller::fetchParameter(const Json::Value &request, Json::Value &respons
 
   // get the vector of values for the requested field
   std::string parameterName = request["parameterName"].asString();
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(Fieldtype::DesignParameter, parameterName);
+  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(Fieldtype::DesignParameter, parameterName);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -624,7 +624,7 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
 
   // get the vector of values for the requested field
   std::string qoiName = request["qoiName"].asString();
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(Fieldtype::QoI, qoiName);
+  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(Fieldtype::QoI, qoiName);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -674,7 +674,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
  *   crystalId     - crystal of the given persistence level
  *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
  */
-void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response)
+void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value &response)
 {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
@@ -692,7 +692,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // model-interpolated images for original samples requested
   bool interpolateOrig = request["interpolateOrig"].asBool();
   if (interpolateOrig)
-    return regenOriginalImagesForCrystal_Shapeodds(request, response);
+    return regenOriginalImagesForCrystal(request, response);
 
   // get requested persistence level
   unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
@@ -719,13 +719,13 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
   auto percent = request["percent"].asDouble();
-  std::cout << "fetchNImagesForCrystal_Shapeodds: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << ", percent is "<<percent<<"\n";
+  std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << ", percent is "<<percent<<"\n";
   
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
+  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(category, fieldname);
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
-  model->setFieldValues(fieldvals);
+  //model->setFieldValues(fieldvals);
 
   const Image& sample_image = m_currentDataset->getThumbnail(0);  // just using this to get dims of image created by model
 
@@ -746,10 +746,10 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
     double fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
-    Eigen::RowVectorXd z_coord = model->getNewLatentSpaceValue(fieldval, sigma);
+    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, fieldval, sigma);
 
     // evaluate model at this coordinate
-    Eigen::MatrixXd I = ShapeOdds::evaluateModel(*model, z_coord, false /*writeToDisk*/);
+    Eigen::MatrixXf I = ShapeOdds::evaluateModel(*model, z_coord, false /*writeToDisk*/);
     
     // add result image to response
     addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
@@ -764,6 +764,7 @@ void Controller::fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Js
 /**
  * computes index of the requested (0-based) persistence level in this M-S complex
  * (since there could be more actual persistence levels than those stored in the complex)
+ * TODO: make MSModelSet function adjust internally, so from outside it just asks for the actualy persistence level (almost there)
  */
 int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenceLevel, const MSModelSet &mscomplex) const
 {
@@ -784,7 +785,7 @@ int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenc
  *   persistenceId - persistence level of the M-S for this field of the dataset
  *   crystalId     - crystal of the given persistence level
  */
-void Controller::regenOriginalImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response) {
+void Controller::regenOriginalImagesForCrystal(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
   // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
@@ -818,40 +819,30 @@ void Controller::regenOriginalImagesForCrystal_Shapeodds(const Json::Value &requ
     return fetchCrystalOriginalSampleImages(request, response);
 
   // interpolate the model using its original samples
-  std::cout << "regenOriginalImagesForCrystal_Shapeodds: all samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << "\n";
+  std::cout << "regenOriginalImagesForCrystal: all samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << "\n";
 
-  // TODO: connect dataset and its values more closely when reading a model, as the model should already know its fieldvalues
-
-  // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
-  if (!fieldvals.data())
-    return setError(response, "Invalid fieldname or empty field");
-  model->setFieldValues(fieldvals);
-
-  //create images using the elements of this model's Z
-  auto sample_indices(model->getSampleIndices());
-  std::cout << "Testing all latent space variables computed for the " << sample_indices.size() << " samples in this model.\n";
+  auto samples(getSamples(category, fieldname, persistenceLevel, crystalId, false /*don't sort by fv*/));
+  std::cout << "Testing all latent space variables computed for the " << samples.size() << " samples in this model.\n";
 
   //z coords are sorted by fieldvalue in Model::setFieldValues
-  for (auto sample: sample_indices)
+  for (auto i = 0; i < samples.size(); i++)
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
-    extern Controller *controller;
-    if (!controller || !controller->m_currentDataset)
+    if (!m_currentDataset)
       throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
 
-    const Image& sample_image = controller->m_currentDataset->getThumbnail(sample.idx);
+    const Image& sample_image = m_currentDataset->getThumbnail(samples[i].idx);
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     //std::string outputBasepath(datapath + "/debug/outimages");
-    //std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(sample.idx) + ".png");
+    //std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
-    Eigen::MatrixXd I = ShapeOdds::evaluateModel(*model, model->getZCoord(sample.idx), false /*writeToDisk*/,
+    Eigen::MatrixXf I = ShapeOdds::evaluateModel(*model, model->getZCoord(i), false /*writeToDisk*/,
                                                  ""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
-    float quality = ShapeOdds::testEvaluateModel(*model, model->getZCoord(sample.idx),
-                                                 persistenceLevel, crystalId, sample.idx, sample_image,
+    float quality = ShapeOdds::testEvaluateModel(*model, model->getZCoord(i),
+                                                 persistenceLevel, crystalId, samples[i].idx, sample_image,
                                                  false /*writeToDisk*/, ""/*outputBasepath*/);
 
     std::cout << "Quality of generation of image for model at persistence level "
@@ -861,10 +852,44 @@ void Controller::regenOriginalImagesForCrystal_Shapeodds(const Json::Value &requ
     addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
 
     // add field value to response
-    response["fieldvals"].append(sample.val);
+    response["fieldvals"].append(samples[i].val);
   }
 
   response["msg"] = std::string("returning requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistenceLevel));
+}
+
+/* 
+ * Returns vector of global sample ids and their fieldvalue for the samples from which the crystal is comprised.
+ */
+std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std::string &fieldname,
+                                                   unsigned persistenceLevel, unsigned crystalid, bool sort) {
+  std::vector<ValueIndexPair> fieldvalues_and_indices;
+
+  // get the vector of values for the field
+  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(category, fieldname);
+  if (!fieldvals.data()) {
+    std::cerr << "Invalid fieldname or empty field\n";
+    return fieldvalues_and_indices;
+  }
+
+  // create a vector of global sample ids and their fieldvalue for the samples from which this crystal is comprised
+  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
+  Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
+  for (unsigned i = 0; i < partitions.size(); i++)
+  {
+    if (partitions(i) == crystalid)
+    {
+      ValueIndexPair sample;
+      sample.idx = i;
+      sample.val = fieldvals(i);
+      fieldvalues_and_indices.push_back(sample);
+    }
+  }
+
+  // sort it by increasing fieldvalue
+  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), ValueIndexPair::compare);
+
+  return fieldvalues_and_indices;
 }
 
 /**
@@ -889,27 +914,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   int crystalid = request["crystalID"].asInt();
   std::cout << "fetchCrystalOriginalSampleImages: datasetId is "<<m_currentDatasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
 
-  // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXd> fieldvals = getFieldvalues(category, fieldname);
-  if (!fieldvals.data())
-    return setError(response, "Invalid fieldname or empty field");
-
-  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
-  Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
-  std::vector<Model::ValueIndexPair> fieldvalues_and_indices;
-  for (unsigned i = 0; i < partitions.size(); i++)
-  {
-    if (partitions(i) == crystalid)
-    {
-      Model::ValueIndexPair sample;
-      sample.idx = i;
-      sample.val = fieldvals(i);
-      fieldvalues_and_indices.push_back(sample);
-    }
-  }
-
-  // sort by increasing fieldvalue
-  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), Model::ValueIndexPair::compare);
+  auto fieldvalues_and_indices(getSamples(category, fieldname, persistenceLevel, crystalid));
   std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
 
   for (auto sample: fieldvalues_and_indices)
@@ -919,7 +924,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     // add image to response
-    addImageToResponse(response, sample_image);
+    addImageToResponse(response, sample_image);  // todo: add index to response so drawer can display it
 
     // add field value to response
     response["fieldvals"].append(sample.val);
@@ -975,31 +980,31 @@ bool Controller::maybeLoadDataset(const Json::Value &request, Json::Value &respo
 // getFieldvalues
 // 
 // returns Eigen::Map wrapping the vector of values for a given field
-const Eigen::Map<Eigen::VectorXd> Controller::getFieldvalues(Fieldtype type, const std::string &name)
+const Eigen::Map<Eigen::VectorXf> Controller::getFieldvalues(Fieldtype type, const std::string &name)
 {
   if (type == Fieldtype::DesignParameter)
   {
     auto parameters = m_currentDataset->getParameterNames();
     auto result = std::find(std::begin(parameters), std::end(parameters), name);
     if (result == std::end(parameters)) 
-      return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+      return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 
     int index = std::distance(parameters.begin(), result);
     FortranLinalg::DenseVector<Precision> values = m_currentDataset->getParameterVector(index);
-    return Eigen::Map<Eigen::VectorXd>(values.data(), values.N());
+    return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
   }
   else if (type == Fieldtype::QoI)
   {
     auto qois = m_currentDataset->getQoiNames();
     auto result = std::find(std::begin(qois), std::end(qois), name);
     if (result == std::end(qois)) 
-      return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+      return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 
     int index = std::distance(qois.begin(), result);
     FortranLinalg::DenseVector<Precision> values = m_currentDataset->getQoiVector(index);
-    return Eigen::Map<Eigen::VectorXd>(values.data(), values.N());
+    return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
   }
-  return Eigen::Map<Eigen::VectorXd>(NULL, 0);
+  return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 }
 
 /**
@@ -1166,7 +1171,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
 
   HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
   try {
-    std::shared_ptr<HDProcessResult> result(
+    m_currentVizData.reset(new SimpleHDVizDataImpl(
       genericProcessor.processOnMetric(m_currentDistanceMatrix,
                                        FortranLinalg::DenseVector<Precision>(fieldvals.size(), fieldvals.data()),
                                        knn,              /* k nearest neighbors to consider */
@@ -1174,8 +1179,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
                                        num_persistences, /* generate this many at most; -1 generates all of 'em */
                                        add_noise,        /* adds very slight noise to field values */
                                        sigma,            /* soften crystal regression curves */
-                                       smoothing));      /* smooth topology */
-    m_currentVizData.reset(new SimpleHDVizDataImpl(result));
+                                       smoothing)));      /* smooth topology */
     m_currentTopoData.reset(new LegacyTopologyDataImpl(m_currentVizData));
   } catch (const char *err) {
     std::cerr << "Controller::processData: processOnMetric failed: " << err << std::endl;
@@ -1198,3 +1202,5 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   
   return true;
 }
+
+} // dspacex

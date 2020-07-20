@@ -19,7 +19,7 @@ class Image {
   int getHeight() const;
   std::string getFormat() const;
   
-  static Image convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h);
+  static Image convertToImage(const Eigen::MatrixXf &I, const unsigned w, const unsigned h);
 
  private:
   int m_width;

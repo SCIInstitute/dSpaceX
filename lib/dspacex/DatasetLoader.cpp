@@ -439,7 +439,7 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
  * (technically, the M-S that partitioned the data with which these models were learned)
  */
 bool setMSParams(MSModelSet& modelset, const YAML::Node& ms) {
-  if (ms["ms_knn"] && ms["ms_sigma"] && ms["ms_smooth"] && ms["ms_curvepoints"] && ms["ms_depth"] && ms["ms_noise"] && ms["ms_normalize"]) {
+  if (ms["knn"] && ms["sigma"] && ms["smooth"] && ms["curvepoints"] && ms["depth"] && ms["noise"] && ms["normalize"]) {
     auto knn         = ms["knn"].as<int>();
     auto sigma       = ms["sigma"].as<double>();
     auto smooth      = ms["smooth"].as<double>();
@@ -520,92 +520,59 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
   int crystalIndexLoc = crystalsBasename.find('?');
   crystalsBasename = crystalsBasename.substr(0, crystalIndexLoc);
 
-  bool shouldPadZeroes = false;
+  bool padIndices = false;
   if (modelNode["padZeroes"]) {
     std::string padZeroes = modelNode["padZeroes"].as<std::string>();
     if (padZeroes == "true") {
-      shouldPadZeroes = true;
+      padIndices = true;
     } else if (padZeroes != "false") {
       std::cerr << "Model's padZeroes contains invalid value: " << padZeroes << std::endl;
       return nullptr;
     }
   }
 
-  // Read crystals, an array of P persistence levels x N samples per level
-  // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
-  // <ctc> TODO: actually, this file renders moot all the (ob1) crystalID.csv files, so let's use it instead.
-  Eigen::MatrixXi crystalPartitions_eigen;
-  if (partitions_format.type == InputFormat::CSV)
-    crystalPartitions_eigen = IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions);
-  else
-  {
-    std::stringstream out("Crystal partitions file should be a csv, but it's a ");
-    out << partitions_format;
-    std::cerr << out.str() << std::endl;
-    return nullptr;
-  }
-  auto npersistences = crystalPartitions_eigen.rows();
-  auto nsamples = crystalPartitions_eigen.cols();
-  std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
-            << nsamples << " samples using these M-S parameters:\n";
+  // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
+  Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions));
+  auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
-  // create the modelset
+  // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
   auto ms_of_models(std::make_unique<MSModelSet>(modelType, fieldname, nsamples, npersistences));
-
-  // Read M-S computation parameters.
+  std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
-    // These MUST be specified because crashes due to misalignment with UI are likely.\n";
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
     return nullptr;
   } 
 
-  // Now read all the models
-  //for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
-  //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
-  for (auto persistence = npersistences-1; persistence >= npersistences-1; persistence--) { // just get the highest plvl
-    unsigned persistence_idx = persistence;
-    MSPersistenceLevel &P = ms_of_models->getPersistenceLevel(persistence_idx);
+  // read paths to all the models (the models themselves are read on demand)
+  //for (auto pidx = npersistences-1; pidx >= 0; pidx--) { <ctc> finally! at long last no more hacking this line!
+  //for (auto pidx = npersistences=0; pidx >= 0; pidx--) { // just get the 0th plvl
+  for (auto pidx = npersistences-1; pidx >= npersistences-1; pidx--) // just get the highest plvl
+  {
+    auto &P = ms_of_models->getPersistenceLevel(pidx);
+    auto persistencePath(persistencesBasePath + maybePadIndex(pidx, padIndices, npersistences));
 
-    // compute ncrystals for this persistence level using crystalPartitions
-    unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
+    // use crystalPartitions to determine number of crystals at this level
+    auto ncrystals = crystalPartitions.row(pidx).maxCoeff()+1;
     P.setNumCrystals(ncrystals);
-    std::cout << "There are " << ncrystals << " crystals in persistence level " << persistence << std::endl;
 
-    // compute padding if necessary
-    unsigned persistenceIndexPadding = 0;
-    unsigned crystalIndexPadding = 0;
-    if (shouldPadZeroes)
-    {
-      persistenceIndexPadding = paddedStringWidth(npersistences);
-      crystalIndexPadding = paddedStringWidth(ncrystals);
-    }
-
-    std::string persistenceIndexStr(shouldPadZeroes ? paddedIndexString(persistence, persistenceIndexPadding) : std::to_string(persistence));
-    std::string persistencePath(persistencesBasePath + persistenceIndexStr);
-
-    // read global embeddings for the set of models (one per crystal) at this persistence level
+    // read global embeddings
     if (!embeddings.empty()) {
-      P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
+      P.setGlobalEmbeddings(IO::readCSVMatrix<float>(persistencePath + '/' + embeddings));
     }
     
-    // read crystalIds indicating to which persistence level each crystal belongs at this persistence
+    // read crystalIds indicating to which crystal each sample belongs at this persistence
     if (IO::fileExists(persistencePath + "/crystalID.csv")) {
       Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(persistencePath + "/crystalID.csv" );
       P.setCrystalSamples(crystal_ids);
     } else {
-      std::stringstream err;
-      err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
-      std::cerr << err.str() << std::endl;
+      std::cerr << "Error: missing crystalID.csv for plvl " << pidx << "(" << persistencePath << ")\n";
       return nullptr;
     }
 
-    // read the model for each crystal at this persistence level
-    for (unsigned crystal = 0; crystal < ncrystals; crystal++)
-    {
-      std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
-      std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      MSCrystal &c = P.getCrystal(crystal);
-      c.setModelPath(crystalPath);    // for faster load times, parses model only when requested by UI
+    // read the model path for each crystal
+    for (unsigned crystal = 0; crystal < ncrystals; crystal++) {
+      std::string crystalPath(persistencePath + '/' + crystalsBasename + maybePadIndex(crystal, padIndices, ncrystals));
+      P.getCrystal(crystal).setModelPath(crystalPath);
     }
   }
 
@@ -616,13 +583,13 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
 void DatasetLoader::parseModel(const std::string &modelPath, Model &m)
 {
   // read W
-  auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");
+auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
 
   // read w0
-  auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
+  auto w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");
+  auto Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
 
   m.setModel(W, w0, Z);
 }
@@ -730,11 +697,11 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   std::string imageBasePath = basePathOf(filePath) + imagePath.substr(0, imageNameLoc);
   std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
-  bool shouldPadZeroes = false;
+  bool padIndices = false;
   if (thumbnailsNode["padZeroes"]) {
     std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
     if (padZeroes == "true") {
-      shouldPadZeroes = true;
+      padIndices = true;
     } else if (padZeroes != "false") {
       throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
     }
@@ -750,7 +717,7 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
     std::string path = createThumbnailPath(imageBasePath, i+indexOffset,
-      imageSuffix, indexOffset, shouldPadZeroes, thumbnailCount);
+      imageSuffix, indexOffset, padIndices, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
     Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
     thumbnails.push_back(image);
