@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
 
 using namespace dspacex;
 
@@ -417,11 +418,14 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
     for (auto i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
 
-      auto modelset(DatasetLoader::parseModel(modelNode, filePath));  // TODO: only call this when model is requested
+      auto modelset(DatasetLoader::parseModel(modelNode, filePath));
       if (modelset) {
         // ensure modelset has a unique name in the set of modelsets for this field and add it (TODO: better name, see issue)
-        modelset->setModelName(modelset->modelName() + std::to_string(models[modelset->fieldName()].size() + 1));
-
+        auto num_of_type_for_this_field = std::count_if(models[modelset->fieldName()].begin(), models[modelset->fieldName()].end(),
+                      [&modelset](std::shared_ptr<MSModelSet> m) { return m->modelType() == modelset->modelType(); });
+        if (num_of_type_for_this_field > 0) // results in PCA, PCA2, PCA3, ...
+          modelset->setModelName(modelset->modelName() + std::to_string(num_of_type_for_this_field + 1));
+          
         models[modelset->fieldName()].push_back(std::move(modelset));
       }
       else
@@ -473,7 +477,7 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
     return nullptr;
   }
   Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
-  std::cout << "Reading " << modelType << " models for '" << fieldname << "' field." << std::endl;
+  std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
 
   if (!modelNode["partitions"]) {
     std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
@@ -560,19 +564,13 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
       P.setGlobalEmbeddings(IO::readCSVMatrix<float>(persistencePath + '/' + embeddings));
     }
     
-    // read crystalIds indicating to which crystal each sample belongs at this persistence
-    if (IO::fileExists(persistencePath + "/crystalID.csv")) {
-      Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(persistencePath + "/crystalID.csv" );
-      P.setCrystalSamples(crystal_ids);
-    } else {
-      std::cerr << "Error: missing crystalID.csv for plvl " << pidx << "(" << persistencePath << ")\n";
-      return nullptr;
-    }
+    // read crystalIds indicating to which crystal each sample belongs at this persistencej
+    P.setCrystalSampleIds(crystalPartitions.row(pidx));
 
     // read the model path for each crystal
     for (unsigned crystal = 0; crystal < ncrystals; crystal++) {
       std::string crystalPath(persistencePath + '/' + crystalsBasename + maybePadIndex(crystal, padIndices, ncrystals));
-      P.getCrystal(crystal).setModelPath(crystalPath);
+      P.crystals[crystal].setModelPath(crystalPath);
     }
   }
 
@@ -580,10 +578,10 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, Model &m)
+void DatasetLoader::parseModel(const std::string& modelPath, Model& m, const std::vector<unsigned> &sample_indices)
 {
   // read W
-auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
+  auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
 
   // read w0
   auto w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
@@ -591,6 +589,15 @@ auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
   // read latent space Z
   auto Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
 
+  // ShapeOdds models have z_coords for all samples, not only those used in their construction
+  if (m.getType() == Model::ShapeOdds) {
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> z_coords(sample_indices.size(), Z.cols());
+    auto i = 0;
+    for (auto idx : sample_indices)
+       z_coords.row(i++) = Z.row(idx);
+    Z = z_coords;
+  }
+  
   m.setModel(W, w0, Z);
 }
 

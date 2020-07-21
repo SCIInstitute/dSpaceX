@@ -23,9 +23,7 @@ std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std
 {
   for (auto modelset : m_models[fieldname])
     if (modelset->modelName() == modelname)
-      if (p < modelset->numPersistenceLevels() && p >= 0)
-        if (c < modelset->getPersistenceLevel(p).numCrystals() && c >= 0)
-          return modelset->getPersistenceLevel(p).getCrystal(c).model;
+      return modelset->getModel(p, c);
 
   return nullptr;
 }
@@ -41,6 +39,47 @@ std::shared_ptr<MSModelSet> Dataset::getModelSet(const std::string& fieldname, c
       return modelset;
 
   return nullptr;
+}
+
+/*
+ * getFieldvalues
+ * returns Eigen::Map wrapping the vector of values for a given field
+ */
+Eigen::Map<Eigen::VectorXf> Dataset::getFieldvalues(const std::string &name, Fieldtype type)
+{
+  // try to find the index of the data in both parameters and qois since it'll be needed anyway
+  auto pnames = getParameterNames();
+  auto ploc = std::find(std::begin(pnames), std::end(pnames), name);
+
+  auto qnames = getQoiNames();
+  auto qloc = std::find(std::begin(qnames), std::end(qnames), name);
+  
+  // if passed type is Unknown, see if indices were found and choose a type (QoI has priority)
+  if (type == Fieldtype::Unknown) {
+    if (ploc != std::end(pnames))
+      type = Fieldtype::DesignParameter;
+    if (qloc != std::end(qnames))
+      type = Fieldtype::QoI;
+  }
+  
+  // wrap the data in a map and return it
+  switch(type) {
+    case Fieldtype::DesignParameter:
+      if (ploc != std::end(pnames)) {
+        int index = std::distance(pnames.begin(), ploc);
+        FortranLinalg::DenseVector<Precision> values = getParameterVector(index);
+        return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
+      }      
+      break;
+    case Fieldtype::QoI:
+      if (qloc != std::end(qnames)) {
+        int index = std::distance(qnames.begin(), qloc);
+        FortranLinalg::DenseVector<Precision> values = getQoiVector(index);
+        return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
+      }
+  }
+
+  return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 }
 
 
@@ -98,6 +137,7 @@ Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared
     m_dataset->m_modelNames.push_back(modelset->modelName());
   
   m_dataset->m_msModelFields.push_back(fieldname);
+  modelset->setSamples(m_dataset->getFieldvalues(fieldname));
   m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));
   return (*this);
 }

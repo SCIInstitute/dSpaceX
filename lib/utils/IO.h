@@ -89,7 +89,7 @@ public:
     
     size_t rows = csv.GetRowCount();
     size_t cols = csv.GetColumnCount();
-    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M(rows, cols);
+    Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> M(rows, cols);
     for (unsigned i = 0; i < rows; i++) {
       std::vector<T> row = csv.GetRow<T>(i);
       for (unsigned j = 0; j < cols; j++) {

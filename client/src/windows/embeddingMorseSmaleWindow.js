@@ -99,20 +99,24 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {number} persistenceLevel
    * @param {number} crystalID
    * @param {number} numSamples
-   * @param {bool} showOrig This doesn't compute new samples, but provides _original_ samples instead.
+   * @param {bool} showOrig - This doesn't compute new samples, but provides _original_ samples instead.
+   * @param {bool} validate - generate model-interpolated images using the z_coords it provided
+   * @param {float} percent - distance along crystal from which to find/generate sample (when only one is requested)
    */
-  evalModelForCrystal(crystalID, numSamples, showOrig) {
+  evalModelForCrystal(crystalID, numSamples, showOrig, validate, percent) {
     // Ask server to compute the N new images for this crystal using the requested model, then add them to the drawer
     // If model doesn't exist or showOrig is true, returns original samples for this crystal.
     this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
-                                                 this.props.decomposition.decompositionCategory, /* does this even matter? */
-                                                 this.props.decomposition.decompositionField,
-                                                 this.props.decomposition.persistenceLevel,
-                                                 crystalID,
-                                                 this.props.decomposition.interpolationModel,
-                                                 numSamples,
-                                                 this.props.decomposition.modelSigma,
-                                                 showOrig)
+                                       this.props.decomposition.decompositionCategory,
+                                       this.props.decomposition.decompositionField,
+                                       this.props.decomposition.persistenceLevel,
+                                       crystalID,
+                                       this.props.decomposition.interpolationModel,
+                                       numSamples,
+                                       this.props.decomposition.modelSigma,
+                                       showOrig,
+                                       validate,
+                                       percent)
       .then((result) => {
         const thumbnails = result.thumbnails.map((thumbnail, i) => {
           return {
@@ -122,8 +126,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
           };
         });
         this.setState({ drawerImages:thumbnails });
-        console.log('computeNewSamplesUsingShapeoddsModel returned ' + result.thumbnails.length
-          + ' images; msg: ' + result.msg);
+        console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
       });
   }
 

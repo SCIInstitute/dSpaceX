@@ -15,7 +15,7 @@ struct Fieldtype {
     else if (strtype == "qoi")
       kind = QoI;
     else
-      kind = Invalid;
+      kind = Unknown;
   }
 
   Fieldtype(const int type) : kind(type) {}
@@ -26,7 +26,7 @@ struct Fieldtype {
   int kind;
   const static int DesignParameter = 0;
   const static int QoI = 1;
-  const static int Invalid = -1;
+  const static int Unknown = -1;
 };
 
 /// fieldvalue and the index of its sample in the full set of samples for a dataset

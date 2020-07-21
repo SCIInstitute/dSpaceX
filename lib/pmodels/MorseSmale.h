@@ -17,8 +17,6 @@ class MSModelSet;
 
 /// All model sets for a given field
 using ModelMap = std::map<std::string, std::vector<std::shared_ptr<MSModelSet>>>;
-/// Associates a model with it's name
-using ModelPair = std::pair<std::string, std::shared_ptr<Model>>;
 
 /*
  * MSModelSet is a model container that stores the set of models computed for a given field
@@ -32,15 +30,17 @@ class MSModelSet
    */
   struct Crystal
   {
-    void addSample(unsigned n) { sample_indices.push_back(n); }
+    void addSampleIndex(unsigned n) { sample_indices.push_back(n); }
     unsigned numSamples() const { sample_indices.size(); }
     const std::vector<unsigned>& getSampleIndices() const { return sample_indices; }
-    
     void setModelPath(const std::string& path) { modelPath = path; }
   
-    std::shared_ptr<Model> model;
+  private:
     std::string modelPath;
     std::vector<unsigned> sample_indices;
+    std::shared_ptr<Model> model;
+
+    friend class MSModelSet;
   };
 
 
@@ -51,15 +51,12 @@ class MSModelSet
   struct PersistenceLevel
   {
     void setNumCrystals(unsigned nCrystals) { crystals.resize(nCrystals); }
-    unsigned numCrystals() const { return crystals.size(); }
-    Crystal& getCrystal(unsigned i) { return crystals[i]; }
-  
     void setGlobalEmbeddings(const Eigen::MatrixXf &embeddings) { global_embeddings = embeddings; }
 
     // each crystal is composed of a non-intersecting set of samples, read from this vector
-    void setCrystalSamples(Eigen::MatrixXi &crystal_ids) {
+    void setCrystalSampleIds(Eigen::RowVectorXi crystal_ids) {
       // WARNING: all crystals must have been added or these crystal ids will be out of range      
-      for (unsigned n = 0; n < crystal_ids.rows(); n++) { crystals[crystal_ids(n)].addSample(n); }
+      for (unsigned n = 0; n < crystal_ids.rows(); n++) { crystals[crystal_ids(n)].addSampleIndex(n); }
     }
 
     std::vector<Crystal> crystals;
@@ -69,7 +66,7 @@ class MSModelSet
 
 public:
   MSModelSet(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences)
-    : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field), num_samples(nSamples)
+    : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field), num_samples(nSamples), samples(nSamples)
   { persistence_levels.resize(nPersistences); }
 
   auto modelType() const { return modeltype; }
@@ -78,18 +75,21 @@ public:
   auto fieldName() const { return fieldname; }
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }
-  void setSamples(Eigen::Map<Eigen::VectorXf>& values) { samples = values; }
+  void setSamples(Eigen::VectorXf values) { samples = values; }
   
   PersistenceLevel& getPersistenceLevel(unsigned idx) { return persistence_levels[idx]; }
 
   /// indicates the existence of a model at the specified crystal of the specified persistence level
-  bool hasModel(unsigned p, unsigned c) const;
+  bool hasModel(int persistence, int crystal) const;
 
   /// returns the model at the specified crystal of the specified persistence level
-  ModelPair getModel(unsigned p, unsigned c);
+  std::shared_ptr<Model> getModel(int persistence, int crystal);
 
-  /// returns all models
-  std::vector<ModelPair> getAllModels();
+  /// returns set of samples associated with a crystal
+  std::vector<float> getCrystalSamples(int persistence, int crystalid);
+
+  /// returns all models (*unused, and costly since it will read every model in this set)
+  std::vector<std::shared_ptr<Model>> getAllModels();
 
   /// parameters used by NNMSComplex to create this (so the complex can be recomputed)
   struct MSParams {
@@ -112,21 +112,14 @@ public:
     params.normalize = normalize;
   }
 
-  // TODO: store persistence range for this complex since not all levels have to be computed (needed?)
-
 private:
   MSModelSet();
-
-  static std::string modelName(unsigned p, unsigned c, unsigned persistence_padding = 2, unsigned crystals_padding = 2)
-  {
-    return std::string("p"+paddedIndexString(p, persistence_padding)+"c"+paddedIndexString(c, crystals_padding));
-  }
 
   Model::Type modeltype;            // type of models in this complex (pca, shapeodds, sharedgp, etc)
   std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S (redundant if we have the samples themselves)
-  Eigen::VectorXf samples;          // the samples for this field of this dataset
+  Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;
 };

@@ -347,16 +347,16 @@ class DecompositionPanel extends React.Component {
    * @param {string} level
    */
   async updateDataModel(level) {
-    let persistenceLevel = this.state.persistenceLevel;
-    if (persistenceLevel >= this.state.minPersistence && persistenceLevel <= this.state.maxPersistence) {
+    let persistence = this.state.persistenceLevel;
+    if (persistence >= this.state.minPersistence && persistence <= this.state.maxPersistence) {
       if (this.state.decompositionMode == 'Morse-Smale') {
         // annoying (and error prone) to have to send all the same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistenceLevel+' of decomposition...\n');
-        await this.client.fetchMorseSmalePersistenceLevel(datasetId, category, field, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+        console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
+        await this.client.fetchMorseSmalePersistence(datasetId, category, field, persistence, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
               this.setState({
@@ -377,7 +377,7 @@ class DecompositionPanel extends React.Component {
       }
     }
     else {
-      console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel ('+persistenceLevel+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
+      console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel ('+persistence+') out of range ('+this.state.minPersistence+', '+this.state.maxPersistence+')');
       this.setState({ crystals: [] });
     }
   }

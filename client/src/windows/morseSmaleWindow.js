@@ -22,6 +22,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.state = {
       selectingCrystal: false,
+      percent: 0.5,
     };
 
     this.client = this.props.dsxContext.client;
@@ -147,7 +148,7 @@ class MorseSmaleWindow extends React.Component {
     
     // Handle left click release
     if (this.state.selectingCrystal && event.button === 0) {
-      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/);
+      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/, event.ctrlKey && event.shiftKey /*validate*/);
     }
   }
 
@@ -303,7 +304,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
    */
-  pick(normalizedPosition, showOrig) {
+  pick(normalizedPosition, showOrig, validate) {
     if (this.props.decomposition === null) {
       return;
     }
@@ -353,7 +354,7 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions (parent component updates drawer once they arrive)
       let crystalID = this.pickedObject.name;
-      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig);
+      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
 
       this.renderScene();
 

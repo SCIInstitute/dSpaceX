@@ -97,7 +97,11 @@ class Dataset {
   /// return MSModelSet associated with this field and modelname
   std::shared_ptr<MSModelSet> getModelSet(const std::string& fieldname, const std::string& modelname);
 
+  /// return the image thumbnail for this sample index
   const Image& getThumbnail(int idx) const;
+
+  /// return the field values for the given field (of the specified type, otherwise the first with that name)
+  Eigen::Map<Eigen::VectorXf> getFieldvalues(const std::string &name, Fieldtype type = Fieldtype::Unknown);
 
   // Builder includes necessary functions for a user to build and return a dSpaceX Dataset
   class Builder {

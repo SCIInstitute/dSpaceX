@@ -1,38 +1,61 @@
 #include "MorseSmale.h"
 #include "DatasetLoader.h"
 
+#include <algorithm>
+
 namespace dspacex {
 
-bool MSModelSet::hasModel(unsigned persistence, unsigned crystal) const
+bool MSModelSet::hasModel(int p, int c) const
 {
-  return !(persistence >= persistence_levels.size() ||
-           crystal >= persistence_levels[persistence].numCrystals());
+  return p < persistence_levels.size() && p >= 0 && c < persistence_levels[p].crystals.size() && c >= 0;
 }
 
-ModelPair MSModelSet::getModel(unsigned persistence, unsigned crystal)
+/* 
+ * returns model crystal of persistence level, creating/reading it if necessary
+ * TODO: use persistence range for this complex to facilitae global persistence passed to getModel function
+ */
+std::shared_ptr<Model> MSModelSet::getModel(int p, int c)
 {
-  if (!hasModel(persistence, crystal))
+  if (!hasModel(p, c))
     throw std::runtime_error("Requested model persistence / crystal index is out of range");
       
-  return ModelPair(modelName(persistence, crystal),
-                   persistence_levels[persistence].getCrystal(crystal).model);
+  std::shared_ptr<Model>& model(persistence_levels[p].crystals[c].model);
+  if (!model) {
+    DatasetLoader::parseModel(persistence_levels[p].crystals[c].modelPath,
+                              *(model = std::make_shared<Model>(modeltype)),
+                              persistence_levels[p].crystals[c].sample_indices);
+
+    // set fieldvalue bounds of model
+    std::vector<float> bounds(getCrystalSamples(p, c));
+    auto minmax = std::minmax_element(bounds.begin(), bounds.end());
+    model->setBounds(std::pair<float, float>(*minmax.first, *minmax.second));
+  }
+  return model;
 }
 
-std::vector<ModelPair> MSModelSet::getAllModels()
+/* 
+ * returns all models, creating/reading it if necessary (warning: expensive)
+ */
+std::vector<std::shared_ptr<Model>> MSModelSet::getAllModels()
 {
-  unsigned persistence_padding = paddedStringWidth(persistence_levels.size());
+  std::vector<std::shared_ptr<Model>> models;
+  for (auto p = 0; p < persistence_levels.size(); p++)
+    for (auto c = 0; c < persistence_levels[p].crystals.size(); c++)
+      models.push_back(getModel(p, c));
 
-  std::vector<ModelPair> models;  
-  for (unsigned p = 0; p < persistence_levels.size(); p++)
-  {
-    unsigned crystals_padding = persistence_levels[p].numCrystals();
-    for (unsigned c = 0; c < persistence_levels[p].numCrystals(); c++)
-    {
-      models.push_back(ModelPair(modelName(p,c,persistence_padding,crystals_padding),
-                                 persistence_levels[p].getCrystal(c).model));
-    }
-  }
   return models;
 }
+
+/* 
+ * returns set of samples associated with this crystal
+ */
+std::vector<float> MSModelSet::getCrystalSamples(int p, int c) {
+  std::vector<float> values;
+  for (auto idx : persistence_levels[p].crystals[c].sample_indices)
+    values.push_back(samples[idx]);
+
+  return values;
+}
+
 
 } // dspacex

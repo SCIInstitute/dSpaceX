@@ -42,9 +42,10 @@ Controller::Controller(const std::string &datapath_) : datapath(datapath_) {
   configureAvailableDatasets(datapath);
 }
 
-// setError
-// Sets the given error message in the Json response.
-void Controller::setError(Json::Value &response, const std::string &str)
+/* 
+ * Sets the given error message in the Json response.
+ */
+void setError(Json::Value &response, const std::string &str)
 {
   response["error"] = true;
   response["error_msg"] = str;
@@ -291,6 +292,20 @@ void Controller::writeMorseSmaleDecomposition(const Json::Value &request, Json::
 }
 
 /**
+ * Gets the persistence level in this request, setting error in response and returning -1 if invalid.
+ */
+int Controller::getPersistence(const Json::Value &request, Json::Value &response) {
+  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
+  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
+  int persistence = request["persistence"].asInt();
+  if (persistence < minLevel || persistence > maxLevel) {
+    setError(response, "invalid persistence level");
+    return -1;
+  }
+  return persistence;
+}
+
+/**
  * Handle the command to fetch the crystal complex composing a morse smale persistence level.
  */
 void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response) {
@@ -301,18 +316,15 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
     return; // response will contain the error
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
-  std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(persistenceLevel);
+  std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(persistence);
 
   response["datasetId"] = m_currentDatasetId;
   response["decompositionMode"] = "Morse-Smale";
   response["k"] = m_currentKNN;
-  response["persistenceLevel"] = persistenceLevel;
+  response["persistence"] = persistence;
   response["complex"] = Json::Value(Json::objectValue);
   response["complex"]["crystals"] = Json::Value(Json::arrayValue);
 
@@ -340,13 +352,10 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
     return; // response will contain the error
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
-  std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(persistenceLevel);
+  std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(persistence);
 
   int crystalId = request["crystalId"].asInt();
   if (crystalId < 0 || crystalId >= complex->getCrystals().size())
@@ -356,7 +365,7 @@ void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value 
 
   response["datasetId"] = m_currentDatasetId;
   response["decompositionMode"] = "Morse-Smale";
-  response["persistenceLevel"] = persistenceLevel;
+  response["persistence"] = persistence;
   response["crystalId"] = crystalId;
   response["crystal"] = Json::Value(Json::objectValue);
   response["crystal"]["minIndex"] = crystal->getMinSample();
@@ -385,12 +394,10 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   if (!maybeProcessData(request, response))
     return; // response will contain the error
 
+
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
   if (m_currentDataset->numberOfEmbeddings() > 0) {
     auto embedding = m_currentDataset->getEmbeddingMatrix(embeddingId);
@@ -443,12 +450,12 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   }
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(m_currentCategory, m_currentField);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(m_currentField, m_currentCategory);
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
 
   // Get colors based on current field
-  auto colorMap = m_currentVizData->getColorMap(persistenceLevel);
+  auto colorMap = m_currentVizData->getColorMap(persistence);
   response["colors"] = Json::Value(Json::arrayValue);
   for(unsigned int i = 0; i < fieldvals.size(); ++i) {
     auto colorRow = Json::Value(Json::arrayValue);
@@ -468,25 +475,22 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
     return; // response will contain the error
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
   // Get points for regression line
-  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistenceLevel);
+  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistence);
   int rows = m_currentVizData->getNumberOfSamples();
   double points[rows][3];
   double colors[rows][3];
 
   // For each crystal
   response["curves"] = Json::Value(Json::arrayValue);
-  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistenceLevel).N(); i++) {
+  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistence).N(); i++) {
 
     // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
-      auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(m_currentVizData->getMean(persistenceLevel)[i](n));
+      auto color = m_currentVizData->getColorMap(persistence).getColor(m_currentVizData->getMean(persistence)[i](n));
       colors[n][0] = color[0];
       colors[n][1] = color[1];
       colors[n][2] = color[2];
@@ -494,7 +498,7 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
       for (unsigned int m = 0; m < layout[i].M(); ++m) {
         points[n][m] = layout[i](m, n);
       }
-      points[n][2] = m_currentVizData->getMeanNormalized(persistenceLevel)[i](n);
+      points[n][2] = m_currentVizData->getMeanNormalized(persistence)[i](n);
     }
 
     // Get layout for each crystal
@@ -524,15 +528,12 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
     return; // response will contain the error
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
-  auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistenceLevel);
-  auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistenceLevel);
-  auto extremaValues = m_currentVizData->getExtremaValues(persistenceLevel);
+  auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistence);
+  auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistence);
+  auto extremaValues = m_currentVizData->getExtremaValues(persistence);
 
   response["extrema"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < extremaLayout.N(); ++i) {
@@ -544,7 +545,7 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
     extremaObject["position"].append(extremaNormalized(i));
 
     // Color
-    auto color = m_currentVizData->getColorMap(persistenceLevel).getColor(extremaValues(i));
+    auto color = m_currentVizData->getColorMap(persistence).getColor(extremaValues(i));
     extremaObject["color"] = Json::Value(Json::arrayValue);
     extremaObject["color"].append(color[0]);
     extremaObject["color"].append(color[1]);
@@ -562,16 +563,13 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
     return; // response will contain the error
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
   // the crystal id to look for in this persistence level
   int crystalID = request["crystalID"].asInt();
 
-  auto crystal_partition = m_currentVizData->getCrystalPartitions(persistenceLevel);
+  auto crystal_partition = m_currentVizData->getCrystalPartitions(persistence);
 
   response["crystalSamples"] = Json::Value(Json::arrayValue);
   for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
@@ -604,7 +602,7 @@ void Controller::fetchParameter(const Json::Value &request, Json::Value &respons
 
   // get the vector of values for the requested field
   std::string parameterName = request["parameterName"].asString();
-  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(Fieldtype::DesignParameter, parameterName);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(parameterName, Fieldtype::DesignParameter);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -624,7 +622,7 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
 
   // get the vector of values for the requested field
   std::string qoiName = request["qoiName"].asString();
-  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(Fieldtype::QoI, qoiName);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(qoiName, Fieldtype::QoI);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -669,37 +667,39 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
  *
  * Parameters: 
  *   datasetId     - should already be loaded
- *   fieldname     - (e.g., one of the QoIs)
- *   persistenceId - persistence level of the M-S for this field of the dataset
- *   crystalId     - crystal of the given persistence level
- *   numZ          - number of evenly-spaced levels of this model's field at which to generate new latent space coordinates
+ *   category      - e.g., qoi or param (used to get fieldvalues)
+ *   fieldname     - e.g., one of the QoIs
+ *   persistence   - persistence level of the M-S for this field of the dataset
+ *   crystalID     - crystal of the given persistence level
+ *   modelname     - model from which to fetch interpolated samples
+ *   numSamples    - number of evenly-spaced samples of the field at which to generate new latent images
+ *   modelSigma    - Gaussian sigma to use for generating new z_coord for shape
+ *   showOrig      - simply return original samples for this crystal
+ *   validate      - generate model-interpolated images using the z_coords it provided
+ *   percent       - distance along crystal from which to find/generate sample (when only one is requested)
  */
 void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value &response)
 {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
-  // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
   // category of the passed fieldname (design param or qoi)
   Fieldtype category = Fieldtype(request["category"].asString());
   if (!category.valid()) return setError(response, "invalid category");
+
+  // validate model by generating model-interpolated images using the z_coords it provided for its own samples
+  bool validate = request["validate"].asBool();
+  if (validate)
+    return regenOriginalImagesForCrystal(request, response);
 
   // original images requested
   bool showOrig = request["showOrig"].asBool();
   if (showOrig)
     return fetchCrystalOriginalSampleImages(request, response);
 
-  // model-interpolated images for original samples requested
-  bool interpolateOrig = request["interpolateOrig"].asBool();
-  if (interpolateOrig)
-    return regenOriginalImagesForCrystal(request, response);
-
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel_idx = request["persistenceLevel"].asInt();
-  if (persistenceLevel_idx < minLevel || persistenceLevel_idx > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence_idx = getPersistence(request, response);
+  if (persistence_idx < 0) return; // response will contain the error
 
   // try to find the requested model
   auto fieldname = request["fieldname"].asString();
@@ -708,9 +708,9 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   
   // TODO: use same parameters as models to generate M-S in gui [and this won't be necessary];
   // currently the one shapeodds model only generated 20 plvls, and the new PCA models generate all of them.
-  int persistenceLevel = getAdjustedPersistenceLevelIdx(persistenceLevel_idx, *m_currentDataset->getModelSet(fieldname, modelname));
+  int persistence = getAdjustedPersistenceLevelIdx(persistence_idx, *m_currentDataset->getModelSet(fieldname, modelname));
 
-  auto model(m_currentDataset->getModel(fieldname, modelname, persistenceLevel, crystalId));
+  auto model(m_currentDataset->getModel(fieldname, modelname, persistence, crystalId));
   
   // if there isn't a model just show its original samples' images 
   if (!model)
@@ -719,10 +719,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
   auto percent = request["percent"].asDouble();
-  std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << ", percent is "<<percent<<"\n";
+  std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistence_idx<<" (MSModelSet plvl " << persistence << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << ", percent is "<<percent<<"\n";
   
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(category, fieldname);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(fieldname, category);
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
   //model->setFieldValues(fieldvals);
@@ -730,10 +730,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   const Image& sample_image = m_currentDataset->getThumbnail(0);  // just using this to get dims of image created by model
 
   // partition the field into numZ values and evaluate model for each
-  double minval = model->minFieldValue();
-  double maxval = model->maxFieldValue();
-  double delta = (maxval - minval) / static_cast<double>(numZ-1); // generates samples for crystal min and max
-  double sigma = request["sigma"].asDouble();
+  float minval = model->minFieldValue();
+  float maxval = model->maxFieldValue();
+  float delta = (maxval - minval) / static_cast<double>(numZ-1); // generates samples for crystal min and max
+  double sigma = request["modelSigma"].asDouble();
 
   // if numZ == 1, evaluate at given percent along crystal
   if (numZ == 1) {
@@ -758,7 +758,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     response["fieldvals"].append(fieldval);
   }
 
-  response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistenceLevel));
+  response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistence));
 }
 
 /**
@@ -766,12 +766,12 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
  * (since there could be more actual persistence levels than those stored in the complex)
  * TODO: make MSModelSet function adjust internally, so from outside it just asks for the actualy persistence level (almost there)
  */
-int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenceLevel, const MSModelSet &mscomplex) const
+int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const MSModelSet &mscomplex) const
 {
-  int persistenceLevel_idx = desired_persistenceLevel -
+  int persistence_idx = desired_persistence -
     (m_currentTopoData->getMaxPersistenceLevel() - mscomplex.numPersistenceLevels() + 1);
 
-  return persistenceLevel_idx;
+  return persistence_idx;
 }
 
 /**
@@ -788,7 +788,6 @@ int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenc
 void Controller::regenOriginalImagesForCrystal(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
-  // maybeLoadModel(persistence,crystal); //<ctc> TODO: for speed, do not load models till their evaluation is requested
 
   // TODO: cut and paste from above! ugh:
 
@@ -797,31 +796,27 @@ void Controller::regenOriginalImagesForCrystal(const Json::Value &request, Json:
   if (!category.valid()) return setError(response, "invalid category");
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel_idx = request["persistenceLevel"].asInt();
-  if (persistenceLevel_idx < minLevel || persistenceLevel_idx > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence_idx = getPersistence(request, response);
+  if (persistence_idx < 0) return; // response will contain the error
 
   // try to find the requested model
   auto fieldname = request["fieldname"].asString();
   auto modelname = request["modelname"].asString();
   auto crystalId = request["crystalID"].asInt();
 
-  // TODO: use same parameters as models to generate M-S in gui [and this won't be necessary];
-  // currently the one shapeodds model only generated 20 plvls, and the new PCA models generate all of them.
-  int persistenceLevel = getAdjustedPersistenceLevelIdx(persistenceLevel_idx, *m_currentDataset->getModelSet(fieldname, modelname));
+  // TODO: transfer this adjustment direction to MSModelSet which how has the MS computation parameters (incl depth)
+  int persistence = getAdjustedPersistenceLevelIdx(persistence_idx, *m_currentDataset->getModelSet(fieldname, modelname));
 
-  auto model(m_currentDataset->getModel(fieldname, modelname, persistenceLevel, crystalId));
+  auto model(m_currentDataset->getModel(fieldname, modelname, persistence, crystalId));
   
   // if there isn't a model just show its original samples' images 
   if (!model)
     return fetchCrystalOriginalSampleImages(request, response);
 
   // interpolate the model using its original samples
-  std::cout << "regenOriginalImagesForCrystal: all samples requested for crystal "<<crystalId<<" of persistence level "<<persistenceLevel_idx<<" (MSModelSet plvl " << persistenceLevel << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << "\n";
+  std::cout << "regenOriginalImagesForCrystal: all samples requested for crystal "<<crystalId<<" of persistence level "<<persistence_idx<<" (MSModelSet plvl " << persistence << "); datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname << "\n";
 
-  auto samples(getSamples(category, fieldname, persistenceLevel, crystalId, false /*don't sort by fv*/));
+  auto samples(getSamples(category, fieldname, persistence, crystalId, false /*don't sort by fv*/));
   std::cout << "Testing all latent space variables computed for the " << samples.size() << " samples in this model.\n";
 
   //z coords are sorted by fieldvalue in Model::setFieldValues
@@ -835,18 +830,18 @@ void Controller::regenOriginalImagesForCrystal(const Json::Value &request, Json:
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     //std::string outputBasepath(datapath + "/debug/outimages");
-    //std::string outpath(outputBasepath + "/p" + std::to_string(persistenceLevel) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
+    //std::string outpath(outputBasepath + "/p" + std::to_string(persistence) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
     Eigen::MatrixXf I = ShapeOdds::evaluateModel(*model, model->getZCoord(i), false /*writeToDisk*/,
                                                  ""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
     float quality = ShapeOdds::testEvaluateModel(*model, model->getZCoord(i),
-                                                 persistenceLevel, crystalId, samples[i].idx, sample_image,
+                                                 persistence, crystalId, samples[i].idx, sample_image,
                                                  false /*writeToDisk*/, ""/*outputBasepath*/);
 
     std::cout << "Quality of generation of image for model at persistence level "
-              << persistenceLevel << ", crystalid " << crystalId << ": " << quality << std::endl;
+              << persistence << ", crystalid " << crystalId << ": " << quality << std::endl;
 
     // add image to response
     addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
@@ -855,25 +850,25 @@ void Controller::regenOriginalImagesForCrystal(const Json::Value &request, Json:
     response["fieldvals"].append(samples[i].val);
   }
 
-  response["msg"] = std::string("returning requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistenceLevel));
+  response["msg"] = std::string("returning requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistence));
 }
 
 /* 
  * Returns vector of global sample ids and their fieldvalue for the samples from which the crystal is comprised.
  */
 std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std::string &fieldname,
-                                                   unsigned persistenceLevel, unsigned crystalid, bool sort) {
+                                                   unsigned persistence, unsigned crystalid, bool sort) {
   std::vector<ValueIndexPair> fieldvalues_and_indices;
 
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXf> fieldvals = getFieldvalues(category, fieldname);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(fieldname, category);
   if (!fieldvals.data()) {
     std::cerr << "Invalid fieldname or empty field\n";
     return fieldvalues_and_indices;
   }
 
   // create a vector of global sample ids and their fieldvalue for the samples from which this crystal is comprised
-  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistenceLevel));
+  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistence));
   Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
   for (unsigned i = 0; i < partitions.size(); i++)
   {
@@ -887,7 +882,8 @@ std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std
   }
 
   // sort it by increasing fieldvalue
-  std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), ValueIndexPair::compare);
+  if (sort)
+    std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), ValueIndexPair::compare);
 
   return fieldvalues_and_indices;
 }
@@ -904,17 +900,14 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   if (!category.valid()) return setError(response, "invalid category");
 
   // get requested persistence level
-  unsigned int minLevel = m_currentTopoData->getMinPersistenceLevel();
-  unsigned int maxLevel = m_currentTopoData->getMaxPersistenceLevel();
-  int persistenceLevel = request["persistenceLevel"].asInt();
-  if (persistenceLevel < minLevel || persistenceLevel > maxLevel)
-    return setError(response, "invalid persistence level");
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
   std::string fieldname = request["fieldname"].asString();
   int crystalid = request["crystalID"].asInt();
-  std::cout << "fetchCrystalOriginalSampleImages: datasetId is "<<m_currentDatasetId<<", persistence is "<<persistenceLevel<<", crystalid is "<<crystalid<<std::endl;
+  std::cout << "fetchCrystalOriginalSampleImages: datasetId is "<<m_currentDatasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
 
-  auto fieldvalues_and_indices(getSamples(category, fieldname, persistenceLevel, crystalid));
+  auto fieldvalues_and_indices(getSamples(category, fieldname, persistence, crystalid));
   std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
 
   for (auto sample: fieldvalues_and_indices)
@@ -930,7 +923,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
     response["fieldvals"].append(sample.val);
   }
 
-  response["msg"] = std::string("returning " + std::to_string(fieldvalues_and_indices.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistenceLevel));
+  response["msg"] = std::string("returning " + std::to_string(fieldvalues_and_indices.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
 }
 
 /**
@@ -975,36 +968,6 @@ bool Controller::maybeLoadDataset(const Json::Value &request, Json::Value &respo
   }
 
   return true;
-}
-
-// getFieldvalues
-// 
-// returns Eigen::Map wrapping the vector of values for a given field
-const Eigen::Map<Eigen::VectorXf> Controller::getFieldvalues(Fieldtype type, const std::string &name)
-{
-  if (type == Fieldtype::DesignParameter)
-  {
-    auto parameters = m_currentDataset->getParameterNames();
-    auto result = std::find(std::begin(parameters), std::end(parameters), name);
-    if (result == std::end(parameters)) 
-      return Eigen::Map<Eigen::VectorXf>(NULL, 0);
-
-    int index = std::distance(parameters.begin(), result);
-    FortranLinalg::DenseVector<Precision> values = m_currentDataset->getParameterVector(index);
-    return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
-  }
-  else if (type == Fieldtype::QoI)
-  {
-    auto qois = m_currentDataset->getQoiNames();
-    auto result = std::find(std::begin(qois), std::end(qois), name);
-    if (result == std::end(qois)) 
-      return Eigen::Map<Eigen::VectorXf>(NULL, 0);
-
-    int index = std::distance(qois.begin(), result);
-    FortranLinalg::DenseVector<Precision> values = m_currentDataset->getQoiVector(index);
-    return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
-  }
-  return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 }
 
 /**
@@ -1128,7 +1091,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   std::cout << "computing nnmscomplex for fieldname: " << fieldname << "..." << std::endl;
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> fieldvals = getFieldvalues(category, fieldname);
+  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> fieldvals = m_currentDataset->getFieldvalues(fieldname, category);
   if (!fieldvals.data()) {
     std::cerr << "Controller::processData failed: invalid fieldname or empty field.\n";
     return false;

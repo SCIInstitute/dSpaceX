@@ -221,13 +221,13 @@ class Client {
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmalePersistenceLevel(datasetId, category, fieldname, persistenceLevel, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
+  fetchMorseSmalePersistence(datasetId, category, fieldname, persistence, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmalePersistenceLevel',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
-      persistenceLevel: persistenceLevel,
+      persistence: persistence,
       knn: knn,
       sigma: sigma,
       smooth: smooth,
@@ -293,14 +293,13 @@ class Client {
    * @param {string} fieldName
    * @return {Promise}
    */
-  fetchSingleEmbedding(datasetId, embeddingId, k,
-    persistenceLevel, category, fieldName) {
+  fetchSingleEmbedding(datasetId, embeddingId, k, persistenceLevel, category, fieldName) {
     let command = {
       name: 'fetchSingleEmbedding',
       datasetId: datasetId,
       embeddingId: embeddingId,
       k: k,
-      persistenceLevel: persistenceLevel,
+      persistence: persistenceLevel,
       category: category,
       fieldName: fieldName,
     };
@@ -342,16 +341,20 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal(datasetId, category, fieldname, persistenceLevel, crystalID, numSamples, showOrig) {
+  fetchNImagesForCrystal(datasetId, category, fieldname, persistence, crystalID, modelname, numSamples, modelSigma, showOrig, validate, percent) {
     let command = {
       name: 'fetchNImagesForCrystal',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
-      persistenceLevel: persistenceLevel,
+      persistence: persistence,
       crystalID: crystalID,
+      modelname: modelname,
       numSamples: numSamples,
+      modelSigma: modelSigma,
       showOrig: showOrig,
+      validate: validate,
+      percent: percent
     };
     return this._createCommandPromise(command);
   }
@@ -362,17 +365,17 @@ class Client {
    * @param {string} category design parameter or qoi
    * @param {string} fieldname
    * @param {number} k nearest neighbors
-   * @param {number} persistenceLevel
+   * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleRegression(datasetId, category, fieldname, k, persistenceLevel) {
+  fetchMorseSmaleRegression(datasetId, category, fieldname, k, persistence) {
     let command = {
       name: 'fetchMorseSmaleRegression',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
       k: k,
-      persistenceLevel: persistenceLevel,
+      persistence: persistence,
     };
     return this._createCommandPromise(command);
   }
@@ -383,26 +386,26 @@ class Client {
    * @param {string} category design parameter or qoi
    * @param {string} fieldname
    * @param {number} k
-   * @param {number} persistenceLevel
+   * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleExtrema(datasetId, category, fieldname, k, persistenceLevel) {
+  fetchMorseSmaleExtrema(datasetId, category, fieldname, k, persistence) {
     let command = {
       name: 'fetchMorseSmaleExtrema',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
       k: k,
-      persistenceLevel: persistenceLevel,
+      persistence: persistence,
     };
     return this._createCommandPromise(command);
   }
 
-  fetchCrystalPartition(datasetId, persistenceLevel, crystalID) {
+  fetchCrystalPartition(datasetId, persistence, crystalID) {
     let command = {
       name: 'fetchCrystalPartition',
       datasetId: datasetId,
-      persistenceLevel: persistenceLevel,
+      persistence: persistence,
       crystalID: crystalID,
     };
     return this._createCommandPromise(command);

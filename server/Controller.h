@@ -12,6 +12,8 @@
 
 namespace dspacex {
 
+void setError(Json::Value &response, const std::string &str = "server error");
+
 class Controller {
  public:
   Controller(const std::string &datapath_);
@@ -19,7 +21,6 @@ class Controller {
   void handleText(void *wsi, const std::string &text);
 
  private:
-  void setError(Json::Value &response, const std::string &str = "server error");
   bool verifyFieldname(Fieldtype type, const std::string &name);
 
   void configureCommandHandlers();
@@ -39,7 +40,7 @@ class Controller {
                    bool add_noise = true /* duplicate values risk erroroneous M-S */,
                    int num_persistences = -1 /* generates all persistence levels */,
                    bool normalize = true /* scale normalize field values */);
-
+  int getPersistence(const Json::Value &request, Json::Value &response);
 
   // Command Handlers
   void fetchDatasetList(const Json::Value &request, Json::Value &response);
@@ -65,8 +66,6 @@ class Controller {
   std::vector<ValueIndexPair> getSamples(Fieldtype category, const std::string &fieldname,
                                          unsigned persistenceLevel, unsigned crystalid, bool sort = true);
 
-  const Eigen::Map<Eigen::VectorXf> getFieldvalues(Fieldtype type, const std::string &name);
-
   int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSModelSet &mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
@@ -83,7 +82,7 @@ class Controller {
 
   // current processing state
   std::string m_currentField;
-  Fieldtype m_currentCategory{Fieldtype::Invalid};
+  Fieldtype m_currentCategory{Fieldtype::Unknown};
   int m_currentKNN{15};
   int m_currentNumSamples{50};
   double m_currentSigma{0.25};
