@@ -19,21 +19,21 @@ const Image& Dataset::getThumbnail(int idx) const
   return m_thumbnails[idx];
 }
 
-std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std::string& modelname, int p, int c)
-{
-  for (auto modelset : m_models[fieldname])
-    if (modelset->modelName() == modelname)
-      return modelset->getModel(p, c);
+// std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std::string& modelname, int p, int c)
+// {
+//   for (auto modelset : m_models[fieldname])
+//     if (modelset->modelName() == modelname)
+//       return modelset->getModel(p, c);
 
-  return nullptr;
-}
+//   return nullptr;
+// }
 
-bool Dataset::hasModel(const std::string& fieldname, const std::string& modelname, int p, int c) const
-{
-  return const_cast<Dataset*>(this)->getModel(fieldname, modelname, p, c) ? true : false;
-}
+// bool Dataset::hasModel(const std::string& fieldname, const std::string& modelname, int p, int c) const
+// {
+//   return const_cast<Dataset*>(this)->getModel(fieldname, modelname, p, c) ? true : false;
+// }
 
-std::shared_ptr<MSModelSet> Dataset::getModelSet(const std::string& fieldname, const std::string& modelname) {
+std::shared_ptr<MSModelset> Dataset::getModelset(const std::string& fieldname, const std::string& modelname) {
   for (auto modelset : m_models[fieldname])
     if (modelset->modelName() == modelname)
       return modelset;
@@ -130,7 +130,7 @@ Dataset::Builder& Dataset::Builder::withEmbedding(std::string name, FortranLinal
   return (*this);
 }
 
-Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared_ptr<MSModelSet> modelset) {
+Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared_ptr<MSModelset> modelset) {
   // only add model name if it doesn't already exist
   auto it = std::find(m_dataset->m_modelNames.begin(), m_dataset->m_modelNames.end(), modelset->modelName());
   if (it == m_dataset->m_modelNames.end())

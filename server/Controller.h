@@ -60,13 +60,13 @@ class Controller {
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
   void fetchNImagesForCrystal(const Json::Value &request, Json::Value &response);
-  void regenOriginalImagesForCrystal(const Json::Value &request, Json::Value &response);
+  void regenOriginalImagesForCrystal(MSModelset &modelset, Model& model, int persistence, int crystalId, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
   std::vector<ValueIndexPair> getSamples(Fieldtype category, const std::string &fieldname,
                                          unsigned persistenceLevel, unsigned crystalid, bool sort = true);
 
-  int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSModelSet &mscomplex) const;
+  int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const std::shared_ptr<MSModelset>& mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;

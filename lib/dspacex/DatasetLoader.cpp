@@ -11,6 +11,14 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <chrono>
+
+// This clock corresponds to CLOCK_MONOTONIC at the syscall level.
+using Clock = std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using namespace std::literals::chrono_literals;
 
 using namespace dspacex;
 
@@ -417,15 +425,21 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
 
     for (auto i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-
+      
+      // load 
+      time_point<Clock> start = Clock::now();
       auto modelset(DatasetLoader::parseModel(modelNode, filePath));
+      time_point<Clock> end = Clock::now();
+      milliseconds diff = duration_cast<milliseconds>(end - start);
+      std::cout << "Loaded " << i << "th modelset in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+      
       if (modelset) {
         // ensure modelset has a unique name in the set of modelsets for this field and add it (TODO: better name, see issue)
         auto num_of_type_for_this_field = std::count_if(models[modelset->fieldName()].begin(), models[modelset->fieldName()].end(),
-                      [&modelset](std::shared_ptr<MSModelSet> m) { return m->modelType() == modelset->modelType(); });
+                                                        [&modelset](std::shared_ptr<MSModelset> m) { return m->modelType() == modelset->modelType(); });
         if (num_of_type_for_this_field > 0) // results in PCA, PCA2, PCA3, ...
           modelset->setModelName(modelset->modelName() + std::to_string(num_of_type_for_this_field + 1));
-          
+        
         models[modelset->fieldName()].push_back(std::move(modelset));
       }
       else
@@ -442,7 +456,7 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
  * Sets the parameters used to compute the M-S in which these models reside.
  * (technically, the M-S that partitioned the data with which these models were learned)
  */
-bool setMSParams(MSModelSet& modelset, const YAML::Node& ms) {
+bool setMSParams(MSModelset& modelset, const YAML::Node& ms) {
   if (ms["knn"] && ms["sigma"] && ms["smooth"] && ms["curvepoints"] && ms["depth"] && ms["noise"] && ms["normalize"]) {
     auto knn         = ms["knn"].as<int>();
     auto sigma       = ms["sigma"].as<double>();
@@ -464,7 +478,7 @@ bool setMSParams(MSModelSet& modelset, const YAML::Node& ms) {
   return false;
 }
 
-std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
+std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
 {
   if (!modelNode["fieldname"]) {
     std::cerr << "Model entry missing 'fieldname'.\n";
@@ -540,7 +554,7 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
-  auto ms_of_models(std::make_unique<MSModelSet>(modelType, fieldname, nsamples, npersistences));
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences));
   std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
@@ -548,9 +562,9 @@ std::unique_ptr<MSModelSet> DatasetLoader::parseModel(const YAML::Node& modelNod
   } 
 
   // read paths to all the models (the models themselves are read on demand)
-  //for (auto pidx = npersistences-1; pidx >= 0; pidx--) { <ctc> finally! at long last no more hacking this line!
+  for (auto pidx = npersistences-1; pidx >= 0; pidx--) //<ctc> finally! at long last no more hacking this line!
   //for (auto pidx = npersistences=0; pidx >= 0; pidx--) { // just get the 0th plvl
-  for (auto pidx = npersistences-1; pidx >= npersistences-1; pidx--) // just get the highest plvl
+  //for (auto pidx = npersistences-1; pidx >= npersistences-1; pidx--) // just get the highest plvl
   {
     auto &P = ms_of_models->getPersistenceLevel(pidx);
     auto persistencePath(persistencesBasePath + maybePadIndex(pidx, padIndices, npersistences));

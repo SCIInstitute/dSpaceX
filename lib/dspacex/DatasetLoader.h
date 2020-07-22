@@ -56,7 +56,7 @@ private:
   static ModelMap parseModels(const YAML::Node &config,
                               const std::string &filePath);
 
-  static std::unique_ptr<MSModelSet> parseModel(const YAML::Node& modelNode,
+  static std::unique_ptr<MSModelset> parseModel(const YAML::Node& modelNode,
                                                  const std::string& filePath);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(

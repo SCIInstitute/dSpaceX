@@ -148,7 +148,9 @@ class MorseSmaleWindow extends React.Component {
     
     // Handle left click release
     if (this.state.selectingCrystal && event.button === 0) {
-      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/, event.ctrlKey && event.shiftKey /*validate*/);
+      this.pick(this.getPickPosition(event),
+                event.ctrlKey && !event.shiftKey /*showOrig*/,
+                event.ctrlKey && event.shiftKey /*validate*/);
     }
   }
 

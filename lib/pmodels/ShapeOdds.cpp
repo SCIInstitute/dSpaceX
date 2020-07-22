@@ -90,10 +90,10 @@ Eigen::MatrixXf ShapeOdds::evaluateModel(const Model &model, const Eigen::Vector
 // verify evaluated model and how closely it corresponds to sample at that idx
 // return measured difference between generated sample and original, and ...
 float ShapeOdds::testEvaluateModel(const Model &model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
-                                   unsigned p, unsigned c, unsigned z_idx, const Image &sampleImage,
+                                   /*unsigned p, unsigned c,*/ /*unsigned z_idx,*/ const Image &sampleImage,
                                    const bool writeToDisk, const std::string basePath)
 {
-  std::string outpath(basePath + "/p" + std::to_string(p) + "-c" + std::to_string(c) +"-z" + std::to_string(z_idx) + ".png");
+  std::string outpath(basePath + "/p_idx_"/* + std::to_string(p)*/ + "-c_idx_"/* + std::to_string(c)*/ +"-z_idx_-"/* + std::to_string(z_idx)*/ + ".png");
   unsigned w = sampleImage.getWidth(), h = sampleImage.getHeight();
   
   Eigen::MatrixXf I(evaluateModel(model, z_coord, writeToDisk, outpath, w, h));

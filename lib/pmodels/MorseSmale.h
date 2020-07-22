@@ -13,17 +13,17 @@
 
 namespace dspacex {
 
-class MSModelSet;
+class MSModelset;
 
 /// All model sets for a given field
-using ModelMap = std::map<std::string, std::vector<std::shared_ptr<MSModelSet>>>;
+using ModelMap = std::map<std::string, std::vector<std::shared_ptr<MSModelset>>>;
 
 /*
- * MSModelSet is a model container that stores the set of models computed for a given field
+ * MSModelset is a model container that stores the set of models computed for a given field
  * using the samples associated with each crystal of a M-S complex. Inclues the parameters
  * used to compute the M-S using NNMSComplex.
  */
-class MSModelSet
+class MSModelset
 {
   /*
    * Crystal contains the models constructed from this set of samples
@@ -39,8 +39,9 @@ class MSModelSet
     std::string modelPath;
     std::vector<unsigned> sample_indices;
     std::shared_ptr<Model> model;
+    std::unique_ptr<std::vector<float>> samples;  // cache samples since they're needed to evaluate model each time
 
-    friend class MSModelSet;
+    friend class MSModelset;
   };
 
 
@@ -56,7 +57,7 @@ class MSModelSet
     // each crystal is composed of a non-intersecting set of samples, read from this vector
     void setCrystalSampleIds(Eigen::RowVectorXi crystal_ids) {
       // WARNING: all crystals must have been added or these crystal ids will be out of range      
-      for (unsigned n = 0; n < crystal_ids.rows(); n++) { crystals[crystal_ids(n)].addSampleIndex(n); }
+      for (unsigned n = 0; n < crystal_ids.cols(); n++) { crystals[crystal_ids(n)].addSampleIndex(n); }
     }
 
     std::vector<Crystal> crystals;
@@ -65,7 +66,7 @@ class MSModelSet
 
 
 public:
-  MSModelSet(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences)
+  MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences)
     : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field), num_samples(nSamples), samples(nSamples)
   { persistence_levels.resize(nPersistences); }
 
@@ -86,7 +87,7 @@ public:
   std::shared_ptr<Model> getModel(int persistence, int crystal);
 
   /// returns set of samples associated with a crystal
-  std::vector<float> getCrystalSamples(int persistence, int crystalid);
+  const std::vector<float>& getCrystalSamples(int persistence, int crystalid);
 
   /// returns all models (*unused, and costly since it will read every model in this set)
   std::vector<std::shared_ptr<Model>> getAllModels();
@@ -113,7 +114,7 @@ public:
   }
 
 private:
-  MSModelSet();
+  MSModelset();
 
   Model::Type modeltype;            // type of models in this complex (pca, shapeodds, sharedgp, etc)
   std::string modelname;            // name of models in this complex

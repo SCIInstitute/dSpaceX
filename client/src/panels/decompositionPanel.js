@@ -206,6 +206,9 @@ class DecompositionPanel extends React.Component {
       console.log('Persistence level changed from '+prevState.persistenceLevel+' to '+this.state.persistenceLevel+', updating data model...');
       this.updateDataModel();
     }
+    else if (prevState.interpolationModel !== this.state.interpolationModel) {
+      this.updatePropsConfig();
+    }
     else {
       //console.log('decompositionPanel.componentDidUpdate, but state has not changed.');
     }

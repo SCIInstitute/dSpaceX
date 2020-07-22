@@ -37,7 +37,7 @@ public:
     maxval = minmax.second;
   }
 
-  const Eigen::VectorXf getZCoord(unsigned local_idx) const
+  const Eigen::VectorXf& getZCoord(unsigned local_idx) const
   {
     // z_coords for this model are ordered by the global order of samples used to construct it
     return Z.row(local_idx);
@@ -114,7 +114,7 @@ public:
                                        const std::string outpath = "", unsigned w = 0, unsigned h = 0);
   
   static float testEvaluateModel(const Model &model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
-                                 const unsigned p, const unsigned c, const unsigned z_idx, const Image &sampleImage,
+                                 /*const unsigned p, const unsigned c, const unsigned z_idx,*/ const Image &sampleImage,
                                  const bool writeToDisk = false, const std::string path = "");
 };
 
@@ -128,7 +128,7 @@ public:
                                        const std::string outpath = "", unsigned w = 0, unsigned h = 0);
   
   static float testEvaluateModel(const Model &model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
-                                 const unsigned p, const unsigned c, const unsigned z_idx, const Image &sampleImage,
+                                 /*const unsigned p, const unsigned c, const unsigned z_idx,*/ const Image &sampleImage,
                                  const bool writeToDisk = false, const std::string path = "");
 };
 

@@ -89,13 +89,13 @@ class Dataset {
   }
 
   /// is there a Model associated with this field, modelname, persistence, and crystal?
-  bool hasModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal) const;
+  //bool hasModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal) const;
 
   /// return specific Model associated with this field, modelname, persistence, and crystal
-  std::shared_ptr<Model> getModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal);
+  //std::shared_ptr<Model> getModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal);
 
-  /// return MSModelSet associated with this field and modelname
-  std::shared_ptr<MSModelSet> getModelSet(const std::string& fieldname, const std::string& modelname);
+  /// return MSModelset associated with this field and modelname
+  std::shared_ptr<MSModelset> getModelset(const std::string& fieldname, const std::string& modelname);
 
   /// return the image thumbnail for this sample index
   const Image& getThumbnail(int idx) const;
@@ -116,7 +116,7 @@ class Dataset {
     Builder& withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter);
     Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi);
     Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding);
-    Builder& withModel(std::string name, std::shared_ptr<MSModelSet> modelset);
+    Builder& withModel(std::string name, std::shared_ptr<MSModelset> modelset);
     Builder& withName(std::string name);
     Builder& withThumbnails(std::vector<Image> thumbnails);
     
