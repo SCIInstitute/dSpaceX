@@ -6,7 +6,7 @@
 #include "imageutils/Image.h"
 #include "dspacex/Precision.h"
 #include "yaml-cpp/yaml.h"
-#include "pmodels/MorseSmale.h"
+#include "pmodels/Modelset.h"
 
 #include <string>
 #include <vector>

@@ -1,11 +1,10 @@
 SET(PMODELS_HEADER_FILES
-  MorseSmale.h
+  Modelset.h
   Models.h
 )
 
 SET(PMODELS_SOURCE_FILES
-  ShapeOdds.cpp
-  MorseSmale.cpp
+  Modelset.cpp
   Models.cpp
 )
 

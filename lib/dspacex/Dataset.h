@@ -4,7 +4,7 @@
 #include "flinalg/LinalgIO.h"
 #include "dspacex/Precision.h"
 #include "imageutils/Image.h"
-#include "pmodels/MorseSmale.h"
+#include "pmodels/Modelset.h"
 
 #include <vector>
 
