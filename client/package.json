@@ -8,6 +8,7 @@
     "build-dev": "webpack --config webpack.config.js",
     "watch": "webpack --watch --config webpack.config.js",
     "start": "webpack-dev-server --config webpack.config.js",
+    "server": "http-server",
     "lint": "eslint src"
   },
   "repository": {

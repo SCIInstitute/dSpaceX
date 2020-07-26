@@ -1,6 +1,9 @@
 #
 # Installs conda environment for building dSpaceX
 #
+echo ""
+echo "Note: this script only supports bash and zsh shells"
+echo ""
 
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
@@ -12,12 +15,12 @@ fi
 function install_conda() {
   if ! command -v conda 2>/dev/null 1>&2; then
     echo "installing anaconda..."
-    if [[ "$(uname)" == "Darwin" ]]; then
-      curl -o ./Miniconda3-latest-MacOSX-x86_64.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+    if [ "$(uname)" == "Darwin" ]; then
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
       bash ./Miniconda3-latest-MacOSX-x86_64.sh
       rm ./Miniconda3-latest-MacOSX-x86_64.sh
-    elif [[ "$(uname)" == "Linux" ]]; then
-      curl -o ./Miniconda3-latest-Linux-x86_64.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    elif [ "$(uname)" == "Linux" ]; then
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
       bash ./Miniconda3-latest-Linux-x86_64.sh
       rm ./Miniconda3-latest-Linux-x86_64.sh
     else
@@ -44,8 +47,8 @@ function install_conda() {
   if ! conda activate $CONDAENV; then return 1; fi
 
   # pip is needed in sub-environments or the base env's pip will silently install to base
-  if ! conda install --yes pip=20.0.2; then return 1; fi
-  if ! pip install --upgrade pip; then return 1; fi
+  if ! conda install --yes pip=20.1.1; then return 1; fi
+  if ! python -m pip install --upgrade pip; then return 1; fi
 
   # install dspacex deps
   if ! conda install --yes \
@@ -72,11 +75,10 @@ function install_conda() {
           liblapack=3.8.0
   fi
   
-  # pip installs (none currently needed, but here are two examples:)
-  #if ! pip install matplotlib==3.1.2; then return 1; fi
-  #if ! pip install -e Python/DatasetUtilsPackage; then return 1; fi   # install the local GirderConnector code as a package
+  # pip installs
   if ! pip install pynrrd==0.4.2; then return 1; fi
   if ! pip install pyrender==0.1.39; then return 1; fi
+  if ! pip install grip==4.5.2; then return 1; fi
 
   conda info
   return 0
