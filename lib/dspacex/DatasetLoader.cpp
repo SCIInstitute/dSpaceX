@@ -436,7 +436,7 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string 
       if (modelset) {
         // ensure modelset has a unique name in the set of modelsets for this field and add it (TODO: better name, see issue)
         auto num_of_type_for_this_field = std::count_if(models[modelset->fieldName()].begin(), models[modelset->fieldName()].end(),
-                                                        [&modelset](std::shared_ptr<MSModelset> m) { return m->modelType() == modelset->modelType(); });
+                                   [&modelset](std::shared_ptr<MSModelset> m) { return m->modelType() == modelset->modelType(); });
         if (num_of_type_for_this_field > 0) // results in PCA, PCA2, PCA3, ...
           modelset->setModelName(modelset->modelName() + std::to_string(num_of_type_for_this_field + 1));
         

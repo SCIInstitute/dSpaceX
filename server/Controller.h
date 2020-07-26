@@ -60,7 +60,7 @@ class Controller {
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
   void fetchNImagesForCrystal(const Json::Value &request, Json::Value &response);
-  void regenOriginalImagesForCrystal(MSModelset &modelset, Model& model, int persistence, int crystalId, Json::Value &response);
+  void regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model, int persistence, int crystalId, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
   std::vector<ValueIndexPair> getSamples(Fieldtype category, const std::string &fieldname,

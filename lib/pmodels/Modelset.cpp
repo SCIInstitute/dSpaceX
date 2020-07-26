@@ -22,7 +22,7 @@ std::shared_ptr<Model> MSModelset::getModel(int p, int c)
   std::shared_ptr<Model>& model(persistence_levels[p].crystals[c].model);
   if (!model) {
     DatasetLoader::parseModel(persistence_levels[p].crystals[c].modelPath,
-                              *(model = std::make_shared<Model>(modeltype)),
+                              *(model = Model::create(modeltype, modelname)),
                               persistence_levels[p].crystals[c].sample_indices);
 
     // set fieldvalue bounds of model

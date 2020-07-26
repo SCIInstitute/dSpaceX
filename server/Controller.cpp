@@ -721,7 +721,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // if requested, validate model by generating interpolated images using z_coords of its own samples
   bool validate = request["validate"].asBool();
   if (validate)
-    return regenOriginalImagesForCrystal(*modelset, *model, persistence_idx, crystalId, response);
+    return regenOriginalImagesForCrystal(*modelset, model, persistence_idx, crystalId, response);
 
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
@@ -754,10 +754,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     double fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
-    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, fieldval, modelSigma);
+    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
 
     // evaluate model at this coordinate
-    Eigen::MatrixXf I = ShapeOdds::evaluateModel(*model, z_coord, false /*writeToDisk*/);
+    Eigen::MatrixXf I = model->evaluate(z_coord, false /*writeToDisk*/);
     
     // add result image to response
     addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
@@ -787,7 +787,7 @@ int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenc
  * specified crystal at this persistence level using the latent space coordinates for each of
  * the original samples of model/crystal (each sample has a z_coord).
  */
-void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, Model& model, int persistence_idx, int crystalId, Json::Value &response) {
+void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model, int persistence_idx, int crystalId, Json::Value &response) {
   // interpolate the model using its original samples
   std::cout << "regenOriginalImagesForCrystal\n";
 
@@ -807,13 +807,12 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, Model& mode
     //std::string outputBasepath(datapath + "/debug/outimages");
     //std::string outpath(outputBasepath + "/pidx" + std::to_string(persistence_idx) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
-    Eigen::MatrixXf I = ShapeOdds::evaluateModel(model, model.getZCoord(i), false /*writeToDisk*/,
-                                                 ""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
+    Eigen::MatrixXf I = model->evaluate(model->getZCoord(i), false /*writeToDisk*/,
+                                        ""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
-    float quality = ShapeOdds::testEvaluateModel(model, model.getZCoord(i),
-                                                 /*persistence_idx, crystalId,*/ /*samples[i].idx,*/ sample_image,
-                                                 false /*writeToDisk*/, ""/*outputBasepath*/);
+    float quality = Model::testEvaluateModel(model, model->getZCoord(i),
+                                             sample_image, false /*writeToDisk*/, ""/*outputBasepath*/);
 
     std::cout << "Quality of generation of image for model at persistence_idx "
               << persistence_idx << ", crystalid " << crystalId << ": " << quality << std::endl;

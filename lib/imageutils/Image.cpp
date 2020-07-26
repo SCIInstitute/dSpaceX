@@ -38,7 +38,7 @@ std::string Image::getFormat() const {
 // converts w*h x 1 matrix of doubles to w x h 2d image of unsigned char, throwing an exception if dims don't match
 Image Image::convertToImage(const Eigen::MatrixXf &I, const unsigned w, const unsigned h)
 {
-  //<ctc> note: this is about the same as in ShapeOdds::evaluateModel, accidental rewrite? consolidate.
+  //<ctc> note: this is about the same as in ShapeOdds::evaluate, accidental rewrite? consolidate.
   Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image_mat = (I.array() * 255.0).cast<unsigned char>();
 
   if (image_mat.size() != w * h)
