@@ -1,17 +1,15 @@
+import { Accordion, AccordionDetails, AccordionSummary } from '@material-ui/core';
 import DecompositionPanel from './decompositionPanel.js';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
 import Select from '@material-ui/core/Select';
-import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+
 
 /**
  * A Window Panel provides a display of the settings associated with any given
@@ -282,10 +280,10 @@ class WindowPanel extends React.Component {
   getScatterPlotOptions() {
     const { classes } = this.props;
     return (
-      <ExpansionPanel disabled={!this.props.enabled || !this.props.dataset}
+      <Accordion disabled={!this.props.enabled || !this.props.dataset}
         defaultExpanded={true} style={{ paddingLeft:'0px', margin:'1px' }}>
-        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}/>
-        <ExpansionPanelDetails style={{
+        <AccordionSummary expandIcon={<ExpandMoreIcon/>}/>
+        <AccordionDetails style={{
           paddingLeft: '15px',
           paddingRight: '10px', margin: '1px', width: '100%',
           boxSizing: 'border-box',
@@ -411,8 +409,8 @@ class WindowPanel extends React.Component {
               </Select>
             </FormControl>
           </div>
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
+        </AccordionDetails>
+      </Accordion>
     );
   };
 
@@ -423,15 +421,15 @@ class WindowPanel extends React.Component {
   render() {
     const { classes } = this.props;
     return (
-      <ExpansionPanel
+      <Accordion
         disabled={!this.props.enabled} defaultExpanded={true}
         style={{ paddingLeft:'0px', margin:'1px', paddingTop:'0px' }}>
-        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
           <Typography>
             {'Window # ' + (this.props.windowIndex + 1)}
           </Typography>
-        </ExpansionPanelSummary>
-        <ExpansionPanelDetails style={{
+        </AccordionSummary>
+        <AccordionDetails style={{
           paddingLeft: '15px', paddingTop: '0px',
           paddingRight: '10px', marginLeft: '1px', marginRight: '1px',
           width: '100%', boxSizing: 'border-box',
@@ -482,8 +480,8 @@ class WindowPanel extends React.Component {
             }
 
           </div>
-        </ExpansionPanelDetails>
-      </ExpansionPanel>
+        </AccordionDetails>
+      </Accordion>
     );
   }
 }
