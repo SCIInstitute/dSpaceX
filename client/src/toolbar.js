@@ -38,7 +38,7 @@ class Toolbar extends React.Component {
     return (
       <AppBar position='absolute' className={classes.appBar}>
         <MaterialToolbar>
-          <Typography variant='title' color='inherit'>
+          <Typography variant='h3' color='inherit'>
             dSpaceX
           </Typography>
           <div style={{

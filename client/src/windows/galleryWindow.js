@@ -80,8 +80,8 @@ class GalleryWindow extends Component {
       <Paper style={{ overflow:'hidden auto', border:'1px solid gray' }}>
         <Grid container
           justify={'center'}
-          spacing={8}
-          style={{ margin:'5px 0px 0px 0px' }}>
+          spacing={1}
+          style={{ margin:'0px 0px 0px 0px' }}>
           {this.state.thumbnails.length > 0
           && this.state.thumbnails.map((thumbnail, i) =>
             activeDesigns.has(i) && <Grid key={i} item>
