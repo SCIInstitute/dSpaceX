@@ -45,6 +45,8 @@ Use `--help` to list all options.
 
 
 **Additional Notes**
+
+**Building Other Artifacts**
 The default CMake configuration will only build the HDProcess library.
 It can also optionally build the following binaries if desired.
 These may require installation of additional dependencies, listed below.
@@ -70,6 +72,21 @@ The HDVizImage binary has the following additional dependencies:
 The beSpace server backend has the following dependencies:
 - libJpeg
 - libPng
+
+**Building in CLion**
+If you build the server in the CLion IDE you see the following error
+```cmake
+CMake Error at /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.16/Modules/FindPackageHandleStandardArgs.cmake:146 (message):
+  Could NOT find PNG (missing: PNG_LIBRARY PNG_PNG_INCLUDE_DIR)
+```
+You will need to add -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} to the CMake options in CLion.
+1. Select the settings(gear) icon in the CMake window
+2. Fromt the dropdown select CMake Settings
+3. In the CMake Options: field paste -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} 
+
+CONDA_PREFIX is the path to the conda environment.
+Adding it to the CMake prefix path guarantees CMake can find all packages installed in that environment.
+
 
 # Building the Client Code
 **See [README.md in the client directory](./client/README.md)**
