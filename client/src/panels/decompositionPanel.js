@@ -1,5 +1,5 @@
 import { Accordion, AccordionDetails, AccordionSummary } from '@material-ui/core';
-import { Button } from '@material-ui/core';
+import { Button, ButtonGroup } from '@material-ui/core';
 import Checkbox from '@material-ui/core/Checkbox';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FormControl from '@material-ui/core/FormControl';
@@ -19,7 +19,6 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
-
 
 /**
  * The Decomposition Panel component provides a display of the
@@ -539,6 +538,27 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
 
+            {/* Interpolation Model Dropdown */}
+            <FormControl className={classes.formControl}
+              disabled={!this.props.enabled}
+              style={{ width: '100%',
+              boxSizing: 'border-box' }}>
+              <InputLabel htmlFor='model-field'>Model</InputLabel>
+              <Select ref="interpolationCombo"
+                value={this.state.interpolationModel}
+                style={{ width:'100%' }}
+                onChange={this.handleInterpolationModelChange.bind(this)} 
+                inputProps={{ name: 'model', id: 'model-field' }}>
+                <MenuItem value='None'>
+                  <em>None</em>
+                </MenuItem>
+                {this.props.dataset.models && this.props.dataset.models.map((model) =>
+                  <MenuItem key={model.id} value={model.name.trim()}>
+                    <em>{model.name}</em>
+                  </MenuItem>)}
+              </Select>
+            </FormControl>
+
             {/* Partitioning Algorithm */ }
             <Accordion disabled={!this.props.enabled} defaultExpanded={false}
               style={{ paddingLeft:'0px', margin:'1px' }}>
@@ -646,17 +666,15 @@ class DecompositionPanel extends React.Component {
                   </FormControl>
 
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
-                  { /* <ButtonGroup orientation="vertical" >  (available in material-ui v4) */ }
-                  { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute</Button> }
-                  { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>
-                    Export
-                  </Button> }
-                  { /* </ButtonGroup> */ }
+                  <ButtonGroup orientation="vertical" >
+                    { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute</Button> }
+                    { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export</Button> }
+                  </ButtonGroup>
                 </div>
               </AccordionDetails>
             </Accordion>
 
-            { /* Interpolation Model Selection */}
+            { /* Interpolation Parameters */}
             <Accordion disabled={!this.props.enabled} defaultExpanded={false}
               style={{ paddingLeft:'0px', margin:'1px' }}>
               <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
@@ -667,30 +685,6 @@ class DecompositionPanel extends React.Component {
                 boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', flexDirection: 'column',
                   width: '100%', boxSizing: 'border-box' }}>
-
-                  {/* Interpolation Model Dropdown */}
-                  <FormControl className={classes.formControl}
-                    disabled={!this.props.enabled}
-                    style={{ width: '100%',
-                      boxSizing: 'border-box' }}>
-                    <InputLabel htmlFor='model-field'>Model</InputLabel>
-                    <Select ref="interpolationCombo"
-                      value={this.state.interpolationModel}
-                      style={{ width:'100%' }}
-                      onChange={this.handleInterpolationModelChange.bind(this)} 
-                      inputProps={{
-                        name: 'model',
-                        id: 'model-field',
-                      }}>
-                      <MenuItem value='None'>
-                        <em>None</em>
-                      </MenuItem>
-                      {this.props.dataset.models && this.props.dataset.models.map((model) =>
-                        <MenuItem key={model.id} value={model.name.trim()}>
-                          <em>{model.name}</em>
-                        </MenuItem>)}
-                    </Select>
-                  </FormControl>
 
                   { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
                   <TextField
