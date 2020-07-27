@@ -4,6 +4,8 @@ Exploration of multidimensional data using dSpaceX, the Design Space Explorer
 
 <img src="documentation/images/all_samples.png" width="1000px" align="center" hspace="20">
 
+Table of Contents
+====================
 - [Overview](#overview)  
 - [Installation](#installation)  
 - [Getting Started](#using-dspacex)  
