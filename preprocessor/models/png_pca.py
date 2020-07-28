@@ -75,10 +75,10 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
 
 
 # Here is an example of using this code - for now it requires a human-in-the-loop
-# shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/images/'
-# partition_directory_ = '/Users/kylimckay-bishop/dSpaceX/data/CantileverBeam/crystal_partitions/cantilever_crystal_partitions_Position.csv'
-# output_directory_ = '/Users/kylimckay-bishop/downloads/'
-# output_filename_ = 'pca_model_param_Position'
-#
-# out = generate_png_pca_model(shape_directory_, partition_directory_)
-# write_to_file(out, output_directory_, output_filename_)
+shape_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/processed_data/images/'
+partition_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/crystal_partitions/cantilever_crystal_partitions_Max_Stress.csv'
+output_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/pca_model_results/'
+output_filename_ = 'pca_model_qoi_max_stress'
+
+out = generate_png_pca_model(shape_directory_, partition_directory_)
+write_to_file(out, output_directory_, output_filename_)

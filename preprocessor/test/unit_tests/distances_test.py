@@ -2,7 +2,7 @@ import glob
 import numpy as np
 import os
 import unittest
-from preprocessor.test.generate_volumes import generate_volumes, generate_ground_truth_distance
+from preprocessor.test.unit_tests.generate_volumes import generate_volumes, generate_ground_truth_distance
 from preprocessor.distances.nrrd_distances import calculate_hamming_distance_nrrd
 
 
