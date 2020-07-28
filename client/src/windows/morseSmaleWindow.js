@@ -18,7 +18,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.selectedOpacity = 1.0;
     this.unselectedOpacity = 0.80;
-    this.numInterpolants = 51; // how many samples to generate using current model [to fill drawer]
+    this.numInterpolants = 50; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
       selectingCrystal: false,
@@ -349,13 +349,14 @@ class MorseSmaleWindow extends React.Component {
         //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
       }
 
+      let crystalID = this.pickedObject.name;
+
       // highlights samples from this crystal in other views (e.g., embedding window)
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
 
       // Get crystal partitions (parent component updates drawer once they arrive)
-      let crystalID = this.pickedObject.name;
       this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
 
       this.renderScene();

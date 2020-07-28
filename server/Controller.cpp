@@ -749,7 +749,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     minval = minval + (maxval - minval) * percent;
   }
   
-  for (unsigned i = 0; i <= numZ; i++)
+  for (unsigned i = 0; i < numZ; i++)
   {
     double fieldval = minval + delta * i;
 
