@@ -1,0 +1,113 @@
+from glob import glob
+import math
+import numpy as np
+from numpy.linalg import inv
+from PIL import Image
+import pyrender
+import re
+import trimesh
+
+
+def generate_mesh_thumbnails(shape_directory, output_directory, add_slices=True):
+    # Initialize scene and set-up static objects
+    gold_material = pyrender.MetallicRoughnessMaterial(baseColorFactor=[1.0, 0.766, 0.336, 1.0],
+                                                       roughnessFactor=.25,
+                                                       metallicFactor=1,
+                                                       emissiveFactor=0)
+    scene = pyrender.Scene()
+    magnification = 5
+    camera = pyrender.OrthographicCamera(magnification, magnification * .75)
+    camera_position = 2*np.array([3.25, -4.25, 2.5])
+    origin = np.array([0, 0, 0])
+    up_vector = np.array([0, 0, 1])
+
+    image_width, image_height = 144, 108  # 96, 72
+
+    renderer = pyrender.OffscreenRenderer(image_width, image_height)
+
+    # Get all meshes
+    shapes = glob(shape_directory + '*.stl')
+    shapes.extend(glob(shape_directory + '*.ply'))
+    shapes.extend(glob(shape_directory + '*.obj'))
+
+    # For each mesh format generate thumbnail
+    for index, shape_file in enumerate(shapes):
+        shape_id = list(map(int, re.findall(r'\d+', shape_file)))[-1]
+        print('Thumbnail generation %.2f percent complete. Generating thumbnail %i of %i. ' %
+              ((100 * index / len(shapes)), index, len(shapes)), end='\r')
+
+        shape_mesh = trimesh.load_mesh(shape_file)
+        obj_center = shape_mesh.centroid
+
+        # shift camera position to center object
+        camera_pose, left_vector = look_at(camera_position + obj_center, origin + obj_center, up_vector)
+        camera_pose = np.array(inv(camera_pose))
+        scene.add(camera, pose=camera_pose)
+
+        # lighting
+        scene.ambient_light = .01
+        dir_light_obj = pyrender.DirectionalLight(color=[1, 1, 1], intensity=1000)
+
+        spotlight_positions = [[-.1, -.1, 10], np.array([0, 0, 50]) - 8*left_vector]
+        headlamp_offset = 20.0
+        spotlight_positions.append(camera_position + headlamp_offset * left_vector + 1.5 * up_vector)
+        spotlight_positions.append(camera_position - headlamp_offset * left_vector + 1.2 * up_vector)
+
+        for light_pos in spotlight_positions:
+            matrix, left_vector = look_at(light_pos, origin, up_vector)
+            light_pose = np.array(inv(matrix))
+            scene.add(dir_light_obj, pose=light_pose)
+
+        mesh = pyrender.Mesh.from_trimesh(shape_mesh, material=gold_material)
+        scene.add(mesh)
+
+        color, depth = renderer.render(scene)
+
+        # clean up scene since done rendering this object
+        scene.clear()
+
+        pil_img = Image.new('RGB', (image_width, image_height))
+
+        color = [(pixel[0], pixel[1], pixel[2]) for pixel in color.reshape(-1, 3)]
+        pil_img.putdata(color)
+        filename = str(shape_id) + '.png'
+        pil_img.save(output_directory + filename)
+
+
+def look_at(eye, target, up):
+    eye = np.array(eye)
+    target = np.array(target)
+    up = np.array(up)
+    look_vector = eye[:3] - target[:3]
+    look_vector = normalize(look_vector)
+    U = normalize(up[:3])
+    left_vector = np.cross(U, look_vector)
+    up_vector = np.cross(look_vector, left_vector)
+    M = np.array(np.identity(4))
+    M[:3,:3] = np.vstack([left_vector, up_vector, look_vector])
+    T = translate(-eye)
+    return np.matmul(M, T), left_vector
+
+
+def translate(xyz):
+    x, y, z = xyz
+    return np.array([[1, 0, 0, x],
+                     [0, 1, 0, y],
+                     [0, 0, 1, z],
+                     [0, 0, 0, 1]])
+
+
+def magnitude(v):
+    return math.sqrt(np.sum(v ** 2))
+
+
+def normalize(v):
+    m = magnitude(v)
+    if m == 0:
+        return v
+    return v / m
+
+
+mesh_directory = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/unprocessed_data/shape_representations/'
+output = '/Users/kylimckay-bishop/Temporary/thumbnails/'
+generate_mesh_thumbnails(mesh_directory, output)

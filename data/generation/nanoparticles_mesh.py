@@ -3,9 +3,10 @@ import matplotlib.tri as mtri
 import numpy as np
 import os
 import pandas as pd
+import trimesh
 
 
-def generate_nano_thumbnails(parameter_csv, output_directory):
+def generate_nano_meshes(parameter_csv, output_directory):
     parameter_df = pd.read_csv(parameter_csv)
 
     output_directory = os.path.join(output_directory, '')
@@ -18,8 +19,8 @@ def generate_nano_thumbnails(parameter_csv, output_directory):
               ((100 * sample.Index / len(parameter_df.index)), sample.Index, len(parameter_df.index)), end='\r')
 
         X, Y, Z, tri_indices = nano_formula_3d(sample.m, sample.n1, sample.n2, sample.n3, sample.a, sample.b, 100000)
-        vertices = np.column_stack((X, Y, Z))
-        np.savetxt(output_directory + str(sample.Index + 1) + '.csv', vertices, delimiter=',')
+        shape_mesh = trimesh.Trimesh(vertices=np.column_stack((X, Y, Z)), faces=tri_indices)
+        shape_mesh.export(output_directory + str(sample.Index + 1) + '.obj', 'obj')
 
 
 def nano_formula_3d(m, n1, n2, n3, a, b, num_points):
@@ -48,7 +49,7 @@ def nano_formula_2d(m, n1, n2, n3, a, b, theta):
 
 
 # testing
-input_params_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/Nanoparticles_Parameters.csv'
-output_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/images'
+input_params_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/unprocessed_data/Nanoparticles_Parameters.csv'
+output_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/unprocessed_data/shape_representations/'
 
-generate_nano_thumbnails(input_params_dir, output_dir)
+generate_nano_meshes(input_params_dir, output_dir)
