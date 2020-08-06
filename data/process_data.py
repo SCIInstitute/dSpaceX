@@ -13,7 +13,8 @@ import yaml
 from distances.nrrd_distances import calculate_distance_volume
 from distances.png_distances import calculate_distance_png
 from distances.mesh_distances import calculate_distance_mesh
-from thumbnails.nanoparticles_thumbnails import generate_nano_thumbnails
+from thumbnails.volume_thumbnails import generate_volume_thumbnails
+from thumbnails.mesh_thumbnails import generate_mesh_thumbnails
 from utils import run_external_script
 
 
@@ -115,10 +116,10 @@ def generate_thumbnails(input_config, output_directory):
     # Generate thumbnails
     if shape_format == 'volume':
         print('Generating thumbnails from volume.')
-        generate_nano_thumbnails(output_directory + input_config['datasetName'] + '_Parameters.csv', out, add_slices=False)
+        generate_volume_thumbnails(shape_directory, out)
     elif shape_format is 'mesh':
         print('Generating thumbnails from mesh.')
-        generate_nano_thumbnails(output_directory + input_config['datasetName'] + '_Parameters.csv', out, add_slices=False)
+        generate_mesh_thumbnails(shape_directory, out)
     elif shape_format == 'image':
         print('Generating thumbnails from image.')
         image_files = glob(shape_directory + '*.png')

@@ -4,13 +4,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import inv
 import pandas as pd
-import PIL
 from PIL import Image
 import pyrender
 import trimesh
 
 
-def generate_nano_thumbnails(parameter_csv, output_directory, add_slices=True):
+def generate_nano_thumbnails(parameter_csv, output_directory):
     parameter_df = pd.read_csv(parameter_csv)
 
     # Initialize scene and set-up static objects
@@ -77,28 +76,10 @@ def generate_nano_thumbnails(parameter_csv, output_directory, add_slices=True):
         scene.clear()
 
         # make image big enough for slices if adding
-        if add_slices:
-            pil_img = Image.new('RGB', (total_img_width, total_img_height))
-        else:
-            pil_img = Image.new('RGB', (big_img_width, big_img_height))
+        pil_img = Image.new('RGB', (big_img_width, big_img_height))
 
         color = [(pixel[0], pixel[1], pixel[2]) for pixel in color.reshape(-1, 3)]
         pil_img.putdata(color)
-
-        # add slices:
-        if add_slices:
-            slice_img = Image.new('RGB', (n_grid_points_per_dimension, n_grid_points_per_dimension))
-            grid = nano_3d_implicit(unit_cube_size, n_grid_points_per_dimension, sample.a, sample.b, sample.m,
-                                    sample.n1, sample.n2, sample.n3)
-
-            ortho_views = [get_outline(grid, 0), get_outline(grid, 1), get_outline(grid, 2)]
-            back_colors = [(255, 222, 222), (222, 255, 222), (222, 222, 255)]
-
-            for index, view in enumerate(ortho_views):
-                flat_data = [color_binary(x, back_colors[index]) for x in view.flatten()]
-                slice_img.putdata(flat_data)
-                top_left = (index * small_img_size, big_img_height)
-                pil_img.paste(slice_img.resize((small_img_size, small_img_size), resample=PIL.Image.BILINEAR), top_left)
 
         pil_img.save(output_directory + filename)
 
