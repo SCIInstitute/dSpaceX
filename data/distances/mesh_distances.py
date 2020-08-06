@@ -2,10 +2,12 @@ import functools
 from glob import glob
 import numpy as np
 from sklearn.metrics import pairwise_distances
-from distances.distance_utils import sort_by_sample_id
+import trimesh
+
+from data.distances.distance_utils import sort_by_sample_id
 
 
-def calculate_distance_mesh(directory, metric='hamming'):
+def calculate_distance_mesh(directory, metric='l2'):
     """
     Calculates the distance between meshes saved as .csv files.
     :param metric: The distance metric to calculate.
@@ -16,14 +18,22 @@ def calculate_distance_mesh(directory, metric='hamming'):
     :return: Distance matrix between every mesh.
     """
     print('Starting mesh distance calculation.')
-    shapes_files = glob(directory + '*.csv')
+    shapes_files = glob(directory + '*.stl')
+    shapes_files.extend(glob(directory + '*.ply'))
+    shapes_files.extend(glob(directory + '*.obj'))
+
     shapes_files.sort(key=functools.cmp_to_key(sort_by_sample_id))
     shapes_list = []
     for shape_index, shape in enumerate(shapes_files):
         print('Opening shape %i / %i' % (shape_index, len(shapes_files)), end='\r')
-        shape_array = np.genfromtxt(shape, dtype='float64', delimiter=',')
-        shape_array = shape_array.reshape((1, -1))
-        shapes_list.append(shape_array)
+        shape_mesh = trimesh.load_mesh(shape)
+        vertices = shape_mesh.vertices
+        vertices = vertices.reshape((1, -1))
+        shapes_list.append(vertices)
     all_shapes_array = np.row_stack(shapes_list)
     print('Calling pairwise distance.')
     return pairwise_distances(all_shapes_array, metric=metric)
+
+
+dir = '/Users/kylimckay-bishop/Temporary/mesh_distance_example/'
+dist = calculate_distance_mesh(dir)
