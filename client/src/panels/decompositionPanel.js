@@ -14,6 +14,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import MenuItem from '@material-ui/core/MenuItem';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { saveAs } from 'file-saver';
 import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -299,7 +300,15 @@ class DecompositionPanel extends React.Component {
   }
 
   handleExportMorseSmale() {
-    console.log('Dumping the ms object (TODO)...');
+    this.client.writeMorseSmaleDecomposition().then((response) => {
+      let fileName = 'crystal_partitions.json';
+      let fileToSave = new Blob([JSON.stringify(response, undefined, 2)], {
+        type: 'application/json',
+        name: fileName,
+      });
+      saveAs(fileToSave, fileName);
+      console.log(response);
+    });
   }
 
   handleModelSigmaChange(event) {
@@ -578,7 +587,7 @@ class DecompositionPanel extends React.Component {
 
                   {/* Sigma */}
                   <TextField
-                    label="Smooth Curves"
+                    label="Regression Bandwidth"
                     id="ms-sigma"
                     defaultValue={this.state.ms.sigma}
                     size="small"
@@ -587,7 +596,7 @@ class DecompositionPanel extends React.Component {
 
                   {/* Smooth */}
                   <TextField
-                    label="Smooth Topology"
+                    label="Topology Smoothing"
                     id="ms-smooth"
                     defaultValue={this.state.ms.smooth}
                     size="small"
@@ -607,7 +616,7 @@ class DecompositionPanel extends React.Component {
 
                   {/* Curve points */}
                   <TextField
-                    label="Crystal curve points"
+                    label="Crystal Curve Points"
                     id="ms-curvepoints"
                     defaultValue={this.state.ms.curvepoints}
                     size="small"
@@ -650,11 +659,11 @@ class DecompositionPanel extends React.Component {
               </AccordionDetails>
             </Accordion>
 
-            { /* Interpolation Model Selection */}
+            { /* Prediction Model Selection */}
             <Accordion disabled={!this.props.enabled} defaultExpanded={false}
               style={{ paddingLeft:'0px', margin:'1px' }}>
               <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
-                <Typography>Interpolation</Typography>
+                <Typography>Prediction</Typography>
               </AccordionSummary>
               <AccordionDetails style={{ paddingLeft: '0px',
                 paddingRight: '10px', margin: '1px', width: '100%',
@@ -695,7 +704,7 @@ class DecompositionPanel extends React.Component {
 
                   { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
                   <TextField
-                    label="sigma bandwidth"
+                    label="Gaussian Kernel Sigma"
                     id="model-sigma"
                     defaultValue={this.state.model.sigma}
                     size="small"

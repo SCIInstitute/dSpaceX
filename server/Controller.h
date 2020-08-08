@@ -5,6 +5,7 @@
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
 #include "dspacex/Fieldtype.h"
+#include "utils/DataExport.h"
 
 #include <jsoncpp/json/json.h>
 #include <map>
@@ -85,10 +86,10 @@ class Controller {
   std::string m_currentField;
   Fieldtype m_currentCategory{Fieldtype::Invalid};
   int m_currentKNN{-1};
-  int m_currentNumSamples;
+  int m_currentNumCurvepoints{50};
   double m_currentSigma;
   double m_currentSmoothing;
   bool m_currentAddNoise;
-  int m_currentNumPersistences;
+  int m_currentPersistenceDepth;
   bool m_currentNormalize;
 };

@@ -58,6 +58,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
   m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
+  m_commandMap.insert({ "writeMorseSmaleDecomposition", std::bind(&Controller::writeMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
@@ -267,21 +268,20 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
  */
 void Controller::writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
 {
-  using json = nlohmann::json;
+    response["neighborhoodSize"] = m_currentKNN;
+    response["sigma"] = m_currentSigma;
+    response["smoothing"] = m_currentSmoothing;
+    response["crystalCurvepoints"] = m_currentNumCurvepoints;
 
-//  if (m_currentVizData->m_data) // if there is a current decomposition and it's valid
-  {
-//    auto filename(uniqueFilename(request["basePath"].asString() + "crystalpartitions", ".csv"));
-//
-//    std::ofstream outfile;
-//    outfile.open(filename);
-//
-//    json ms(m_currentVizData->m_data->asJson());
-//    std::cout << "M-S crystal partitions:\n" << ms << std::endl;
-
-    // fixme: for now just do this
-//    DataExport::exportCrystalPartitions(m_currentVizData->m_data->crystalPartitions, start, filename);
-  }
+    auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
+    response["crystalPartitions"] = Json::Value(Json::arrayValue);
+    for (unsigned i = 0; i < m_currentVizData->getPersistence().N(); ++i) {
+        Json::Value row = Json::Value(Json::arrayValue);
+        response["crystalPartitions"].append(row);
+        for (unsigned j = 0; j < crystal_partitions[i].N(); ++j) {
+            response["crystalPartitions"][i].append(crystal_partitions[i](j));
+        }
+    }
 }
 
 /**
@@ -1113,11 +1113,11 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
   auto category    = request.isMember("category")    ? Fieldtype(request["category"].asString()) : m_currentCategory;
   auto fieldname   = request.isMember("fieldname")   ? request["fieldname"].asString()           : m_currentField;
   auto knn         = request.isMember("knn")         ? request["knn"].asInt()                    : m_currentKNN;
-  auto curvepoints = request.isMember("curvepoints") ? request["curvepoints"].asInt()            : m_currentNumSamples;
+  auto curvepoints = request.isMember("curvepoints") ? request["curvepoints"].asInt()            : m_currentNumCurvepoints;
   auto sigma       = request.isMember("sigma")       ? request["sigma"].asFloat()                : m_currentSigma;
   auto smoothing   = request.isMember("smooth")      ? request["smooth"].asFloat()               : m_currentSmoothing;
   auto addnoise    = request.isMember("noise")       ? request["noise"].asBool()                 : m_currentAddNoise;
-  auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentNumPersistences;
+  auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentPersistenceDepth;
   auto normalize   = request.isMember("normalize")   ? request["normalize"].asInt()              : m_currentNormalize;  
 
   if (!verifyProcessDataParams(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize, response))
@@ -1135,14 +1135,14 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
 bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
                                           double sigma, double smoothing, bool add_noise,
                                           int num_persistences, bool normalize) {
-  return !(m_currentCategory        == category         &&
-           m_currentField           == fieldname        &&
-           m_currentKNN             == knn              &&
-           m_currentNumSamples      == num_samples      &&
-           m_currentSigma           == sigma            &&
-           m_currentSmoothing       == smoothing        &&
-           m_currentAddNoise        == add_noise        &&
-           m_currentNumPersistences == num_persistences &&
+  return !(m_currentCategory        == category &&
+           m_currentField           == fieldname &&
+           m_currentKNN             == knn &&
+           m_currentNumCurvepoints == num_samples &&
+           m_currentSigma           == sigma &&
+           m_currentSmoothing       == smoothing &&
+           m_currentAddNoise        == add_noise &&
+           m_currentPersistenceDepth == num_persistences &&
            m_currentNormalize       == normalize);
 }
 
@@ -1251,11 +1251,11 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   m_currentCategory = category;
   m_currentField = fieldname;
   m_currentKNN = knn;
-  m_currentNumSamples = num_samples;
+        m_currentNumCurvepoints = num_samples;
   m_currentSigma = sigma;
   m_currentSmoothing = smoothing;
   m_currentAddNoise = add_noise;
-  m_currentNumPersistences = num_persistences;
+        m_currentPersistenceDepth = num_persistences;
   m_currentNormalize = normalize;
   
   return true;
