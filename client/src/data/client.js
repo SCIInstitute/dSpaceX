@@ -205,9 +205,9 @@ class Client {
    * to directory.
    * @return {Promise}
    */
-  writeMorseSmaleDecomposition() {
+  exportMorseSmaleDecomposition() {
     let command = {
-      name: 'writeMorseSmaleDecomposition',
+      name: 'exportMorseSmaleDecomposition',
       basePath: '/tmp/',
     };
     return this._createCommandPromise(command);

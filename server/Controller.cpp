@@ -58,7 +58,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
   m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
-  m_commandMap.insert({ "writeMorseSmaleDecomposition", std::bind(&Controller::writeMorseSmaleDecomposition, this, _1, _2)});
+  m_commandMap.insert({ "exportMorseSmaleDecomposition", std::bind(&Controller::exportMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
@@ -266,12 +266,17 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
 /**
  * Write the current morse smale decomposition of a dataset.
  */
-void Controller::writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
+void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
 {
+    response["field"] = m_currentField;
+    response["category"] = m_currentCategory.asString();
     response["neighborhoodSize"] = m_currentKNN;
     response["sigma"] = m_currentSigma;
     response["smoothing"] = m_currentSmoothing;
     response["crystalCurvepoints"] = m_currentNumCurvepoints;
+    response["depth"] = m_currentPersistenceDepth;
+    response["noise"] = m_currentAddNoise;
+    response["normalize"] = m_currentNormalize;
 
     auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
     response["crystalPartitions"] = Json::Value(Json::arrayValue);
@@ -1120,7 +1125,7 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
   auto smoothing   = request.isMember("smooth")      ? request["smooth"].asFloat()               : m_currentSmoothing;
   auto addnoise    = request.isMember("noise")       ? request["noise"].asBool()                 : m_currentAddNoise;
   auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentPersistenceDepth;
-  auto normalize   = request.isMember("normalize")   ? request["normalize"].asInt()              : m_currentNormalize;  
+  auto normalize   = request.isMember("normalize")   ? request["normalize"].asBool()              : m_currentNormalize;
 
   if (!verifyProcessDataParams(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize, response))
     return false; // response will contain the error

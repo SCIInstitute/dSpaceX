@@ -48,7 +48,7 @@ class Controller {
   void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
-  void writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
+  void exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);

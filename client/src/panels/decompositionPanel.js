@@ -300,7 +300,7 @@ class DecompositionPanel extends React.Component {
   }
 
   handleExportMorseSmale() {
-    this.client.writeMorseSmaleDecomposition().then((response) => {
+    this.client.exportMorseSmaleDecomposition().then((response) => {
       let fileName = this.state.decompositionField.replace(' ', '', 'g') + '_Crystal_Partitions.json';
       let fileToSave = new Blob([JSON.stringify(response, undefined, 2)], {
         type: 'application/json',
