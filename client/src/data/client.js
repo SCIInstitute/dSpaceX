@@ -201,12 +201,14 @@ class Client {
   }
 
   /**
-   * Write current M-S decomposition to /tmp on server.
+   * Requests server to write current MS decomposition
+   * to directory.
+   * @return {Promise}
    */
-  writeCurrentMorseSmaleDecomposition() {
+  writeMorseSmaleDecomposition() {
     let command = {
-      name: 'writeCurrentMorseSmaleDecomposition',
-      basePath: "/tmp/",
+      name: 'writeMorseSmaleDecomposition',
+      basePath: '/tmp/',
     };
     return this._createCommandPromise(command);
   }

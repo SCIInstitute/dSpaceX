@@ -281,6 +281,10 @@ FortranLinalg::DenseVector<int>& SimpleHDVizDataImpl::getCrystalPartitions(int p
   return m_data->crystalPartitions[persistenceLevel];
 }
 
+std::vector<FortranLinalg::DenseVector<int>> SimpleHDVizDataImpl::getAllCrystalPartitions() {
+    return m_data->crystalPartitions;
+}
+
 /**
  *
  */
