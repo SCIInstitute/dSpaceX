@@ -1,5 +1,6 @@
-from glob import glob
 import functools
+from glob import glob
+import json
 import numpy as np
 from PIL import Image
 from sklearn.decomposition import PCA
@@ -51,22 +52,24 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
     """
     # get data
     data_matrix = get_data_matrix(shape_directory)
-    partitions = np.genfromtxt(partition_directory, delimiter=',')
-    # code expects 2Dim ndarray, this will reshape it if there is only one persistence level
-    if partitions.ndim == 1:
-        partitions = partitions.reshape((1, -1))
+    with open(partition_directory) as json_file:
+        partition_config = json.load(json_file)
+    partitions = partition_config['crystalPartitions']
+
     # create model for each crystal
     all_pca_models = []
-    for p_level, crystal_memberships in enumerate(partitions):
-        pca_model_for_persistence = {'pLevel': p_level, 'crystalIDs': crystal_memberships, 'models': []}
-        crystal_ids = np.unique(crystal_memberships)
+    for crystal in partitions:
+        persistence_level = crystal['persistenceLevel']
+        crystal_membership = crystal['crystalMembership']
+        pca_model_for_persistence = {'pLevel': persistence_level, 'crystalIDs': crystal_membership, 'models': []}
+        crystal_ids = np.unique(crystal_membership)
         for c_id in crystal_ids:
-            crystal_samples_index = (crystal_memberships == c_id)
+            crystal_samples_index = (crystal_membership == c_id)
             crystal_samples = data_matrix[crystal_samples_index]
             transformer = PCA(n_components=n_components)
             transformer.fit(crystal_samples)
             W = transformer.components_
-            w0 = np.mean(crystal_samples, axis=0)
+            w0 = transformer.mean_
             z = np.matmul((crystal_samples - w0), W.T)
             model = {'crystalID': c_id, 'W': W, 'w0': w0, 'z': z}
             pca_model_for_persistence['models'].append(model)
@@ -75,9 +78,9 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
 
 
 # Here is an example of using this code - for now it requires a human-in-the-loop
-shape_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/processed_data/images/'
-partition_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/crystal_partitions/cantilever_crystal_partitions_Max_Stress.csv'
-output_directory_ = '/Users/kylimckay-bishop/Temporary/CantileverBeam-1/pca_model_results/'
+shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/CantileverBeam-1/unprocessed_data/shape_representations/'
+partition_directory_ = '/Users/kylimckay-bishop/Downloads/MaxStress_Crystal_Partitions.json'
+output_directory_ = '/Users/kylimckay-bishop/Temporary/pca_model_test/'
 output_filename_ = 'pca_model_qoi_max_stress'
 
 out = generate_png_pca_model(shape_directory_, partition_directory_)

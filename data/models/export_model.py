@@ -13,7 +13,8 @@ def write_to_file(model_data, output_directory, output_file_name='pca_model'):
     model_output_directory = os.path.join(output_directory, output_file_name)
     if not os.path.exists(model_output_directory):
         os.makedirs(model_output_directory)
-    for p_level, p_level_data in enumerate(model_data):
+    for p_level_data in model_data:
+        p_level = p_level_data['pLevel']
         # create directory for persistence level
         p_level_output_directory = os.path.join(model_output_directory, 'persistence-' + str(p_level))
         if not os.path.exists(p_level_output_directory):
