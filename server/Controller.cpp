@@ -275,12 +275,14 @@ void Controller::writeMorseSmaleDecomposition(const Json::Value &request, Json::
 
     auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
     response["crystalPartitions"] = Json::Value(Json::arrayValue);
-    for (unsigned i = 0; i < m_currentVizData->getPersistence().N(); ++i) {
-        Json::Value row = Json::Value(Json::arrayValue);
-        response["crystalPartitions"].append(row);
+    for (unsigned i = m_currentVizData->getMinPersistenceLevel(); i < m_currentVizData->getPersistence().N(); ++i) {
+        Json::Value item = Json::Value(Json::objectValue);
+        item["persistenceLevel"] = i;
+        item["crystalMembership"] = Json::Value(Json::arrayValue);
         for (unsigned j = 0; j < crystal_partitions[i].N(); ++j) {
-            response["crystalPartitions"][i].append(crystal_partitions[i](j));
+            item["crystalMembership"].append(crystal_partitions[i](j));
         }
+        response["crystalPartitions"].append(item);
     }
 }
 
