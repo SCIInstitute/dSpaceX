@@ -541,7 +541,8 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   }
 
   // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
-  Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions));
+  auto partition_file = modelsBasePath + '/' + partitions;
+  Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(partition_file));
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)

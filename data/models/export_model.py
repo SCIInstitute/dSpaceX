@@ -16,9 +16,6 @@ def write_to_file(model_data, output_directory):
         p_level_output_directory = os.path.join(output_directory, 'persistence-' + str(p_level))
         if not os.path.exists(p_level_output_directory):
             os.makedirs(p_level_output_directory)
-        # export crystal ids for that persistence level
-        np.savetxt(os.path.join(p_level_output_directory, 'crystalID.csv'), p_level_data['crystalIDs'], fmt='%i',
-                   delimiter=',')
         for c_id, crystal_data in enumerate(p_level_data['models']):
             # create directory for crystal
             crystal_output_directory = os.path.join(p_level_output_directory, 'crystal-' + str(c_id))

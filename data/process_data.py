@@ -85,6 +85,7 @@ def generate_model(config):
         'crystals': 'crystal-?',
         'padZeroes': False,
         'partitions': csv_partition_directory,
+        'rowmajor': True,
         'ms': {
             'knn': partition_config['neighborhoodSize'],
             'sigma': partition_config['sigma'],
