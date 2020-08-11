@@ -11,6 +11,9 @@
 #include <map>
 #include <functional>
 
+namespace dspacex {
+
+void setError(Json::Value &response, const std::string &str = "server error");
 
 class Controller {
  public:
@@ -19,7 +22,6 @@ class Controller {
   void handleText(void *wsi, const std::string &text);
 
  private:
-  void setError(Json::Value &response, const std::string &str = "server error");
   bool verifyFieldname(Fieldtype type, const std::string &name);
 
   void configureCommandHandlers();
@@ -39,7 +41,7 @@ class Controller {
                    bool add_noise = true /* duplicate values risk erroroneous M-S */,
                    int num_persistences = -1 /* generates all persistence levels */,
                    bool normalize = true /* scale normalize field values */);
-
+  int getPersistence(const Json::Value &request, Json::Value &response);
 
   // Command Handlers
   void fetchDatasetList(const Json::Value &request, Json::Value &response);
@@ -53,29 +55,26 @@ class Controller {
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
-  void fetchModelsList(const Json::Value &request, Json::Value &response);
+  //  void fetchModelsList(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
-  void fetchAllForLatentSpaceUsingSharedGP(const Json::Value &request, Json::Value &response);
-  void fetchImageForLatentSpaceCoord_Shapeodds(const Json::Value &request, Json::Value &response);
-  void fetchNImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
-  void fetchAllImagesForCrystal_Shapeodds(const Json::Value &request, Json::Value &response);
+  void fetchNImagesForCrystal(const Json::Value &request, Json::Value &response);
+  void regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model, int persistence, int crystalId, Json::Value &response);
   void fetchCrystalOriginalSampleImages(const Json::Value &request, Json::Value &response);
 
+  std::vector<ValueIndexPair> getSamples(Fieldtype category, const std::string &fieldname,
+                                         unsigned persistenceLevel, unsigned crystalid, bool sort = true);
 
-  const Eigen::Map<Eigen::VectorXd> getFieldvalues(Fieldtype type, const std::string &name);
-
-  // todo: user shouldn't need this: a plvl is a plvl, so bury the details
-  int getPersistenceLevelIdx(const unsigned desired_persistence, const dspacex::MSComplex &mscomplex) const;
+  int getAdjustedPersistenceLevelIdx(const unsigned desired_persistence, const std::shared_ptr<MSModelset>& mscomplex) const;
 
   typedef std::function<void(const Json::Value&, Json::Value&)> RequestHandler;
   std::map<std::string, RequestHandler> m_commandMap;
   std::vector<std::pair<std::string, std::string>> m_availableDatasets;
   FortranLinalg::DenseMatrix<Precision> m_currentDistanceMatrix;
   std::shared_ptr<HDVizData> m_currentVizData;
-  std::shared_ptr<TopologyData> m_currentTopoData;
+  std::unique_ptr<TopologyData> m_currentTopoData;
   std::string datapath;
 
   // current loaded dataset
@@ -84,12 +83,15 @@ class Controller {
 
   // current processing state
   std::string m_currentField;
-  Fieldtype m_currentCategory{Fieldtype::Invalid};
-  int m_currentKNN{-1};
+  Fieldtype m_currentCategory{Fieldtype::Unknown};
+  int m_currentKNN{15};
   int m_currentNumCurvepoints{50};
-  double m_currentSigma;
-  double m_currentSmoothing;
-  bool m_currentAddNoise;
-  int m_currentPersistenceDepth;
-  bool m_currentNormalize;
+  double m_currentSigma{0.25};
+  double m_currentSmoothing{15.0};
+  bool m_currentAddNoise{true};
+  int m_currentPersistenceDepth{20};
+  bool m_currentNormalize{true};
+
 };
+
+} // dspacex

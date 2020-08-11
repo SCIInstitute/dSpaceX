@@ -1,74 +1,103 @@
 #include "Image.h"
 #include "lodepng.h"
 
-Image::Image(int width, int height, unsigned char *data, 
-  std::vector<char> rawData, const std::string &format) : m_width(width), 
-  m_height(height), m_data(data), m_rawData(rawData), m_format(format) {
-  // intentionally left empty
-}
+namespace dspacex {
 
-unsigned char* Image::getData() {
-  return m_data;
-}
-
-std::vector<char>& Image::getRawData() {
-  return m_rawData;
-}
-
-const unsigned char* Image::getConstData() const {
-  return m_data;
-}
-
-const std::vector<char>& Image::getConstRawData() const {
-  return m_rawData;
-}
-
-int Image::getWidth() const {
-  return m_width;
-}
-
-int Image::getHeight() const {
-  return m_height;
-}
-
-std::string Image::getFormat() const {
-  return m_format;
-}
-
-// converts w*h x 1 matrix of doubles to w x h 2d image of unsigned char, throwing an exception if dims don't match
-Image Image::convertToImage(const Eigen::MatrixXd &I, const unsigned w, const unsigned h)
+Image::Image(const Eigen::MatrixXf &I, unsigned w, unsigned h, unsigned c) :
+  m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
+  m_data(w * h * c), m_decompressed(true)
 {
-  //<ctc> note: this is about the same as in ShapeOdds::evaluateModel, accidental rewrite? consolidate.
-  Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image_mat = (I.array() * 255.0).cast<unsigned char>();
-
-  if (image_mat.size() != w * h)
+  // throw an exception if dims/channels don't match
+  if (I.size() != w * h * c)
   { 
-    throw std::runtime_error("Warning: w * h (" + std::to_string(w) + " * " + std::to_string(h) + ") != computed image size (" + std::to_string(image_mat.size()) + ")");
+    throw std::runtime_error("Warning: w * h * c (" + std::to_string(w) + " * " + std::to_string(h) + " * " + std::to_string(c) + ") != input matrix size (" + std::to_string(I.size()) + ")");
   }
-  image_mat.resize(h, w);
-  image_mat.transposeInPlace();  // make data row-order
 
-  std::vector<unsigned char> png;
-  unsigned error = lodepng::encode(png, image_mat.data(), w, h, LCT_GREY, 8);
-  if (error) {
-    throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
-  } 
+  if (c != 1 && c != 3 && c != 4) {
+    throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
+  }
 
-  std::vector<char> char_png_vec(w * h);        //<ctc> grumble-grumble... it'll just turn around and be converted back to unsigned char*
-  std::copy(png.begin(), png.end(), char_png_vec.begin());
-  return Image(w, h, NULL, char_png_vec, "png");
+  /* convert w x h x c matrix of floats to w x h 2d image of unsigned char (note: tricky use of Eigen::Map) */
+  using EigenImage = Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-#if 0
-  //<ctc> this doesn't work since when the Eigen::Matrix goes out of scope it still deletes its data.
-  //  char *image_data = reinterpret_cast<char *>(std::move(image.data()));
-  // ...so instead we just copy it for now, but I put a question out there to see if Eigen's matrix can relinquish its data.
-  std::vector<char> image_data_vec(w * h);
-  char *idata = reinterpret_cast<char *>(image.data());
-  std::copy(idata, idata + w * h, image_data_vec.begin());
-  //return Image(w, h, NULL, image_data_vec, "raw");
-  unsigned char *foo = std::reinterpret_cast<unsigned char*>(idata); // why the error calling the Image constructor with this argument? -> must use static_cast!
-  //return Image(w, h, std::reinterpret_cast<unsigned char*>(idata), image_data_vec, "raw");
-  return Image(w, h, (unsigned char*)idata, image_data_vec, "raw");
-#endif
+  // 1. create a map to an EigenImage matrix using the already-allocated m_data vector
+  bool rowmajor = true;
+  unsigned width = rowmajor ? w * c : h;   // length of each row
+  unsigned height = rowmajor ? h : w * c;  // length of each column
+  //Eigen::Map<EigenImage> tmp(m_data.data(), height, width);
+  Eigen::Map<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>> tmp(m_data.data(), height, width);
+  Eigen::Map<Eigen::MatrixXf> Itmp(const_cast<float*>(I.data()), height, width);
+  
+  // 2. using the Eigen assignment operator from CwiseUnaryOp to (mapped) Matrix, copy the casted results into m_data
+  tmp = (Itmp.array() * 255.0).cast<unsigned char>();
+
+  // 3. use "placement new" syntax to set tmp's data ptr to null so it doesn't try to deallocate it when it goes out of scope
+  //new (&tmp) Eigen::Map<EigenImage>(nullptr, -1, -1);
+  new (&tmp) Eigen::Map<Eigen::MatrixXf>(nullptr, -1, -1);
 }
 
+Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {
+  // identify resolution and format
+  std::vector<unsigned char> png;
+  lodepng::State state;
+  unsigned error;
+  if (lodepng::load_file(png, filename))
+    throw std::runtime_error("error loading png");
+  if (lodepng_inspect(&m_width, &m_height, &state, png.data(), png.size()))
+    if (error) throw std::runtime_error("error loading png");
+
+  // either load it as a single channel raw buffer or a 3-channel buffer
+  if (state.info_png.color.colortype == LCT_GREY) {
+    state.info_raw.colortype = LCT_GREY;
+    m_format = LCT_GREY;
+  }
+  else if (state.info_png.color.colortype = LCT_RGBA) {
+    state.info_raw.colortype = LCT_RGBA;
+    m_format = LCT_RGBA;
+  }
+  else {
+    state.info_raw.colortype = LCT_RGB;
+    m_format = LCT_RGB;
+  }
+  
+  // decompress the png data to this Image's raw buffer
+  if (decompress)
+    lodepng::decode(m_data, m_width, m_height, state, png);
+}
+
+/// write image
+void Image::write(const std::string& outpath) const {
+  if (lodepng::save_file(getPNGData(), outpath))
+    throw std::runtime_error("error writing png to " + outpath);
+}
+
+const std::vector<unsigned char> Image::getData() const {
+  if (!m_decompressed)
+    throw std::runtime_error("must decompress png on load");
+  return m_data;
+}
+
+const std::vector<unsigned char> Image::getPNGData() const {
+  if (m_pngData.empty()) {
+    unsigned error = lodepng::encode(const_cast<std::vector<unsigned char>&>(m_pngData), m_data, m_width, m_height, m_format, 8);
+    if (error) {
+      throw std::runtime_error("encoder error " + std::to_string(error) + ": " + lodepng_error_text(error));
+    } 
+  }
+
+  return m_pngData;
+}
+
+int Image::numChannels() const {
+  return m_format == LCT_GREY ? 1 : m_format == LCT_RGB ? 3 : 4;
+}
+
+Image::Format Image::getFormat() const {
+  return m_format == LCT_GREY ? GREY : m_format == LCT_RGB ? RGB : RGBA;
+}
+
+unsigned char Image::getPixel(unsigned i) const {
+  return getData()[i];
+}
+
+} // dspacex

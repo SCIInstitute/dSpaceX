@@ -1,4 +1,4 @@
 #pragma once
 
 // Specification of the computational precision used throughout the library
-typedef double Precision;
+typedef float Precision;  // fixme: this is hard-coded float most places (which doesn't hurt much as most inputs are .csv files)

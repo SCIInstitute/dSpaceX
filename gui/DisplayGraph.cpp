@@ -369,7 +369,7 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     std::string filename = imagesPathPrefix + std::to_string(i+1) + pngSuffix;
     std::cout << "Loading image: " << filename << std::endl;
 
-    Image image = m_imageLoader.loadImage(filename, ImageLoader::Format::PNG);
+    Image image(filename);
 
     // Copy texture into atlas
     int atlasOffsetY = i / thumbnailsPerTextureRow;
@@ -379,10 +379,9 @@ void DisplayGraph::buildTextureAtlas(GLubyte *textureAtlas, const std::string im
     for (int h=0; h < image.getHeight(); h++) {
       for (int w=0; w < image.getWidth(); w++) {        
         int index = ((y+h)*maxTextureSize) + x + w;
-        // TODO: Move pixel lookup logic into Image class method.
-        textureAtlas[4*index+0] = image.getData()[4*(image.getWidth()*h + w) + 0];
-        textureAtlas[4*index+1] = image.getData()[4*(image.getWidth()*h + w) + 1];
-        textureAtlas[4*index+2] = image.getData()[4*(image.getWidth()*h + w) + 2];
+        textureAtlas[4*index+0] = image.getPixel(4*(image.getWidth()*h + w) + 0);
+        textureAtlas[4*index+1] = image.getPixel(4*(image.getWidth()*h + w) + 1);
+        textureAtlas[4*index+2] = image.getPixel(4*(image.getWidth()*h + w) + 2);
       }
     }
   }

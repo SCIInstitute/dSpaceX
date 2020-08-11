@@ -5,27 +5,24 @@
 #include "flinalg/LinalgIO.h"
 #include "imageutils/Image.h"
 #include "dspacex/Precision.h"
-#include "yaml-cpp/yaml.h"
-#include "pmodels/MorseSmale.h"
+#include <yaml-cpp/yaml.h>
+#include "pmodels/Modelset.h"
 
 #include <string>
 #include <vector>
 
 namespace dspacex {
 
-typedef
-std::pair<std::string, FortranLinalg::DenseVector<Precision>> ParameterNameValuePair;
-typedef
-std::pair<std::string, FortranLinalg::DenseVector<Precision>> QoiNameValuePair;
-typedef
-std::pair<std::string, FortranLinalg::DenseMatrix<Precision>> EmbeddingPair;
-typedef
-std::pair<std::string, dspacex::MSComplex> MSModelsPair;
+using ParameterNameValuePair = std::pair<std::string, FortranLinalg::DenseVector<Precision>>;
+using QoiNameValuePair = std::pair<std::string, FortranLinalg::DenseVector<Precision>>;
+using EmbeddingPair = std::pair<std::string, FortranLinalg::DenseMatrix<Precision>>;
 
 class DatasetLoader {
 public:
   static std::unique_ptr<Dataset> loadDataset(const std::string &filePath);
   static std::string getDatasetName(const std::string &filePath);
+
+  static void parseModel(const std::string &modelPath, Model &m, const std::vector<unsigned> &sample_indices);
 
 private:
   // Disallow creating an instance of this object (reinforces its purpose)
@@ -56,15 +53,11 @@ private:
   static EmbeddingPair parseEmbedding(
       const YAML::Node &embeddingNode, const std::string &filePath);
 
-  //static std::vector<dspacex::MSComplex> parseMSModels(
-  static std::vector<MSModelsPair> parseMSModels(
-      const YAML::Node &config, const std::string &filePath);
+  static ModelMap parseModels(const YAML::Node &config,
+                              const std::string &filePath);
 
-  //static std::vector<dspacex::MSComplex> parseMSModelsForField(
-  static MSModelsPair parseMSModelsForField(
-      const YAML::Node &config, const std::string &filePath);
-
-  static void parseModel(const std::string &modelPath, dspacex::Model &m);
+  static std::unique_ptr<MSModelset> parseModel(const YAML::Node& modelNode,
+                                                 const std::string& filePath);
 
   static FortranLinalg::DenseMatrix<Precision> parseDistances(
       const YAML::Node &config, const std::string &filePath);

@@ -18,10 +18,11 @@ class MorseSmaleWindow extends React.Component {
 
     this.selectedOpacity = 1.0;
     this.unselectedOpacity = 0.80;
-    this.numInterpolants = 51; // how many samples to generate using current model [to fill drawer]
+    this.numInterpolants = 50; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
       selectingCrystal: false,
+      percent: 0.5,
     };
 
     this.client = this.props.dsxContext.client;
@@ -147,7 +148,9 @@ class MorseSmaleWindow extends React.Component {
     
     // Handle left click release
     if (this.state.selectingCrystal && event.button === 0) {
-      this.pick(this.getPickPosition(event), event.ctrlKey /*showOrig*/);
+      this.pick(this.getPickPosition(event),
+                event.ctrlKey && !event.shiftKey /*showOrig*/,
+                event.ctrlKey && event.shiftKey /*validate*/);
     }
   }
 
@@ -303,13 +306,13 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
    */
-  pick(normalizedPosition, showOrig) {
+  pick(normalizedPosition, showOrig, validate) {
     if (this.props.decomposition === null) {
       return;
     }
 
     // Get intersected object
-    const { datasetId, decompositionCategory, decompositionField, persistenceLevel } = this.props.decomposition;
+    const { datasetId, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
@@ -346,15 +349,17 @@ class MorseSmaleWindow extends React.Component {
         //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
       }
 
-      this.renderScene();
-
-      // Get crystal partitions
       let crystalID = this.pickedObject.name;
-      this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-        crystalID, this.numInterpolants, showOrig);
+
+      // highlights samples from this crystal in other views (e.g., embedding window)
       this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
         this.props.onCrystalSelection(result.crystalSamples);
       });
+
+      // Get crystal partitions (parent component updates drawer once they arrive)
+      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
+
+      this.renderScene();
 
       return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
     }
