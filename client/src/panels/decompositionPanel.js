@@ -41,7 +41,7 @@ class DecompositionPanel extends React.Component {
 
       interpolationModel: this.props.dataset.models ? this.props.dataset.models[0].name.trim() : 'None',
       model: {
-        sigma: 0.15,
+        sigma: 0.01,
       },
 
       decompositionMode: 'Morse-Smale',
@@ -205,7 +205,8 @@ class DecompositionPanel extends React.Component {
           + prevState.persistenceLevel +' to '+this.state.persistenceLevel+', updating data model...');
       this.updateDataModel();
     }
-    else if (prevState.interpolationModel !== this.state.interpolationModel) {
+    else if (prevState.interpolationModel !== this.state.interpolationModel ||
+             prevState.model.sigma !== this.state.model.sigma) {
       this.updatePropsConfig();
     }
     else {
@@ -309,7 +310,7 @@ class DecompositionPanel extends React.Component {
   }
 
   handleModelSigmaChange(event) {
-    let sigma = event.target.value;
+    let sigma = parseFloat(event.target.value);
     if (!isNaN(sigma)) {
       this.setState((prevState) => ({
         model: { ...prevState.model, sigma:sigma },
