@@ -54,7 +54,6 @@ function install_conda() {
        cmake=3.15.5 \
        nodejs=13.9.0 \
        eigen=3.3.7 \
-       libpng=1.6.37 \
        gtest=1.10.0 \
        yaml-cpp=0.6.3 \
        numpy=1.18.1 \

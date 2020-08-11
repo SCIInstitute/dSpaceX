@@ -116,6 +116,7 @@ thumbnails:
   files: images/?.png
   offset: 1                     # base-1 image names (0th name is 1; if offset by 1000, names would start at 1000)
   padZeroes: false              # padded image names (min chars needed must represent offset + num_files)
+  channels: 3                    # num channels in each shape (e.g., 1-greyscale, 3-RGB, 4-RGBA)
 
 distances:
   format: csv
@@ -126,15 +127,88 @@ embeddings:
   - name: tsne
     format: csv
     file: CantileverBeam_tsne_layout.csv
+  - name: ShapeOdds
+    format: csv
+    file: shapeodds_global_embedding.csv
+  - name: Shared GP
+    format: csv
+    file: shared_gp_global_embedding.csv
 
 models:
-  - fieldname: maxStress
-    type: shapeodds                                            # could be shapeodds or sharedgp
+  - fieldname: Max Stress
+    type: shapeodds                                            # shapeodds, pca, sharedgp, etc
     root: shapeodds_models_maxStress                           # directory of models for this field
     persistences: persistence-?                                # persistence files
     crystals: crystal-?                                        # in each persistence dir are its crystals
     padZeroes: false                                           # for both persistence and crystal dirs/files
-    #format: csv   (just use extension of most files to determine format) # lots of csv files in each crystal: Z, crystalIds, W, wo
     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
-    embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
+    rowmajor: false                                            # the shape produced by this model is a row-major image
+    ms:                                                        # Morse-Smale parameters used to compute partitions
+      knn: 15                                                  # k-nearest neighbors
+      sigma: 0.25                                              # 
+      smooth: 15.0                                             # 
+      depth: 20                                                # num persistence levels; -1 means compute them all
+      noise: true                                              # add mild noise to the field to ensure inequality
+      curvepoints: 50                                          # vis only? Not sure if this matters for crystal partitions 
+      normalize: false                                         # vis only? Not sure if this matters for crystal partitions
+    interpolations:                                            # precomputed interps
+       - i1:
+         params:                                               # model interpolation parameters used
+           sigma: 0.15                                         # Gaussian width
+           num_interps: 50                                     # precomputed interps per crystal
+       - i2:
+         params:
+           sigma: 0.01
+           num_interps: 500
+
+  - fieldname: Angle
+    type: pca
+    root: pca_models/pca_model_param_Angle
+    persistences: persistence-?
+    crystals: crystal-?
+    padZeroes: false
+    partitions: crystal_partitions/cantilever_crystal_partitions_Angle.csv
+    rowmajor: true
+    ms:
+      knn: 15
+      sigma: 0.25
+      smooth: 15.0
+      depth: -1
+      noise: true
+      curvepoints: 50
+      normalize: false
+    interpolations:
+       - i1:
+         params:
+           sigma: 0.15
+           num_interps: 50
+       - i2:
+         params:
+           sigma: 0.01
+           num_interps: 500
+
+  - fieldname: Angle
+    type: custom                                        # a new model type (no dynamic interpolation will be available, so precomputed should be provided)
+    root: custom_models/custom_model_param_Angle
+    persistences: persistence-?
+    crystals: crystal-?
+    padZeroes: false
+    partitions: crystal_partitions/cantilever_crystal_partitions_Angle.csv
+    ms:
+      knn: 15
+      sigma: 0.25
+      smooth: 15.0
+      depth: -1
+      noise: true
+      curvepoints: 50
+      normalize: false
+    interpolations:
+       - i1:
+         params:
+           sigma: 0.15
+           num_interps: 50
+       - i2:
+         params:
+           sigma: 0.01
+           num_interps: 500
 ```

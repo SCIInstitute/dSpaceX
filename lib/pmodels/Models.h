@@ -48,15 +48,14 @@ public:
   static const Eigen::RowVectorXf getNewLatentSpaceValue(const Eigen::RowVectorXf& fieldvalues, const Eigen::MatrixXf& z_coords,
                                                          float new_fieldval, float sigma = 0.25);
 
-  virtual Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord, const bool writeToDisk = false,
-                                   const std::string outpath = "", unsigned w = 0, unsigned h = 0) const = 0;
+  virtual Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const = 0;
 
   // TODO: create version of evaluate that produces new images for an array of z_coords rather than one at a time
   // virtual std::vector<Eigen::MatrixXf> evaluate(const Eigen::MatrixXf &z_coords, const bool writeToDisk = false,
   //                                       const std::string outpath = "", unsigned w = 0, unsigned h = 0) const = 0;
 
   static float testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
-                                 const Image &sampleImage, const bool writeToDisk = false, const std::string path = "");
+                                 const Image &sampleImage);
 
   Type getType() const { return type; }
 
@@ -78,8 +77,7 @@ class ShapeOddsModel : public Model
 {
 public:
   ShapeOddsModel() : Model{ShapeOdds} {}
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord, const bool writeToDisk = false,
-                           const std::string outpath = "", unsigned w = 0, unsigned h = 0) const override;
+  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
 /* 
@@ -89,8 +87,7 @@ class PCAModel : public Model
 {
 public:
   PCAModel() : Model{PCA} {}
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord, const bool writeToDisk = false,
-                           const std::string outpath = "", unsigned w = 0, unsigned h = 0) const override;
+  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
 /* 
@@ -100,8 +97,7 @@ class CustomModel : public Model
 {
 public:
   CustomModel(std::string _name = std::string()) : Model{Custom}, name(std::move(_name)) {}
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord, const bool writeToDisk = false,
-                           const std::string outpath = "", unsigned w = 0, unsigned h = 0) const override
+  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override
   { return Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>(); }
   
   const std::string name;

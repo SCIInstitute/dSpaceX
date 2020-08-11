@@ -5,7 +5,7 @@
 #include "flinalg/LinalgIO.h"
 #include "imageutils/Image.h"
 #include "dspacex/Precision.h"
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 #include "pmodels/Modelset.h"
 
 #include <string>

@@ -1,7 +1,6 @@
 #include "DatasetLoader.h"
 #include "utils/loaders.h"
-#include "imageutils/ImageLoader.h"
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 #include "utils/StringUtils.h"
 #include "utils/IO.h"
 
@@ -403,7 +402,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 //     crystals: crystal-?                                        # in each persistence dir are its crystals
 //     padZeroes: false                                           # for both persistence and crystal dirs/files
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
-//     embeddings: shapeodds_global_embedding.csv                 # global for each p-lvl, and local for each crystal
+//     rowmajor: false                                            # the shape produced by this model is a row-major image
 //     ms:                                                        # Morse-Smale parameters used to compute partitions
 //      - knn: 15                                                 # k-nearest neighbors
 //      - sigma: 0.25                                             # 
@@ -502,20 +501,6 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   InputFormat partitions_format = InputFormat(partitions_suffix);
   std::cout << "Partitions file format: " << partitions_format << std::endl;
 
-  if (!modelNode["embeddings"]) {
-    std::cerr << "Missing 'embeddings' field (name of global embeddings for each persistence level's models).\n";
-    return nullptr;
-  }
-  std::string embeddings = modelNode["embeddings"].as<std::string>();
-  if (embeddings.empty() || embeddings == "None") {
-    std::cout << "No global embeddings for this model\n";
-    embeddings.clear();
-  } else {
-    std::string embeddings_suffix = embeddings.substr(embeddings.rfind('.')+1);
-    InputFormat embeddings_format = InputFormat(embeddings_suffix);
-    std::cout << "Global embeddings for each persistence level file format: " << embeddings_format << std::endl;
-  }
-  
   if (!modelNode["root"]) {
     std::cerr << "Model missing 'root' field.\n";
     return nullptr;
@@ -549,12 +534,18 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     }
   }
 
+  // is the modelset producing row-major or column-major shapes?
+  bool rowMajor = false;
+  if (modelNode["rowmajor"] && modelNode["padZeroes"].as<std::string>() == "true") {
+    rowMajor = true;
+  }
+
   // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
   Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions));
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
-  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences));
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rowMajor));
   std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
@@ -573,11 +564,6 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     auto ncrystals = crystalPartitions.row(pidx).maxCoeff()+1;
     P.setNumCrystals(ncrystals);
 
-    // read global embeddings
-    if (!embeddings.empty()) {
-      P.setGlobalEmbeddings(IO::readCSVMatrix<float>(persistencePath + '/' + embeddings));
-    }
-    
     // read crystalIds indicating to which crystal each sample belongs at this persistencej
     P.setCrystalSampleIds(crystalPartitions.row(pidx));
 
@@ -733,14 +719,13 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     indexOffset = thumbnailsNode["offset"].as<int>();
   }
 
-  ImageLoader imageLoader;
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
     std::string path = createThumbnailPath(imageBasePath, i+indexOffset,
       imageSuffix, indexOffset, padIndices, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
-    Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
+    Image image(path, true/*decompress*/);
     thumbnails.push_back(image);
   }
 

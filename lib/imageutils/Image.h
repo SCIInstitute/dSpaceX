@@ -3,28 +3,39 @@
 #include <string>
 #include <vector>
 #include <Eigen/Core>
+#include <lodepng.h>
+
+namespace dspacex {
 
 class Image {
- public:
-  Image(int width, int height, unsigned char *data, std::vector<char> rawData, 
-    const std::string &format);
-
-  unsigned char* getData();
-  std::vector<char>& getRawData();
-
-  const unsigned char* getConstData() const;
-  const std::vector<char>& getConstRawData() const;
-
-  int getWidth() const;
-  int getHeight() const;
-  std::string getFormat() const;
+  enum Format { GREY, RGB, RGBA, UNKNOWN };
   
-  static Image convertToImage(const Eigen::MatrixXf &I, const unsigned w, const unsigned h);
+ public:
+  /// Creates image from w x h matrix of floats, throwing an exception if dims don't match
+  Image(const Eigen::MatrixXf &I, unsigned width, unsigned height, unsigned channels = 1);
+
+  /// load an image from a png file (throw exception on failure)
+  Image(const std::string& filename, bool decompress = false);
+
+  /// write image (throw exception on failure)
+  void write(const std::string& filename) const;
+
+  const std::vector<unsigned char> getData() const;     // returns uncompressed image data
+  const std::vector<unsigned char> getPNGData() const;  // returns png-encoded (i.e., compressed) data
+
+  int getWidth() const { return m_width; }
+  int getHeight() const { return m_height; }
+  int numChannels() const;
+  Format getFormat() const;
+  
+  unsigned char getPixel(unsigned i) const;
 
  private:
-  int m_width;
-  int m_height;
-  unsigned char* m_data;
-  std::vector<char> m_rawData;
-  std::string m_format;
+  LodePNGColorType m_format;
+  bool m_decompressed;
+  unsigned m_width, m_height;
+  std::vector<unsigned char> m_data;    // uncompressed image or float [0,1] data from EigenImage * 255.0
+  std::vector<unsigned char> m_pngData; // compressed png-encoded data
 };
+
+} // dspacex

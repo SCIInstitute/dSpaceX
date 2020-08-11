@@ -649,12 +649,11 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
  * adds the given image to the respose's "thumbnails" array
  */
 void addImageToResponse(Json::Value &response, const Image &image) {
-    Json::Value imageObject = Json::Value(Json::objectValue);
-    imageObject["width"] = image.getWidth();
-    imageObject["height"] = image.getHeight();
-    imageObject["rawData"] = base64_encode(reinterpret_cast<const unsigned char *>(&image.getConstRawData()[0]),
-                                           image.getConstRawData().size());
-    response["thumbnails"].append(imageObject);
+  Json::Value imageObject = Json::Value(Json::objectValue);
+  imageObject["width"] = image.getWidth();
+  imageObject["height"] = image.getHeight();
+  imageObject["rawData"] = base64_encode(image.getPNGData().data(), image.getPNGData().size());
+  response["thumbnails"].append(imageObject);
 }
 
 /**
@@ -667,7 +666,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
   auto thumbnails = m_currentDataset->getThumbnails();
 
   response["thumbnails"] = Json::Value(Json::arrayValue);
-  for (auto image : thumbnails) {
+  for (auto& image : thumbnails) {
     addImageToResponse(response, image);
   }
 }
@@ -736,7 +735,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
 
-  const Image& sample_image = m_currentDataset->getThumbnail(0);  // just using this to get dims of image created by model
+  const Image& sample_image = m_currentDataset->getThumbnail(0); // just using this to get dims of image created by model
 
   // partition the field into numZ values and evaluate model for each
   float minval = model->minFieldValue();
@@ -757,10 +756,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
 
     // evaluate model at this coordinate
-    Eigen::MatrixXf I = model->evaluate(z_coord, false /*writeToDisk*/);
+    Eigen::MatrixXf I = model->evaluate(z_coord);
     
-    // add result image to response
-    addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
+    // add result image to response // TODO: add cols to this (test that it works using CBII)
+    addImageToResponse(response, Image(I, sample_image.getWidth(), sample_image.getHeight()));
 
     // add field value to response
     response["fieldvals"].append(fieldval);
@@ -807,18 +806,18 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
     //std::string outputBasepath(datapath + "/debug/outimages");
     //std::string outpath(outputBasepath + "/pidx" + std::to_string(persistence_idx) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
-    Eigen::MatrixXf I = model->evaluate(model->getZCoord(i), false /*writeToDisk*/,
-                                        ""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
+    Eigen::MatrixXf I = model->evaluate(model->getZCoord(i));//, false /*writeToDisk*/,
+    //""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
     float quality = Model::testEvaluateModel(model, model->getZCoord(i),
-                                             sample_image, false /*writeToDisk*/, ""/*outputBasepath*/);
+                                             sample_image);//, false /*writeToDisk*/, ""/*outputBasepath*/);
 
     std::cout << "Quality of generation of image for model at persistence_idx "
               << persistence_idx << ", crystalid " << crystalId << ": " << quality << std::endl;
 
     // add image to response
-    addImageToResponse(response, Image::convertToImage(I, sample_image.getWidth(), sample_image.getHeight()));
+    addImageToResponse(response, Image(I, sample_image.getWidth(), sample_image.getHeight()));
 
     // add field value to response
     response["fieldvals"].append(samples[i]);

@@ -52,7 +52,6 @@ class MSModelset
   struct PersistenceLevel
   {
     void setNumCrystals(unsigned nCrystals) { crystals.resize(nCrystals); }
-    void setGlobalEmbeddings(const Eigen::MatrixXf &embeddings) { global_embeddings = embeddings; }
 
     // each crystal is composed of a non-intersecting set of samples, read from this vector
     void setCrystalSampleIds(Eigen::RowVectorXi crystal_ids) {
@@ -61,13 +60,13 @@ class MSModelset
     }
 
     std::vector<Crystal> crystals;
-    Eigen::MatrixXf global_embeddings;
   };
 
 
 public:
-  MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences)
-    : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field), num_samples(nSamples), samples(nSamples)
+  MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences, bool rowMajor = false)
+    : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field),
+      num_samples(nSamples), samples(nSamples), rowmajor(rowMajor)
   { persistence_levels.resize(nPersistences); }
 
   auto modelType() const { return modeltype; }
@@ -120,6 +119,7 @@ private:
   std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S (redundant if we have the samples themselves)
+  bool rowmajor{false};             // whether the models produce row-major or column-major output
   Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;
