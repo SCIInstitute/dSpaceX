@@ -16,17 +16,96 @@ from distances.mesh_distances import calculate_distance_mesh
 from thumbnails.volume_thumbnails import generate_volume_thumbnails
 from thumbnails.mesh_thumbnails import generate_mesh_thumbnails
 from utils import run_external_script
+from models.export_model import write_to_file
+from models.png_pca import generate_image_pca_model
 
 
 def process_data(config):
     if 'generateModel' in config and config['generateModel'] is True:
         generate_model(config)
+    if 'makePredictions' in config and config['makePredictions'] is True:
+        print('Need to implement make predictions.')
+        # TODO need to implement offline predictions/interpolations
     else:
         preprocess_data(config)
 
 
 def generate_model(config):
-    print('generating model')
+    partition_directory = config['partitionDirectory']
+    shape_directory = config['shapeDirectory']
+    shape_format = config['shapeFormat']
+
+    with open(partition_directory) as partition_json:
+        partition_config = json.load(partition_json)
+
+    # Create output directory
+    existing_output_directory = config['existingOutputDirectory']
+    existing_output_directory = os.path.join(existing_output_directory, '')
+
+    output_directory = os.path.join(existing_output_directory, 'ms_partitions')
+    if 'outputFilename' in config:
+        file_name = config['outputFilename']
+    else:
+        file_name = 'pca_model_' \
+                    + partition_config['category'].replace(' ', '') \
+                    + '_' + partition_config['field'].replace(' ', '')
+    output_directory = os.path.join(output_directory, file_name)
+    output_directory = os.path.join(output_directory, '')
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    # Copy partitions json to newly created directory and create a csv
+    shutil.copyfile(partition_directory, output_directory + 'ms_partitions.json')
+
+    crystal_membership = []
+    for partition in partition_config['crystalPartitions']:
+        crystal_membership.append(partition['crystalMembership'])
+    crystal_membership = np.array(crystal_membership)
+    csv_partition_directory = output_directory + 'ms_partitions.csv'
+    np.savetxt(csv_partition_directory, crystal_membership, fmt='%i', delimiter=',')
+
+    # Generate PCA model
+    if shape_format == 'image':
+        pca_model = generate_image_pca_model(shape_directory, partition_directory)
+    write_to_file(pca_model, output_directory)
+
+    # UPDATE config.yaml
+    with open(existing_output_directory + 'config.yaml') as yaml_file:
+        output_config = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    # Add model
+    if 'models' in output_config and output_config['models'] is not None:
+        models = output_config['models']
+    else:
+        models = []
+    new_model = {
+        'fieldname': partition_config['field'],
+        'type': 'pca',
+        'root': output_directory,
+        'persistences': 'persistence-?',
+        'crystals': 'crystal-?',
+        'padZeroes': False,
+        'partitions': csv_partition_directory,
+        'ms': {
+            'knn': partition_config['neighborhoodSize'],
+            'sigma': partition_config['sigma'],
+            'smooth': partition_config['smoothing'],
+            'depth': partition_config['depth'],
+            'noise': partition_config['noise'],
+            'curvepoints': partition_config['crystalCurvepoints'],
+            'normalize': partition_config['normalize']
+        }
+    }
+    # only update config.yaml if a new model was created,
+    # don't want to keep adding the same model
+    if new_model not in models:
+        models.append(new_model)
+        models_config = {'models': models}
+        output_config.update(models_config)
+        print('Updating config.yaml')
+        with open(existing_output_directory + 'config.yaml', 'w') as yaml_file:
+            noalias_dumper = yaml.dumper.SafeDumper
+            noalias_dumper.ignore_aliases = lambda self, data: True
+            yaml.dump(output_config, yaml_file, default_flow_style=False, sort_keys=False, line_break=2)
 
 
 def preprocess_data(config):

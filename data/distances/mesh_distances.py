@@ -33,7 +33,3 @@ def calculate_distance_mesh(directory, metric='l2'):
     all_shapes_array = np.row_stack(shapes_list)
     print('Calling pairwise distance.')
     return pairwise_distances(all_shapes_array, metric=metric)
-
-
-dir = '/Users/kylimckay-bishop/Temporary/mesh_distance_example/'
-dist = calculate_distance_mesh(dir)

@@ -6,8 +6,6 @@ from PIL import Image
 from sklearn.decomposition import PCA
 import re
 
-from export_model import write_to_file
-
 
 def sort_by_sample_id(file_1, file_2):
     """
@@ -41,7 +39,7 @@ def get_data_matrix(directory):
     return all_shapes_array
 
 
-def generate_png_pca_model(shape_directory, partition_directory, n_components=0.97):
+def generate_image_pca_model(shape_directory, partition_directory, n_components=0.97):
     """
     Generates PCA model for each crystal in each persistence level.
     :param shape_directory: Directory where png images are found
@@ -75,13 +73,3 @@ def generate_png_pca_model(shape_directory, partition_directory, n_components=0.
             pca_model_for_persistence['models'].append(model)
         all_pca_models.append(pca_model_for_persistence)
     return all_pca_models
-
-
-# Here is an example of using this code - for now it requires a human-in-the-loop
-shape_directory_ = '/Users/kylimckay-bishop/dSpaceX/CantileverBeam-1/unprocessed_data/shape_representations/'
-partition_directory_ = '/Users/kylimckay-bishop/Downloads/MaxStress_Crystal_Partitions.json'
-output_directory_ = '/Users/kylimckay-bishop/Temporary/pca_model_test/'
-output_filename_ = 'pca_model_qoi_max_stress'
-
-out = generate_png_pca_model(shape_directory_, partition_directory_)
-write_to_file(out, output_directory_, output_filename_)

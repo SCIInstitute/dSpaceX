@@ -2,21 +2,18 @@ import numpy as np
 import os
 
 
-def write_to_file(model_data, output_directory, output_file_name='pca_model'):
+def write_to_file(model_data, output_directory):
     """
     Write pca model to output directory
+    :param output_file_name:
     :param model_data: Data to write
     :param output_directory: place to write the data
     :return:
     """
-    # create output directory
-    model_output_directory = os.path.join(output_directory, output_file_name)
-    if not os.path.exists(model_output_directory):
-        os.makedirs(model_output_directory)
     for p_level_data in model_data:
         p_level = p_level_data['pLevel']
         # create directory for persistence level
-        p_level_output_directory = os.path.join(model_output_directory, 'persistence-' + str(p_level))
+        p_level_output_directory = os.path.join(output_directory, 'persistence-' + str(p_level))
         if not os.path.exists(p_level_output_directory):
             os.makedirs(p_level_output_directory)
         # export crystal ids for that persistence level
