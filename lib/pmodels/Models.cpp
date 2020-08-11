@@ -48,18 +48,34 @@ std::unique_ptr<Model> Model::create(Type t, const std::string& name) {
 // {
 // }
 
+// z' = f(x', X, Z)
+//
+// new z_coord z' = Gaussian kernel regression computed from new field_val x' and original
+// field_vals X along with their associated z_coords Z.
+//
+// The contribution of the nearby original z_coords is larger than those farther away using a
+// Gaussian curve centered at the new sample, and sigma determine the width of this curve.
+//
+// 
 const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf& fieldvalues, const Eigen::MatrixXf& z_coords, float new_fieldval, float sigma)
 {
   //debug: hardcode new fieldval
   //new_fieldval = 0.62341;
   //std::cout << "num_samples: " << sample_indices.size() << std::endl;
   //std::cout << "z-size: " << z_coords.cols() << std::endl;
-    
+
+  // 1 / sqrt(2*pi*sigma) * e^0.5*((x-mu)/sigma)^2
+  // x-mu is the differences between the field values
+  // 
+  // sigma should be used to only include a subset of nearby fieldvalues to average its value
+  // is not independent of the field range, but perhaps a percentage of the data range is a
+  // reasonable choice (todo: ask Shireen what she wants to do)
+  
   // gaussian kernel regression to generate a new LSV
   using namespace Eigen;
 
   // calculate difference
-  RowVectorXf fieldvals(fieldvalues); // todo: convert this to a static function by passing in z_coords since it's used for evaluation of multiple model types (PCA or ShapeOdds)
+  RowVectorXf fieldvals(fieldvalues);
   fieldvals *= -1.0;
   fieldvals.array() += new_fieldval;
   //std::cout << "difference between new field value and training field values:\n" << fieldvals << std::endl;

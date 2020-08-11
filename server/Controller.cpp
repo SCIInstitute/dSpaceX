@@ -712,7 +712,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto fieldname = request["fieldname"].asString();
   auto modelname = request["modelname"].asString();
   auto crystalId = request["crystalID"].asInt();
-  auto modelSigma = request["modelSigma"].asDouble();
+  auto modelSigma = request["modelSigma"].asFloat();
   
   // try to find the requested model
   auto modelset(m_currentDataset->getModelset(fieldname, modelname));
