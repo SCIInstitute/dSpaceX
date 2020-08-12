@@ -553,13 +553,16 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     return nullptr;
   } 
 
+  int plvl_start = 0;
+  if (modelNode["first_partition"]) {
+    plvl_start = modelNode["first_partition"].as<int>();
+  }
+
   // read paths to all the models (the models themselves are read on demand)
-  for (auto pidx = npersistences-1; pidx >= 0; pidx--) //<ctc> finally! at long last no more hacking this line!
-  //for (auto pidx = npersistences=0; pidx >= 0; pidx--) { // just get the 0th plvl
-  //for (auto pidx = npersistences-1; pidx >= npersistences-1; pidx--) // just get the highest plvl
+  for (auto pidx = npersistences-1; pidx >= 0; pidx--)
   {
     auto &P = ms_of_models->getPersistenceLevel(pidx);
-    auto persistencePath(persistencesBasePath + maybePadIndex(pidx, padIndices, npersistences));
+    auto persistencePath(persistencesBasePath + maybePadIndex(plvl_start + pidx, padIndices, npersistences));
 
     // use crystalPartitions to determine number of crystals at this level
     auto ncrystals = crystalPartitions.row(pidx).maxCoeff()+1;

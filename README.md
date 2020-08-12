@@ -85,6 +85,7 @@ models:
     crystals: crystal-?                                        # in each persistence dir are its crystals
     padZeroes: false                                           # for both persistence and crystal dirs/files
     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
+    first_partition: 0                                         # if depth != -1 && num_persistences > 20, this is the first directory #
     rowmajor: false                                            # the shape produced by this model is a row-major image
     ms:                                                        # Morse-Smale parameters used to compute partitions
       knn: 15                                                  # k-nearest neighbors
@@ -103,6 +104,24 @@ models:
          params:
            sigma: 0.01
            num_interps: 500
+
+- fieldname: Max Stress
+  type: pca
+  root: ms_partitions/test_max_stress_pca_model
+  persistences: persistence-?
+  crystals: crystal-?
+  padZeroes: false
+  partitions: ms_partitions.csv
+  first_partition: 6
+  rowmajor: true
+  ms:
+    knn: 15
+    sigma: 0.25
+    smooth: 15
+    depth: 20
+    noise: true
+    curvepoints: 50
+    normalize: true
 
   - fieldname: Angle
     type: pca
