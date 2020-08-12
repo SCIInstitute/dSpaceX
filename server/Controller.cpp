@@ -296,6 +296,7 @@ void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json:
     response["depth"] = m_currentPersistenceDepth;
     response["noise"] = m_currentAddNoise;
     response["normalize"] = m_currentNormalize;
+    response["minPersistence"] = m_currentVizData->getMinPersistenceLevel();
 
     auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
     response["crystalPartitions"] = Json::Value(Json::arrayValue);

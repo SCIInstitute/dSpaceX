@@ -23,7 +23,7 @@ from models.png_pca import generate_image_pca_model
 def process_data(config):
     if 'generateModel' in config and config['generateModel'] is True:
         generate_model(config)
-    if 'makePredictions' in config and config['makePredictions'] is True:
+    elif 'makePredictions' in config and config['makePredictions'] is True:
         print('Need to implement make predictions.')
         # TODO need to implement offline predictions/interpolations
     else:
@@ -80,11 +80,12 @@ def generate_model(config):
     new_model = {
         'fieldname': partition_config['field'],
         'type': 'pca',
-        'root': output_directory,
+        'root': 'ms_partitions' + '/' + file_name,
         'persistences': 'persistence-?',
         'crystals': 'crystal-?',
         'padZeroes': False,
-        'partitions': csv_partition_directory,
+        'partitions': 'ms_partitions.csv',
+        'first_partition': partition_config['minPersistence'],
         'rowmajor': True,
         'ms': {
             'knn': partition_config['neighborhoodSize'],
