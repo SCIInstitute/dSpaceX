@@ -19,6 +19,7 @@ from utils import run_external_script
 from models.export_model import write_to_file
 from models.png_pca import generate_image_pca_model
 from models.mesh_pca import generate_mesh_pca_model
+from models.volume_pca import generate_volume_pca_model
 
 
 def process_data(config):
@@ -70,6 +71,8 @@ def generate_model(config):
         pca_model = generate_image_pca_model(shape_directory, partition_directory)
     elif shape_format == 'mesh':
         pca_model = generate_mesh_pca_model(shape_directory, partition_directory)
+    elif shape_format == 'volume':
+        pca_model = generate_volume_pca_model(shape_directory, partition_directory)
     write_to_file(pca_model, output_directory)
 
     # UPDATE config.yaml
@@ -266,7 +269,8 @@ def calculate_distance(input_config, output_directory):
         arguments = input_config['distance']['arguments'] if 'arguments' in input_config['distance'] else None
         distance = run_external_script(script_directory, module_name, method_name, arguments=arguments)
     else:
-        print('Calculating ' + distance_type + ' distance.')
+        # print('Calculating ' + distance_type + ' distance.')
+        # print('\n')
         if shape_format == 'volume':
             distance = calculate_distance_volume(shape_directory, metric=distance_type)
         elif shape_format == 'image':

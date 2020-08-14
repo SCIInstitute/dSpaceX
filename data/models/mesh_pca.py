@@ -6,9 +6,6 @@ import re
 from sklearn.decomposition import PCA
 import trimesh
 
-from data.thumbnails.thumbnail_utils import generate_image_from_vertices_and_faces
-from data.models.export_model import write_to_file
-
 
 def sort_by_sample_id(file_1, file_2):
     """

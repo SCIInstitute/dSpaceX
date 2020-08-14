@@ -1,12 +1,10 @@
 import functools
 from glob import glob
-import math
+import json
 import numpy as np
 import nrrd
-from sklearn.decomposition import IncrementalPCA
 import re
-
-from export_model import write_to_file
+from sklearn.decomposition import PCA
 
 
 def sort_by_sample_id(file_1, file_2):
@@ -22,82 +20,41 @@ def sort_by_sample_id(file_1, file_2):
     return file_1_id - file_2_id
 
 
-def get_block(files):
-    output = []
-    for file in files:
-        data, _ = nrrd.read(file)
-        output.append(data)
-    output = np.array(output)
-    return output.reshape((len(files), -1))
+def get_data_matrix(directory):
+    shape_files = glob(directory + '*.nrrd')
+    shape_files.sort(key=functools.cmp_to_key(sort_by_sample_id))
+
+    shape_list = []
+    for shape in shape_files:
+        data, header = nrrd.read(shape)
+        data = data.flatten()
+        shape_list.append(data)
+
+    return np.row_stack(shape_list)
 
 
-def not_sure_name_yet(shapes_files, n_blocks=15):
-    # determine number of shapes to load per block
-    number_of_shapes = len(shapes_files)
-    shapes_per_block = math.ceil(number_of_shapes / n_blocks)
-    block_files = [shapes_files[i:i+shapes_per_block] for i in range(0, number_of_shapes, shapes_per_block)]
+def generate_volume_pca_model(shape_directory, partition_directory, n_components=0.97):
+    data_matrix = get_data_matrix(shape_directory)
 
-    # create transformer
-    if len(shapes_files) > 20:
-        transformer = IncrementalPCA(n_components=20)
-    else:
-        transformer = IncrementalPCA()
+    with open(partition_directory) as json_file:
+        partition_config = json.load(json_file)
+    partitions = partition_config['crystalPartitions']
 
-    # run incremental pca to get W, keep track of sum of features to w0, we will calculatet the mean ourselves
-    sum_of_features = 0
-    for files in block_files:
-        block = get_block(files)
-        sum_of_features = sum_of_features + np.sum(block, axis=0)
-        transformer.partial_fit(block)
-
-    W = transformer.components_
-    w0 = sum_of_features / number_of_shapes #mean
-    z = []
-    for file in shapes_files:
-        data, _ = nrrd.read(file)
-        x = data.reshape((1, -1))
-        z.append(np.matmul((x - w0), W.T))
-    z = np.row_stack(z)
-    return W, w0, z
-
-
-def do_things_for_persistence_crystal(shape_directory, partition_directory, n_blocks=15, offset=1):
-    partitions = np.genfromtxt(partition_directory, delimiter=',')
-
-    # get shape files
-    shapes = glob(shape_directory + '*.nrrd')
-    shapes.sort(key=functools.cmp_to_key(sort_by_sample_id))
-
-    # code expects 2Dim ndarray, this will reshape it if there is only one persistence level
-    if partitions.ndim == 1:
-        partitions = partitions.reshape((1, -1))
-
-    # create model for each crystal
     all_pca_models = []
-    number_of_persistence_levels = len(partitions)
-    for p_level, crystal_memberships in enumerate(partitions):
-        pca_model_for_persistence = {'pLevel': p_level, 'crystalIDs': crystal_memberships, 'models':[]}
-        crystal_ids = np.unique(crystal_memberships)
-        number_of_crystals = len(crystal_ids)
+    for crystal in partitions:
+        persistence_level = crystal['persistenceLevel']
+        crystal_membership = crystal['crystalMembership']
+        pca_model_for_persistence = {'pLevel': persistence_level, 'crystalIDs': crystal_membership, 'models': []}
+        crystal_ids = np.unique(crystal_membership)
         for c_id in crystal_ids:
-            print('\033[92m Calculating pca model for crystal %i of %i for persistence level %i of %i. \u001b[37m' %
-                  (c_id + offset, number_of_crystals, p_level + offset, number_of_persistence_levels))
-            crystal_samples_ids = np.where(crystal_memberships == c_id)[0] + offset
-            # filter shapes files based on crystal_samples_ids
-            crystal_shapes = [s for s in shapes if (list(map(int, re.findall(r'\d+', s)))[-1] in crystal_samples_ids)]
-            W, w0, z = not_sure_name_yet(crystal_shapes, n_blocks)
+            crystal_samples_index = (crystal_membership == c_id)
+            crystal_samples = data_matrix[crystal_samples_index]
+            transformer = PCA(n_components=n_components)
+            transformer.fit(crystal_samples)
+            W = transformer.components_
+            w0 = transformer.mean_
+            z = np.matmul((crystal_samples - w0), W.T)
             model = {'crystalID': c_id, 'W': W, 'w0': w0, 'z': z}
             pca_model_for_persistence['models'].append(model)
         all_pca_models.append(pca_model_for_persistence)
     return all_pca_models
-
-
-test_shape_directory = '/Users/kylimckay-bishop/Temporary/nanoparticle_data/original_data_small/design_volumes/'
-test_partition_directory = '/Users/kylimckay-bishop/Temporary/nanoparticle_data/processed_data/example/nrrd_minimum/nano_example_min_partitions.csv'
-test_output_directory = '/Users/kylimckay-bishop/downloads/'
-output_filename_ = 'nrrd_pca_model_test'
-
-full_shape_directory = '/Volumes/External_Drive/dSpaceX_data/raw_data/nanoparticles/highres/BinaryVolume/'
-
-out = do_things_for_persistence_crystal(test_shape_directory, test_partition_directory)
-write_to_file(out, test_output_directory, output_filename_)

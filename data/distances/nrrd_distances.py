@@ -26,12 +26,11 @@ def calculate_distance_volume(directory, metric='hamming'):
     array = []
     count = 1
     for s in shapes:
-        print('Opening volume number %i' % count)
         count += 1
         data, header = nrrd.read(s)
         data = data.flatten()
         array.append(data)
-    print('Calculating Distance')
+    print('Calculating Distance', end='\n')
     array = np.array(array)
     distance = pairwise_distances(array, metric=metric)
     return distance
