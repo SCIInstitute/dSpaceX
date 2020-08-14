@@ -47,10 +47,3 @@ def nano_formula_3d(m, n1, n2, n3, a, b, num_points):
 def nano_formula_2d(m, n1, n2, n3, a, b, theta):
     r = abs((1 / a) * np.cos(m * theta / 4.0))**n2 + abs((1 / b) * np.sin(m * theta / 4.0))**n3
     return r**(-1 / n1)
-
-
-# testing
-input_params_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/unprocessed_data/Nanoparticles_Parameters.csv'
-output_dir = '/Users/kylimckay-bishop/dSpaceX/nanoparticles_mesh/unprocessed_data/shape_representations/'
-
-generate_nano_meshes(input_params_dir, output_dir)

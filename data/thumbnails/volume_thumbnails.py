@@ -8,6 +8,12 @@ from data.thumbnails.thumbnail_utils import generate_image_from_vertices_and_fac
 
 
 def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
+    """
+    Generates thumbnails from voxels
+    :param shape_directory: Directory where voxels are saved
+    :param output_directory: Directory where thumbnails are saved
+    :param scale: A scaling value so that the designs are within the thumbnails, usually the default is sufficient
+    """
     # Get all possible meshes
     shapes = glob(shape_directory + '*.nrrd')
 
@@ -30,8 +36,3 @@ def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
         image.save(output_directory + str(shape_id) + '.png')
     # Necessary so next line prints on new line
     print('', end='\n')
-
-
-shape_directory_ = '/Users/kylimckay-bishop/Desktop/empty_volumes/'
-output_directory_ = '/Users/kylimckay-bishop/Temporary/place_holder_thumbnails/'
-generate_volume_thumbnails(shape_directory_, output_directory_)

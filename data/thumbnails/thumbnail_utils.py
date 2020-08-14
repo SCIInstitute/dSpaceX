@@ -7,6 +7,11 @@ import trimesh
 
 
 def generate_image_from_vertices_and_faces(vertices, faces):
+    """
+    From the vertices and faces of a mesh generates a 2D thumbnail.
+    :param vertices: The mesh vertices.
+    :param faces: The mesh faces.
+    """
     # Initialize scene and set-up static objects
     gold_material = pyrender.MetallicRoughnessMaterial(baseColorFactor=[1.0, 0.766, 0.336, 1.0],
                                                        roughnessFactor=.25,

@@ -1,12 +1,15 @@
 # dSpaceX Pre-processing Tool
-The dSpaceX pre-processing tool is intended to make dSpaceX more user friendly. The pre-processing tool takes a JSON file as
+The dSpaceX data processing tool is intended to make dSpaceX more user friendly. The data processing tool takes a JSON file as
 input and outputs the files that the dSpaceX server and UI require, including:
 - The config.yaml which specifics the location and format of the processed data.
 - A distance matrix between the design shape representations.
 - The 2D embeddings of the design shape representations. The default embeddings are t-SNE, MDS, and Isomap.
 - Thumbnails of the design shape representations.
 - (TODO) The Morse-Smale decomposition.
-- (TODO) The interpolation models for design prediction. 
+- The latent space models for design prediction; currently only generates PCA models. 
+
+Currently, there are two paths through the tool. Either a user can generate all the initial data (distances, embeddings, configs, etc) 
+or they can generate a latent space model based on a Morse-Smale parition of the data.
 
 The JSON file needs to specify the location of the original data, including, the input parameters, the quantities of interest,
 and the design shape representation — usually these are images or volumes.
@@ -23,7 +26,7 @@ already set up the server and/or the client then the conda environment should be
    source ./conda_installs.sh
    ```
 
-## Running the Pre-processing Tool
+## Running the data processing Tool
 1. Activate the dSpaceX conda environment — note that the dSpaceX conda environment is all lower case).
 ```bash
    conda activate dspacex
@@ -169,5 +172,21 @@ embeddings field is a list of objects, each object describes the type of embeddi
       "file": "<path>/<file_name>.csv"
     }
   ]
+}
+```
+
+### Creating a Latent Space Model
+To create a latent space model include the field generateModel to notify the tool you want to generate a model.
+You will also need to provide the data partitioning, the shape representations, and the exiting output directory.
+The data processor will generate the models and update the existing config.yaml.
+Below is an example of the JSON for model generation.
+```json
+{
+  "generateModel": true,
+  "partitionDirectory": "Directory for partition exported and downloaded from UI",
+  "existingOutputDirectory": "Existing Output Directory",
+  "outputFilename": "Name of model; if this field is not provided a name will be generated",
+  "shapeDirectory": "Directory of shape representations",
+  "shapeFormat": "Shape format, option include image, volume, and mesh"
 }
 ```

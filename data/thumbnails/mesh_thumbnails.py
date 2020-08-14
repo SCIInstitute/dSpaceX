@@ -1,6 +1,4 @@
 from glob import glob
-import math
-import numpy as np
 import re
 import trimesh
 
@@ -8,6 +6,11 @@ from thumbnails.thumbnail_utils import generate_image_from_vertices_and_faces
 
 
 def generate_mesh_thumbnails(shape_directory, output_directory):
+    """
+    Generate mesh thumbnails from .stl, .ply, or .obj files.
+    :param shape_directory: Directory that contains mesh shapes
+    :param output_directory: Directory to save generated thumbnails
+    """
     # Get all possible meshes
     shapes = glob(shape_directory + '*.stl')
     shapes.extend(glob(shape_directory + '*.ply'))

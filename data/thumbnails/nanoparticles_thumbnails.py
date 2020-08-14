@@ -1,3 +1,8 @@
+"""
+This file creates thumbnails for Nanoparticles from the input parameters.
+It has been replaced by mesh_thumbnails and volume_thumbnails which generalize to
+any 3D data saved as meshes or volumes.
+"""
 import math
 import matplotlib.tri as mtri
 import matplotlib.pyplot as plt

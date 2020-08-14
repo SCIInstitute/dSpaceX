@@ -1,3 +1,7 @@
+"""
+This is the main script for the data processing pipeline.
+This is the script that is called from the command line and passed the JSON config.
+"""
 from glob import glob
 from PIL import Image
 import json
@@ -23,6 +27,11 @@ from models.volume_pca import generate_volume_pca_model
 
 
 def process_data(config):
+    """
+    Main function. Depending on config will either run initial data processing pipeline or
+    generate a new model.
+    :param config: dictionary containing configurations
+    """
     if 'generateModel' in config and config['generateModel'] is True:
         generate_model(config)
     elif 'makePredictions' in config and config['makePredictions'] is True:
@@ -33,6 +42,11 @@ def process_data(config):
 
 
 def generate_model(config):
+    """
+    Generates a new latent space or prediction model for a dataset.
+    :param config: dictionary containing configurations
+    :return:
+    """
     partition_directory = config['partitionDirectory']
     shape_directory = os.path.join(config['shapeDirectory'], '')
     shape_format = config['shapeFormat']
@@ -117,6 +131,12 @@ def generate_model(config):
 
 
 def preprocess_data(config):
+    """
+    Initial data processing pipeline.
+    Calculates distances and embeddings and generates thumbnails and config.yaml.
+    :param config: dictionary containing configurations
+    :return:
+    """
     # OUTPUT DIRECTORY AND INITIALIZE OUTPUT CONFIG
     if 'outputDirectory' not in config:
         print('The output directory is a required field. Please, update config and run again.')
@@ -220,6 +240,12 @@ def generate_thumbnails(input_config, output_directory):
 
 
 def calculate_distance(input_config, output_directory):
+    """
+    Calculates the distances between designs shapes depending on shape_format
+    :param input_config: dictionary containing configurations
+    :param output_directory: directory where distance matrix should be saved.
+    :return:
+    """
     # Make sure fields are in dictionary
     if 'shapeDirectory' not in input_config:
         print('The shape directory is a required field. Please, update config and run again.')
@@ -285,6 +311,11 @@ def calculate_distance(input_config, output_directory):
 
 
 def verify_distance_type(distance_type):
+    """
+    Verifies requested distances is supported.
+    :param distance_type: Type of distance to calculate
+    :return:
+    """
     supported_distances = ['precomputed', 'script', 'cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan',
                            'braycurtis', 'canberra', 'chebyshev', 'correlation', 'dice', 'hamming', 'jaccard',
                            'kulsinski', 'mahalanobis', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
@@ -296,6 +327,11 @@ def verify_distance_type(distance_type):
 
 
 def verify_shape_format(shape_format):
+    """
+    Verifies shape format is supported.
+    :param shape_format: The shape format.
+    :return:
+    """
     supported_shapes = ['image', 'volume', 'mesh']
     if shape_format in supported_shapes:
         return True
@@ -304,6 +340,12 @@ def verify_shape_format(shape_format):
 
 
 def calculate_embeddings(distance, input_config, output_directory):
+    """
+    Calculates 2D embeddings of design shapes.
+    :param distance: Distance matrix
+    :param input_config: dictionary containing configurations
+    :param output_directory: Directory where embeddings should be saved
+    """
     # Calculate default embeddings first
     print('Calculating default 2D embeddings for entire dataset.')
     tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
