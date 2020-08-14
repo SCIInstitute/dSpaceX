@@ -19,8 +19,9 @@ def generate_nano_meshes(parameter_csv, output_directory):
               ((100 * sample.Index / len(parameter_df.index)), sample.Index, len(parameter_df.index)), end='\r')
 
         X, Y, Z, tri_indices = nano_formula_3d(sample.m, sample.n1, sample.n2, sample.n3, sample.a, sample.b, 100000)
-        shape_mesh = trimesh.Trimesh(vertices=np.column_stack((X, Y, Z)), faces=tri_indices)
-        shape_mesh.export(output_directory + str(sample.Index + 1) + '.obj', 'obj')
+        # It is critical that process=False in the below constructor or else the meshes will not be in correspondence
+        shape_mesh = trimesh.Trimesh(vertices=np.column_stack((X, Y, Z)), faces=tri_indices, process=False)
+        shape_mesh.export(output_directory + str(sample.Index + 1) + '.ply', 'ply')
 
 
 def nano_formula_3d(m, n1, n2, n3, a, b, num_points):

@@ -19,7 +19,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory):
         print('Thumbnail generation %.2f percent complete. Generating thumbnail %i of %i. ' %
               ((100 * index / len(shapes)), index, len(shapes)), end='\r')
 
-        shape_mesh = trimesh.load_mesh(shape_file)
+        shape_mesh = trimesh.load_mesh(shape_file, process=False)
         vertices = shape_mesh.vertices
         faces = shape_mesh.faces
         image = generate_image_from_vertices_and_faces(vertices, faces)

@@ -43,7 +43,7 @@ def generate_nano_thumbnails(parameter_csv, output_directory):
         X, Y, Z, tri_indices = nano_formula_3d(sample.m, sample.n1, sample.n2, sample.n3, sample.a, sample.b, 100000)
         vertices = np.column_stack((X, Y, Z))
 
-        shape_mesh = trimesh.Trimesh(vertices=vertices, faces=tri_indices)
+        shape_mesh = trimesh.Trimesh(vertices=vertices, faces=tri_indices, process=False)
         obj_center = shape_mesh.centroid
 
         # shift camera position to center object

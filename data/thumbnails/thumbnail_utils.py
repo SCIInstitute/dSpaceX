@@ -23,7 +23,7 @@ def generate_image_from_vertices_and_faces(vertices, faces):
     renderer = pyrender.OffscreenRenderer(image_width, image_height)
 
     # render mesh
-    shape_mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+    shape_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
     obj_center = shape_mesh.centroid
 
     # shift camera position to center object

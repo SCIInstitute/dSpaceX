@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.metrics import pairwise_distances
 import trimesh
 
-from data.distances.distance_utils import sort_by_sample_id
+from distances.distance_utils import sort_by_sample_id
 
 
 def calculate_distance_mesh(directory, metric='l2'):
@@ -26,7 +26,7 @@ def calculate_distance_mesh(directory, metric='l2'):
     shapes_list = []
     for shape_index, shape in enumerate(shapes_files):
         print('Opening shape %i / %i' % (shape_index, len(shapes_files)), end='\r')
-        shape_mesh = trimesh.load_mesh(shape)
+        shape_mesh = trimesh.load_mesh(shape, process=False)
         vertices = shape_mesh.vertices
         vertices = vertices.reshape((1, -1))
         shapes_list.append(vertices)

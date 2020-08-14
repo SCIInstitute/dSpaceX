@@ -18,6 +18,7 @@ from thumbnails.mesh_thumbnails import generate_mesh_thumbnails
 from utils import run_external_script
 from models.export_model import write_to_file
 from models.png_pca import generate_image_pca_model
+from models.mesh_pca import generate_mesh_pca_model
 
 
 def process_data(config):
@@ -32,7 +33,7 @@ def process_data(config):
 
 def generate_model(config):
     partition_directory = config['partitionDirectory']
-    shape_directory = config['shapeDirectory']
+    shape_directory = os.path.join(config['shapeDirectory'], '')
     shape_format = config['shapeFormat']
 
     with open(partition_directory) as partition_json:
@@ -67,6 +68,8 @@ def generate_model(config):
     # Generate PCA model
     if shape_format == 'image':
         pca_model = generate_image_pca_model(shape_directory, partition_directory)
+    elif shape_format == 'mesh':
+        pca_model = generate_mesh_pca_model(shape_directory, partition_directory)
     write_to_file(pca_model, output_directory)
 
     # UPDATE config.yaml
@@ -190,15 +193,15 @@ def generate_thumbnails(input_config, output_directory):
 
     shape_format = input_config['shapeFormat'].lower()
     if verify_shape_format(shape_format) is False:
-        print('Sorry I only know how to make thumbnails for Nanoparticles and png images.'
-              ' Skipping thumbnails generation.')
+        print('The shape format: ' + shape_format + ' ist not supported.'
+                                                    ' Please, update config using mesh, image, or volume and run again')
         return
 
     # Generate thumbnails
     if shape_format == 'volume':
         print('Generating thumbnails from volume.')
         generate_volume_thumbnails(shape_directory, out)
-    elif shape_format is 'mesh':
+    elif shape_format == 'mesh':
         print('Generating thumbnails from mesh.')
         generate_mesh_thumbnails(shape_directory, out)
     elif shape_format == 'image':

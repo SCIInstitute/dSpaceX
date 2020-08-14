@@ -3,7 +3,7 @@ import nrrd
 import re
 from skimage import measure
 
-from data.thumbnails.thumbnail_utils import generate_image_from_vertices_and_faces
+from thumbnails.thumbnail_utils import generate_image_from_vertices_and_faces
 
 
 def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
