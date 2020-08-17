@@ -57,11 +57,10 @@ We explain each field below.
   "parametersFile": "<path>/<file_name>.csv",
   "qoisFile": "<path>/<file_name>.csv",
   "shapeDirectory": "<path>",
-  "shapeFormat": "png or nrrd",
+  "shapeFormat": "image, mesh, or volume",
   "distance": {
     "type": "L1 or L2"
-  },
-  "thumbnails": "png or nano"
+  }
 }
 ```
 
@@ -71,12 +70,11 @@ We explain each field below.
 - *parametersFile:* [Path to CSV] The input parameters for your designs. Headers are expected.
 - *qoisFile:* [Path to CSV] The quantities of interest for your designs. Headers are expected.
 - *shapeDirectory:* [Path to Shape Representations] The shape representations for your designs.
-- *shapeFormat:* [String] Currently, we support "png" or "nrrd" shape representations.
+- *shapeFormat:* [String] Currently, we support image, volume, and mesh shape representations.
 - *distance:* [Object] Depending on how you want to calculate distances this object will look different. For the minimum JSON
 it will only have one field 'type' explained next.
 - *distance.type:* [String] For the minimum JSON you need to specify if you want the 'L1' or the 'L2' distance calculated.
-- *thumbnails:* [String] Type of thumbnails to generate. You must specify either 'png' or 'nano'. Currently, we only generate
-thumbnails for 3D volumes if it is the Nanoparticles data set. 
+
 
 **A Note on Embeddings:**
 
@@ -101,12 +99,11 @@ path to the csv file.
   "parametersFile": "<path>/<file_name>.csv",
   "qoisFile": "<path>/<file_name>.csv",
   "shapeDirectory": "<path>",
-  "shapeFormat": "png or nrrd",
+  "shapeFormat": "image, mesh, or volume",
   "distance": {
     "type": "precomputed",
     "file": "<path>/<file_name>.csv"
-  },
-  "thumbnails": "png or nano"
+  }
 }
 ```
 
@@ -125,15 +122,14 @@ the list from the JSON file to your method, the list can be heterogeneous.
   "parametersFile": "<path>/<file_name>.csv",
   "qoisFile": "<path>/<file_name>.csv",
   "shapeDirectory": "<path>",
-  "shapeFormat": "png or nrrd",
+  "shapeFormat": "image, mesh, or volume",
   "distance": {
     "type": "script",
     "script": "<path>/<file_name>.py",
     "moduleName": "<module_name> (this is likely the <file_name>",
     "methodName": "<method_name>",
     "arguments": ["<list of arguments - if your method does not take arguments exclude this field)>"]
-  },
-  "thumbnails": "png or nano"
+  }
 }
 ```
 
@@ -152,11 +148,10 @@ embeddings field is a list of objects, each object describes the type of embeddi
   "parametersFile": "<path>/<file_name>.csv",
   "qoisFile": "<path>/<file_name>.csv",
   "shapeDirectory": "<path>",
-  "shapeFormat": "png or nrrd",
+  "shapeFormat": "image, mesh, or volume",
   "distance": {
     "type": "L1"
-  },
-  "thumbnails": "png or nano",
+  }
   "embeddings": [
     {
       "type": "script",

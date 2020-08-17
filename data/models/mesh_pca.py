@@ -3,7 +3,7 @@ from glob import glob
 import json
 import numpy as np
 import re
-from sklearn.decomposition import PCA
+from sklearn.decomposition import IncrementalPCA
 import trimesh
 
 
@@ -42,7 +42,7 @@ def get_data_matrix(directory):
     return all_shapes_array
 
 
-def generate_mesh_pca_model(shape_directory, partition_directory, n_components=0.97):
+def generate_mesh_pca_model(shape_directory, partition_directory, batch_size=50):
     """
     Generates PCA model for each crystal in each persistence level.
     :param shape_directory: Directory where png images are found
@@ -52,12 +52,14 @@ def generate_mesh_pca_model(shape_directory, partition_directory, n_components=0
     in each persistence level.
     """
     # get data
+    print('Loading data')
     data_matrix = get_data_matrix(shape_directory)
     with open(partition_directory) as json_file:
         partition_config = json.load(json_file)
     partitions = partition_config['crystalPartitions']
 
     # create model for each crystal
+    print('Generating model')
     all_pca_models = []
     for crystal in partitions:
         persistence_level = crystal['persistenceLevel']
@@ -67,7 +69,7 @@ def generate_mesh_pca_model(shape_directory, partition_directory, n_components=0
         for c_id in crystal_ids:
             crystal_samples_index = (crystal_membership == c_id)
             crystal_samples = data_matrix[crystal_samples_index]
-            transformer = PCA(n_components=n_components)
+            transformer = IncrementalPCA(batch_size=batch_size)
             transformer.fit(crystal_samples)
             W = transformer.components_
             w0 = transformer.mean_

@@ -4,7 +4,7 @@ import json
 import numpy as np
 import nrrd
 import re
-from sklearn.decomposition import PCA
+from sklearn.decomposition import IncrementalPCA
 
 
 def sort_by_sample_id(file_1, file_2):
@@ -33,7 +33,7 @@ def get_data_matrix(directory):
     return np.row_stack(shape_list)
 
 
-def generate_volume_pca_model(shape_directory, partition_directory, n_components=0.97):
+def generate_volume_pca_model(shape_directory, partition_directory, batch_size=20):
     data_matrix = get_data_matrix(shape_directory)
 
     with open(partition_directory) as json_file:
@@ -49,7 +49,7 @@ def generate_volume_pca_model(shape_directory, partition_directory, n_components
         for c_id in crystal_ids:
             crystal_samples_index = (crystal_membership == c_id)
             crystal_samples = data_matrix[crystal_samples_index]
-            transformer = PCA(n_components=n_components)
+            transformer = IncrementalPCA(batch_size=batch_size)
             transformer.fit(crystal_samples)
             W = transformer.components_
             w0 = transformer.mean_

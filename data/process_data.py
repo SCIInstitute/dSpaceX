@@ -81,6 +81,7 @@ def generate_model(config):
     np.savetxt(csv_partition_directory, crystal_membership, fmt='%i', delimiter=',')
 
     # Generate PCA model
+    print('Generating PCA model')
     if shape_format == 'image':
         pca_model = generate_image_pca_model(shape_directory, partition_directory)
     elif shape_format == 'mesh':
@@ -174,6 +175,7 @@ def preprocess_data(config):
     output_config.update(thumbnail_config)
 
     # DISTANCES
+    print('Calculating Distances')
     distance_config, distance = calculate_distance(config, output_directory)
     output_config.update(distance_config)
 
