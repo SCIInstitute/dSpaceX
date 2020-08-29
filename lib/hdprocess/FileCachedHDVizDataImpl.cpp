@@ -241,11 +241,11 @@ ColorMapper<Precision>& FileCachedHDVizDataImpl::getDColorMap(
   return dcolormap;
 }
 
-int FileCachedHDVizDataImpl::getMinPersistenceLevel() { 
+int FileCachedHDVizDataImpl::getMinPersistenceLevel() const {
   return minLevel; 
 }
 
-int FileCachedHDVizDataImpl::getMaxPersistenceLevel() { 
+int FileCachedHDVizDataImpl::getMaxPersistenceLevel() const { 
   return maxLevel; 
 }
 
