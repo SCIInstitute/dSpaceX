@@ -64,7 +64,8 @@ function install_conda() {
        pandas=1.0.3 \
        pillow=7.0.0 \
        pyyaml=5.3.1 \
-       matplotlib==3.2.1
+       matplotlib==3.2.1 \
+       scikit-image==0.17.2
   then return 1; fi
 
   # linux-only deps

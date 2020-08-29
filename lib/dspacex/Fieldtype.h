@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace dspacex {
 
 // Fieldtype: a quantity of interest or a design parameter
@@ -22,6 +24,14 @@ struct Fieldtype {
 
   operator int() const { return kind; } // enables comparison using ==
   bool valid() { return kind == DesignParameter || kind == QoI; }
+  std::string asString() { // For exporting ms complex
+    switch(kind) {
+        case DesignParameter:
+          return "Design Parameter";
+        case QoI:
+          return "QoI";
+    }
+  }
 
   int kind;
   const static int DesignParameter = 0;

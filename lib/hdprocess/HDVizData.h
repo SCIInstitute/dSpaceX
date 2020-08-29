@@ -25,6 +25,7 @@ class HDVizData {
     virtual FortranLinalg::DenseMatrix<int>& getNearestNeighbors() = 0;
     virtual FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel) = 0;
     virtual FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel) = 0;
+    virtual std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions() = 0;
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
     virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(

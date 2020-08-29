@@ -5,6 +5,7 @@
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
 #include "dspacex/Fieldtype.h"
+#include "utils/DataExport.h"
 
 #include <jsoncpp/json/json.h>
 #include <map>
@@ -49,7 +50,7 @@ class Controller {
   void fetchMorseSmalePersistenceLevel(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
-  void writeMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
+  void exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
@@ -84,12 +85,13 @@ class Controller {
   std::string m_currentField;
   Fieldtype m_currentCategory{Fieldtype::Unknown};
   int m_currentKNN{15};
-  int m_currentNumSamples{50};
+  int m_currentNumCurvepoints{50};
   double m_currentSigma{0.25};
   double m_currentSmoothing{15.0};
   bool m_currentAddNoise{true};
-  int m_currentNumPersistences{20};
+  int m_currentPersistenceDepth{20};
   bool m_currentNormalize{true};
+
 };
 
 } // dspacex

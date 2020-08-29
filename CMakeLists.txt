@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 IF(COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW) # NEW: /full/path/to/lib.so won't break search paths specified by link_directories command
-  CMAKE_POLICY(SET CMP0005 OLD) # OLD: don't escape preprocessor defs added via add_definitions command
+  CMAKE_POLICY(SET CMP0005 OLD) # OLD: don't escape data defs added via add_definitions command
 ENDIF(COMMAND CMAKE_POLICY)
 
 if(${CMAKE_VERSION} VERSION_LESS 3.14)
