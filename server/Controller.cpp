@@ -106,12 +106,12 @@ void Controller::configureAvailableDatasets(const std::string &path) {
   std::vector<boost::filesystem::path> configPaths;
   boost::filesystem::recursive_directory_iterator iter{rootPath};
   while (iter != boost::filesystem::recursive_directory_iterator{}) {
-    if (iter.level() == MAX_DATASET_DEPTH) {
-      iter.pop();
-    }
     if (iter->path().filename() != "config.yaml") {
       iter++;
       continue;
+    }
+    if (iter.level() == MAX_DATASET_DEPTH) {
+      iter.pop();
     }
     configPaths.push_back(*iter);
     iter++;
