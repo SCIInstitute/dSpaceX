@@ -24,6 +24,7 @@ public:
   static std::unique_ptr<Model> create(Type t, const std::string& name = std::string());
 
   Model(Type t = None) : type(t) {}
+  virtual ~Model() = default;
   void setModel(Eigen::MatrixXf _W, Eigen::MatrixXf _w0, Eigen::MatrixXf _Z) {
     W  = _W;
     w0 = _w0;
@@ -77,6 +78,7 @@ class ShapeOddsModel : public Model
 {
 public:
   ShapeOddsModel() : Model{ShapeOdds} {}
+  ~ShapeOddsModel() = default;
   Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
@@ -87,6 +89,7 @@ class PCAModel : public Model
 {
 public:
   PCAModel() : Model{PCA} {}
+  ~PCAModel() = default;
   Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
@@ -97,6 +100,7 @@ class CustomModel : public Model
 {
 public:
   CustomModel(std::string _name = std::string()) : Model{Custom}, name(std::move(_name)) {}
+  ~CustomModel() = default;
   Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override
   { return Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>(); }
   
