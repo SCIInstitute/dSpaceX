@@ -72,6 +72,7 @@ public:
   auto modelType() const { return modeltype; }
   auto modelName() const { return modelname; }
   void setModelName(const std::string& name) { modelname = name; }
+  auto rowMajor() const { return rowmajor; }
   auto fieldName() const { return fieldname; }
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }

@@ -12,7 +12,7 @@ class Image {
   
  public:
   /// Creates image from w x h matrix of floats, throwing an exception if dims don't match
-  Image(const Eigen::MatrixXf &I, unsigned width, unsigned height, unsigned channels = 1);
+  Image(const Eigen::MatrixXf &I, unsigned width, unsigned height, unsigned channels = 1, bool rowmajor = false);
 
   /// load an image from a png file (throw exception on failure)
   Image(const std::string& filename, bool decompress = false);

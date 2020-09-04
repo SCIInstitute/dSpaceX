@@ -3,7 +3,7 @@
 
 namespace dspacex {
 
-Image::Image(const Eigen::MatrixXf &I, unsigned w, unsigned h, unsigned c) :
+Image::Image(const Eigen::MatrixXf &I, unsigned w, unsigned h, unsigned c, bool rotate) :
   m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
   m_data(w * h * c), m_decompressed(true)
 {
@@ -18,22 +18,32 @@ Image::Image(const Eigen::MatrixXf &I, unsigned w, unsigned h, unsigned c) :
   }
 
   /* convert w x h x c matrix of floats to w x h 2d image of unsigned char (note: tricky use of Eigen::Map) */
-  using EigenImage = Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+  //using EigenImage = Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>;
 
   // 1. create a map to an EigenImage matrix using the already-allocated m_data vector
-  bool rowmajor = true;
-  unsigned width = rowmajor ? w * c : h;   // length of each row
-  unsigned height = rowmajor ? h : w * c;  // length of each column
-  //Eigen::Map<EigenImage> tmp(m_data.data(), height, width);
-  Eigen::Map<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>> tmp(m_data.data(), height, width);
-  Eigen::Map<Eigen::MatrixXf> Itmp(const_cast<float*>(I.data()), height, width);
+  unsigned cols = w * c; //rowmajor ? w * c : h;
+  unsigned rows = h; //rowmajor ? h : w * c;
+  //Eigen::Map<EigenImage> tmp(m_data.data(), rows, cols);
   
   // 2. using the Eigen assignment operator from CwiseUnaryOp to (mapped) Matrix, copy the casted results into m_data
-  tmp = (Itmp.array() * 255.0).cast<unsigned char>();
+  if (rotate) {
+    Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> Itmp(const_cast<float*>(I.data()), cols, rows); // shapeodds needs to be rotated
+    Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> coltmp = (Itmp.array() * 255.0).cast<unsigned char>();
+    Eigen::Map<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> tmp(m_data.data(), m_height, m_width);
+    // rotate (<ctc> rowmajor isn't really a differentiator here, but just rotation)
+    for (int i = 0; i < m_height; i++)
+      tmp.row(i) = coltmp.col(i);
+    new (&tmp) Eigen::Map<Eigen::MatrixXf>(nullptr, -1, -1);
+  }
+  else {
+    Eigen::Map<Eigen::MatrixXf> Itmp(const_cast<float*>(I.data()), rows, cols);
+    Eigen::Map<Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic>> tmp(m_data.data(), rows, cols);
+    tmp = (Itmp.array() * 255.0).cast<unsigned char>();
+    new (&tmp) Eigen::Map<Eigen::MatrixXf>(nullptr, -1, -1);
+  }
 
   // 3. use "placement new" syntax to set tmp's data ptr to null so it doesn't try to deallocate it when it goes out of scope
   //new (&tmp) Eigen::Map<EigenImage>(nullptr, -1, -1);
-  new (&tmp) Eigen::Map<Eigen::MatrixXf>(nullptr, -1, -1);
 }
 
 Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {

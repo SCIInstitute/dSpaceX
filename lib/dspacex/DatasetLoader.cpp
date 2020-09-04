@@ -536,7 +536,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
 
   // is the modelset producing row-major or column-major shapes?
   bool rowMajor = false;
-  if (modelNode["rowmajor"] && modelNode["padZeroes"].as<std::string>() == "true") {
+  if (modelNode["rowmajor"] && modelNode["rowmajor"].as<std::string>() == "true") {
     rowMajor = true;
   }
 

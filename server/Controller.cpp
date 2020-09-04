@@ -718,7 +718,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // try to find the requested model
   auto modelset(m_currentDataset->getModelset(fieldname, modelname));
   auto persistence_idx = getAdjustedPersistenceLevelIdx(persistence, modelset);
-  auto model(modelset? modelset->getModel(persistence_idx, crystalId) : nullptr);
+  auto model(modelset ? modelset->getModel(persistence_idx, crystalId) : nullptr);
 
   // if there isn't a model or original images requested just show its original samples' images 
   bool showOrig = request["showOrig"].asBool();
@@ -766,8 +766,13 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     // evaluate model at this coordinate
     Eigen::MatrixXf I = model->evaluate(z_coord);
     
-    // add result image to response // TODO: add cols to this (test that it works using CBII)
-    addImageToResponse(response, Image(I, sample_image.getWidth(), sample_image.getHeight()));
+    // add result image to response
+    Image image(I, 
+                sample_image.getWidth(), sample_image.getHeight(),
+                // modelset->rowMajor() ? sample_image.getWidth() : sample_image.getHeight(),
+                // modelset->rowMajor() ? sample_image.getHeight() : sample_image.getWidth(),
+                sample_image.numChannels(), !modelset->rowMajor());
+    addImageToResponse(response, image);
 
     // add field value to response
     response["fieldvals"].append(fieldval);
@@ -825,7 +830,12 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
               << persistence_idx << ", crystalid " << crystalId << ": " << quality << std::endl;
 
     // add image to response
-    addImageToResponse(response, Image(I, sample_image.getWidth(), sample_image.getHeight()));
+    Image image(I,
+                sample_image.getWidth(), sample_image.getHeight(),
+                // modelset->rowMajor() ? sample_image.getWidth() : sample_image.getHeight(),
+                // modelset->rowMajor() ? sample_image.getHeight() : sample_image.getWidth(),
+                sample_image.numChannels(), !modelset.rowMajor());
+    addImageToResponse(response, image);
 
     // add field value to response
     response["fieldvals"].append(samples[i]);
