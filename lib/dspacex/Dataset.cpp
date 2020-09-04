@@ -12,33 +12,76 @@ bool Dataset::valid() const
   return true;
 }
 
-const Image& Dataset::getThumbnail(unsigned idx) const
+const Image& Dataset::getThumbnail(int idx) const
 {
-  if (idx >= m_thumbnails.size())
+  if (idx < 0 || idx >= m_thumbnails.size())
     throw std::runtime_error("Tried to fetch thumbnail " + std::to_string(idx) + ", but there are only " + std::to_string(m_thumbnails.size()));
   return m_thumbnails[idx];
 }
 
-int Dataset::getMSComplexIdxForFieldname(const std::string fieldname) const
-{
-  // A dataset can have models for more than one field, so use fieldname argument to find index of the ms_complex for the given fieldname.
-  //   NOTE: passed fieldname is specified in (e.g., CantileverBeam_QoIs.csv) as plain text (e.g., "Max Stress"),
-  //         but (FIXME) the ms_complex thinks its fieldname is (e.g.,) maxStress.
-  int idx = 0;
-  for (; idx < m_msModels.size(); idx++)
-    if (m_msModels[idx].getFieldname() == fieldname)
-      return idx;
-  return -1;
+// std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std::string& modelname, int p, int c)
+// {
+//   for (auto modelset : m_models[fieldname])
+//     if (modelset->modelName() == modelname)
+//       return modelset->getModel(p, c);
+
+//   return nullptr;
+// }
+
+// bool Dataset::hasModel(const std::string& fieldname, const std::string& modelname, int p, int c) const
+// {
+//   return const_cast<Dataset*>(this)->getModel(fieldname, modelname, p, c) ? true : false;
+// }
+
+std::shared_ptr<MSModelset> Dataset::getModelset(const std::string& fieldname, const std::string& modelname) {
+  for (auto modelset : m_models[fieldname])
+    if (modelset->modelName() == modelname)
+      return modelset;
+
+  return nullptr;
 }
 
-dspacex::MSComplex& Dataset::getMSComplex(const std::string fieldname)
+/*
+ * getFieldvalues
+ * returns Eigen::Map wrapping the vector of values for a given field
+ */
+Eigen::Map<Eigen::VectorXf> Dataset::getFieldvalues(const std::string &name, Fieldtype type)
 {
-  int idx = getMSComplexIdxForFieldname(fieldname);
-  if (idx < 0)
-    throw std::runtime_error("ERROR: no model for fieldname " + fieldname);
+  // try to find the index of the data in both parameters and qois since it'll be needed anyway
+  auto pnames = getParameterNames();
+  auto ploc = std::find(std::begin(pnames), std::end(pnames), name);
 
-  return m_msModels[idx];
+  auto qnames = getQoiNames();
+  auto qloc = std::find(std::begin(qnames), std::end(qnames), name);
+  
+  // if passed type is Unknown, see if indices were found and choose a type (QoI has priority)
+  if (type == Fieldtype::Unknown) {
+    if (ploc != std::end(pnames))
+      type = Fieldtype::DesignParameter;
+    if (qloc != std::end(qnames))
+      type = Fieldtype::QoI;
+  }
+  
+  // wrap the data in a map and return it
+  switch(type) {
+    case Fieldtype::DesignParameter:
+      if (ploc != std::end(pnames)) {
+        int index = std::distance(pnames.begin(), ploc);
+        FortranLinalg::DenseVector<Precision> values = getParameterVector(index);
+        return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
+      }      
+      break;
+    case Fieldtype::QoI:
+      if (qloc != std::end(qnames)) {
+        int index = std::distance(qnames.begin(), qloc);
+        FortranLinalg::DenseVector<Precision> values = getQoiVector(index);
+        return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
+      }
+  }
+
+  return Eigen::Map<Eigen::VectorXf>(NULL, 0);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Dataset::Builder
@@ -46,7 +89,7 @@ dspacex::MSComplex& Dataset::getMSComplex(const std::string fieldname)
 std::unique_ptr<Dataset> Dataset::Builder::build()
 {
   if (!m_dataset || !m_dataset->valid())
-    throw std::runtime_error("dspacex::Dataset in Dataset::Builder is not valid.");
+    throw std::runtime_error("Dataset in Dataset::Builder is not valid.");
 
   return std::move(m_dataset); // std::move releases ownership of m_dataset
 }
@@ -87,20 +130,15 @@ Dataset::Builder& Dataset::Builder::withEmbedding(std::string name, FortranLinal
   return (*this);
 }
 
-Dataset::Builder& Dataset::Builder::withMSModel(std::string name, dspacex::MSComplex ms_model) {
-
-  // TODO: add model types as they're read rather than hardcoding them here
-
-  // only add model type if it doesn't already exist
-  std::vector<std::string> types{"ShapeOdds", "PCA", "SharedGP"};
-  for (auto type : types) {
-    auto it = std::find(m_dataset->m_modelTypes.begin(), m_dataset->m_modelTypes.end(), type);
-    if (it != m_dataset->m_modelTypes.end())
-      m_dataset->m_modelTypes.push_back(type);
-  }
+Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared_ptr<MSModelset> modelset) {
+  // only add model name if it doesn't already exist
+  auto it = std::find(m_dataset->m_modelNames.begin(), m_dataset->m_modelNames.end(), modelset->modelName());
+  if (it == m_dataset->m_modelNames.end())
+    m_dataset->m_modelNames.push_back(modelset->modelName());
   
-  m_dataset->m_msModelFields.push_back(name);
-  m_dataset->m_msModels.push_back(ms_model); // ...or std::move(ms_model)
+  m_dataset->m_msModelFields.push_back(fieldname);
+  modelset->setSamples(m_dataset->getFieldvalues(fieldname));
+  m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));
   return (*this);
 }
 

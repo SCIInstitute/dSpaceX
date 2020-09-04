@@ -1,12 +1,11 @@
 SET(PMODELS_HEADER_FILES
-  MorseSmale.h
+  Modelset.h
   Models.h
 )
 
 SET(PMODELS_SOURCE_FILES
-  ShapeOdds.cpp
-  SharedGP.cpp
-  MorseSmale.cpp
+  Modelset.cpp
+  Models.cpp
 )
 
 ADD_LIBRARY(pmodels ${PMODELS_HEADER_FILES} ${PMODELS_SOURCE_FILES})
@@ -15,5 +14,6 @@ TARGET_INCLUDE_DIRECTORIES(pmodels PUBLIC
   $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>)
 TARGET_LINK_LIBRARIES(pmodels
+  dspacex
   dspacex_utils
   lodepng)

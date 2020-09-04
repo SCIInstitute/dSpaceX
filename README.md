@@ -8,7 +8,7 @@ Table of Contents
 ====================
 - [Overview](#overview)  
 - [Installation](#installation)  
-- [Getting Started](#using-dspacex)  
+- [Using dSpaceX](#using-dspacex)  
 - [Development](#development)  
 
 ## Overview
@@ -34,5 +34,3 @@ dSpaceX is under active development. To get started first build the server
 
 ## Building the Client Code
 **See [README.md in the client directory](./client/README.md)**
-
-

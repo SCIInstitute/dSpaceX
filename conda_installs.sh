@@ -57,7 +57,6 @@ function install_conda() {
        cmake=3.15.5 \
        nodejs=13.9.0 \
        eigen=3.3.7 \
-       libpng=1.6.37 \
        gtest=1.10.0 \
        yaml-cpp=0.6.3 \
        numpy=1.18.1 \
@@ -65,7 +64,8 @@ function install_conda() {
        pandas=1.0.3 \
        pillow=7.0.0 \
        pyyaml=5.3.1 \
-       matplotlib==3.2.1
+       matplotlib==3.2.1 \
+       scikit-image==0.17.2
   then return 1; fi
 
   # linux-only deps

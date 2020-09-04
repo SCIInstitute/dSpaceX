@@ -5,3 +5,7 @@ include_directories(${CMAKE_SOURCE_DIR}/server ${EIGEN3_INCLUDE_DIR})
 
 newtest(HDVizData_tests)
 newtest(DataLoader_tests)
+
+TARGET_LINK_LIBRARIES(DataLoader_tests
+pmodels
+)

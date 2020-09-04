@@ -85,7 +85,7 @@ TEST(HDVizData, compare) {
   } 
 
   HDProcessResult *result = HDProcessResultSerializer::read(data_dir);  
-  HDVizData *simpleData = new SimpleHDVizDataImpl(result); 
+  HDVizData *simpleData = new SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult>(HDProcessResultSerializer::read(data_dir)));
 
   ASSERT_EQ(cachedData->getNumberOfSamples(), simpleData->getNumberOfSamples());
   
@@ -161,5 +161,4 @@ TEST(HDVizData, compare) {
 
   // cleanup
   delete cachedData;
-  delete result;
 }
