@@ -32,7 +32,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   EuclideanMetric<Precision> metric;
   MetricMDS<Precision> mds;
   // Store input data as member variables.
-  std::cout << "knn = " << knn << std::endl;
+  //std::cout << "knn = " << knn << std::endl;
   // make copy of distances so embedder won't trash data.
   auto dd = Linalg<Precision>::Copy(d);
   Xall = mds.embed(dd, 3); // TODO why 3?
@@ -308,9 +308,9 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   Ef.deallocate();
 
 
-  std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
-  std::cout << "# of Crystals: " << crystals.N() << std::endl;
-  std::cout << "=================================" << std::endl << std::endl;
+  // std::cout << std::endl << "PersistenceLevel: " << persistenceLevel << std::endl;
+  // std::cout << "# of Crystals: " << crystals.N() << std::endl;
+  // std::cout << "=================================" << std::endl << std::endl;
   
   if (!computeRegression) {
     // Create and return fake data for now.
@@ -359,7 +359,7 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   // ------------------------------------------------------------
   // Only Proceed Below if Regression can be ran over input.
   // ------------------------------------------------------------
-  std::cout << "Before Regression: crystals.N() = " << crystals.N() << std::endl;
+  //std::cout << "Before Regression: crystals.N() = " << crystals.N() << std::endl;
 
   DenseMatrix<Precision> S(Xall.M(), crystals.N()*nSamples + nExt);
   std::vector<DenseMatrix<Precision>> ScrystalIDs(crystals.N());  
@@ -499,8 +499,8 @@ void HDProcessor::computeRegressionForCrystal(
 
   
   // Compute Rgeression curve
-  std::cout << "Computing regression curve for crystalID " << crystalIndex << std::endl;
-  std::cout << X.N() << " points" << std::endl;
+  // std::cout << "Computing regression curve for crystalID " << crystalIndex << std::endl;
+  // std::cout << X.N() << " points" << std::endl;
 
   GaussianKernel<Precision> kernel(sigma, 1);
   FirstOrderKernelRegression<Precision> kr(X, y, kernel, 1000);

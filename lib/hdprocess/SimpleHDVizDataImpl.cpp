@@ -16,15 +16,16 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
   m_numberOfSamples = k_defaultSamplesCount;
 
   // TEMP DEBUG CODE
-  
-  std::cout << "VECTOR / MATRIX SIZES" << std::endl;
-  std::cout << "scaledPersistence.N() = " << m_data->scaledPersistence.N() << std::endl;
-  std::cout << "minLevel.N() = " << m_data->minLevel.N() << std::endl;
-  std::cout << "getMinPersistenceLevel() = " << getMinPersistenceLevel() << std::endl;
-  std::cout << "getMaxPersistenceLevel() = " << getMaxPersistenceLevel() << std::endl;
-  for (unsigned int level = 0; level <= getMaxPersistenceLevel(); level++) {
-    std::cout << " m_data->extremaValues[" << level << "].N() = " << m_data->extremaValues[level].N() << std::endl;
-  }
+
+  // std::cout << "VECTOR / MATRIX SIZES" << std::endl;
+  // std::cout << "scaledPersistence.N() = " << m_data->scaledPersistence.N() << std::endl;
+  // std::cout << "minLevel.N() = " << m_data->minLevel.N() << std::endl;
+  // std::cout << "getMinPersistenceLevel() = " << getMinPersistenceLevel() << std::endl;
+  // std::cout << "getMaxPersistenceLevel() = " << getMaxPersistenceLevel() << std::endl;
+  // for (unsigned int level = 0; level <= getMaxPersistenceLevel(); level++) {
+  //   std::cout << " m_data->extremaValues[" << level << "].N() = " << m_data->extremaValues[level].N() << std::endl;
+  // }
+
   /*
   std::cout << "X.N() = " << m_data->X.N() << std::endl;
   std::cout << "Y.N() = " << m_data->Y.N() << std::endl;
@@ -279,6 +280,10 @@ FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getCrystals(int persistenc
  */
 FortranLinalg::DenseVector<int>& SimpleHDVizDataImpl::getCrystalPartitions(int persistenceLevel) {
   return m_data->crystalPartitions[persistenceLevel];
+}
+
+std::vector<FortranLinalg::DenseVector<int>> SimpleHDVizDataImpl::getAllCrystalPartitions() {
+    return m_data->crystalPartitions;
 }
 
 /**
