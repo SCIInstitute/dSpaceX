@@ -1,8 +1,15 @@
 #include "StringUtils.h"
 
 #include <sstream>
-//#include <memory>
 #include <iomanip>
+
+std::string maybePadIndex(unsigned index, bool pad, unsigned num_indices)
+{
+  if (pad) 
+    return paddedIndexString(index, paddedStringWidth(num_indices));
+  else
+    return std::to_string(index);
+}
 
 // returns a string containing index padded with zeros up to width characters
 std::string paddedIndexString(unsigned index, unsigned width)

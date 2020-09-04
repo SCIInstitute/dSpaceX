@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 IF(COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW) # NEW: /full/path/to/lib.so won't break search paths specified by link_directories command
-  CMAKE_POLICY(SET CMP0005 OLD) # OLD: don't escape preprocessor defs added via add_definitions command
+  CMAKE_POLICY(SET CMP0005 OLD) # OLD: don't escape data defs added via add_definitions command
 ENDIF(COMMAND CMAKE_POLICY)
 
 if(${CMAKE_VERSION} VERSION_LESS 3.14)
@@ -40,6 +40,8 @@ IF(WIN32)
 ENDIF()
 SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL
   "Single output directory for building all executables.")
+
+INCLUDE_DIRECTORIES(${CMAKE_PREFIX_PATH}/include)
 
 find_package(Eigen3 3.3.7 REQUIRED)
 INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})

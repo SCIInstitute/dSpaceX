@@ -23,7 +23,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<std::string>& getNames();
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
         HDVizLayout layout, int persistenceLevel);
-
+  std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions() override { return std::vector<FortranLinalg::DenseVector<int>>(); } //ugh
+  
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getExtremaNormalized(int persistenceLevel);
@@ -67,8 +68,8 @@ class FileCachedHDVizDataImpl : public HDVizData {
     ColorMapper<Precision>& getColorMap(int persistenceLevel);
     ColorMapper<Precision>& getDColorMap(int persistenceLevel);
 
-    int getMinPersistenceLevel(); 
-    int getMaxPersistenceLevel();
+    int getMinPersistenceLevel() const override;
+    int getMaxPersistenceLevel() const override;
         
   private:        
     void loadData(int level);

@@ -1,11 +1,7 @@
 import Paper from '@material-ui/core/Paper';
 import PropTypes from 'prop-types';
 import React from 'react';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
+import { Table, TableBody, TableCell, TableHead, TableRow} from '@material-ui/core';
 import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -191,16 +187,19 @@ class TableWindow extends React.Component {
 
     return (
       <Paper className={classes.root}>
-        <Table className={classes.table}>
+        <Table stickyHeader className={classes.table}>
           <TableHead style={{ borderBottom:'1px solid black' }}>
             <TableRow>
-              {columnNames.length > 0 && <TableCell
-                style={{ fontWeight:'bold', fontSize:'medium' }} align='right' padding='dense'>id</TableCell>}
+              {columnNames.length > 0 &&
+              <TableCell
+                style={{ fontWeight:'bold', fontSize:'medium' }} align='right' padding='default'>
+                id
+              </TableCell>}
               {
                 columnNames.map((n) => {
                   return (
-                    <TableCell
-                      style={{ fontWeight:'bold', fontSize:'medium' }} key={n} align='right' padding='dense'>{n}
+                    <TableCell style={{ fontWeight:'bold', fontSize:'medium' }} key={n} align='right' padding='default'>
+                      {n}
                     </TableCell>
                   );
                 })
@@ -216,11 +215,11 @@ class TableWindow extends React.Component {
                       key={i}
                       className={this.getClassName(i)}
                       onClick={(e) => this.props.onDesignSelection(e, i)}>
-                      <TableCell align='right' padding='dense'>{i}</TableCell>
+                      <TableCell align='right' padding='default'>{i}</TableCell>
                       {
                         columnNames.map((p) => {
                           return (
-                            <TableCell align='right' padding='dense'
+                            <TableCell align='right' padding='default'
                               key={i + '-' + p}>
                               { n[p] && n[p].toPrecision(5) }
                             </TableCell>

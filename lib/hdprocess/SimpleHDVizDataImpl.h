@@ -20,6 +20,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
     FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);    
     FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel);
+    std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions();
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
@@ -103,5 +104,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledIsoExtremaLayout;
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCAExtremaLayout;
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCA2ExtremaLayout;
+
+
 };
 

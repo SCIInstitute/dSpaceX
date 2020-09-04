@@ -4,7 +4,7 @@
 #include "flinalg/LinalgIO.h"
 #include "dspacex/Precision.h"
 #include "imageutils/Image.h"
-#include "pmodels/MorseSmale.h"
+#include "pmodels/Modelset.h"
 
 #include <vector>
 
@@ -29,7 +29,7 @@ class Dataset {
   }
 
   int numberOfModels() {
-    return m_msModels.size();
+    return m_models.size();
   }
 
   bool hasSamplesMatrix() {
@@ -64,8 +64,8 @@ class Dataset {
     return m_embeddingNames;
   }
 
-  std::vector<std::string>& getModelTypes() {
-    return m_modelTypes;
+  std::vector<std::string>& getModelNames() {
+    return m_modelNames;
   }
 
   FortranLinalg::DenseVector<Precision>& getParameterVector(int i) {
@@ -84,14 +84,24 @@ class Dataset {
     return m_thumbnails;
   }
 
-  std::vector<MSComplex>& getMSModels() {
-    return m_msModels;
+  ModelMap& getModels() {
+    return m_models;
   }
 
-  int getMSComplexIdxForFieldname(const std::string fieldname) const;
-  dspacex::MSComplex& getMSComplex(const std::string fieldname);
+  /// is there a Model associated with this field, modelname, persistence, and crystal?
+  //bool hasModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal) const;
 
-  const Image& getThumbnail(unsigned idx) const;
+  /// return specific Model associated with this field, modelname, persistence, and crystal
+  //std::shared_ptr<Model> getModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal);
+
+  /// return MSModelset associated with this field and modelname
+  std::shared_ptr<MSModelset> getModelset(const std::string& fieldname, const std::string& modelname);
+
+  /// return the image thumbnail for this sample index
+  const Image& getThumbnail(int idx) const;
+
+  /// return the field values for the given field (of the specified type, otherwise the first with that name)
+  Eigen::Map<Eigen::VectorXf> getFieldvalues(const std::string &name, Fieldtype type = Fieldtype::Unknown);
 
   // Builder includes necessary functions for a user to build and return a dSpaceX Dataset
   class Builder {
@@ -106,7 +116,7 @@ class Dataset {
     Builder& withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter);
     Builder& withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi);
     Builder& withEmbedding(std::string name, FortranLinalg::DenseMatrix<Precision> &embedding);
-    Builder& withMSModel(std::string name, dspacex::MSComplex ms_model);
+    Builder& withModel(std::string name, std::shared_ptr<MSModelset> modelset);
     Builder& withName(std::string name);
     Builder& withThumbnails(std::vector<Image> thumbnails);
     
@@ -124,8 +134,8 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<std::string> m_modelTypes;      // PCA, ShapeOdds, SharedGP, etc                                 
-  std::vector<dspacex::MSComplex> m_msModels; // models associated with crystals in a Morse-Smale decomposition 
+  std::vector<std::string> m_modelNames;      // Names of individual models (e.g., PCA1, PCA2 for diff params used to compute PCA)
+  ModelMap m_models;                  // map of fields' sets of models associated with crystals in a Morse-Smale decomposition 
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

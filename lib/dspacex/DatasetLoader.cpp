@@ -1,7 +1,6 @@
 #include "DatasetLoader.h"
 #include "utils/loaders.h"
-#include "imageutils/ImageLoader.h"
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 #include "utils/StringUtils.h"
 #include "utils/IO.h"
 
@@ -10,6 +9,15 @@
 #include <sstream>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
+#include <chrono>
+
+// This clock corresponds to CLOCK_MONOTONIC at the syscall level.
+using Clock = std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using namespace std::literals::chrono_literals;
 
 using namespace dspacex;
 
@@ -103,10 +111,10 @@ std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &filePath)
   }
 
   if (config["models"]) {
-    auto ms_models = DatasetLoader::parseMSModels(config, filePath);
-    for (auto ms_model : ms_models) {
-      builder.withMSModel(ms_model.first, ms_model.second);
-    }
+    auto modelmap = DatasetLoader::parseModels(config, filePath);
+    for (auto models : modelmap)
+      for (auto model : models.second)
+        builder.withModel(models.first, model);
   }
 
   if (config["thumbnails"]) {
@@ -382,193 +390,217 @@ EmbeddingPair DatasetLoader::parseEmbedding(
   return EmbeddingPair(name, embedding);
 }
 
-// There is a model for each crystal of each persistence level of a M-S complex... maybe too
-// much to read all at once, so only read them on demand? Anyway, for now just read them all.
+// There is a model for each crystal of each persistence level of a M-S complex...
+// TODO: too much to read all at once, so only read them on demand.
 //
-// This was the addition to the config.yaml for the dataset:
-//
-// models:  # seems a little tedious to write out list of models, or even a list of persistences. The latter can be determined from the CrystalPartitions csv, which can also indicate how many crystals each level contains (0-based in this file, but 1-based in each model's crystalIds.csv)
-//   - fieldname: maxStress
+// In the config.yaml for the dataset:
+// models:
+//   - fieldname: Max Stress
 //     type: shapeodds                                            # could be shapeodds or sharedgp
 //     root: shapeodds_models_maxStress                           # directory of models for this field
 //     persistences: persistence-?                                # persistence files
 //     crystals: crystal-?                                        # in each persistence dir are its crystals
 //     padZeroes: false                                           # for both persistence and crystal dirs/files
-//     #format: csv   (just use extension of most files to determine format) # lots of csv files in each crystal: Z, crystalIds, W, wo
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
-//     embeddings: shapeodds_global_embedding.csv                 # a tsne embedding? Global for each p-lvl, and local for each crystal
+//     rotate: false                                              # the shape produced by this model needs to be rotated 90 degrees
+//     ms:                                                        # Morse-Smale parameters used to compute partitions
+//      - knn: 15                                                 # k-nearest neighbors
+//      - sigma: 0.25                                             # 
+//      - smooth: 15.0                                            # 
+//      - depth: 20                                               # num persistence levels; -1 means compute them all
+//      - noise: true                                             # add mild noise to the field to ensure inequality
+//      - curvepoints: 50                                         # vis only? Not sure if this matters for crystal partitions 
+//      - normalize: false                                        # vis only? Not sure if this matters for crystal partitions
+//     params:                                                    # model interpolation parameters used
+//      - sigma: 0.15                                             # Gaussian width
 //
-std::vector<MSModelsPair> DatasetLoader::parseMSModels(const YAML::Node &config, const std::string &filePath)
+ModelMap DatasetLoader::parseModels(const YAML::Node &config, const std::string &filePath)
 {
-  std::vector<MSModelsPair> ms_models;
+  ModelMap models;
 
-  if (!config["models"]) {
-    throw std::runtime_error("Dataset config missing 'models' field.");
-  }
-  const YAML::Node &modelsNode = config["models"];
+  if (config["models"] && config["models"].IsSequence()) {
+    const YAML::Node &modelsNode = config["models"];
+    std::cout << "Reading " << modelsNode.size() << " model sets..." << std::endl;
 
-  if (modelsNode.IsSequence()) {
-    // Parse Models one field at a time if in list form:
-    std::cout << "Reading sets of models for " << modelsNode.size() << " field(s)." << std::endl;
-    for (std::size_t i = 0; i < modelsNode.size(); i++) {
+    for (auto i = 0; i < modelsNode.size(); i++) {
       const YAML::Node &modelNode = modelsNode[i];
-      ms_models.push_back(DatasetLoader::parseMSModelsForField(modelNode, filePath));
+      
+      // load 
+      time_point<Clock> start = Clock::now();
+      auto modelset(DatasetLoader::parseModel(modelNode, filePath));
+      time_point<Clock> end = Clock::now();
+      milliseconds diff = duration_cast<milliseconds>(end - start);
+      std::cout << "Loaded " << i << "th modelset in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+      
+      if (modelset) {
+        // ensure modelset has a unique name in the set of modelsets for this field and add it (TODO: better name, see issue)
+        auto num_of_type_for_this_field = std::count_if(models[modelset->fieldName()].begin(), models[modelset->fieldName()].end(),
+                                   [&modelset](std::shared_ptr<MSModelset> m) { return m->modelType() == modelset->modelType(); });
+        if (num_of_type_for_this_field > 0) // results in PCA, PCA2, PCA3, ...
+          modelset->setModelName(modelset->modelName() + std::to_string(num_of_type_for_this_field + 1));
+        
+        models[modelset->fieldName()].push_back(std::move(modelset));
+      }
+      else
+        std::cerr << "Unknown error reading " << i <<"th modelNode. Skipping it.\n";
     }
-  } else {
-    throw std::runtime_error("Config 'models' field is not a list.");
   }
+  else
+    std::cerr << "Config 'models' field missing or not a list.\n";
 
-  return ms_models;
+  return models;
 }
 
-MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
-///*dspacex::MSComplex*/MSModelsPair DatasetLoader::parseMSModelsForField(const YAML::Node &modelNode, const std::string &filePath)
-{
-  using namespace dspacex;
+/*
+ * Sets the parameters used to compute the M-S in which these models reside.
+ * (technically, the M-S that partitioned the data with which these models were learned)
+ */
+bool setMSParams(MSModelset& modelset, const YAML::Node& ms) {
+  if (ms["knn"] && ms["sigma"] && ms["smooth"] && ms["curvepoints"] && ms["depth"] && ms["noise"] && ms["normalize"]) {
+    auto knn         = ms["knn"].as<int>();
+    auto sigma       = ms["sigma"].as<double>();
+    auto smooth      = ms["smooth"].as<double>();
+    auto curvepoints = ms["curvepoints"].as<int>();
+    auto depth       = ms["depth"].as<int>();
+    auto noise       = ms["noise"].as<bool>();
+    auto normalize   = ms["normalize"].as<bool>();
+    std::cout << "\tknn:         " << knn         << std::endl
+              << "\tsigma:       " << sigma       << std::endl
+              << "\tsmooth:      " << smooth      << std::endl
+              << "\tcurvepoints: " << curvepoints << std::endl
+              << "\tdepth:       " << depth       << std::endl
+              << "\tnoise:       " << noise       << std::endl
+              << "\tnormalize:   " << normalize   << std::endl;
+    modelset.setParams(knn, sigma, smooth, curvepoints, depth, noise, normalize);
+    return true;
+  }
+  return false;
+}
 
+std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
+{
   if (!modelNode["fieldname"]) {
-    throw std::runtime_error("Model missing 'fieldname' field.");
+    std::cerr << "Model entry missing 'fieldname'.\n";
+    return nullptr;
   }
   std::string fieldname = modelNode["fieldname"].as<std::string>();
 
   if (!modelNode["type"]) {
-    throw std::runtime_error("Model missing 'type' field.");
+    std::cerr << "Models entry missing 'type' field.\n";
+    return nullptr;
   }
-  std::string modelsType = modelNode["type"].as<std::string>();
-  std::cout << "Reading '" << modelsType << "' models for '" << fieldname << "' field." << std::endl;
+  Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
+  std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
 
   if (!modelNode["partitions"]) {
-     throw std::runtime_error("Model missing 'partitions' field (specifyies samples for the crystals at each persistence level) .");
+    std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
+    return nullptr;
   }
   std::string partitions = modelNode["partitions"].as<std::string>();
   std::string partitions_suffix = partitions.substr(partitions.rfind('.')+1);
   InputFormat partitions_format = InputFormat(partitions_suffix);
   std::cout << "Partitions file format: " << partitions_format << std::endl;
 
-  if (!modelNode["embeddings"]) {
-     throw std::runtime_error("Missing 'embeddings' field (name of global embeddings for each persistence level's models).");
-  }
-  std::string embeddings = modelNode["embeddings"].as<std::string>();
-  if (embeddings.empty() || embeddings == "None") {
-    std::cout << "No global embeddings for this model\n";
-    embeddings.clear();
-  } else {
-    std::string embeddings_suffix = embeddings.substr(embeddings.rfind('.')+1);
-    InputFormat embeddings_format = InputFormat(embeddings_suffix);
-    std::cout << "Global embeddings for each persistence level file format: " << embeddings_format << std::endl;
-  }
-  
   if (!modelNode["root"]) {
-    throw std::runtime_error("Model missing 'root' field.");
+    std::cerr << "Model missing 'root' field.\n";
+    return nullptr;
   }
   std::string modelsBasePath = basePathOf(filePath) + modelNode["root"].as<std::string>();
 
   if (!modelNode["persistences"]) {
-    throw std::runtime_error("Model missing 'persistences' field specifying base filename for persistence levels.");
+    std::cerr << "Model missing 'persistences' field specifying base filename for persistence levels.\n";
+    return nullptr;
   }
   std::string persistencesBase = modelNode["persistences"].as<std::string>();
   int persistenceNameLoc = persistencesBase.find('?');
   std::string persistencesBasePath = modelsBasePath + '/' + persistencesBase.substr(0, persistenceNameLoc);
 
   if (!modelNode["crystals"]) {
-    throw std::runtime_error("Model missing 'crystals' field specifying base filename for the crystals at each level.");
+    std::cerr << "Model missing 'crystals' field specifying base filename for the crystals at each level.\n";
+    return nullptr;
   }
   std::string crystalsBasename = modelNode["crystals"].as<std::string>();
   int crystalIndexLoc = crystalsBasename.find('?');
   crystalsBasename = crystalsBasename.substr(0, crystalIndexLoc);
 
-  bool shouldPadZeroes = false;
+  bool padIndices = false;
   if (modelNode["padZeroes"]) {
     std::string padZeroes = modelNode["padZeroes"].as<std::string>();
     if (padZeroes == "true") {
-      shouldPadZeroes = true;
+      padIndices = true;
     } else if (padZeroes != "false") {
-      throw std::runtime_error("Model's padZeroes contains invalid value: " + padZeroes);
+      std::cerr << "Model's padZeroes contains invalid value: " << padZeroes << std::endl;
+      return nullptr;
     }
   }
 
-  // Read crystals, an array of P persistence levels x N samples per level
-  // We only read this to determine the number of samples, the number of persistence levels, and the number of crystals per level.
-  // <ctc> TODO: actually, this file renders moot all the (ob1) crystalID.csv files, so let's use it instead.
-  Eigen::MatrixXi crystalPartitions_eigen;
-  if (partitions_format.type == InputFormat::CSV)
-    crystalPartitions_eigen = IO::readCSVMatrix<int>(basePathOf(filePath) + '/' + partitions);
-  else
+  bool rotate = false;
+  if (modelNode["rotate"] && modelNode["rotate"].as<std::string>() == "true") {
+    rotate = true;
+  }
+
+  // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
+  auto partition_file = modelsBasePath + '/' + partitions;
+  Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(partition_file));
+  auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
+
+  // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
+  std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
+  if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
+    std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
+    return nullptr;
+  } 
+
+  int plvl_start = 0;
+  if (modelNode["first_partition"]) {
+    plvl_start = modelNode["first_partition"].as<int>();
+  }
+
+  // read paths to all the models (the models themselves are read on demand)
+  for (auto pidx = npersistences-1; pidx >= 0; pidx--)
   {
-    std::stringstream out("Crystal partitions file should be a csv, but it's a ");
-    out << partitions_format;
-    throw std::runtime_error(out.str());
-  }
-  auto npersistences = crystalPartitions_eigen.rows();
-  auto nsamples = crystalPartitions_eigen.cols();
-  std::cout << "There are " << npersistences << " persistence levels of the M-S complex computed from "
-            << nsamples << " samples." << std::endl;
+    auto &P = ms_of_models->getPersistenceLevel(pidx);
+    auto persistencePath(persistencesBasePath + maybePadIndex(plvl_start + pidx, padIndices, npersistences));
 
-  // Now read all the models
-  MSComplex ms_of_models(fieldname, nsamples, npersistences);
-  for (auto persistence = npersistences-1; persistence >= 0; persistence--) {
-  //for (auto persistence = npersistences=0; persistence >= 0; persistence--) { // just get the 0th plvl
-    unsigned persistence_idx = persistence;
-    MSPersistenceLevel &P = ms_of_models.getPersistenceLevel(persistence_idx);
-
-    // compute ncrystals for this persistence level using crystalPartitions
-    unsigned ncrystals = crystalPartitions_eigen.row(persistence).maxCoeff()+1;
+    // use crystalPartitions to determine number of crystals at this level
+    auto ncrystals = crystalPartitions.row(pidx).maxCoeff()+1;
     P.setNumCrystals(ncrystals);
-    std::cout << "There are " << ncrystals << " crystals in persistence level " << persistence << std::endl;
 
-    // compute padding if necessary
-    unsigned persistenceIndexPadding = 0;
-    unsigned crystalIndexPadding = 0;
-    if (shouldPadZeroes)
-    {
-      persistenceIndexPadding = paddedStringWidth(npersistences);
-      crystalIndexPadding = paddedStringWidth(ncrystals);
-    }
+    // read crystalIds indicating to which crystal each sample belongs at this persistencej
+    P.setCrystalSampleIds(crystalPartitions.row(pidx));
 
-    std::string persistenceIndexStr(shouldPadZeroes ? paddedIndexString(persistence, persistenceIndexPadding) : std::to_string(persistence));
-    std::string persistencePath(persistencesBasePath + persistenceIndexStr);
-
-    // read global embeddings for the set of models (one per crystal) at this persistence level
-    if (!embeddings.empty()) {
-      P.setGlobalEmbeddings(IO::readCSVMatrix<double>(persistencePath + '/' + embeddings));
-    }
-    
-    // read crystalIds indicating to which persistence level each crystal belongs at this persistence
-    if (IO::fileExists(persistencePath + "/crystalID.csv")) {
-      Eigen::MatrixXi crystal_ids = IO::readCSVMatrix<int>(persistencePath + "/crystalID.csv" );
-      P.setCrystalSamples(crystal_ids);
-    } else {
-      std::stringstream err;
-      err << "Cannot find crystalID.csv for model at persistence level " << persistence << "(" << persistencePath << ")";
-      throw std::runtime_error(err.str());
-    }
-
-    // read the model for each crystal at this persistence level
-    for (unsigned crystal = 0; crystal < ncrystals; crystal++)
-    {
-      std::string crystalIndexStr(shouldPadZeroes ? paddedIndexString(crystal, crystalIndexPadding) : std::to_string(crystal));
-      std::string crystalPath(persistencePath + '/' + crystalsBasename + crystalIndexStr);
-      dspacex::MSCrystal &c = P.getCrystal(crystal);
-      c.getModel().setFieldname(fieldname); // <ctc> see TODOs in dspacex::Model
-      parseModel(crystalPath, c.getModel());// todo: just store path here and read model on demand
+    // read the model path for each crystal
+    for (unsigned crystal = 0; crystal < ncrystals; crystal++) {
+      std::string crystalPath(persistencePath + '/' + crystalsBasename + maybePadIndex(crystal, padIndices, ncrystals));
+      P.crystals[crystal].setModelPath(crystalPath);
     }
   }
 
-  return MSModelsPair(fieldname, std::move(ms_of_models));
+  return ms_of_models;
 }
 
 // read the components of each model (Z, W, w0) from their respective csv files
-void DatasetLoader::parseModel(const std::string &modelPath, dspacex::Model &m)
+void DatasetLoader::parseModel(const std::string& modelPath, Model& m, const std::vector<unsigned> &sample_indices)
 {
   // read W
-  auto W = IO::readCSVMatrix<double>(modelPath + "/W.csv");
+  auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
 
   // read w0
-  auto w0 = IO::readCSVMatrix<double>(modelPath + "/w0.csv");
+  auto w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<double>(modelPath + "/Z.csv");  // TODO: this is handily functional on case-insensitive OSes, but shapeodds and pca models have different case 'z' in the name of this file, so it'll fail on linux
+  auto Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
 
+  // ShapeOdds models have z_coords for all samples, not only those used in their construction
+  if (m.getType() == Model::ShapeOdds) {
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> z_coords(sample_indices.size(), Z.cols());
+    auto i = 0;
+    for (auto idx : sample_indices)
+       z_coords.row(i++) = Z.row(idx);
+    Z = z_coords;
+  }
+  
   m.setModel(W, w0, Z);
 }
 
@@ -675,11 +707,11 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   std::string imageBasePath = basePathOf(filePath) + imagePath.substr(0, imageNameLoc);
   std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
-  bool shouldPadZeroes = false;
+  bool padIndices = false;
   if (thumbnailsNode["padZeroes"]) {
     std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
     if (padZeroes == "true") {
-      shouldPadZeroes = true;
+      padIndices = true;
     } else if (padZeroes != "false") {
       throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
     }
@@ -690,14 +722,13 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     indexOffset = thumbnailsNode["offset"].as<int>();
   }
 
-  ImageLoader imageLoader;
   unsigned int thumbnailCount = parseSampleCount(config);
   std::vector<Image> thumbnails;
   for (int i = 0; i < thumbnailCount; i++) {
     std::string path = createThumbnailPath(imageBasePath, i+indexOffset,
-      imageSuffix, indexOffset, shouldPadZeroes, thumbnailCount);
+      imageSuffix, indexOffset, padIndices, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
-    Image image = imageLoader.loadImage(path, ImageLoader::Format::PNG);
+    Image image(path, true/*decompress*/);
     thumbnails.push_back(image);
   }
 
