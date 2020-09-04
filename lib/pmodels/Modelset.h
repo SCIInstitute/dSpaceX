@@ -64,15 +64,15 @@ class MSModelset
 
 
 public:
-  MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences, bool rowMajor = false)
+  MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences, bool rotate = false)
     : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field),
-      num_samples(nSamples), samples(nSamples), rowmajor(rowMajor)
+      num_samples(nSamples), samples(nSamples), _rotate(rotate)
   { persistence_levels.resize(nPersistences); }
 
   auto modelType() const { return modeltype; }
   auto modelName() const { return modelname; }
   void setModelName(const std::string& name) { modelname = name; }
-  auto rowMajor() const { return rowmajor; }
+  auto rotate() const { return _rotate; }
   auto fieldName() const { return fieldname; }
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }
@@ -120,7 +120,7 @@ private:
   std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S (redundant if we have the samples themselves)
-  bool rowmajor{false};             // whether the models produce row-major or column-major output
+  bool _rotate{false};               // whether the models results need to be rotated 90 degrees clockwise (e.g., old ShapeOdds models)
   Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;

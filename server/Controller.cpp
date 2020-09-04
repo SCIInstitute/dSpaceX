@@ -767,11 +767,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     Eigen::MatrixXf I = model->evaluate(z_coord);
     
     // add result image to response
-    Image image(I, 
-                sample_image.getWidth(), sample_image.getHeight(),
-                // modelset->rowMajor() ? sample_image.getWidth() : sample_image.getHeight(),
-                // modelset->rowMajor() ? sample_image.getHeight() : sample_image.getWidth(),
-                sample_image.numChannels(), !modelset->rowMajor());
+    Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
     addImageToResponse(response, image);
 
     // add field value to response
@@ -830,11 +826,7 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
               << persistence_idx << ", crystalid " << crystalId << ": " << quality << std::endl;
 
     // add image to response
-    Image image(I,
-                sample_image.getWidth(), sample_image.getHeight(),
-                // modelset->rowMajor() ? sample_image.getWidth() : sample_image.getHeight(),
-                // modelset->rowMajor() ? sample_image.getHeight() : sample_image.getWidth(),
-                sample_image.numChannels(), !modelset.rowMajor());
+    Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset.rotate());
     addImageToResponse(response, image);
 
     // add field value to response

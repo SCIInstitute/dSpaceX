@@ -402,7 +402,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 //     crystals: crystal-?                                        # in each persistence dir are its crystals
 //     padZeroes: false                                           # for both persistence and crystal dirs/files
 //     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
-//     rowmajor: false                                            # the shape produced by this model is a row-major image
+//     rotate: false                                              # the shape produced by this model needs to be rotated 90 degrees
 //     ms:                                                        # Morse-Smale parameters used to compute partitions
 //      - knn: 15                                                 # k-nearest neighbors
 //      - sigma: 0.25                                             # 
@@ -534,10 +534,9 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     }
   }
 
-  // is the modelset producing row-major or column-major shapes?
-  bool rowMajor = false;
-  if (modelNode["rowmajor"] && modelNode["rowmajor"].as<std::string>() == "true") {
-    rowMajor = true;
+  bool rotate = false;
+  if (modelNode["rotate"] && modelNode["rotate"].as<std::string>() == "true") {
+    rotate = true;
   }
 
   // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
@@ -546,7 +545,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
-  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rowMajor));
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
   std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
