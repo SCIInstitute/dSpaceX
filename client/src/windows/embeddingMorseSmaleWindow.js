@@ -103,10 +103,10 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {bool} validate - generate model-interpolated images using the z_coords it provided
    * @param {float} percent - distance along crystal from which to find/generate sample (when only one is requested)
    */
-  evalModelForCrystal(crystalID, numSamples, showOrig, validate, percent) {
+  async evalModelForCrystal(crystalID, numSamples, showOrig, validate, percent) {
     // Ask server to compute the N new images for this crystal using the requested model, then add them to the drawer
     // If model doesn't exist or showOrig is true, returns original samples for this crystal.
-    this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
+    let result = await this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
                                        this.props.decomposition.decompositionCategory,
                                        this.props.decomposition.decompositionField,
                                        this.props.decomposition.persistenceLevel,
@@ -117,17 +117,22 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                                        showOrig,
                                        validate,
                                        percent)
-      .then((result) => {
-        const thumbnails = result.thumbnails.map((thumbnail, i) => {
-          return {
-            img: thumbnail,
-            val: result.fieldvals[i],
-            id: i,
-          };
-        });
-        this.setState({ drawerImages:thumbnails });
-        console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
-      });
+    const thumbnails = result.thumbnails.map((thumbnail, i) => {
+      return {
+        img: thumbnail,
+        val: result.fieldvals[i],
+        id: i,
+      };
+    });
+    console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
+
+    // if more than one sample, fill the drawer, otherwise just return the image
+    if (numSamples > 1) {
+      this.setState({ drawerImages:thumbnails });
+    }
+    else {
+      return thumbnails[0];
+    }
   }
 
   /**

@@ -24,6 +24,8 @@ class MorseSmaleWindow extends React.Component {
     this.state = {
       selectingCrystal: false,
       percent: 0.5,
+      evalModelInProgress: false,
+      evalNext: undefined,
     };
 
     this.client = this.props.dsxContext.client;
@@ -36,7 +38,6 @@ class MorseSmaleWindow extends React.Component {
     this.toggleCamera = this.toggleCamera.bind(this);
 
     this.handleKeyDownEvent = this.handleKeyDownEvent.bind(this);
-    // this.handleMouseMove = this.handleMouseMove.bind(this); // todo: need to consolidate with onMouseMove
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
@@ -126,6 +127,11 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
 
+    if (this.continuousInterpolation) {
+      //this.startInterpolation = this.getPickPosition(event); // can't read mouse position, and we'll use moving widget anyway
+      this.startInterpolation = 0.5; //this.refs.msCanvas.clientHeight / 2.0;  //todo: super cheap hack right now
+    }
+    
     // if left button clicked start a potential crystal selection action
     if (event.button === 0)
       this.setState({ selectingCrystal:true });
@@ -137,9 +143,14 @@ class MorseSmaleWindow extends React.Component {
   onMouseMove(event) {
     this.setState({ selectingCrystal:false });
 
-    // can release these event handlers now since orbit controls handles camera
-    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
-    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+    if (this.continuousInterpolation) {
+      this.handleContinuousInterpolationMouseMove(this.getPickPosition(event));
+    }
+    else {
+      // can release these event handlers now since orbit controls handles camera
+      this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+      this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+    }
   }
 
   /**
@@ -148,7 +159,7 @@ class MorseSmaleWindow extends React.Component {
   onMouseUp(event) {
     this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
-    
+
     // Handle left click release
     if (this.state.selectingCrystal && event.button === 0) {
       this.pick(this.getPickPosition(event),
@@ -230,7 +241,7 @@ class MorseSmaleWindow extends React.Component {
 
     // for continuous interpolation of a selected crystal
     this.continuousInterpolation = false;
-    this.startInterpolation = 0;
+    this.startInterpolation = 0.5;
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
@@ -304,14 +315,13 @@ class MorseSmaleWindow extends React.Component {
     case 'x': // continuous interpolation
       this.continuousInterpolation = !this.continuousInterpolation;
       if (this.continuousInterpolation) {
-        //this.startInterpolation = this.getPickPosition(event); // can't read mouse position, and we'll use moving widget anyway
-        this.startInterpolation = 0.5; //this.refs.msCanvas.clientHeight / 2.0;  //todo: super cheap hack right now
-        this.refs.msCanvas.addEventListener('mousemove', this.handleMouseMove, { passive:true });
+        console.log("continuous interpolation (press 'x' again to disable)");
+        this.controls.enable = false;
       }
       else {
-        this.refs.msCanvas.removeEventListener('mousemove', this.handleMouseMove);
+        console.log("continuous interpolation disabled");
+        this.controls.enable = true;
       }
-      console.log("continuous interpolation (press 'x' again to disable)")
       break;
     }
     this.renderScene();
@@ -345,19 +355,17 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Event handling for mouse move (for continuous interpolation)
-   * @param {Event} event
+   * Handle mouse move for continuous interpolation
    */
-  handleMouseMove(event) {
-    const position = this.getPickPosition(event);
+  handleContinuousInterpolationMouseMove(position) {
     let crystalID = this.pickedObject.name;
-    //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
-    let percent = Math.max(Math.min(position.y/2.0 + this.startInterpolation, 1.0), 0.0);  //todo: crazy cheap shot right now
-    console.log("percent = " + percent);
-    const { datasetId, decompositionCategory, decompositionField, persistenceLevel } = this.props.decomposition;
-    this.props.evalShapeoddsModelForCrystal(datasetId, decompositionCategory, decompositionField, persistenceLevel,
-                                            crystalID, 1 /* get sample at this percent along crystal */, false, percent);
-    this.setImage(this.props.drawerImages[0]);
+    if (this.pickedObject !== undefined) {
+      //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
+      let percent = Math.max(Math.min(position.y/2.0 + this.startInterpolation, 1.0), 0.0);  //todo: crazy cheap shot right now
+      console.log("percent = " + percent);
+
+      this.evalModel(crystalID, percent);
+    }
     return true;
   }
 
@@ -391,7 +399,26 @@ class MorseSmaleWindow extends React.Component {
       this.imageSprite.visible = false;
     }
   }
-
+  
+  // get a single sample at the given percent along the selected crystal
+  async evalModel(crystalID, percent) {
+    if (this.state.evalModelInProgress) {
+      this.state.evalNext = { crystalID, percent };
+    }
+    else {
+      this.state.evalModelInProgress = true;
+      this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/, false /*validate*/, percent).then((image) => {
+        this.setImage(image);
+        this.state.evalModelInProgress = false;
+        if (this.state.evalNext !== undefined) {
+          this.evalModel(this.state.evalNext.crystalID, this.state.evalNext.percent);
+          this.state.evalNext = undefined;
+        }
+        this.renderScene();
+      });
+    }
+  }
+  
   /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
@@ -449,7 +476,9 @@ class MorseSmaleWindow extends React.Component {
 
       // Get crystal partitions (parent component updates drawer once they arrive)
       this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
-      //this.setImage(this.props.drawerImages[0]); //<ctc> test that first image of selected crystal can be used to set images sprite
+      if (this.continuousInterpolation) {
+        this.evalModel(crystalID, this.state.percent);
+      }
 
       this.renderScene();
 
