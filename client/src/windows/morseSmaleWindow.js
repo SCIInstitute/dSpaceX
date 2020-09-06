@@ -227,15 +227,11 @@ class MorseSmaleWindow extends React.Component {
     // instantiate a loader
     this.textureLoader = new THREE.TextureLoader();
     
-    //<ctc> test that we can create a 2d sprite texture and load an image into it (once it works, then try to load the base64 raw from pick())
-    this.spriteTexture = this.textureLoader.load("../../la.png");
-
     // imageSprite
-    this.imageSprite = new THREE.Sprite(new SpriteMaterial({map:this.spriteTexture}));
-    this.imageSprite.position.set(0.825,0.5,0); // position of center of sprite
-    this.imageSprite.scale.x = 0.25;
-    this.imageSprite.scale.y = 0.25;
-    this.imageSprite.material.map = this.spriteTexture;
+    this.spriteScale = 0.25;
+    this.imageSprite = new THREE.Sprite();
+    this.imageSprite.position.set(0,-0.85,0); // position of center of sprite
+    this.imageSprite.visible = false;
     this.uiScene.add(this.imageSprite);
     // ---- ui create function
 
@@ -382,18 +378,10 @@ class MorseSmaleWindow extends React.Component {
           this.imageSprite.material.map = texture;
           this.imageSprite.visible = true;
           this.imageSprite.material.needsUpdate = true;
- 		      console.log('texture loaded!');
+          this.imageSprite.scale.x = this.spriteScale;
+          this.imageSprite.scale.y = texture.image.height / texture.image.width * this.spriteScale;
           this.renderScene();
         }.bind(this));
-
-      // just load another image from disk. Works! <ctc> 
-      // new THREE.TextureLoader().load("../../satyam.png", function(texture) {
-      //   this.imageSprite.material.map = texture;
-      //   this.imageSprite.visible = true;
-      //   this.imageSprite.material.needsUpdate = true;
- 		  //   console.log('texture loaded!');
-      //   this.renderScene();
-      // }.bind(this));
     }
     else {
       this.imageSprite.visible = false;
