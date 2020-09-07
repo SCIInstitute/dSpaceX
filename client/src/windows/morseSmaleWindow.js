@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { SpriteMaterial } from 'three/src/materials/SpriteMaterial.js';
+import { Box3 } from 'three/src/math/Box3.js';
+import { Vector3 } from 'three/src/math/Vector3.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
 import { withDSXContext } from '../dsxContext';
@@ -23,6 +25,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
+      boundingBox: undefined,
       selectingCrystal: false,
       percent: 0.5,
       evalModel: { inProgress: false,   // dragging along a crystal
@@ -400,16 +403,29 @@ class MorseSmaleWindow extends React.Component {
       });
     }
   }
+
+  /**
+   * guess how far point is along a curve
+   */
+  getPercent(curve, pt) {
+    // TODO: only finding [.4 to .95] along a curve <ctc> fixme
+    let p0 = curve.getPoint(0.0);
+    let p1 = curve.getPoint(1.0);
+    let B = new Vector3().subVectors(p1, p0).normalize();
+    let A = new Vector3().subVectors(pt, p0).normalize();
+    let percent = Math.acos(A.dot(B)); // a dot b = |a| * |b| * cos(theta) 
+    return Math.max(0.0, Math.min(1.0, percent));
+  }
   
   /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
-   * returns true if slider on crystal was selected so the... crap. anyway, gonna think about it.
+   * @return returns false if nothing picked and scene rotation can continue
    */
   pick(normalizedPosition, showOrig, validate) {
     if (this.props.decomposition === null) {
-      return;// true; // nothing to pick and no need to propagate this event
+      return false;
     }
 
     // Get intersected object
@@ -421,17 +437,23 @@ class MorseSmaleWindow extends React.Component {
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
       let percent = 0.5; // TODO where we are along selected crystal
+
       if (intersectedObjects[0].object === this.crystalPosObject || intersectedObjects[0].object === this.pickedCrystal) {
-        // We picked the active pointer along a curve, or the already selected
-        // curve, so update its position along curve. NOTE: this function is
-        // called on mouseUp, so interactive interpolation is still disabled.
+        // picked active pointer along curve, or already selected curve, so update its position
         console.log('You clicked the crystalPosObject or the already selected crystal');
         crystalID = this.pickedCrystal.name;
-        percent = 0.15; // TODO where we are along selected crystal
-        // <ctc> look at normalizedPosition to see if it might make sense to use
+
+        // use the extrema of the selected crystal to guess how far along it to place slider
+        let curve = this.pickedCrystal.geometry.parameters.path;
+        percent = this.getPercent(curve, intersectedObjects[0].point);
+        console.log("guessing we're at percent "+percent+" along currently selected crystal.");
+
+        // change position of crystalPos slider
+        // TODO: this position is not in... hmm... it's wrong but still changes. <ctc>
+        this.crystalPosObject.position.copy(curve.getPoint(percent));
       }
       else {
-        // New crystal selected.
+        console.log('New crystal selected (' + crystalID + ')');
 
         // ensure previously selected object is back to unselected opacity
         if (this.pickedCrystal) {
@@ -441,7 +463,14 @@ class MorseSmaleWindow extends React.Component {
         this.pickedCrystal = intersectedObjects[0].object;
         this.pickedCrystal.material.opacity = this.selectedOpacity;
 
-        console.log('New crystal selected (' + crystalID + ')');
+        // use the extrema of the selected crystal to guess how far along it to place slider
+        let curve = this.pickedCrystal.geometry.parameters.path;
+        percent = this.getPercent(curve, intersectedObjects[0].point);
+
+        // Add a clickable plane (crystal pos object) perpendicular to the curve
+        // (using curve.getTangent(u)) at selected position along this crystal
+        // (just another sphere for now).
+        this.crystalPosObject = this.addSphere(curve.getPoint(percent), new THREE.Color('darkorange'));
 
         // highlight this crystal's samples in the other views (e.g., embedding window)
         this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
@@ -452,24 +481,13 @@ class MorseSmaleWindow extends React.Component {
         this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.evalModel.percent);
       }
 
-      // TODO: add a clickable plane (crystal pos object) perpendicular to the
-      // curve (using curve.getTangent(u)) at selected position along this
-      // crystal (just another sphere for now).
-
-      // NOTE: may need to save the catmull rom curves for each crystal in
-      // order to move these along the curve.
-      //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
-      // <ctc> need a curve. is the selected object that abstract, or just a triangle?
-
-      // add sprite for model evaluation at selected point along crystal
+      // evaluate model at selected point along crystal
       this.evalModel(percent);
 
-      //this.renderScene();  //<ctc> this works without needing to render here! (but do need to in setImage above)
-
-      //return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
+      return true; // curve picked and now we can be sliding along it to interpolate model
     }
 
-    return false;
+    return false; // nothing picked so go ahead and rotate
   }
 
   /**
@@ -551,6 +569,8 @@ class MorseSmaleWindow extends React.Component {
    * @param {object} regressionData
    */
   addRegressionCurvesToScene(regressionData) {
+    this.state.boundingBox = new Box3();
+
     regressionData.curves.forEach((rCurve, index) => {
       // Use midpoint as curve position to ensure transparency sorting has better odds of working,
       // since conflicts arise when using first or last point, bounding box, etc.
@@ -605,7 +625,13 @@ class MorseSmaleWindow extends React.Component {
       curveMesh.translateOnAxis(dir, dist);
 
       this.scene.add(curveMesh);
+
+      // add to scene bounding box
+      curveGeometry.computeBoundingBox();
+      this.state.boundingBox.union(curveGeometry.boundingBox);
     });
+
+    
   }
 
   /**
@@ -648,6 +674,7 @@ class MorseSmaleWindow extends React.Component {
    * There are two types of cameras, perspective and orthographic, each with associated controls.
    * NOTE: need to have essentially "the camera for this scene" before creating controls so that controls.reset() works as expected.
    * TODO: z is normalized by Controller to [0,1], but x/y are not normalized, so adjust target when loading new data.
+   *       use this.state.boundingBox computed in addRegressionCurvesToScene
    */
   createCamerasAndControls() {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
