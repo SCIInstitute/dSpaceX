@@ -457,7 +457,7 @@ class MorseSmaleWindow extends React.Component {
       // add sprite for model evaluation at selected point along crystal
       this.evalModel(percent);
 
-      this.renderScene();
+      //this.renderScene();  //<ctc> this works without needing to render here! (but do need to in setImage above)
 
       //return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
     }
