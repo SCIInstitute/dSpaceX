@@ -22,6 +22,7 @@ class MorseSmaleWindow extends React.Component {
     this.numInterpolants = 50; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
+      drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
       selectingCrystal: false,
       percent: 0.5,
       evalModel: { inProgress: false,   // dragging along a crystal
@@ -106,6 +107,12 @@ class MorseSmaleWindow extends React.Component {
                       +regressionResponse.error_msg+'\n\t extremaResponse: '+extremaResponse.error_msg);
         }
       });
+    }
+
+    // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)
+    if (this.state.drawerAdded == false && this.props.drawerImages.length > 0) {
+      this.resizeCanvas();
+      this.state.drawerAdded = true;
     }
   }
 
@@ -296,11 +303,11 @@ class MorseSmaleWindow extends React.Component {
       this.continuousInterpolation = !this.continuousInterpolation;
       if (this.continuousInterpolation) {
         console.log("continuous interpolation (press 'x' again to disable)");
-        this.controls.enable = false;
+        this.controls.enabled = false;
       }
       else {
         console.log("continuous interpolation disabled");
-        this.controls.enable = true;
+        this.controls.enabled = true;
       }
       break;
     }
@@ -646,20 +653,22 @@ class MorseSmaleWindow extends React.Component {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
     // orthographic
+    const orthoPosition = new THREE.Vector3(0, -1, 0.5);
     this.orthoCamera = new THREE.OrthographicCamera();
     this.orthoCamera.zoom = 2.5;
-    this.orthoCamera.position.set(0, -1, 0.5);
+    this.orthoCamera.position.copy(orthoPosition);
     this.orthoCamera.up.set(0, 0, 1);
-    this.orthoCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.orthoCamera.add(new THREE.PointLight(0xffffff));
     this.orthoCamera.name = "camera";
     this.updateOrthoCamera(width, height);
 
     this.orthoControls = new OrbitControls(this.orthoCamera, this.renderer.domElement);
-    this.orthoControls.enable = false;
+    this.orthoControls.enabled = false;
     this.orthoControls.screenSpacePanning = true;
     this.orthoControls.minDistance = this.orthoCamera.near;
     this.orthoControls.maxDistance = this.orthoCamera.far;
-    this.orthoControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.orthoControls.target0.set(0, 0, 0.5);  // setting position0 and target0 since controls.reset() uses these
+    this.orthoControls.position0.copy(orthoPosition);
     this.orthoControls.addEventListener( 'change', this.renderScene );
 
     // perspective
@@ -667,25 +676,27 @@ class MorseSmaleWindow extends React.Component {
     const aspect = width / height;
     const near = 0.001;
     const far = 100;
+    let perspPosition = new THREE.Vector3(0, -6, 0.5);
     this.perspCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    this.perspCamera.position.set(0, -6, 0.5);
+    this.perspCamera.position.copy(perspPosition);
     this.perspCamera.up.set(0, 0, 1);
-    this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.perspCamera.add(new THREE.PointLight(0xffffff));
     this.perspCamera.name = "camera";
     this.updatePerspCamera(width, height);
     
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
-    this.perspControls.enable = false;
+    this.perspControls.enabled = false;
     this.perspControls.screenSpacePanning = true;
     this.perspControls.minDistance = this.perspCamera.near;
     this.perspControls.maxDistance = this.perspCamera.far;
-    this.perspControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.perspControls.target0.set(0, 0, 0.5);  // setting position0 and target0 since controls.reset() uses these
+    this.perspControls.position0.copy(perspPosition);
     this.perspControls.addEventListener( 'change', this.renderScene );
 
     // set default to perspective
     this.camera = this.perspCamera;
     this.controls = this.perspControls;
-    this.controls.enable = true;
+    this.controls.enabled = true;
   }
 
   /**
@@ -693,7 +704,7 @@ class MorseSmaleWindow extends React.Component {
    * Toggles between orthographic and perspective cameras.
    */
   toggleCamera() {
-    this.controls.enable = false;
+    this.controls.enabled = false;
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
@@ -702,7 +713,7 @@ class MorseSmaleWindow extends React.Component {
       this.camera = this.orthoCamera;
       this.controls = this.orthoControls;
     }
-    this.controls.enable = true;
+    this.controls.enabled = true;
     this.controls.reset();
   }
   
