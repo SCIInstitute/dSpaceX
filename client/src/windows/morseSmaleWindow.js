@@ -24,8 +24,10 @@ class MorseSmaleWindow extends React.Component {
     this.state = {
       selectingCrystal: false,
       percent: 0.5,
-      evalModelInProgress: false,
-      evalNext: undefined,
+      evalModel: { inProgress: false,   // dragging along a crystal
+                   next: undefined,     // { crystalID, percent }
+                   sprites: undefined,  // { nearestLesser, interpolated, nearestGreater }
+                 },
     };
 
     this.client = this.props.dsxContext.client;
@@ -127,11 +129,13 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
 
-    if (this.continuousInterpolation) {
-      //this.startInterpolation = this.getPickPosition(event); // can't read mouse position, and we'll use moving widget anyway
-      this.startInterpolation = 0.5; //this.refs.msCanvas.clientHeight / 2.0;  //todo: super cheap hack right now
-    }
-    
+    // // Handle left click
+    // if (this.state.selectingCrystal && event.button === 0) {
+    //   return this.pick(this.getPickPosition(event),
+    //             event.ctrlKey && !event.shiftKey /*showOrig*/,
+    //             event.ctrlKey && event.shiftKey /*validate*/);
+    // }
+
     // if left button clicked start a potential crystal selection action
     if (event.button === 0)
       this.setState({ selectingCrystal:true });
@@ -145,6 +149,7 @@ class MorseSmaleWindow extends React.Component {
 
     if (this.continuousInterpolation) {
       this.handleContinuousInterpolationMouseMove(this.getPickPosition(event));
+      return true; // no more percolation of this mouse move event (doesn't work, instead control.disable is probably what we need)
     }
     else {
       // can release these event handlers now since orbit controls handles camera
@@ -215,29 +220,8 @@ class MorseSmaleWindow extends React.Component {
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color('whatever'); // do NOT set scene background or outline selection won't work
 
-
-
-    // uiScene  //<ctc> put this in a create function
-    this.uiCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 1, 2 );
-    this.uiCamera.position.set( 0, 0, 1 );
-    this.uiCamera.name = "uiCamera";
-
-    this.uiScene = new THREE.Scene();
-
-    // instantiate a loader
-    this.textureLoader = new THREE.TextureLoader();
-    
-    // imageSprite
-    this.spriteScale = 0.25;
-    this.imageSprite = new THREE.Sprite();
-    this.imageSprite.position.set(0,-0.85,0); // position of center of sprite
-    this.imageSprite.visible = false;
-    this.uiScene.add(this.imageSprite);
-    // ---- ui create function
-
-    // for continuous interpolation of a selected crystal
-    this.continuousInterpolation = false;
-    this.startInterpolation = 0.5;
+    // UI
+    this.createUI();
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
@@ -354,15 +338,10 @@ class MorseSmaleWindow extends React.Component {
    * Handle mouse move for continuous interpolation
    */
   handleContinuousInterpolationMouseMove(position) {
-    let crystalID = this.pickedObject.name;
-    if (this.pickedObject !== undefined) {
-      //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
-      let percent = Math.max(Math.min(position.y/2.0 + this.startInterpolation, 1.0), 0.0);  //todo: crazy cheap shot right now
-      console.log("percent = " + percent);
-
-      this.evalModel(crystalID, percent);
-    }
-    return true;
+    //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
+    let percent = Math.max(Math.min(position.y/2.0 + 0.5, 1.0), 0.0);  //todo: crazy cheap shot right now
+    console.log("percent = " + percent);    
+    this.evalModel(percent);
   }
 
   /*
@@ -372,7 +351,7 @@ class MorseSmaleWindow extends React.Component {
   setImage(data) {
     if (data !== undefined) {
       
-      // load the new image sent from the server // works! <ctc> 
+      // load the new image sent from the server
       this.textureLoader.load(
 	      'data:image/png;base64,' + data.img.rawData, function(texture) {
           this.imageSprite.material.map = texture;
@@ -389,18 +368,26 @@ class MorseSmaleWindow extends React.Component {
   }
   
   // get a single sample at the given percent along the selected crystal
-  async evalModel(crystalID, percent) {
-    if (this.state.evalModelInProgress) {
-      this.state.evalNext = { crystalID, percent };
+  // todo:
+  // - if no model, hide sprites
+  // - show adjacent sprites at field's value closest <= and >= to this percent along crystal
+  async evalModel(percent) {
+    console.log("evalModel("+percent+")");
+    let crystalID = this.pickedCrystal.name;
+    if (this.state.evalModel.inProgress) {
+      this.state.evalModel.next = { crystalID, percent };
+      console.log("evalModel in progress, setting next to("+percent+")");
     }
     else {
-      this.state.evalModelInProgress = true;
+      this.state.evalModel.inProgress = true;
       this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/, false /*validate*/, percent).then((image) => {
+        console.log("evalModel("+percent+") complete! setting image");
         this.setImage(image);
-        this.state.evalModelInProgress = false;
-        if (this.state.evalNext !== undefined) {
-          this.evalModel(this.state.evalNext.crystalID, this.state.evalNext.percent);
-          this.state.evalNext = undefined;
+        this.state.evalModel.inProgress = false;
+        if (this.state.evalModel.next !== undefined) {
+          console.log("evalModel.next exists, calling that now(id: "+this.state.evalModel.next.crystalID+", pct: "+this.state.evalModel.next.percent+")");
+          this.evalModel(this.state.evalModel.next.percent);
+          this.state.evalModel.next = undefined;
         }
         this.renderScene();
       });
@@ -411,10 +398,11 @@ class MorseSmaleWindow extends React.Component {
    * Pick level set of decomposition
    * @param {object} normalizedPosition
    * @param {boolean} showOrig
+   * returns true if slider on crystal was selected so the... crap. anyway, gonna think about it.
    */
   pick(normalizedPosition, showOrig, validate) {
     if (this.props.decomposition === null) {
-      return;
+      return;// true; // nothing to pick and no need to propagate this event
     }
 
     // Get intersected object
@@ -422,55 +410,56 @@ class MorseSmaleWindow extends React.Component {
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
+
     if (intersectedObjects.length) {
-      if (intersectedObjects[0].object === this.crystalPosObject) {
-        // we picked the active pointer along a curve, so turn on dragging of the pointer
-        //this.draggingCrystalPos = true;  // TODO
-        console.log('You clicked the crystalPosObject!');
-
-      }
-      else if (intersectedObjects[0].object === this.pickedObject) {
-        console.log('You clicked the already selected object');
-
-        // TODO: (maybe) move crystal pos object to selected position along this crystal
+      let crystalID = intersectedObjects[0].object.name;
+      let percent = 0.5; // TODO where we are along selected crystal
+      if (intersectedObjects[0].object === this.crystalPosObject || intersectedObjects[0].object === this.pickedCrystal) {
+        // We picked the active pointer along a curve, or the already selected
+        // curve, so update its position along curve. NOTE: this function is
+        // called on mouseUp, so interactive interpolation is still disabled.
+        console.log('You clicked the crystalPosObject or the already selected crystal');
+        crystalID = this.pickedCrystal.name;
+        percent = 0.15; // TODO where we are along selected crystal
+        // <ctc> look at normalizedPosition to see if it might make sense to use
       }
       else {
-        console.log('New crystal selected');
+        // New crystal selected.
 
-        // Ensure previously selected object is back to unselected opacity
-        if (this.pickedObject) {
-          this.pickedObject.material.opacity = this.unselectedOpacity;
+        // ensure previously selected object is back to unselected opacity
+        if (this.pickedCrystal) {
+          this.pickedCrystal.material.opacity = this.unselectedOpacity;
         }
 
-        this.pickedObject = intersectedObjects[0].object;
-        this.pickedObject.material.opacity = this.selectedOpacity;
+        this.pickedCrystal = intersectedObjects[0].object;
+        this.pickedCrystal.material.opacity = this.selectedOpacity;
 
-        // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
-        // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
-        //        may need to save the catmull rom curves for each crystal in order to move these along the curve.
-        //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
+        console.log('New crystal selected (' + crystalID + ')');
 
-        //...or start with a simple sphere
-        //   // add a clickable sphere along the curve
-        //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
+        // highlight this crystal's samples in the other views (e.g., embedding window)
+        this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
+          this.props.onCrystalSelection(result.crystalSamples);
+        });
+
+        // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
+        this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.evalModel.percent);
       }
 
-      let crystalID = this.pickedObject.name;
+      // TODO: add a clickable plane (crystal pos object) perpendicular to the
+      // curve (using curve.getTangent(u)) at selected position along this
+      // crystal (just another sphere for now).
 
-      // highlights samples from this crystal in other views (e.g., embedding window)
-      this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
-        this.props.onCrystalSelection(result.crystalSamples);
-      });
+      // NOTE: may need to save the catmull rom curves for each crystal in
+      // order to move these along the curve.
+      //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
+      // <ctc> need a curve. is the selected object that abstract, or just a triangle?
 
-      // Get crystal partitions (parent component updates drawer once they arrive)
-      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
-      if (this.continuousInterpolation) {
-        this.evalModel(crystalID, this.state.percent);
-      }
+      // add sprite for model evaluation at selected point along crystal
+      this.evalModel(percent);
 
       this.renderScene();
 
-      return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
+      //return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
     }
 
     return false;
@@ -624,6 +613,29 @@ class MorseSmaleWindow extends React.Component {
     });
   }
 
+  createUI() {
+    // uiScene
+    this.uiScene = new THREE.Scene();
+
+    // uiCamera
+    this.uiCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 1, 2 );
+    this.uiCamera.position.set( 0, 0, 1 );
+    this.uiCamera.name = "uiCamera";
+
+    // instantiate a loader and sprites
+    this.textureLoader = new THREE.TextureLoader();
+    
+    // imageSprite
+    this.spriteScale = 0.25;
+    this.imageSprite = new THREE.Sprite();
+    this.imageSprite.position.set(0,-0.85,0); // position of center of sprite
+    this.imageSprite.visible = false;
+    this.uiScene.add(this.imageSprite);
+
+    // for continuous interpolation of a selected crystal
+    this.continuousInterpolation = false;
+  }
+
   /**
    * createCamerasAndControls
    * There are two types of cameras, perspective and orthographic, each with associated controls.
@@ -711,7 +723,7 @@ class MorseSmaleWindow extends React.Component {
    * updatePerspCamera
    */
   updatePerspCamera(width, height) {
-    this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
+    this.perspCamera.aspect = width / height;
   }
 
   /**
@@ -741,7 +753,7 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.camera);        // camera MUST be added to scene for it's light to work
     this.scene.add(this.ambientLight);
 
-    this.pickedObject = undefined;
+    this.pickedCrystal = undefined;
     this.crystalPosObject = undefined;
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
@@ -758,10 +770,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderer.render(this.scene, this.camera);
 
     // ...then outline
-    if (this.pickedObject !== undefined) {
+    if (this.pickedCrystal !== undefined) {
       // hide everything but selected object for outline
       for (var item of scene) {
-        item.visible = (item === this.pickedObject);
+        item.visible = (item === this.pickedCrystal);
       }
       this.outline.renderOutline(this.scene, this.camera);
 
