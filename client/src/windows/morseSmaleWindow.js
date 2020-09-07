@@ -568,35 +568,32 @@ class MorseSmaleWindow extends React.Component {
         let P = new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]);
         curvePoints.push(P.sub(midPoint));
       });
+      let cr_curve = new THREE.CatmullRomCurve3(curvePoints);
+
+      let curveColors = [];
+      rCurve.colors.forEach((regressionColor) => {
+        let C = new THREE.Vector3(regressionColor[0], regressionColor[1], regressionColor[2]);
+        curveColors.push(C);
+      });
+      let cr_color = new THREE.CatmullRomCurve3(curveColors, false, "centripetal", 0.9); // match colors by using high tension
 
       // Create curve
-      let curve = new THREE.CatmullRomCurve3(curvePoints);
-      let segmentsPerPoint = 6;
+      let extrusionSegments = 350;
+      let colors = cr_color.getPoints(extrusionSegments); // "interpolate" colors
       let radialSegments = 10;
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, (curvePoints.length-1) * (segmentsPerPoint-1) /*tubularSegments*/,
-                                                       .02 /*radius*/, radialSegments-1, false /*closed curve*/);
-      let count = curveGeometry.attributes.position.count;
+      let radius = 0.02;  // TODO: should be relative to scene size (which needs adjusting as noted in a github issue #158)
+      let curveGeometry = new THREE.TubeBufferGeometry(cr_curve, extrusionSegments, radius, radialSegments, false /*closed curve*/);
+      let count = curveGeometry.attributes.position.count; // geom size; we need to set a color per point in the geometry
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-      let colors = rCurve.colors, colorAttribute = curveGeometry.attributes.color;
+      let colorAttribute = curveGeometry.attributes.color;
       
-      // set colors for first point
-      let c1 = new THREE.Color(colors[0][0], colors[0][1], colors[0][2]);
-      for (let r = 0; r < radialSegments; r++) {
-        colorAttribute.setXYZ(r, c1.r, c1.g, c1.b);
-      }
-      // set colors for the rest
-      let c2 = new THREE.Color;
+      // set colors and material
       let color = new THREE.Color;
-      for (let i = 0; i < curvePoints.length-1; ++i) {
-        c2.setRGB(colors[i+1][0], colors[i+1][1], colors[i+1][2]);
-        for (let j = 1; j < segmentsPerPoint+1; ++j) {
-          color = c1.lerp(c2, 1.0/segmentsPerPoint * j);
-          for (let r = 0; r < radialSegments; r++)
-            colorAttribute.setXYZ(i*segmentsPerPoint*radialSegments + j*radialSegments + r, color.r, color.g, color.b);
-        }
-        c1.copy(c2);
+      for (let i = 0; i <= extrusionSegments; ++i) {
+        color.setRGB(colors[i].x, colors[i].y, colors[i].z);
+        for (let r = 0; r <= radialSegments; r++)
+          colorAttribute.setXYZ(i*(radialSegments+1) + r, color.r, color.g, color.b);
       }
-
       let curveMaterial = new THREE.MeshStandardMaterial({
         vertexColors: true,
         transparent: true,
