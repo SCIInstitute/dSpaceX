@@ -26,7 +26,6 @@ class MorseSmaleWindow extends React.Component {
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
       boundingBox: undefined,
-      selectingCrystal: false,
       percent: 0.5,
       evalModel: { inProgress: false,   // dragging along a crystal
                    next: undefined,     // { crystalID, percent }
@@ -139,27 +138,22 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
 
-    // // Handle left click
-    // if (this.state.selectingCrystal && event.button === 0) {
-    //   return this.pick(this.getPickPosition(event),
-    //             event.ctrlKey && !event.shiftKey /*showOrig*/,
-    //             event.ctrlKey && event.shiftKey /*validate*/);
-    // }
+    // left click to select and slide
+    if (event.button === 0 && this.pick(this.getPickPosition(event))) {
+      this.continuousInterpolation = true;
+      this.controls.enabled = false;
+    }
 
-    // if left button clicked start a potential crystal selection action
-    if (event.button === 0)
-      this.setState({ selectingCrystal:true });
+    // event.ctrlKey && !event.shiftKey /*showOrig*/,
+    // event.ctrlKey && event.shiftKey /*validate*/))
   }
   
   /**
    * mousemove ends a potential crystal so rotations don't accidentally select a crystal
    */
   onMouseMove(event) {
-    this.setState({ selectingCrystal:false });
-
     if (this.continuousInterpolation) {
       this.handleContinuousInterpolationMouseMove(this.getPickPosition(event));
-      return true; // no more percolation of this mouse move event (doesn't work, instead control.disable is probably what we need)
     }
     else {
       // can release these event handlers now since orbit controls handles camera
@@ -174,15 +168,8 @@ class MorseSmaleWindow extends React.Component {
   onMouseUp(event) {
     this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
-
-    // Handle left click release
-    if (this.state.selectingCrystal && event.button === 0) {
-      this.pick(this.getPickPosition(event),
-                event.ctrlKey && !event.shiftKey /*showOrig*/,
-                event.ctrlKey && event.shiftKey /*validate*/);
-    }
+    this.controls.enabled = true;
   }
-
 
   /**
    * If any of the decomposition settings have changed returns true
@@ -338,19 +325,30 @@ class MorseSmaleWindow extends React.Component {
   getPickPosition(event) {  //todo: maybe rename to getMousePosition
     const pos = this.getCanvasPosition(event);
     const canvas = this.refs.msCanvas;
+    let pick = [ (pos.x / canvas.clientWidth) * 2 - 1, (pos.y / canvas.clientHeight) * -2 + 1 ];
+    console.log("pick position: "+ pick[0] + ", " + pick[1]);
+    
     return {
-      x: (pos.x / canvas.clientWidth) * 2 - 1,
-      y: (pos.y / canvas.clientHeight) * -2 + 1,
+      x: pick[0],
+      y: pick[1],
     };
   }
 
   /**
    * Handle mouse move for continuous interpolation
    */
-  handleContinuousInterpolationMouseMove(position) {
+  handleContinuousInterpolationMouseMove(normalizedPosition) {
+    // TODO: likely we'll want to project the curve to the screen and lerp it in
+    // order to make it feel natural to move the currPos, less dependent on the
+    // physical curve position)
+    //
     //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
-    let percent = Math.max(Math.min(position.y/2.0 + 0.5, 1.0), 0.0);  //todo: crazy cheap shot right now
-    console.log("percent = " + percent);    
+    // ...but first we'll try to use the same nearest point as used in the pick function.
+
+    // use the extrema of the selected crystal to guess how far along it to place slider
+    let curve = this.pickedCrystal.geometry.parameters.path;
+    let percent = this.getPercent(curve, normalizedPosition, this.pickedCrystal.matrix);
+    this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
     this.evalModel(percent);
   }
 
@@ -407,10 +405,14 @@ class MorseSmaleWindow extends React.Component {
   /**
    * guess how far point is along a curve
    */
-  getPercent(curve, pt) {
+  getPercent(curve, pt, matrix) {
     // TODO: only finding [.4 to .95] along a curve <ctc> fixme
-    let p0 = curve.getPoint(0.0);
-    let p1 = curve.getPoint(1.0);
+    // <ctc> definitely something not working right with this projection.
+    //   - Maybe upside-down normalized pt?
+    //   - maybe severely non-uniform point spacing on curve
+    //   - and maybe both
+    let p1 = curve.getPoint(0.0).applyMatrix4(matrix);
+    let p0 = curve.getPoint(1.0).applyMatrix4(matrix);
     let B = new Vector3().subVectors(p1, p0).normalize();
     let A = new Vector3().subVectors(pt, p0).normalize();
     let percent = Math.acos(A.dot(B)); // a dot b = |a| * |b| * cos(theta) 
@@ -445,12 +447,12 @@ class MorseSmaleWindow extends React.Component {
 
         // use the extrema of the selected crystal to guess how far along it to place slider
         let curve = this.pickedCrystal.geometry.parameters.path;
-        percent = this.getPercent(curve, intersectedObjects[0].point);
+        percent = this.getPercent(curve, intersectedObjects[0].point, intersectedObjects[0].object.matrix);
         console.log("guessing we're at percent "+percent+" along currently selected crystal.");
 
         // change position of crystalPos slider
         // TODO: this position is not in... hmm... it's wrong but still changes. <ctc>
-        this.crystalPosObject.position.copy(curve.getPoint(percent));
+        this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
       }
       else {
         console.log('New crystal selected (' + crystalID + ')');
@@ -465,12 +467,12 @@ class MorseSmaleWindow extends React.Component {
 
         // use the extrema of the selected crystal to guess how far along it to place slider
         let curve = this.pickedCrystal.geometry.parameters.path;
-        percent = this.getPercent(curve, intersectedObjects[0].point);
+        percent = this.getPercent(curve, intersectedObjects[0].point, intersectedObjects[0].object.matrix);
 
         // Add a clickable plane (crystal pos object) perpendicular to the curve
         // (using curve.getTangent(u)) at selected position along this crystal
         // (just another sphere for now).
-        this.crystalPosObject = this.addSphere(curve.getPoint(percent), new THREE.Color('darkorange'));
+        this.crystalPosObject = this.addSphere(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix), new THREE.Color('darkorange'));
 
         // highlight this crystal's samples in the other views (e.g., embedding window)
         this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
