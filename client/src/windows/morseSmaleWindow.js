@@ -32,8 +32,6 @@ class MorseSmaleWindow extends React.Component {
                    sprites: undefined,  // { nearestLesser, interpolated, nearestGreater }
                    p0: new Vector2(),   // projection of currently selected curve to normalized screen coordinates
                    p1: new Vector3(),
-                   debugLine: undefined,
-                   debugPt: undefined,
                  },
       validate: false,                  // when crystal selected, use model's z_coords to reconstruct original shapes
     };
@@ -224,9 +222,6 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the renderer, camera, and scene for Three.js.
    */
   init() {
-    //<ctc> debugging vars
-    this.nResizes = 0;
-
     // canvas
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
@@ -275,7 +270,6 @@ class MorseSmaleWindow extends React.Component {
    */
   resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
-    //console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
 
     // update camera
     this.updateCamera(width, height);
@@ -420,18 +414,6 @@ class MorseSmaleWindow extends React.Component {
     let curveVec = new Vector2().subVectors(this.state.evalModel.p1, this.state.evalModel.p0);
     let pickVec = new Vector2().subVectors(normalizedPosition, this.state.evalModel.p0);
 
-
-
-    // add a visible pickVec for debugging
-    if (this.state.evalModel.debugPt) {
-      this.uiScene.remove(this.state.evalModel.debugPt);
-    }
-    this.state.evalModel.debugPt = this.addLine(this.uiScene, [normalizedPosition.x, normalizedPosition.y, 0],
-                                                [this.state.evalModel.p0.x, this.state.evalModel.p0.y, 0]);
-    this.renderScene();
-
-
-
     // compute percent of projected pickVec along curveVec
     let crvlen = curveVec.length();
     curveVec.normalize();
@@ -460,16 +442,6 @@ class MorseSmaleWindow extends React.Component {
 
     this.state.evalModel.p0.set(p0.x, p0.y);
     this.state.evalModel.p1.set(p1.x, p1.y);
-
-
-    // add a visible line for debugging
-    if (this.state.evalModel.debugLine) {
-      this.uiScene.remove(this.state.evalModel.debugLine);
-    }
-    this.state.evalModel.debugLine = this.addLine(this.uiScene, [this.state.evalModel.p0.x, this.state.evalModel.p0.y, 0],
-                                                  [this.state.evalModel.p1.x, this.state.evalModel.p1.y, 0],
-                                                  new THREE.Color(0.5, 0.5, 1.0));
-    this.renderScene();
   }
 
   /**
