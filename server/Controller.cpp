@@ -732,9 +732,9 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
-  auto percent = request["percent"].asDouble();
+  auto percent = request["percent"].asFloat();
   std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistence <<"; datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname;
-  if (numZ == 1) std::cout << " (percent is " << percent;
+  if (numZ == 1) std::cout << " (percent is " << percent << ")";
   std::cout << std::endl;
   
   // get the vector of values for the field
@@ -748,7 +748,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // partition the field into numZ values and evaluate model for each
   float minval = model->minFieldValue();
   float maxval = model->maxFieldValue();
-  float delta = (maxval - minval) / static_cast<double>(numZ-1); // generates samples for crystal min and max
+  float delta = (maxval - minval) / static_cast<float>(numZ-1); // (numZ - 1) so it generates samples for crystal min and max
 
   // if numZ == 1, evaluate at given percent along crystal
   if (numZ == 1) {
@@ -758,7 +758,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   
   for (unsigned i = 0; i < numZ; i++)
   {
-    double fieldval = minval + delta * i;
+    auto fieldval = minval + delta * i;
 
     // get new latent space coordinate for this field_val
     Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
