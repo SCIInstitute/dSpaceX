@@ -26,7 +26,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
-      boundingBox: undefined,           // set when curves added to scene, used to set up camera 
+      boundingBox: undefined,           // set when curves added to scene, used to set up camera
       evalModel: { inProgress: false,   // dragging along a crystal
                    next: undefined,     // { crystalID, percent }
                    sprites: undefined,  // { nearestLesser, interpolated, nearestGreater }
@@ -51,6 +51,7 @@ class MorseSmaleWindow extends React.Component {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
 
     this.pick = this.pick.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -64,9 +65,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
+    this.addLine = this.addLine.bind(this);
     this.setImage = this.setImage.bind(this);
   }
-  
+
   /**
    * Called by react when this component mounts.
    * Initializes Three.js for drawing and adds event listeners.
@@ -75,6 +77,7 @@ class MorseSmaleWindow extends React.Component {
     this.init();
     window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.msCanvas.addEventListener('wheel', _.debounce(this.onMouseWheel, 50));
     this.refs.msCanvas.addEventListener('mousedown', this.onMouseDown);
   }
 
@@ -149,7 +152,7 @@ class MorseSmaleWindow extends React.Component {
       this.controls.enabled = false;
     }
   }
-  
+
   /**
    * mousemove ends a potential crystal so rotations don't accidentally select a crystal
    */
@@ -175,7 +178,16 @@ class MorseSmaleWindow extends React.Component {
     this.continuousInterpolation = false;
 
     // update projected extrema
-    this.projectExtrema(this.pickedCrystal);
+    if (this.pickedCrystal !== undefined) {
+      this.projectExtrema(this.pickedCrystal);
+    }
+  }
+
+  onMouseWheel(event) {
+    // update projected extrema
+    if (this.pickedCrystal !== undefined) {
+      this.projectExtrema(this.pickedCrystal);
+    }
   }
 
   /**
@@ -296,7 +308,7 @@ class MorseSmaleWindow extends React.Component {
       this.numInterpolants = Math.max(1, this.numInterpolants - 1);
       console.log("numInterpolants decreased to " + this.numInterpolants)
       break;
-    case 'q': // validate by interpolating original z-coords to fill drawer when crystal selected
+    case 'q': // validate model by interpolating original z-coords to fill drawer when crystal selected
       this.state.validate = !this.state.validate;
       break;
     }
@@ -325,8 +337,8 @@ class MorseSmaleWindow extends React.Component {
     const pos = this.getCanvasPosition(event);
     const canvas = this.refs.msCanvas;
     let pick = [ (pos.x / canvas.clientWidth) * 2 - 1, (pos.y / canvas.clientHeight) * -2 + 1 ];
-    console.log("pick position: "+ pick[0] + ", " + pick[1]);
-    
+    //console.log("pick position: "+ pick[0] + ", " + pick[1]);
+
     return {
       x: pick[0],
       y: pick[1],
@@ -335,19 +347,14 @@ class MorseSmaleWindow extends React.Component {
 
   /**
    * Handle mouse move for continuous interpolation
+   * @param {Point2} normalized screen space coordinate of pick
    */
   handleContinuousInterpolationMouseMove(normalizedPosition) {
-    // TODO: likely we'll want to project the curve to the screen and lerp it in
-    // order to make it feel natural to move the currPos, less dependent on the
-    // physical curve position)
-    //
-    //let percent = Math.max(Math.min(position.y - this.startInterpolation, 100.0), 0.0);
-    // ...but first we'll try to use the same nearest point as used in the pick function.
-
-    // use the extrema of the selected crystal to guess how far along it to place slider
+    // get current percent of selected pt along current crystal, and change position of crystalPos slider
     let curve = this.pickedCrystal.geometry.parameters.path;
     let percent = this.getPercent(normalizedPosition);
     this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
+    this.renderScene();
     this.evalModel(percent);
   }
 
@@ -357,10 +364,10 @@ class MorseSmaleWindow extends React.Component {
    */
   setImage(data) {
     if (data !== undefined) {
-      
+
       // load the new image sent from the server
       this.textureLoader.load(
-	      'data:image/png;base64,' + data.img.rawData, function(texture) {
+        'data:image/png;base64,' + data.img.rawData, function(texture) {
           this.imageSprite.material.map = texture;
           this.imageSprite.visible = true;
           this.imageSprite.material.needsUpdate = true;
@@ -373,26 +380,28 @@ class MorseSmaleWindow extends React.Component {
       this.imageSprite.visible = false;
     }
   }
-  
-  // get a single sample at the given percent along the selected crystal
-  // todo:
-  // - if no model, hide sprites
-  // - show adjacent sprites at field's value closest <= and >= to this percent along crystal
+
+  /*
+   * Get a single sample at the given percent along the selected crystal
+   * @param {float} percent along current crystal to evaluate (in range [0,1])
+   * todo:
+   *  - if no model, hide sprites
+   *  - show adjacent sprites at field's value closest <= and >= to this percent along crystal
+   */
   async evalModel(percent) {
     console.log("evalModel("+percent+")");
     let crystalID = this.pickedCrystal.name;
     if (this.state.evalModel.inProgress) {
       this.state.evalModel.next = { crystalID, percent };
-      console.log("evalModel in progress, setting next to("+percent+")");
+      //console.log("evalModel in progress, setting next to("+percent+")");
     }
     else {
       this.state.evalModel.inProgress = true;
       this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/, false /*validate*/, percent).then((image) => {
-        console.log("evalModel("+percent+") complete! setting image");
+        //console.log("evalModel("+percent+") complete! setting image");
         this.setImage(image);
         this.state.evalModel.inProgress = false;
         if (this.state.evalModel.next !== undefined) {
-          console.log("evalModel.next exists, calling that now(id: "+this.state.evalModel.next.crystalID+", pct: "+this.state.evalModel.next.percent+")");
           this.evalModel(this.state.evalModel.next.percent);
           this.state.evalModel.next = undefined;
         }
@@ -402,94 +411,70 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * guess how far point is along a curve
+   * Compute how far point is along a curve
+   * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
+   * @return percent of mouse position along currently selected crystal
    */
-  //getPercent(curve, pt, matrix) {
   getPercent(normalizedPosition) {
-    // TODO: only finding [.4 to .95] along a curve <ctc> fixme
-    // <ctc> definitely something not working right with this projection.
-    //   - Maybe upside-down normalized pt?
-    //   - maybe severely non-uniform point spacing on curve
-    //   - and maybe both
-    // let p1 = curve.getPoint(0.0).applyMatrix4(matrix);
-    // let p0 = curve.getPoint(1.0).applyMatrix4(matrix);
-    // let B = new Vector3().subVectors(p1, p0).normalize();
-    // let A = new Vector3().subVectors(pt, p0).normalize();
-    // let percent = Math.acos(A.dot(B)); // a dot b = |a| * |b| * cos(theta) 
-    // return Math.max(0.0, Math.min(1.0, percent));
-
-    // TODO: make this a function (maybe use it as getPercent instead of what's there)
-    // pick projected the curve's endpoints to normalized screen coords
-    // just like getPercent, project vector (pt - p0) to (p1 - p0) to get percent
+    // project vector (pt - p0) to (p1 - p0) to get percent
     let curveVec = new Vector2().subVectors(this.state.evalModel.p1, this.state.evalModel.p0);
     let pickVec = new Vector2().subVectors(normalizedPosition, this.state.evalModel.p0);
 
 
- 
+
     // add a visible pickVec for debugging
     if (this.state.evalModel.debugPt) {
       this.uiScene.remove(this.state.evalModel.debugPt);
     }
-    let vertices = [normalizedPosition.x,normalizedPosition.y,0, this.state.evalModel.p0.x,this.state.evalModel.p0.y,0];
-		var colors =   [.5,1,0.5,       0.5,0.5,1];
-		var	material = new THREE.LineBasicMaterial( { color: 0xffffff, vertexColors: true } );
-    var geometry = new THREE.BufferGeometry();
-    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-		this.state.evalModel.debugPt = new THREE.Line(geometry, material);
-		this.uiScene.add( this.state.evalModel.debugPt );
+    this.state.evalModel.debugPt = this.addLine(this.uiScene, [normalizedPosition.x, normalizedPosition.y, 0],
+                                                [this.state.evalModel.p0.x, this.state.evalModel.p0.y, 0]);
     this.renderScene();
 
 
-    let dot = pickVec.dot(curveVec);
-    let pvlen = pickVec.length();
+
+    // compute percent of projected pickVec along curveVec
     let crvlen = curveVec.length();
     curveVec.normalize();
-
-    let percent = pickVec.dot(curveVec); // a dot b = |a| * |b| * cos(theta) 
-    if (percent === NaN) percent = 0.0; // if p0 == p1 (an unlikely but possible projection) percent will come out NaN
+    let percent = pickVec.dot(curveVec); // a dot b = |a| * |b| * cos(theta)
     percent = percent / crvlen;
+
+    // clamp percent and handle div by 0
+    if (percent === NaN) percent = 0.0; // div by 0 if p0 == p1 (an unlikely but possible projection)
     percent = Math.max(0.0, Math.min(1.0, percent));
-    console.log("guessing we're at percent "+percent+" along currently selected crystal.");
+
     return percent;
   }
-  
+
   /**
    * Projects the crystal's endpoints to normalized screen space.
    * @param {object} crystal object (a mesh)
    * @param {point} normalized screen space position ([-1,1], [-1,1])
    */
   projectExtrema(crystal) {
-    // get original endpoints and apply current geometry's transformation, then 
+    // get original endpoints and apply current geometry's transformation, then
     // use camera's transformation to bring them into normalized screen space
     let matrix = crystal.matrix
     let curve = crystal.geometry.parameters.path;
     let p0 = curve.getPoint(0.0).applyMatrix4(matrix).project(this.camera);
     let p1 = curve.getPoint(1.0).applyMatrix4(matrix).project(this.camera);
-    
+
     this.state.evalModel.p0.set(p0.x, p0.y);
     this.state.evalModel.p1.set(p1.x, p1.y);
-
 
 
     // add a visible line for debugging
     if (this.state.evalModel.debugLine) {
       this.uiScene.remove(this.state.evalModel.debugLine);
     }
-    let vertices = [p0.x,p0.y,0, p1.x,p1.y,0];
-		var colors =   [0.5,0.5,1,       1,0.5,0.5];
-		var	material = new THREE.LineBasicMaterial( { color: 0xffffff, vertexColors: true } );
-    var geometry = new THREE.BufferGeometry();
-    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-		geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );
-		this.state.evalModel.debugLine = new THREE.Line(geometry, material);
-		this.uiScene.add( this.state.evalModel.debugLine );
+    this.state.evalModel.debugLine = this.addLine(this.uiScene, [this.state.evalModel.p0.x, this.state.evalModel.p0.y, 0],
+                                                  [this.state.evalModel.p1.x, this.state.evalModel.p1.y, 0],
+                                                  new THREE.Color(0.5, 0.5, 1.0));
     this.renderScene();
   }
 
   /**
    * Pick level set of decomposition
-   * @param {object} normalizedPosition
+   * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
    * @return returns false if nothing picked and scene rotation can continue
    */
   pick(normalizedPosition) {
@@ -505,44 +490,22 @@ class MorseSmaleWindow extends React.Component {
 
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
-      let percent = 0.5; // where we are along selected crystal
 
-      if (intersectedObjects[0].object === this.crystalPosObject || intersectedObjects[0].object === this.pickedCrystal) {
-        // picked active pointer along curve, or already selected curve, so update its position
-        console.log('You clicked the crystalPosObject or the already selected crystal');
-        crystalID = this.pickedCrystal.name;
-
-        // use the extrema of the selected crystal to guess how far along it to place slider
-        let curve = this.pickedCrystal.geometry.parameters.path;
-
-        // change position of crystalPos slider
-        this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
-      }
-      else {
+      if (intersectedObjects[0].object !== this.crystalPosObject && intersectedObjects[0].object !== this.pickedCrystal) {
         console.log('New crystal selected (' + crystalID + ')');
+        // otherwise picked active pointer along curve, or already selected curve, so do nothing
 
         // ensure previously selected object is back to unselected opacity
         if (this.pickedCrystal) {
           this.pickedCrystal.material.opacity = this.unselectedOpacity;
         }
-        if (this.crystalPosObject) {
-          this.scene.remove(this.crystalPosObject);
-        }
 
+        // set newly-selected crystal as picked
         this.pickedCrystal = intersectedObjects[0].object;
         this.pickedCrystal.material.opacity = this.selectedOpacity;
 
-        // project extrema to normalized screen space
+        // project extrema of selected crystal to screen space to compute distance along curve
         this.projectExtrema(this.pickedCrystal);
-
-        // use the extrema of the selected crystal to guess how far along it to place slider
-        let curve = this.pickedCrystal.geometry.parameters.path;
-
-        // Add a clickable plane (crystal pos object) perpendicular to the curve
-        // (using curve.getTangent(u)) at selected position along this crystal
-        // (just another sphere for now).
-        this.crystalPosObject = this.addSphere(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix),
-                                               new THREE.Color('darkorange'), 0.03 /*radius*/);
 
         // highlight this crystal's samples in the other views (e.g., embedding window)
         this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
@@ -550,19 +513,37 @@ class MorseSmaleWindow extends React.Component {
         });
 
         // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
-        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.evalModel.percent);
+        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate);
       }
 
-      // get current percent of pt along this line
-      percent = this.getPercent(normalizedPosition);
+      // ensure current position of selected point on crystal is visible
+      this.crystalPosObject.visible = true;
 
       // evaluate model at selected point along crystal
-      this.evalModel(percent);
+      this.handleContinuousInterpolationMouseMove(normalizedPosition);
 
-      return true; // curve picked and now we can be sliding along it to interpolate model
+      return true; // curve picked and now we can be sliding along it to dynamically interpolate model
     }
 
     return false; // nothing picked so go ahead and rotate
+  }
+
+  /**
+   * Adds a line to the scene
+   * @param {object} scene add the new object to this scene
+   * @param {vector3} p0 
+   * @param {vector3} p1
+   * @param {vector3} color THREE.Color object
+   * returns object added to scene
+   */
+  addLine(scene, p0, p1, color = new THREE.Color(0xddccbb)) {
+    let vertices = p0.concat(p1);
+    var	material = new THREE.LineBasicMaterial( { color: color,  vertexColors: false } );
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+    let line = new THREE.Line(geometry, material);
+    scene.add(line);
+    return line;
   }
 
   /**
@@ -572,14 +553,14 @@ class MorseSmaleWindow extends React.Component {
    * @param {float} radius
    * returns object added to scene
    */
-  addSphere(pos, color, radius = 0.05) {
+  addSphere(scene, pos, color, radius = 0.05) {
     let geometry = new THREE.SphereBufferGeometry(radius, 32, 32);
     let material = new THREE.MeshStandardMaterial({ color:color });
     let mesh = new THREE.Mesh(geometry, material);
     let dist = pos.length();
     let dir = pos.clone().normalize();
     mesh.translateOnAxis(dir, dist);
-    this.scene.add(mesh);
+    scene.add(mesh);
     return mesh;
   }
 
@@ -591,7 +572,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {float} size xy dims
    * returns object added to scene
    */
-  addPlane( {position = [0,0,0], normal = [0,0,1], size = [1,1], color = null} ) {
+  addPlane({scene, position = [0,0,0], normal = [0,0,1], size = [1,1], color = null} ) {
     if (!color)
       color = new THREE.Color('brown');
     let geometry = new THREE.PlaneBufferGeometry(size[0], size[1]);
@@ -606,39 +587,10 @@ class MorseSmaleWindow extends React.Component {
       mesh.rotate(perp_vec, up_vec.angleTo(normal));
     }
     mesh.translateOnAxis(translation_dir, translation);
-    this.scene.add(mesh);
+    scene.add(mesh);
     return mesh;
   }
 
-  /**
-   * Adds a box to the scene
-   * @param {vector3} pos position
-   * @param {vector3} normal position
-   * @param {vector3} color rgb color
-   * @param {float} size xy dims
-   * returns object added to scene
-   */
-/* TODO for crystal slider
-  addBox(pos = [0,0,0], normal = [0,0,1], size = [1,1], color = null) {
-    if (!color)
-      color = new THREE.Color('brown');
-    let geometry = new THREE.BoxBufferGeometry(size[0], size[1]);
-    let material = new THREE.MeshStandardMaterial({ color:color });
-    let mesh = new THREE.Mesh(geometry, material);
-    let dist = pos.length();
-    let dir = pos.clone().normalize();
-    let up = THREE.Vector3(0,1,0);
-    let perp = dir.clone().cross(up);
-    let eps = 0.001;
-    if (perp.length() > eps) {
-      mesh.rotate(perp, up.angleTo(dir));
-    }
-    mesh.translate(dir, dist);
-    this.scene.add(mesh);
-    return mesh;
-  }
-*/
-  
   /**
    * Adds the regression curves to the scene
    * @param {object} regressionData
@@ -677,7 +629,7 @@ class MorseSmaleWindow extends React.Component {
       let count = curveGeometry.attributes.position.count; // geom size; we need to set a color per point in the geometry
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
       let colorAttribute = curveGeometry.attributes.color;
-      
+
       // set colors and material
       let color = new THREE.Color;
       for (let i = 0; i <= extrusionSegments; ++i) {
@@ -705,8 +657,6 @@ class MorseSmaleWindow extends React.Component {
       curveGeometry.computeBoundingBox();
       this.state.boundingBox.union(curveGeometry.boundingBox);
     });
-
-    
   }
 
   /**
@@ -717,7 +667,7 @@ class MorseSmaleWindow extends React.Component {
     extrema.forEach((extreme) => {
       let position = new THREE.Vector3().fromArray(extreme.position);
       //todo: scale radius relative to this.bounds; ~0.05 (default) is good for bounds of size 1, 1, 1.
-      this.addSphere(position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
+      this.addSphere(this.scene, position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
     });
   }
 
@@ -732,7 +682,7 @@ class MorseSmaleWindow extends React.Component {
 
     // instantiate a loader and sprites
     this.textureLoader = new THREE.TextureLoader();
-    
+
     // imageSprite
     this.spriteScale = 0.25;
     this.imageSprite = new THREE.Sprite();
@@ -785,7 +735,7 @@ class MorseSmaleWindow extends React.Component {
     this.perspCamera.add(new THREE.PointLight(0xffffff));
     this.perspCamera.name = "camera";
     this.updatePerspCamera(width, height);
-    
+
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
     this.perspControls.enabled = false;
     this.perspControls.screenSpacePanning = true;
@@ -818,7 +768,7 @@ class MorseSmaleWindow extends React.Component {
     this.controls.enabled = true;
     this.controls.reset();
   }
-  
+
   /**
    * updateOrthoCamera
    */
@@ -831,7 +781,7 @@ class MorseSmaleWindow extends React.Component {
     this.orthoCamera.near   = -16;
     this.orthoCamera.far    = 16;
   }
-  
+
   /**
    * updatePerspCamera
    */
@@ -867,7 +817,8 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.ambientLight);
 
     this.pickedCrystal = undefined;
-    this.crystalPosObject = undefined;
+    this.crystalPosObject = this.addSphere(this.scene, new THREE.Vector3(), new THREE.Color('darkorange'), 0.03 /*radius*/);
+    this.crystalPosObject.visible = false;
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
   }
@@ -879,7 +830,7 @@ class MorseSmaleWindow extends React.Component {
     var scene = Object.values(this.scene.children);
     this.renderer.clear();
 
-    // render first... 
+    // render first...
     this.renderer.render(this.scene, this.camera);
 
     // ...then outline

@@ -734,7 +734,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto numZ = request["numSamples"].asInt();
   auto percent = request["percent"].asFloat();
   std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistence <<"; datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname;
-  if (numZ == 1) std::cout << " (percent is " << percent;
+  if (numZ == 1) std::cout << " (percent is " << percent << ")";
   std::cout << std::endl;
   
   // get the vector of values for the field
