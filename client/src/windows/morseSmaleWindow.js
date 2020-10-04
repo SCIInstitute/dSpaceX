@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { SpriteMaterial } from 'three/src/materials/SpriteMaterial.js';
+import { Box3 } from 'three/src/math/Box3.js';
+import { Vector3 } from 'three/src/math/Vector3.js';
+import { Vector2 } from 'three/src/math/Vector2.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
 import { withDSXContext } from '../dsxContext';
@@ -21,8 +25,15 @@ class MorseSmaleWindow extends React.Component {
     this.numInterpolants = 50; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
-      selectingCrystal: false,
-      percent: 0.5,
+      drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
+      boundingBox: undefined,           // set when curves added to scene, used to set up camera
+      evalModel: { inProgress: false,   // dragging along a crystal
+                   next: undefined,     // { crystalID, percent }
+                   sprites: undefined,  // { nearestLesser, interpolated, nearestGreater }
+                   p0: new Vector2(),   // projection of currently selected curve to normalized screen coordinates
+                   p1: new Vector3(),
+                 },
+      validate: false,                  // when crystal selected, use model's z_coords to reconstruct original shapes
     };
 
     this.client = this.props.dsxContext.client;
@@ -38,6 +49,7 @@ class MorseSmaleWindow extends React.Component {
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
 
     this.pick = this.pick.bind(this);
     this.getPickPosition = this.getPickPosition.bind(this);
@@ -51,8 +63,10 @@ class MorseSmaleWindow extends React.Component {
     this.renderScene = this.renderScene.bind(this);
 
     this.addSphere = this.addSphere.bind(this);
+    this.addLine = this.addLine.bind(this);
+    this.setImage = this.setImage.bind(this);
   }
-  
+
   /**
    * Called by react when this component mounts.
    * Initializes Three.js for drawing and adds event listeners.
@@ -61,6 +75,7 @@ class MorseSmaleWindow extends React.Component {
     this.init();
     window.addEventListener('resize', _.debounce(this.resizeCanvas, 200));
     window.addEventListener('keydown', this.handleKeyDownEvent);
+    this.refs.msCanvas.addEventListener('wheel', _.debounce(this.onMouseWheel, 50));
     this.refs.msCanvas.addEventListener('mousedown', this.onMouseDown);
   }
 
@@ -101,6 +116,12 @@ class MorseSmaleWindow extends React.Component {
         }
       });
     }
+
+    // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)
+    if (this.state.drawerAdded == false && this.props.drawerImages.length > 0) {
+      this.resizeCanvas();
+      this.state.drawerAdded = true;
+    }
   }
 
   /**
@@ -123,20 +144,24 @@ class MorseSmaleWindow extends React.Component {
     this.refs.msCanvas.addEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.addEventListener('mouseup', this.onMouseUp);
 
-    // if left button clicked start a potential crystal selection action
-    if (event.button === 0)
-      this.setState({ selectingCrystal:true });
+    // left click to select and slide
+    if (event.button === 0 && this.pick(this.getPickPosition(event))) {
+      this.continuousInterpolation = true;
+      this.controls.enabled = false;
+    }
   }
-  
+
   /**
    * mousemove ends a potential crystal so rotations don't accidentally select a crystal
    */
   onMouseMove(event) {
-    this.setState({ selectingCrystal:false });
-
-    // can release these event handlers now since orbit controls handles camera
-    this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
-    this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
+    if (this.continuousInterpolation) {
+      this.handleContinuousInterpolationMouseMove(this.getPickPosition(event));
+    }
+    else {
+      // can release mousemove handler since orbit controls handles camera
+      this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
+    }
   }
 
   /**
@@ -145,15 +170,23 @@ class MorseSmaleWindow extends React.Component {
   onMouseUp(event) {
     this.refs.msCanvas.removeEventListener('mousemove', this.onMouseMove);
     this.refs.msCanvas.removeEventListener('mouseup', this.onMouseUp);
-    
-    // Handle left click release
-    if (this.state.selectingCrystal && event.button === 0) {
-      this.pick(this.getPickPosition(event),
-                event.ctrlKey && !event.shiftKey /*showOrig*/,
-                event.ctrlKey && event.shiftKey /*validate*/);
+
+    // reset camera controls and continuous interpolation state
+    this.controls.enabled = true;
+    this.continuousInterpolation = false;
+
+    // update projected extrema
+    if (this.pickedCrystal !== undefined) {
+      this.projectExtrema(this.pickedCrystal);
     }
   }
 
+  onMouseWheel(event) {
+    // update projected extrema
+    if (this.pickedCrystal !== undefined) {
+      this.projectExtrema(this.pickedCrystal);
+    }
+  }
 
   /**
    * If any of the decomposition settings have changed returns true
@@ -189,9 +222,6 @@ class MorseSmaleWindow extends React.Component {
    * Initializes the renderer, camera, and scene for Three.js.
    */
   init() {
-    //<ctc> debugging vars
-    this.nResizes = 0;
-
     // canvas
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
@@ -200,6 +230,9 @@ class MorseSmaleWindow extends React.Component {
     // scene
     this.scene = new THREE.Scene();
     //this.scene.background = new THREE.Color('whatever'); // do NOT set scene background or outline selection won't work
+
+    // UI
+    this.createUI();
 
     // renderer
     this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
@@ -237,7 +270,6 @@ class MorseSmaleWindow extends React.Component {
    */
   resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
-    //console.log('['+ this.nResizes++ +'] morseSmaleWindow resizing canvas from '+this.refs.msCanvas.width+' x '+this.refs.msCanvas.height+' to '+width+' x '+height);
 
     // update camera
     this.updateCamera(width, height);
@@ -270,6 +302,9 @@ class MorseSmaleWindow extends React.Component {
       this.numInterpolants = Math.max(1, this.numInterpolants - 1);
       console.log("numInterpolants decreased to " + this.numInterpolants)
       break;
+    case 'q': // validate model by interpolating original z-coords to fill drawer when crystal selected
+      this.state.validate = !this.state.validate;
+      break;
     }
     this.renderScene();
   }
@@ -292,23 +327,131 @@ class MorseSmaleWindow extends React.Component {
     * @param {object} event
     * @return {{x: number, y: number}}
     */
-  getPickPosition(event) {
+  getPickPosition(event) {  //todo: maybe rename to getMousePosition
     const pos = this.getCanvasPosition(event);
     const canvas = this.refs.msCanvas;
+    let pick = [ (pos.x / canvas.clientWidth) * 2 - 1, (pos.y / canvas.clientHeight) * -2 + 1 ];
+    //console.log("pick position: "+ pick[0] + ", " + pick[1]);
+
     return {
-      x: (pos.x / canvas.clientWidth) * 2 - 1,
-      y: (pos.y / canvas.clientHeight) * -2 + 1,
+      x: pick[0],
+      y: pick[1],
     };
   }
 
   /**
-   * Pick level set of decomposition
-   * @param {object} normalizedPosition
-   * @param {boolean} showOrig
+   * Handle mouse move for continuous interpolation
+   * @param {Point2} normalized screen space coordinate of pick
    */
-  pick(normalizedPosition, showOrig, validate) {
+  handleContinuousInterpolationMouseMove(normalizedPosition) {
+    // get current percent of selected pt along current crystal, and change position of crystalPos slider
+    let curve = this.pickedCrystal.geometry.parameters.path;
+    let percent = this.getPercent(normalizedPosition);
+    this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
+    this.renderScene();
+    this.evalModel(percent);
+  }
+
+  /*
+   * set the material for the current image, hiding image if no data
+   * @param {data} raw base64 [png] image data
+   */
+  setImage(data) {
+    if (data !== undefined) {
+
+      // load the new image sent from the server
+      this.textureLoader.load(
+        'data:image/png;base64,' + data.img.rawData, function(texture) {
+          this.imageSprite.material.map = texture;
+          this.imageSprite.visible = true;
+          this.imageSprite.material.needsUpdate = true;
+          this.imageSprite.scale.x = this.spriteScale;
+          this.imageSprite.scale.y = texture.image.height / texture.image.width * this.spriteScale;
+          this.renderScene();
+        }.bind(this));
+    }
+    else {
+      this.imageSprite.visible = false;
+    }
+  }
+
+  /*
+   * Get a single sample at the given percent along the selected crystal
+   * @param {float} percent along current crystal to evaluate (in range [0,1])
+   * todo:
+   *  - if no model, hide sprites
+   *  - show adjacent sprites at field's value closest <= and >= to this percent along crystal
+   */
+  async evalModel(percent) {
+    console.log("evalModel("+percent+")");
+    let crystalID = this.pickedCrystal.name;
+    if (this.state.evalModel.inProgress) {
+      this.state.evalModel.next = { crystalID, percent };
+      //console.log("evalModel in progress, setting next to("+percent+")");
+    }
+    else {
+      this.state.evalModel.inProgress = true;
+      this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/, false /*validate*/, percent).then((image) => {
+        //console.log("evalModel("+percent+") complete! setting image");
+        this.setImage(image);
+        this.state.evalModel.inProgress = false;
+        if (this.state.evalModel.next !== undefined) {
+          this.evalModel(this.state.evalModel.next.percent);
+          this.state.evalModel.next = undefined;
+        }
+        this.renderScene();
+      });
+    }
+  }
+
+  /**
+   * Compute how far point is along a curve
+   * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
+   * @return percent of mouse position along currently selected crystal
+   */
+  getPercent(normalizedPosition) {
+    // project vector (pt - p0) to (p1 - p0) to get percent
+    let curveVec = new Vector2().subVectors(this.state.evalModel.p1, this.state.evalModel.p0);
+    let pickVec = new Vector2().subVectors(normalizedPosition, this.state.evalModel.p0);
+
+    // compute percent of projected pickVec along curveVec
+    let crvlen = curveVec.length();
+    curveVec.normalize();
+    let percent = pickVec.dot(curveVec); // a dot b = |a| * |b| * cos(theta)
+    percent = percent / crvlen;
+
+    // clamp percent and handle div by 0
+    if (percent === NaN) percent = 0.0; // div by 0 if p0 == p1 (an unlikely but possible projection)
+    percent = Math.max(0.0, Math.min(1.0, percent));
+
+    return percent;
+  }
+
+  /**
+   * Projects the crystal's endpoints to normalized screen space.
+   * @param {object} crystal object (a mesh)
+   * @param {point} normalized screen space position ([-1,1], [-1,1])
+   */
+  projectExtrema(crystal) {
+    // get original endpoints and apply current geometry's transformation, then
+    // use camera's transformation to bring them into normalized screen space
+    let matrix = crystal.matrix
+    let curve = crystal.geometry.parameters.path;
+    let p0 = curve.getPoint(0.0).applyMatrix4(matrix).project(this.camera);
+    let p1 = curve.getPoint(1.0).applyMatrix4(matrix).project(this.camera);
+
+    this.state.evalModel.p0.set(p0.x, p0.y);
+    this.state.evalModel.p1.set(p1.x, p1.y);
+  }
+
+  /**
+   * Pick level set of decomposition
+   * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
+   * @return returns false if nothing picked and scene rotation can continue
+   */
+  pick(normalizedPosition) {
     if (this.props.decomposition === null) {
-      return;
+      return false;
     }
 
     // Get intersected object
@@ -316,55 +459,63 @@ class MorseSmaleWindow extends React.Component {
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
+
     if (intersectedObjects.length) {
-      if (intersectedObjects[0].object === this.crystalPosObject) {
-        // we picked the active pointer along a curve, so turn on dragging of the pointer
-        //this.draggingCrystalPos = true;  // TODO
-        console.log('You clicked the crystalPosObject!');
+      let crystalID = intersectedObjects[0].object.name;
 
-      }
-      else if (intersectedObjects[0].object === this.pickedObject) {
-        console.log('You clicked the already selected object');
+      if (intersectedObjects[0].object !== this.crystalPosObject && intersectedObjects[0].object !== this.pickedCrystal) {
+        console.log('New crystal selected (' + crystalID + ')');
+        // otherwise picked active pointer along curve, or already selected curve, so do nothing
 
-        // TODO: (maybe) move crystal pos object to selected position along this crystal
-      }
-      else {
-        console.log('New crystal selected');
-
-        // Ensure previously selected object is back to unselected opacity
-        if (this.pickedObject) {
-          this.pickedObject.material.opacity = this.unselectedOpacity;
+        // ensure previously selected object is back to unselected opacity
+        if (this.pickedCrystal) {
+          this.pickedCrystal.material.opacity = this.unselectedOpacity;
         }
 
-        this.pickedObject = intersectedObjects[0].object;
-        this.pickedObject.material.opacity = this.selectedOpacity;
+        // set newly-selected crystal as picked
+        this.pickedCrystal = intersectedObjects[0].object;
+        this.pickedCrystal.material.opacity = this.selectedOpacity;
 
-        // add a clickable plane perpendicular to the curve (using curve.getTangent(u))... or just another sphere for now
-        // Hmm... maybe create one of these for each crystal? Then they can remember their positions per crystal.
-        //        may need to save the catmull rom curves for each crystal in order to move these along the curve.
-        //this.crystalPosObject = this.addSphere(curve.getPoint(0.5), new THREE.Color('darkorange'));
+        // project extrema of selected crystal to screen space to compute distance along curve
+        this.projectExtrema(this.pickedCrystal);
 
-        //...or start with a simple sphere
-        //   // add a clickable sphere along the curve
-        //   this.addSphere(curve.getPoint(0.5), THREE.Color('darkorange'));
+        // highlight this crystal's samples in the other views (e.g., embedding window)
+        this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
+          this.props.onCrystalSelection(result.crystalSamples);
+        });
+
+        // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
+        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate);
       }
 
-      let crystalID = this.pickedObject.name;
+      // ensure current position of selected point on crystal is visible
+      this.crystalPosObject.visible = true;
 
-      // highlights samples from this crystal in other views (e.g., embedding window)
-      this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
-        this.props.onCrystalSelection(result.crystalSamples);
-      });
+      // evaluate model at selected point along crystal
+      this.handleContinuousInterpolationMouseMove(normalizedPosition);
 
-      // Get crystal partitions (parent component updates drawer once they arrive)
-      this.props.evalModelForCrystal(crystalID, this.numInterpolants, showOrig, validate, this.state.percent);
-
-      this.renderScene();
-
-      return true; // tell caller something was picked so event propagation can be stopped (avoiding undesired rotation)
+      return true; // curve picked and now we can be sliding along it to dynamically interpolate model
     }
 
-    return false;
+    return false; // nothing picked so go ahead and rotate
+  }
+
+  /**
+   * Adds a line to the scene
+   * @param {object} scene add the new object to this scene
+   * @param {vector3} p0 
+   * @param {vector3} p1
+   * @param {vector3} color THREE.Color object
+   * returns object added to scene
+   */
+  addLine(scene, p0, p1, color = new THREE.Color(0xddccbb)) {
+    let vertices = p0.concat(p1);
+    var	material = new THREE.LineBasicMaterial( { color: color,  vertexColors: false } );
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+    let line = new THREE.Line(geometry, material);
+    scene.add(line);
+    return line;
   }
 
   /**
@@ -374,14 +525,14 @@ class MorseSmaleWindow extends React.Component {
    * @param {float} radius
    * returns object added to scene
    */
-  addSphere(pos, color, radius = 0.05) {
+  addSphere(scene, pos, color, radius = 0.05) {
     let geometry = new THREE.SphereBufferGeometry(radius, 32, 32);
     let material = new THREE.MeshStandardMaterial({ color:color });
     let mesh = new THREE.Mesh(geometry, material);
     let dist = pos.length();
     let dir = pos.clone().normalize();
     mesh.translateOnAxis(dir, dist);
-    this.scene.add(mesh);
+    scene.add(mesh);
     return mesh;
   }
 
@@ -393,7 +544,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {float} size xy dims
    * returns object added to scene
    */
-  addPlane( {position = [0,0,0], normal = [0,0,1], size = [1,1], color = null} ) {
+  addPlane({scene, position = [0,0,0], normal = [0,0,1], size = [1,1], color = null} ) {
     if (!color)
       color = new THREE.Color('brown');
     let geometry = new THREE.PlaneBufferGeometry(size[0], size[1]);
@@ -408,44 +559,17 @@ class MorseSmaleWindow extends React.Component {
       mesh.rotate(perp_vec, up_vec.angleTo(normal));
     }
     mesh.translateOnAxis(translation_dir, translation);
-    this.scene.add(mesh);
+    scene.add(mesh);
     return mesh;
   }
 
-  /**
-   * Adds a box to the scene
-   * @param {vector3} pos position
-   * @param {vector3} normal position
-   * @param {vector3} color rgb color
-   * @param {float} size xy dims
-   * returns object added to scene
-   */
-/* TODO for crystal slider
-  addBox(pos = [0,0,0], normal = [0,0,1], size = [1,1], color = null) {
-    if (!color)
-      color = new THREE.Color('brown');
-    let geometry = new THREE.BoxBufferGeometry(size[0], size[1]);
-    let material = new THREE.MeshStandardMaterial({ color:color });
-    let mesh = new THREE.Mesh(geometry, material);
-    let dist = pos.length();
-    let dir = pos.clone().normalize();
-    let up = THREE.Vector3(0,1,0);
-    let perp = dir.clone().cross(up);
-    let eps = 0.001;
-    if (perp.length() > eps) {
-      mesh.rotate(perp, up.angleTo(dir));
-    }
-    mesh.translate(dir, dist);
-    this.scene.add(mesh);
-    return mesh;
-  }
-*/
-  
   /**
    * Adds the regression curves to the scene
    * @param {object} regressionData
    */
   addRegressionCurvesToScene(regressionData) {
+    this.state.boundingBox = new Box3();
+
     regressionData.curves.forEach((rCurve, index) => {
       // Use midpoint as curve position to ensure transparency sorting has better odds of working,
       // since conflicts arise when using first or last point, bounding box, etc.
@@ -459,35 +583,32 @@ class MorseSmaleWindow extends React.Component {
         let P = new THREE.Vector3(regressionPoint[0], regressionPoint[1], regressionPoint[2]);
         curvePoints.push(P.sub(midPoint));
       });
+      let cr_curve = new THREE.CatmullRomCurve3(curvePoints);
+
+      let curveColors = [];
+      rCurve.colors.forEach((regressionColor) => {
+        let C = new THREE.Vector3(regressionColor[0], regressionColor[1], regressionColor[2]);
+        curveColors.push(C);
+      });
+      let cr_color = new THREE.CatmullRomCurve3(curveColors, false, "centripetal", 0.9); // match colors by using high tension
 
       // Create curve
-      let curve = new THREE.CatmullRomCurve3(curvePoints);
-      let segmentsPerPoint = 6;
+      let extrusionSegments = 350;
+      let colors = cr_color.getPoints(extrusionSegments); // "interpolate" colors
       let radialSegments = 10;
-      let curveGeometry = new THREE.TubeBufferGeometry(curve, (curvePoints.length-1) * (segmentsPerPoint-1) /*tubularSegments*/,
-                                                       .02 /*radius*/, radialSegments-1, false /*closed curve*/);
-      let count = curveGeometry.attributes.position.count;
+      let radius = 0.02;  // TODO: should be relative to scene size (which needs adjusting as noted in a github issue #158)
+      let curveGeometry = new THREE.TubeBufferGeometry(cr_curve, extrusionSegments, radius, radialSegments, false /*closed curve*/);
+      let count = curveGeometry.attributes.position.count; // geom size; we need to set a color per point in the geometry
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
-      let colors = rCurve.colors, colorAttribute = curveGeometry.attributes.color;
-      
-      // set colors for first point
-      let c1 = new THREE.Color(colors[0][0], colors[0][1], colors[0][2]);
-      for (let r = 0; r < radialSegments; r++) {
-        colorAttribute.setXYZ(r, c1.r, c1.g, c1.b);
-      }
-      // set colors for the rest
-      let c2 = new THREE.Color;
-      let color = new THREE.Color;
-      for (let i = 0; i < curvePoints.length-1; ++i) {
-        c2.setRGB(colors[i+1][0], colors[i+1][1], colors[i+1][2]);
-        for (let j = 1; j < segmentsPerPoint+1; ++j) {
-          color = c1.lerp(c2, 1.0/segmentsPerPoint * j);
-          for (let r = 0; r < radialSegments; r++)
-            colorAttribute.setXYZ(i*segmentsPerPoint*radialSegments + j*radialSegments + r, color.r, color.g, color.b);
-        }
-        c1.copy(c2);
-      }
+      let colorAttribute = curveGeometry.attributes.color;
 
+      // set colors and material
+      let color = new THREE.Color;
+      for (let i = 0; i <= extrusionSegments; ++i) {
+        color.setRGB(colors[i].x, colors[i].y, colors[i].z);
+        for (let r = 0; r <= radialSegments; r++)
+          colorAttribute.setXYZ(i*(radialSegments+1) + r, color.r, color.g, color.b);
+      }
       let curveMaterial = new THREE.MeshStandardMaterial({
         vertexColors: true,
         transparent: true,
@@ -503,6 +624,10 @@ class MorseSmaleWindow extends React.Component {
       curveMesh.translateOnAxis(dir, dist);
 
       this.scene.add(curveMesh);
+
+      // add to scene bounding box
+      curveGeometry.computeBoundingBox();
+      this.state.boundingBox.union(curveGeometry.boundingBox);
     });
   }
 
@@ -514,8 +639,31 @@ class MorseSmaleWindow extends React.Component {
     extrema.forEach((extreme) => {
       let position = new THREE.Vector3().fromArray(extreme.position);
       //todo: scale radius relative to this.bounds; ~0.05 (default) is good for bounds of size 1, 1, 1.
-      this.addSphere(position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
+      this.addSphere(this.scene, position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
     });
+  }
+
+  createUI() {
+    // uiScene
+    this.uiScene = new THREE.Scene();
+
+    // uiCamera
+    this.uiCamera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 2 );
+    this.uiCamera.position.set( 0, 0, 1 );
+    this.uiCamera.name = "uiCamera";
+
+    // instantiate a loader and sprites
+    this.textureLoader = new THREE.TextureLoader();
+
+    // imageSprite
+    this.spriteScale = 0.25;
+    this.imageSprite = new THREE.Sprite();
+    this.imageSprite.position.set(0,-0.85,0); // position of center of sprite
+    this.imageSprite.visible = false;
+    this.uiScene.add(this.imageSprite);
+
+    // for continuous interpolation of a selected crystal
+    this.continuousInterpolation = false;
   }
 
   /**
@@ -523,25 +671,28 @@ class MorseSmaleWindow extends React.Component {
    * There are two types of cameras, perspective and orthographic, each with associated controls.
    * NOTE: need to have essentially "the camera for this scene" before creating controls so that controls.reset() works as expected.
    * TODO: z is normalized by Controller to [0,1], but x/y are not normalized, so adjust target when loading new data.
+   *       use this.state.boundingBox computed in addRegressionCurvesToScene
    */
   createCamerasAndControls() {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
 
     // orthographic
+    const orthoPosition = new THREE.Vector3(0, -1, 0.5);
     this.orthoCamera = new THREE.OrthographicCamera();
     this.orthoCamera.zoom = 2.5;
-    this.orthoCamera.position.set(0, -1, 0.5);
+    this.orthoCamera.position.copy(orthoPosition);
     this.orthoCamera.up.set(0, 0, 1);
-    this.orthoCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.orthoCamera.add(new THREE.PointLight(0xffffff));
     this.orthoCamera.name = "camera";
     this.updateOrthoCamera(width, height);
 
     this.orthoControls = new OrbitControls(this.orthoCamera, this.renderer.domElement);
-    this.orthoControls.enable = false;
+    this.orthoControls.enabled = false;
     this.orthoControls.screenSpacePanning = true;
     this.orthoControls.minDistance = this.orthoCamera.near;
     this.orthoControls.maxDistance = this.orthoCamera.far;
-    this.orthoControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.orthoControls.target0.set(0, 0, 0.5);  // setting position0 and target0 since controls.reset() uses these
+    this.orthoControls.position0.copy(orthoPosition);
     this.orthoControls.addEventListener( 'change', this.renderScene );
 
     // perspective
@@ -549,25 +700,27 @@ class MorseSmaleWindow extends React.Component {
     const aspect = width / height;
     const near = 0.001;
     const far = 100;
+    let perspPosition = new THREE.Vector3(0, -6, 0.5);
     this.perspCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    this.perspCamera.position.set(0, -6, 0.5);
+    this.perspCamera.position.copy(perspPosition);
     this.perspCamera.up.set(0, 0, 1);
-    this.perspCamera.add(new THREE.PointLight(0xffffff, 1));
+    this.perspCamera.add(new THREE.PointLight(0xffffff));
     this.perspCamera.name = "camera";
     this.updatePerspCamera(width, height);
-    
+
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
-    this.perspControls.enable = false;
+    this.perspControls.enabled = false;
     this.perspControls.screenSpacePanning = true;
     this.perspControls.minDistance = this.perspCamera.near;
     this.perspControls.maxDistance = this.perspCamera.far;
-    this.perspControls.target0.set(0, 0, 0.5);  // setting target0 since controls.reset() uses this... todo: try controls.saveState 
+    this.perspControls.target0.set(0, 0, 0.5);  // setting position0 and target0 since controls.reset() uses these
+    this.perspControls.position0.copy(perspPosition);
     this.perspControls.addEventListener( 'change', this.renderScene );
 
     // set default to perspective
     this.camera = this.perspCamera;
     this.controls = this.perspControls;
-    this.controls.enable = true;
+    this.controls.enabled = true;
   }
 
   /**
@@ -575,7 +728,7 @@ class MorseSmaleWindow extends React.Component {
    * Toggles between orthographic and perspective cameras.
    */
   toggleCamera() {
-    this.controls.enable = false;
+    this.controls.enabled = false;
     if (this.camera === this.orthoCamera) {
       this.camera = this.perspCamera;
       this.controls = this.perspControls;
@@ -584,10 +737,10 @@ class MorseSmaleWindow extends React.Component {
       this.camera = this.orthoCamera;
       this.controls = this.orthoControls;
     }
-    this.controls.enable = true;
+    this.controls.enabled = true;
     this.controls.reset();
   }
-  
+
   /**
    * updateOrthoCamera
    */
@@ -600,12 +753,12 @@ class MorseSmaleWindow extends React.Component {
     this.orthoCamera.near   = -16;
     this.orthoCamera.far    = 16;
   }
-  
+
   /**
    * updatePerspCamera
    */
   updatePerspCamera(width, height) {
-    this.perspCamera.aspect = width / height;  // <ctc> aspect ration width/height works, but height/width makes extrema look like ellipses
+    this.perspCamera.aspect = width / height;
   }
 
   /**
@@ -635,8 +788,9 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.camera);        // camera MUST be added to scene for it's light to work
     this.scene.add(this.ambientLight);
 
-    this.pickedObject = undefined;
-    this.crystalPosObject = undefined;
+    this.pickedCrystal = undefined;
+    this.crystalPosObject = this.addSphere(this.scene, new THREE.Vector3(), new THREE.Color('darkorange'), 0.03 /*radius*/);
+    this.crystalPosObject.visible = false;
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
   }
@@ -648,14 +802,14 @@ class MorseSmaleWindow extends React.Component {
     var scene = Object.values(this.scene.children);
     this.renderer.clear();
 
-    // render first... 
+    // render first...
     this.renderer.render(this.scene, this.camera);
 
     // ...then outline
-    if (this.pickedObject !== undefined) {
+    if (this.pickedCrystal !== undefined) {
       // hide everything but selected object for outline
       for (var item of scene) {
-        item.visible = (item === this.pickedObject);
+        item.visible = (item === this.pickedCrystal);
       }
       this.outline.renderOutline(this.scene, this.camera);
 
@@ -664,6 +818,9 @@ class MorseSmaleWindow extends React.Component {
         item.visible = true;
       }
     }
+
+    // ...and finally, the UI
+    this.renderer.render(this.uiScene, this.uiCamera);
   }
 
   /**
