@@ -4,6 +4,8 @@
 #include <chrono>
 #include <exception>
 #include <thread>
+#include <pybind11/embed.h> // everything needed for embedding
+namespace py = pybind11;
 
 const int kDefaultPort = 7681;
 const std::string kDefaultDatapath("../../examples");
@@ -20,6 +22,17 @@ extern "C" void browserText(void *wsi, char *text, int lena) {
 
 int main(int argc, char *argv[])
 {
+  py::scoped_interpreter guard{}; // start the interpreter and keep it alive
+  py::print("Hello, World!"); // use the Python API
+
+  py::module sys = py::module::import("sys");
+  py::print(sys.attr("path"));
+  sys.attr("path").attr("insert")(1, "/Users/cam/code/dSpaceX/data/test");
+  py::print(sys.attr("path"));
+  py::object DataProc = py::module::import("call_from_server"); // run server from <src>/<build>
+  auto foo = DataProc.attr("add")(4, 3).cast<int>();
+  std::cout << "result: " << foo << std::endl;
+
   using optparse::OptionParser;
   OptionParser parser = OptionParser().description("dSpaceX Server");
   parser.add_option("-p", "--port").dest("port").type("int").set_default(kDefaultPort).help("server port");

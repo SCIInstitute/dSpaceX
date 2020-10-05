@@ -5,6 +5,7 @@ FIND_PACKAGE(Threads)
 FIND_PACKAGE(ZLIB REQUIRED)
 FIND_PACKAGE(LAPACK REQUIRED)
 FIND_PACKAGE(BLAS REQUIRED)
+find_package(pybind11 REQUIRED)
 
 SET(SERVER_INCLUDE_FILES
   Controller.h
@@ -22,6 +23,7 @@ target_include_directories(dSpaceX PUBLIC
 TARGET_LINK_LIBRARIES(dSpaceX
   base64
   ${BLAS_LIBRARIES}
+  pybind11::embed
   boostparts
   dl
   hdprocess

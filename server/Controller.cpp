@@ -28,6 +28,8 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <pybind11/embed.h>
+namespace py = pybind11;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
 using Clock = std::chrono::steady_clock;
@@ -700,6 +702,10 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
 void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
+
+  // test calling a python function from c++ (will be used to evaluate models and/or generate thumbnails as needed)
+  py::object DataProc = py::module::import("call_from_server");
+  DataProc.attr("add")(2, 4);
 
   // category of the passed fieldname (design param or qoi)
   Fieldtype category = Fieldtype(request["category"].asString());

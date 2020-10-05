@@ -1,4 +1,4 @@
-# dSpaceX Pre-processing Tool
+# dSpaceX Processing Tool
 The dSpaceX data processing tool is intended to make dSpaceX more user friendly. The data processing tool takes a JSON file as
 input and outputs the files that the dSpaceX server and UI require, including:
 - The config.yaml which specifics the location and format of the processed data.
@@ -8,8 +8,7 @@ input and outputs the files that the dSpaceX server and UI require, including:
 - (TODO) The Morse-Smale decomposition.
 - The latent space models for design prediction; currently only generates PCA models. 
 
-Currently, there are two paths through the tool. Either a user can generate all the initial data (distances, embeddings, configs, etc) 
-or they can generate a latent space model based on a Morse-Smale parition of the data.
+Currently, there are two paths through the tool. Either a user can generate all the initial data (distances, embeddings, configs, etc) or they can generate a latent space model based on a Morse-Smale partition of the data.
 
 The JSON file needs to specify the location of the original data, including, the input parameters, the quantities of interest,
 and the design shape representation — usually these are images or volumes.
@@ -33,12 +32,12 @@ already set up the server and/or the client then the conda environment should be
    ```
 2. In the terminal, navigate to the pre-processing tool directory.
 ```bash
-   cd [your dSpaceX directory]/preprocessor/
+   cd [your dSpaceX directory]/data/
    ```
-3. Run the preprocess_main.py python script, this takes one argument a JSON file which specifies data locations and settings
+3. Run the process_main.py python script, this takes one argument a JSON file which specifies data locations and settings
 for the tool, below we provide detailed examples of the JSON files.
 ```bash
-   <.../dSpaceX/preprocessor>$ python preprocessor_main.py <path_to_your_config_file>/<file_name>.json 
+   <.../dSpaceX/data>$ python processor_main.py <path_to_your_config_file>/<file_name>.json 
    ```
 
 ## The JSON file
@@ -111,7 +110,7 @@ path to the csv file.
 To use a Python script that is called when the distance matrix is calculated set the distance.type
 to "script". You will also need to provide the module name and the method name. If your method takes
 any arguments please provide them as a field called "arguments". If your method does not take any
-arguments then exclude the "arguments" field from the JSON. Please note, the method you create and that the preprocessor calls
+arguments then exclude the "arguments" field from the JSON. Please note, the method you create and that the data processor calls
 should take a list of arguments and not individual arguments. The pre-processing tool is simply passing
 the list from the JSON file to your method, the list can be heterogeneous.
 ```json

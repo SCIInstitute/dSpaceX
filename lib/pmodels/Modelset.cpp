@@ -13,6 +13,8 @@ bool MSModelset::hasModel(int p, int c) const
 /* 
  * returns model crystal of persistence level, creating/reading it if necessary
  * TODO: use persistence range for this complex to facilitae global persistence passed to getModel function
+ *       i.e., when only a subset of N of the P total M-S persistences is used, desired p is in range [0,P-1], and pidx = p - N.
+ *             Don't make the called precalculate this since it forces them to know too much about the modelset.
  */
 std::shared_ptr<Model> MSModelset::getModel(int p, int c)
 {

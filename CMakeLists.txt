@@ -59,7 +59,7 @@ ADD_SUBDIRECTORY(ExternalLibs/tinyply)
 ADD_SUBDIRECTORY(lib/utils)
 ADD_SUBDIRECTORY(lib/pmodels)
 ADD_SUBDIRECTORY(lib/dspacex)
-ADD_SUBDIRECTORY(data/cpp_bindings)
+ADD_SUBDIRECTORY(python)            # dspacex python module
 
 if(BUILD_SERVER_LIB)
   INCLUDE_DIRECTORIES(ExternalLibs/boost)
