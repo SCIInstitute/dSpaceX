@@ -8,7 +8,7 @@ using namespace pybind11::literals;  // enables handy "argname"_a rather than py
 
 //#include <sstream>
 
-#include "Models.h"
+#include "Model.h"
 using namespace dspacex;
 
 // used for demonstration of submodule creation below

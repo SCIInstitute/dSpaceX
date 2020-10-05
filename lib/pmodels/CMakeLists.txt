@@ -1,11 +1,11 @@
 SET(PMODELS_HEADER_FILES
   Modelset.h
-  Models.h
+  Model.h
 )
 
 SET(PMODELS_SOURCE_FILES
   Modelset.cpp
-  Models.cpp
+  Model.cpp
 )
 
 ADD_LIBRARY(pmodels ${PMODELS_HEADER_FILES} ${PMODELS_SOURCE_FILES})

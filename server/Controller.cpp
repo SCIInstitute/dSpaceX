@@ -16,7 +16,7 @@
 #include "utils/DenseVectorSample.h"
 #include "utils/loaders.h"
 #include "utils/utils.h"
-#include "pmodels/Models.h"
+#include "pmodels/Model.h"
 
 #include <cassert>
 #include <algorithm>
