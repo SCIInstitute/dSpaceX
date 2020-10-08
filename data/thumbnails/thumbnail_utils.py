@@ -4,14 +4,21 @@ from numpy.linalg import inv
 from PIL import Image
 import pyrender
 import trimesh
+from vtk.util import numpy_support
+import vtk
 
-
-def generate_image_from_vertices_and_faces(vertices, faces):
+def generate_image_from_vertices_and_faces(vertices, faces = []):
     """
     From the vertices and faces of a mesh generates a 2D thumbnail.
     :param vertices: The mesh vertices.
     :param faces: The mesh faces.
     """
+    if len(faces) == 0:  # fixme: make this somehow sustainable; same with hard-coded values all over this function
+        original_mesh_directory = '/Users/cam/data/dSpaceX/latest/nanoparticles_mesh/unprocessed_data/shape_representations/1.ply'
+        print("faces not set, so using defaults from " + original_mesh_directory)
+        original_mesh = trimesh.load_mesh(original_mesh_directory, process=False)
+        faces = original_mesh.faces
+
     # Initialize scene and set-up static objects
     gold_material = pyrender.MetallicRoughnessMaterial(baseColorFactor=[1.0, 0.766, 0.336, 1.0],
                                                        roughnessFactor=.25,
@@ -66,6 +73,120 @@ def generate_image_from_vertices_and_faces(vertices, faces):
 
     return pil_img
 
+def vtkRenderMesh(vertices, faces = []):
+    """
+    From the vertices and faces of a mesh generates a 2D thumbnail.
+    :param vertices: The mesh vertices.
+    :param faces: The mesh faces.
+    """
+    polydata = vtk.vtkPolyData()
+
+    if len(faces) == 0:  # fixme: make this somehow sustainable; same with hard-coded values all over the place
+        default_mesh = '/Users/cam/data/dSpaceX/latest/nanoparticles_mesh/unprocessed_data/shape_representations/1.ply'
+        print("faces not set, so using defaults from " + default_mesh)
+        reader = vtk.vtkPLYReader()
+        reader.SetFileName(default_mesh)
+        reader.Update() # when this function is called from c++, this line causes:
+    # dSpaceX[24453:12650119] dynamic_cast error 1: Both of the following type_info's should have public visibility.
+    #                                               At least one of them is hidden.
+    #               NSt3__113basic_istreamIcNS_11char_traitsIcEEEE,
+    #               NSt3__114basic_ifstreamIcNS_11char_traitsIcEEEE.
+    # Super verbose `python -vvv` doesn't produce this error, so something with pybind11? Ignoring for now.
+        polydata.SetPolys(reader.GetOutput().GetPolys())
+    else:
+        polydata.SetPolys(faces)
+        
+    #<ctc> let's see what that eigen matrix looks like...
+    print("vertices: shape " + str(vertices.shape) + ", dtype " + str(vertices.dtype))
+
+    # <ctc> hack since Controller needs to reshape before it sends to python function
+    vertices = vertices.reshape((-1, 3))
+    print("vertices: shape " + str(vertices.shape) + ", dtype " + str(vertices.dtype))
+
+    # initialize points
+    points = vtk.vtkPoints()
+    points.SetNumberOfPoints(len(vertices));
+    for i in range(len(vertices)):
+        points.SetPoint(i, vertices[i])
+
+    polydata.SetPoints(points)
+
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputData(polydata)
+
+    colors = vtk.vtkNamedColors()
+    bkg = map(lambda x: x / 255.0, [26, 51, 102, 255])
+    colors.SetColor("BkgColor", *bkg)
+
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetColor(colors.GetColor3d("Tomato"))
+    actor.RotateX(30.0)
+    actor.RotateY(-45.0)
+
+    # Create the graphics structure. The renderer renders into the render
+    ren = vtk.vtkRenderer()
+    renWin = vtk.vtkRenderWindow()
+    renWin.AddRenderer(ren)
+    renWin.OffScreenRenderingOn()   # ***** don't open a window *****
+
+    # Add the actors to the renderer, set the background and size
+    ren.AddActor(actor)
+    ren.SetBackground(colors.GetColor3d("BkgColor"))
+    renWin.SetSize(300, 300)
+    renWin.SetWindowName('TwistyTurnyNanoparticle')
+
+    # We'll zoom in a little by accessing the camera and invoking a "Zoom"
+    ren.ResetCamera()
+    ren.GetActiveCamera().Zoom(1.5)
+    renWin.Render()
+
+    # screenshot code:
+    w2if = vtk.vtkWindowToImageFilter()
+    w2if.SetInput(renWin)
+    w2if.SetInputBufferTypeToRGB()
+    w2if.ReadFrontBufferOff()
+    w2if.Update()
+
+    # return the vtk image
+    return w2if.GetOutput()
+
+# <ctc> try this, but also just try attr("generate_image_from_vertices_and_faces").attr("pilImageToByes")() -> yay, works!
+def getPILImage():
+    """
+    Returns the byte array of the uncompressed image.
+    """
+    original_img_directory = '/Users/cam/data/dSpaceX/latest/nanoparticles_mesh/processed_data/thumbnails/5.png'
+    print("no image to convert, so using defaults from " + original_img_directory)
+    return Image.open(original_img_directory)
+
+def pilImageToBytes(img = None):
+    """
+    Returns the byte array of the uncompressed image.
+    """
+    if not img:
+        img = getPILImage()
+    return img.tobytes()
+
+def writeVtkImage(img, filename):
+    writer = vtk.vtkPNGWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(img)
+    writer.Write()
+
+def getVtkImage():
+    pngreader = vtk.vtkPNGReader()
+    pngreader.SetFileName("/tmp/1.png")
+    pngreader.Update()
+    return pngreader.GetOutput()
+
+def vtkToNumpy(vtkimg = None):
+    """
+    Just a test: returns the byte array of a vtk image as a numpy array. Can Controller use it? Stay tuned...
+    """
+    if not vtkimg:
+        vtkimg = getVtkImage()
+    return numpy_support.vtk_to_numpy(vtkimg.GetPointData().GetScalars())
 
 def look_at(eye, target, up):
     eye = np.array(eye)

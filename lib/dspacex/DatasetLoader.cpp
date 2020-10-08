@@ -391,7 +391,6 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 }
 
 // There is a model for each crystal of each persistence level of a M-S complex...
-// TODO: too much to read all at once, so only read them on demand.
 //
 // In the config.yaml for the dataset:
 // models:
@@ -546,7 +545,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
   auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
-  std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << "using:";
+  std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << " samples using:\n";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
     return nullptr;

@@ -22,6 +22,8 @@ class Controller {
   void handleText(void *wsi, const std::string &text);
 
  private:
+  Controller() = delete;
+  
   bool verifyFieldname(Fieldtype type, const std::string &name);
 
   void configureCommandHandlers();
@@ -91,7 +93,6 @@ class Controller {
   bool m_currentAddNoise{true};
   int m_currentPersistenceDepth{20};
   bool m_currentNormalize{true};
-
 };
 
 } // dspacex

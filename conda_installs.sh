@@ -65,7 +65,8 @@ function install_conda() {
        pillow=7.0.0 \
        pyyaml=5.3.1 \
        matplotlib==3.2.1 \
-       pybind11==2.5.0
+       pybind11==2.5.0 \
+       vtk==9.0.1 \
        scikit-image==0.17.2
   then return 1; fi
 
@@ -80,6 +81,7 @@ function install_conda() {
   if ! pip install pynrrd==0.4.2; then return 1; fi
   if ! pip install pyrender==0.1.39; then return 1; fi
   if ! pip install grip==4.5.2; then return 1; fi
+  if ! pip install scikit-iamge==0.17.2; then return 1; fi
 
   conda info
   return 0

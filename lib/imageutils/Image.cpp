@@ -43,6 +43,35 @@ Image::Image(const Eigen::MatrixXf &I, unsigned w, unsigned h, unsigned c, bool 
   new (&tmp) Eigen::Map<EigenImage>(nullptr, -1, -1);
 }
 
+// initialize by copying from a char array of the raw image
+Image::Image(const unsigned char data[], unsigned w, unsigned h, unsigned c) :
+  m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
+  m_data(data, data + w * h * c), m_decompressed(true)
+{
+  if (c != 1 && c != 3 && c != 4) {
+    throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
+  }
+}
+
+// initialize by moving an input vector of the raw image
+Image::Image(std::vector<unsigned char> &&data, unsigned w, unsigned h, unsigned c) :
+  m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
+  m_data(data), m_decompressed(true)
+{
+  if (c != 1 && c != 3 && c != 4) {
+    throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
+  }
+}
+
+// initialize by moving an input vector of the raw image
+Image::Image(std::string &&data, unsigned w, unsigned h, unsigned c) :
+  m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
+  m_data(data.begin(), data.end()), m_decompressed(true)
+{
+  if (c != 1 && c != 3 && c != 4) {
+    throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
+  }
+}
 Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {
   // identify resolution and format
   std::vector<unsigned char> png;
@@ -58,7 +87,7 @@ Image::Image(const std::string& filename, bool decompress) : m_decompressed(deco
     state.info_raw.colortype = LCT_GREY;
     m_format = LCT_GREY;
   }
-  else if (state.info_png.color.colortype = LCT_RGBA) {
+  else if (state.info_png.color.colortype == LCT_RGBA) {
     state.info_raw.colortype = LCT_RGBA;
     m_format = LCT_RGBA;
   }

@@ -17,6 +17,10 @@ class Image {
   /// load an image from a png file (throw exception on failure)
   Image(const std::string& filename, bool decompress = false);
 
+  Image(const unsigned char data[], unsigned w, unsigned h, unsigned c);
+  Image(std::vector<unsigned char> &&data, unsigned w, unsigned h, unsigned c);
+  Image(std::string &&data, unsigned w, unsigned h, unsigned c);
+
   /// write image (throw exception on failure)
   void write(const std::string& filename) const;
 

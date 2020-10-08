@@ -5,6 +5,7 @@
 #include <exception>
 #include <thread>
 #include <pybind11/embed.h> // everything needed for embedding
+#include <pybind11/eigen.h> // <ctc> testing this will work in main thread (crashes from Controller, which is a thread)
 namespace py = pybind11;
 
 const int kDefaultPort = 7681;
@@ -27,11 +28,36 @@ int main(int argc, char *argv[])
 
   py::module sys = py::module::import("sys");
   py::print(sys.attr("path"));
-  sys.attr("path").attr("insert")(1, "/Users/cam/code/dSpaceX/data/test");
+  sys.attr("path").attr("insert")(1, "/Users/cam/code/dSpaceX");
   py::print(sys.attr("path"));
-  py::object DataProc = py::module::import("call_from_server"); // run server from <src>/<build>
-  auto foo = DataProc.attr("add")(4, 3).cast<int>();
-  std::cout << "result: " << foo << std::endl;
+
+  // import the module and call the add function from this module
+  // py::object cfs_module = py::module::import("data.test.call_from_server");
+  // auto foo = cfs_module.attr("add")(4, 3).cast<int>();
+
+  // or put them all together and import the function itself (I suspect this still imports the whole module)
+  //py::function add_func = py::module::import("data.test.call_from_server").attr("add").cast<py::function>();
+  //auto foo = add_func(4, 3).cast<int>();
+  //std::cout << "result: " << foo << std::endl;
+
+  // <ctc> NOTE: had problems with imports, but now they seem okay... here is what I was going to add to Controller and why:
+  // pybind11 modules callable from c++ (issues importing more than once, so just hanging on to them here for now)
+  // note: probably related to this https://github.com/pybind/pybind11/issues/1439, so we just need to initialize the
+  //       interpreter every time it's used.
+  //py::function imageFromPts;
+
+  // test that this function can be called from main thread (it crashes opening a GL window from Controller)
+  py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
+  Eigen::MatrixXf I = Eigen::MatrixXf::Random(1, 299568);
+  auto vtkimg = thumbnail_utils_module.attr("vtkRenderMesh")(I);
+  auto npimg = thumbnail_utils_module.attr("vtkToNumpy")(vtkimg).cast<py::array_t<unsigned char>>();
+
+  // import the thumbnail_utils module
+  // py::object data_module = py::module::import("data");
+  // py::object thumbnails_module = py::module::import("data.thumbnails");
+  // py::object eff_vtk = py::module::import("vtk");
+  // py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
+  // py::function img_from_pts = thumbnail_utils_module.attr("generate_image_from_vertices_and_faces").cast<py::function>();
 
   using optparse::OptionParser;
   OptionParser parser = OptionParser().description("dSpaceX Server");

@@ -22,7 +22,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.selectedOpacity = 1.0;
     this.unselectedOpacity = 0.80;
-    this.numInterpolants = 50; // how many samples to generate using current model [to fill drawer]
+    this.numInterpolants = 8; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it

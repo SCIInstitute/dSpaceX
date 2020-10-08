@@ -29,6 +29,7 @@
 #include <string>
 #include <chrono>
 #include <pybind11/embed.h>
+#include <pybind11/eigen.h>
 namespace py = pybind11;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
@@ -681,6 +682,20 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
   }
 }
 
+/*
+ * copy contents of pyvec into a standard vector
+ */
+template<typename T>
+std::vector<T> toStdVec(const py::array_t<T>& pyvec) {
+  py::buffer_info info = pyvec.request();
+  int n = 1;
+  for (auto r: info.shape) {
+    n *= r;
+  }
+  auto ptr = static_cast<T*>(info.ptr);
+  return std::vector<T>(ptr, ptr + n);
+}
+
 /**
  * This returns a set of new samples (images) computed with the given ShapeOdds model for
  * the specified crystal at this persistence level using numZ latent space coordinates.
@@ -704,8 +719,12 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     return setError(response, "invalid datasetId");
 
   // test calling a python function from c++ (will be used to evaluate models and/or generate thumbnails as needed)
-  py::object DataProc = py::module::import("call_from_server");
-  DataProc.attr("add")(2, 4);
+  // py::object DataProc = py::module::import("call_from_server");
+  // DataProc.attr("add")(2, 4);
+
+  // import necessary python modules
+  py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
+  py::function imageFromPts = thumbnail_utils_module.attr("generate_image_from_vertices_and_faces").cast<py::function>();
 
   // category of the passed fieldname (design param or qoi)
   Fieldtype category = Fieldtype(request["category"].asString());
@@ -771,10 +790,36 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 
     // evaluate model at this coordinate
     Eigen::MatrixXf I = model->evaluate(z_coord);
+
+    //std::unique_ptr<Image> image; // default to nullptr? <ctc> 
+    std::unique_ptr<Image> image{nullptr};
+    bool mesh{true};
+    if (mesh) {
+      // for nanoparticles_mesh we need to call the python function with these new points to create a 2d shape
+      // [] todo0: call the python function to render the thumbnail (independently useful for model interpolation)
+      // [] todo1: make this optional
+      // [] todo2: use three.js to simply render the polygon itself (probably much later, so just create a github issue)
+
+#if 0 // # works to pass a PIL image's bytes, yay!
+      py::object img = thumbnail_utils_module.attr("getPILImage")();
+      py::object imgData = thumbnail_utils_module.attr("pilImageToBytes")(img);
+      py::bytes bytes(imgData.cast<py::bytes>());
+      //std::cout << "bytes: " << bytes << std::endl;
+      image.reset(new Image(static_cast<std::string>(bytes), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
+#elif 0 // # works to pass a vtk image as a numpy array
+      auto numpyvec = thumbnail_utils_module.attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
+      image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
+#else // # now do the actual mesh rendering using vtk instead of pyrender (test this one outside of ui)
+      auto numpyvec = thumbnail_utils_module.attr("vtkRenderMesh")(I).attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
+      image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
+#endif
+    }
+    else {
+      image.reset(new Image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate()));
+    }
     
-    // add result image to response
-    Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
-    addImageToResponse(response, image);
+    // add result image to response 
+    addImageToResponse(response, *image);
 
     // add field value to response
     response["fieldvals"].append(fieldval);
