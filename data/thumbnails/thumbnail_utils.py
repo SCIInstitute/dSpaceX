@@ -73,7 +73,111 @@ def generate_image_from_vertices_and_faces(vertices, faces = []):
 
     return pil_img
 
-def vtkRenderMesh(vertices, faces = []):
+class vtkRenderMesh:
+    """
+    Renders a 2d thumbnail from the vertices and faces of a mesh.
+    """
+    datapath = "/Users/cam/data/dSpaceX/latest/"
+
+    def __init__(self, default_mesh = datapath + 'nanoparticles_mesh/unprocessed_data/shape_representations/1.ply'):
+        self.polydata = vtk.vtkPolyData()
+
+        # load a default mesh, setting self.vertices and self.faces to be used with polydata
+        self.loadNewMesh(default_mesh)
+
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInputData(self.polydata)
+
+        colors = vtk.vtkNamedColors()
+        bkg = map(lambda x: x / 255.0, [26, 51, 102, 255])
+        colors.SetColor("BkgColor", *bkg)
+
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetColor(colors.GetColor3d("Tomato"))
+        actor.RotateX(30.0)
+        actor.RotateY(-45.0)
+
+        # Create the graphics structure. The renderer renders into the render
+        self.ren = vtk.vtkRenderer()
+        self.renWin = vtk.vtkRenderWindow()
+        self.renWin.AddRenderer(self.ren)
+        #self.renWin.OffScreenRenderingOn()   # ***** don't open a window *****
+
+        # Add the actors to the renderer, set the background and size
+        self.ren.AddActor(actor)
+        self.ren.SetBackground(colors.GetColor3d("BkgColor"))
+        self.renWin.SetSize(300, 300)
+        self.renWin.SetWindowName('TwistyTurnyNanoparticle')
+
+        # We'll zoom in a little by accessing the camera and invoking a "Zoom"
+        self.ren.ResetCamera()
+        self.ren.GetActiveCamera().Zoom(1.5)
+
+        # screenshot filter
+        self.w2if = vtk.vtkWindowToImageFilter()
+        self.w2if.SetInput(self.renWin)
+        self.w2if.SetInputBufferTypeToRGB()
+        self.w2if.ReadFrontBufferOff()
+
+        # need to call this during initialization or the thread that calls updatemesh will crash opening the window
+        self.update()
+
+    def updateMesh(self, vertices = [], faces = []):
+        print("welcome to vtkRenderMesh.updateMesh!")
+        if len(faces) > 0:
+            # TODO: process faces to produce polys for polydata
+            # self.polys = ...
+            None
+
+        print("faces complete, time for vertices")
+
+        if len(vertices) > 0:
+            print("vertices: shape " + str(vertices.shape) + ", dtype " + str(vertices.dtype))
+            vertices = vertices.reshape((-1, 3)) # <ctc> Controller needs to reshape before it sends to python function (TODO)
+            print("vertices: shape " + str(vertices.shape) + ", dtype " + str(vertices.dtype))
+
+            # initialize points
+            self.points.SetNumberOfPoints(len(vertices))
+            for i in range(len(vertices)):
+                self.points.SetPoint(i, vertices[i])
+
+        print("vertices complete, let's set self.polydata data next")
+
+        self.polydata.SetPoints(self.points)
+        self.polydata.SetPolys(self.polys)
+        self.polydata.Modified()   #<ctc> may or may not be necessary... doesn't seem like it is in interpreter
+
+        #print("finally, we'll call update, which calls self.renWin.Render()")
+        #self.update() #don't do it! causes crash when called from non-main thread on server
+
+    def loadNewMesh(self, filename):
+        reader = vtk.vtkPLYReader()
+        reader.SetFileName(filename)
+        reader.Update() # when this function is called from c++, reader.Update() causes:
+            # dSpaceX[24453:12650119] dynamic_cast error 1: Both of the following type_info's should have public visibility.
+            #                                               At least one of them is hidden.
+            #               NSt3__113basic_istreamIcNS_11char_traitsIcEEEE,
+            #               NSt3__114basic_ifstreamIcNS_11char_traitsIcEEEE.
+            # Super verbose `python -vvv` doesn't produce this error, so something with pybind11? Ignoring for now.
+        self.points = reader.GetOutput().GetPoints()
+        self.polys = reader.GetOutput().GetPolys()
+        self.polydata.SetPolys(self.polys)
+        self.polydata.SetPoints(self.points)
+
+    def update(self):
+        print("vtkRenderMesh.update (just calls renWin.Render())")
+        self.renWin.Render()
+        print("done!")
+
+    def screenshot(self):
+        # update and return a numpy array of the vtk image
+        self.w2if.Modified()
+        self.w2if.Update()
+        return self.w2if.GetOutput()
+        
+    
+def vtkRenderMesh_func(vertices, faces = []):
     """
     From the vertices and faces of a mesh generates a 2D thumbnail.
     :param vertices: The mesh vertices.
@@ -105,7 +209,7 @@ def vtkRenderMesh(vertices, faces = []):
 
     # initialize points
     points = vtk.vtkPoints()
-    points.SetNumberOfPoints(len(vertices));
+    points.SetNumberOfPoints(len(vertices))
     for i in range(len(vertices)):
         points.SetPoint(i, vertices[i])
 
@@ -145,7 +249,7 @@ def vtkRenderMesh(vertices, faces = []):
     w2if = vtk.vtkWindowToImageFilter()
     w2if.SetInput(renWin)
     w2if.SetInputBufferTypeToRGB()
-    w2if.ReadFrontBufferOff()
+    self.w2if.ReadFrontBufferOff()      # need to read from the back buffer for screenshots
     w2if.Update()
 
     # return the vtk image

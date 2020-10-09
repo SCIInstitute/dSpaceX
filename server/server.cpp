@@ -4,9 +4,14 @@
 #include <chrono>
 #include <exception>
 #include <thread>
+#include <sstream>
 #include <pybind11/embed.h> // everything needed for embedding
-#include <pybind11/eigen.h> // <ctc> testing this will work in main thread (crashes from Controller, which is a thread)
 namespace py = pybind11;
+
+// <ctc> testing this will work in main thread (crashes from Controller, which is a thread)
+#include <pybind11/eigen.h>
+
+#include "utils/Data.h"
 
 const int kDefaultPort = 7681;
 const std::string kDefaultDatapath("../../examples");
@@ -20,6 +25,9 @@ extern "C" void browserData(void *wsi, void *data) {
 extern "C" void browserText(void *wsi, char *text, int lena) {
   controller->handleText(wsi, std::string(text));
 }
+
+py::object thumbnail_renderer;
+bool nanosnap{false};
 
 int main(int argc, char *argv[])
 {
@@ -47,18 +55,65 @@ int main(int argc, char *argv[])
   //py::function imageFromPts;
 
   // test that this function can be called from main thread (it crashes opening a GL window from Controller)
-  py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
-  Eigen::MatrixXf I = Eigen::MatrixXf::Random(1, 299568);
-  auto vtkimg = thumbnail_utils_module.attr("vtkRenderMesh")(I);
-  auto npimg = thumbnail_utils_module.attr("vtkToNumpy")(vtkimg).cast<py::array_t<unsigned char>>();
+  py::object thumbnail_utils = py::module::import("data.thumbnails.thumbnail_utils");
+  //Eigen::MatrixXf I = Eigen::MatrixXf::Random(1, 299568);
+  // auto vtkimg = thumbnail_utils.attr("vtkRenderMesh_func")(I);
+  // auto npimg = thumbnail_utils.attr("vtkToNumpy")(vtkimg).cast<py::array_t<unsigned char>>();
 
-  // import the thumbnail_utils module
-  // py::object data_module = py::module::import("data");
-  // py::object thumbnails_module = py::module::import("data.thumbnails");
-  // py::object eff_vtk = py::module::import("vtk");
-  // py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
-  // py::function img_from_pts = thumbnail_utils_module.attr("generate_image_from_vertices_and_faces").cast<py::function>();
+  // create a vtkRenderMesh instance for use by Controller
+  // - renderer must be in main thread
+  // - more efficient to instantiate it once then reuse it when a new thumbnail is needed
+  thumbnail_renderer = thumbnail_utils.attr("vtkRenderMesh")();
 
+#if 0
+  // this works alone! But calling updateMesh ends up with an empty image... maybe cuz of random values
+  {
+    thumbnail_renderer.attr("updateMesh")();      // this *works* (doesn't change any points)
+    thumbnail_renderer.attr("update")();
+    auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+    dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+    image.write("/tmp/test_render_from_server-default.png");
+  }
+  {
+    Eigen::MatrixXf I = Eigen::MatrixXf::Random(1, 299568);
+    thumbnail_renderer.attr("updateMesh")(I);     // this works too! (ugly bcuz random points)
+    thumbnail_renderer.attr("update")();
+    auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+    dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+    image.write("/tmp/test_render_from_server-updated.png");
+  }
+  {
+    thumbnail_renderer.attr("updateMesh")();      // this *works* (doesn't change any points)
+    thumbnail_renderer.attr("update")();
+    auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+    dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+    image.write("/tmp/test_render_from_server-default-again.png");
+  }
+  {
+    Eigen::MatrixXf I = Eigen::MatrixXf::Random(1, 299568);
+    thumbnail_renderer.attr("updateMesh")(I);     // this works too! (ugly bcuz random points)
+    thumbnail_renderer.attr("update")();
+    auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+    dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+    image.write("/tmp/test_render_from_server-updated-again.png");
+  }
+#endif
+
+  // updated class interface, works from python
+  auto& ren = thumbnail_renderer;
+  for (auto i=0; i<10; i++) {
+    std::ostringstream filename;
+    filename << "/Users/cam/data/dSpaceX/latest/nanoparticles_mesh/unprocessed_data/shape_representations/" << i+10 << ".ply";
+    ren.attr("loadNewMesh")(filename.str());
+    ren.attr("update")();
+
+    auto npvec = thumbnail_utils.attr("vtkToNumpy")(ren.attr("screenshot")()).cast<py::array_t<unsigned char>>();
+    dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+    std::ostringstream outname;
+    outname << "/tmp/test-nanosnap-" << std::setfill('0') << std::setw(1) << i << ".png";
+    image.write(outname.str());
+  }
+  
   using optparse::OptionParser;
   OptionParser parser = OptionParser().description("dSpaceX Server");
   parser.add_option("-p", "--port").dest("port").type("int").set_default(kDefaultPort).help("server port");
@@ -101,8 +156,18 @@ int main(int argc, char *argv[])
   }
 
   // Keep server alive.
+  static int snapshotidx = 0;
   while (wst_statusServer(0)) {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    if (nanosnap) { // make this a vector if it works, first saving snaps to disk then figuring out how to return the array
+      thumbnail_renderer.attr("update")();
+      auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+      dspacex::Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+      std::ostringstream os;
+      os << "/tmp/nanosnap-" << std::setfill('0') << std::setw(3) << snapshotidx++ << ".png";
+      image.write(os.str());
+      nanosnap = false; // done!
+    }
   }
   wst_cleanupServers();
   return 0;

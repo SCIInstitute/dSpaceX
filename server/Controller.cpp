@@ -17,6 +17,7 @@
 #include "utils/loaders.h"
 #include "utils/utils.h"
 #include "pmodels/Model.h"
+#include "utils/Data.h"
 
 #include <cassert>
 #include <algorithm>
@@ -28,9 +29,12 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <thread>
 #include <pybind11/embed.h>
 #include <pybind11/eigen.h>
 namespace py = pybind11;
+extern py::object thumbnail_renderer;
+extern bool nanosnap;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
 using Clock = std::chrono::steady_clock;
@@ -682,20 +686,6 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
   }
 }
 
-/*
- * copy contents of pyvec into a standard vector
- */
-template<typename T>
-std::vector<T> toStdVec(const py::array_t<T>& pyvec) {
-  py::buffer_info info = pyvec.request();
-  int n = 1;
-  for (auto r: info.shape) {
-    n *= r;
-  }
-  auto ptr = static_cast<T*>(info.ptr);
-  return std::vector<T>(ptr, ptr + n);
-}
-
 /**
  * This returns a set of new samples (images) computed with the given ShapeOdds model for
  * the specified crystal at this persistence level using numZ latent space coordinates.
@@ -717,14 +707,6 @@ std::vector<T> toStdVec(const py::array_t<T>& pyvec) {
 void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
-
-  // test calling a python function from c++ (will be used to evaluate models and/or generate thumbnails as needed)
-  // py::object DataProc = py::module::import("call_from_server");
-  // DataProc.attr("add")(2, 4);
-
-  // import necessary python modules
-  py::object thumbnail_utils_module = py::module::import("data.thumbnails.thumbnail_utils");
-  py::function imageFromPts = thumbnail_utils_module.attr("generate_image_from_vertices_and_faces").cast<py::function>();
 
   // category of the passed fieldname (design param or qoi)
   Fieldtype category = Fieldtype(request["category"].asString());
@@ -793,6 +775,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 
     //std::unique_ptr<Image> image; // default to nullptr? <ctc> 
     std::unique_ptr<Image> image{nullptr};
+    image.reset(new Image(sample_image)); // <ctc> just do this do setimage doesn't crash if it isn't correct (debugging, delete me when it works).
     bool mesh{true};
     if (mesh) {
       // for nanoparticles_mesh we need to call the python function with these new points to create a 2d shape
@@ -801,17 +784,29 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
       // [] todo2: use three.js to simply render the polygon itself (probably much later, so just create a github issue)
 
 #if 0 // # works to pass a PIL image's bytes, yay!
-      py::object img = thumbnail_utils_module.attr("getPILImage")();
-      py::object imgData = thumbnail_utils_module.attr("pilImageToBytes")(img);
+      py::object img = thumbnail_utils.attr("getPILImage")();
+      py::object imgData = thumbnail_utils.attr("pilImageToBytes")(img);
       py::bytes bytes(imgData.cast<py::bytes>());
       //std::cout << "bytes: " << bytes << std::endl;
       image.reset(new Image(static_cast<std::string>(bytes), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
 #elif 0 // # works to pass a vtk image as a numpy array
-      auto numpyvec = thumbnail_utils_module.attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
+      auto numpyvec = thumbnail_utils.attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
       image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-#else // # now do the actual mesh rendering using vtk instead of pyrender (test this one outside of ui)
-      auto numpyvec = thumbnail_utils_module.attr("vtkRenderMesh")(I).attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
+#elif 1 // mesh render from global thumbnail_renderer... ** FAILS ** 
+
+      thumbnail_renderer.attr("updateMesh")(I);     // this works from main, but fails from here. Adding prints in python...
+      // auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
+      // dspacex::Image test_image(dspacex::toStdVec(npvec), 300, 300, 3);
+      // test_image.write("/tmp/test_render_from_server.png");
+      nanosnap = true;
+      std::this_thread::sleep_for(std::chrono::milliseconds(500)); // <ctc> wait for it to happen. If it works, we'll send array
+#else  // # now do the actual mesh rendering using vtk instead of pyrender (test this one outside of ui)
+
+      thumbnail_renderer.attr("updateMesh")(I);
+      auto numpyvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
       image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
+      // <ctc> double-check sample image and numpyvec are both the right size (in debugger)
+
 #endif
     }
     else {

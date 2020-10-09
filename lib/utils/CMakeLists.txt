@@ -8,6 +8,7 @@ SET(UTILS_HEADER_FILES
   DataExport.h
   utils.h
   loaders.h
+  Data.h
 )
 
 SET(UTILS_SOURCE_FILES
