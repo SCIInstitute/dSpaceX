@@ -81,7 +81,6 @@ function install_conda() {
   if ! pip install pynrrd==0.4.2; then return 1; fi
   if ! pip install pyrender==0.1.39; then return 1; fi
   if ! pip install grip==4.5.2; then return 1; fi
-  if ! pip install scikit-iamge==0.17.2; then return 1; fi
 
   conda info
   return 0
