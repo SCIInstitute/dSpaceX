@@ -89,12 +89,15 @@ class vtkRenderMesh:
         mapper.SetInputData(self.polydata)
 
         colors = vtk.vtkNamedColors()
-        bkg = map(lambda x: x / 255.0, [26, 51, 102, 255])
+        fgc = [1.0, 0.766, 0.336]
+        #bgk = map(lambda x: x / 255.0, [26, 51, 102, 255])
+        bkg = map(lambda x: x / 255.0, [255, 255, 255, 255])
         colors.SetColor("BkgColor", *bkg)
 
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
-        actor.GetProperty().SetColor(colors.GetColor3d("Tomato"))
+        #actor.GetProperty().SetColor(colors.GetColor3d("Tomato"))
+        actor.GetProperty().SetColor(fgc)
         actor.RotateX(30.0)
         actor.RotateY(-45.0)
 
@@ -112,7 +115,7 @@ class vtkRenderMesh:
 
         # We'll zoom in a little by accessing the camera and invoking a "Zoom"
         self.ren.ResetCamera()
-        self.ren.GetActiveCamera().Zoom(1.5)
+        self.ren.GetActiveCamera().Zoom(5.0)
 
         # screenshot filter
         self.w2if = vtk.vtkWindowToImageFilter()

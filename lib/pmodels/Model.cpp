@@ -114,7 +114,7 @@ float Model::testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix
   //std::string outpath(basePath + "/p_idx_"/* + std::to_string(p)*/ + "-c_idx_"/* + std::to_string(c)*/ +"-z_idx_-"/* + std::to_string(z_idx)*/ + ".png");
   unsigned w = origImage.getWidth(), h = origImage.getHeight();
   
-  Eigen::MatrixXf I(model->evaluate(z_coord));//, writeToDisk, outpath, w, h));
+  Eigen::MatrixXf I(*model->evaluate(z_coord));//, writeToDisk, outpath, w, h));
   //std::cout << "evaluated model: " << I << std::endl;
 
   float quality = 1.0;
@@ -154,7 +154,7 @@ float Model::testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
 // write evaluated model to disk if requested (if w * h != I.size(), then write I.rows() x I.cols() image)
-Eigen::MatrixXf ShapeOddsModel::evaluate(const Eigen::VectorXf &z_coord) const
+std::shared_ptr<Eigen::MatrixXf> ShapeOddsModel::evaluate(const Eigen::VectorXf &z_coord) const
 //const bool writeToDisk, const std::string outpath, unsigned w, unsigned h) const
 {
   // I = f(z):
@@ -170,7 +170,7 @@ Eigen::MatrixXf ShapeOddsModel::evaluate(const Eigen::VectorXf &z_coord) const
   phi.array() *= -1.0;
   phi = phi.array().exp();
   phi.array() += 1.0;
-  Eigen::MatrixXf I(phi.array().inverse());
+  std::shared_ptr<Eigen::MatrixXf> I(new Eigen::MatrixXf(phi.array().inverse()));
   //std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
   
   // if (writeToDisk)
@@ -197,7 +197,7 @@ Eigen::MatrixXf ShapeOddsModel::evaluate(const Eigen::VectorXf &z_coord) const
 
 // creates a new sample (an image) from the given model at the specified latent space coordinate
 // write evaluated model to disk if requested (if w * h != I.size(), then write I.rows() x I.cols() image)
-Eigen::MatrixXf PCAModel::evaluate(const Eigen::VectorXf &z_coord) const
+std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coord) const
                                    //const bool writeToDisk, const std::string outpath, unsigned w, unsigned h) const
 {
   //evaluate this as a PCA model:
@@ -208,7 +208,8 @@ Eigen::MatrixXf PCAModel::evaluate(const Eigen::VectorXf &z_coord) const
 
   Eigen::MatrixXf Wt(W);
   Wt.transposeInPlace();
-  Eigen::MatrixXf I((Wt * z_coord) + w0);
+  std::shared_ptr<Eigen::MatrixXf> Ip(new Eigen::MatrixXf((Wt * z_coord) + w0));
+  Eigen::MatrixXf& I(*Ip);
   
   // Ross said to get rid of anything below 0 and scale normalize the rest 2020.06.07
   for (unsigned i = 0; i < I.size(); i++) {
@@ -222,7 +223,7 @@ Eigen::MatrixXf PCAModel::evaluate(const Eigen::VectorXf &z_coord) const
   I.array() -= minval;
   I.array() /= (maxval - minval);
 
-  return I;
+  return Ip;
 }
 
 Eigen::MatrixXf Model::fetchInterpolation(int idx, int interpolationSet) const

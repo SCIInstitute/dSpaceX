@@ -34,7 +34,7 @@
 #include <pybind11/eigen.h>
 namespace py = pybind11;
 extern py::object thumbnail_renderer;
-extern bool nanosnap;
+extern py::object thumbnail_utils;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
 using Clock = std::chrono::steady_clock;
@@ -661,7 +661,7 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
 }
 
 /**
- * adds the given image to the respose's "thumbnails" array
+ * adds the given image to a respose's "thumbnails" array
  */
 void addImageToResponse(Json::Value &response, const Image &image) {
   Json::Value imageObject = Json::Value(Json::objectValue);
@@ -750,8 +750,6 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
 
-  const Image& sample_image = m_currentDataset->getThumbnail(0); // just using this to get dims of image created by model
-
   // partition the field into numZ values and evaluate model for each
   float minval = model->minFieldValue();
   float maxval = model->maxFieldValue();
@@ -763,64 +761,77 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     minval = minval + (maxval - minval) * percent;
   }
   
-  for (unsigned i = 0; i < numZ; i++)
-  {
-    auto fieldval = minval + delta * i;
+  if (modelset->generatesMeshPoints()) {
+    for (unsigned i = 0; i < numZ; i++)
+    {
+      // compute new field value and add it to response
+      auto fieldval = minval + delta * i;
+      response["fieldvals"].append(fieldval);
 
-    // get new latent space coordinate for this field_val
-    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
+      // get new latent space coordinate for this field_val
+      Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
 
-    // evaluate model at this coordinate
-    Eigen::MatrixXf I = model->evaluate(z_coord);
+      // evaluate model at this coordinate
+      std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);
 
-    //std::unique_ptr<Image> image; // default to nullptr? <ctc> 
-    std::unique_ptr<Image> image{nullptr};
-    image.reset(new Image(sample_image)); // <ctc> just do this do setimage doesn't crash if it isn't correct (debugging, delete me when it works).
-    bool mesh{true};
-    if (mesh) {
-      // for nanoparticles_mesh we need to call the python function with these new points to create a 2d shape
-      // [] todo0: call the python function to render the thumbnail (independently useful for model interpolation)
-      // [] todo1: make this optional
-      // [] todo2: use three.js to simply render the polygon itself (probably much later, so just create a github issue)
-
-#if 0 // # works to pass a PIL image's bytes, yay!
-      py::object img = thumbnail_utils.attr("getPILImage")();
-      py::object imgData = thumbnail_utils.attr("pilImageToBytes")(img);
-      py::bytes bytes(imgData.cast<py::bytes>());
-      //std::cout << "bytes: " << bytes << std::endl;
-      image.reset(new Image(static_cast<std::string>(bytes), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-#elif 0 // # works to pass a vtk image as a numpy array
-      auto numpyvec = thumbnail_utils.attr("vtkToNumpy")().cast<py::array_t<unsigned char>>();
-      image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-#elif 1 // mesh render from global thumbnail_renderer... ** FAILS ** 
-
-      thumbnail_renderer.attr("updateMesh")(I);     // this works from main, but fails from here. Adding prints in python...
-      // auto npvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
-      // dspacex::Image test_image(dspacex::toStdVec(npvec), 300, 300, 3);
-      // test_image.write("/tmp/test_render_from_server.png");
-      nanosnap = true;
-      std::this_thread::sleep_for(std::chrono::milliseconds(500)); // <ctc> wait for it to happen. If it works, we'll send array
-#else  // # now do the actual mesh rendering using vtk instead of pyrender (test this one outside of ui)
-
-      thumbnail_renderer.attr("updateMesh")(I);
-      auto numpyvec = thumbnail_renderer.attr("screenshot")().cast<py::array_t<unsigned char>>();
-      image.reset(new Image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-      // <ctc> double-check sample image and numpyvec are both the right size (in debugger)
-
-#endif
+      // push to genthumbs so main thread can call the gl rendering function (through python, but gl nonetheless)
+      genthumbs.emplace_back(Thumbgen{I, /*function to use from model,*/ response});
     }
-    else {
-      image.reset(new Image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate()));
-    }
-    
-    // add result image to response 
-    addImageToResponse(response, *image);
 
-    // add field value to response
-    response["fieldvals"].append(fieldval);
+    // wait until all thumbnails have been generated and added to response
+    while (!genthumbs.empty()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
   }
+  else {
+    const Image& sample_image = m_currentDataset->getThumbnail(0); // just using this to get dims of image created by model
 
+    for (unsigned i = 0; i < numZ; i++)
+    {
+      auto fieldval = minval + delta * i;
+
+      // get new latent space coordinate for this field_val
+      Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
+
+      // evaluate model at this coordinate
+      Eigen::MatrixXf I = *model->evaluate(z_coord);
+
+      // convert resultant matrix to a 2d image (* uses sample_image to determine dims)
+      Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
+    
+      // add result image to response 
+      addImageToResponse(response, image);
+
+      // add field value to response
+      response["fieldvals"].append(fieldval);
+    }
+  }
+  
   response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistence));
+}
+
+// Calls a custom python thumbnail generation function with the matrix produced by the model evaluation
+// <ctc> there should also be a custom model evalution function provided by the model
+// <ctc> this custom thumbnail generator should be provided by the model
+// <ctc> how can a model in the config.json specify python functions to call? Pretty easy actually since they're already str attrs
+void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, Json::Value &response) {
+  auto& ren = thumbnail_renderer;
+
+  ren.attr("updateMesh")(*I);
+  ren.attr("update")();
+  auto npvec = thumbnail_utils.attr("vtkToNumpy")(ren.attr("screenshot")()).cast<py::array_t<unsigned char>>();
+
+  //Image image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
+  Image image(dspacex::toStdVec(npvec), 300, 300, 3); // <ctc> dammit hard-coded size-- basically hard-coded anyway with sample img
+
+  // <ctc> debug by also dumping the generated image
+  std::ostringstream os;
+  static int genidx{0};
+  os << "/tmp/generated-thumbnail-" << std::setfill('0') << std::setw(3) << genidx++ << ".png";
+  image.write(os.str());
+
+  // add result image to response 
+  addImageToResponse(response, image);
 }
 
 /**
@@ -861,7 +872,7 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
     //std::string outputBasepath(datapath + "/debug/outimages");
     //std::string outpath(outputBasepath + "/pidx" + std::to_string(persistence_idx) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
-    Eigen::MatrixXf I = model->evaluate(model->getZCoord(i));//, false /*writeToDisk*/,
+    Eigen::MatrixXf I = *model->evaluate(model->getZCoord(i));//, false /*writeToDisk*/,
     //""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)

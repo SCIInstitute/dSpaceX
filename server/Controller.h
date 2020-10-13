@@ -21,6 +21,11 @@ class Controller {
   void handleData(void *wsi, void *data);
   void handleText(void *wsi, const std::string &text);
 
+  // <ctc> pass the python function from the model
+  static void generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, /*the python function,*/ Json::Value &response);
+  struct Thumbgen { std::shared_ptr<Eigen::MatrixXf> I; /*the python function;*/ Json::Value &response; };
+  std::list<Thumbgen> genthumbs;
+  
  private:
   Controller() = delete;
   

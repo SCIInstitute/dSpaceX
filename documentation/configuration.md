@@ -74,6 +74,7 @@ models:
     padZeroes: false                                           # for both persistence and crystal dirs/files
     partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
     first_partition: 0                                         # if depth != -1 && num_persistences > 20, this is the first directory #
+    mesh: false                                                 # This is a mesh model generating corresponding sets of points (each set of points has the same triangle associations)
     rotate: false                                            # the shape produced by this model needs to be rotated 90 degrees clockwise to match samples (old ShapeWorks models need this)
     ms:                                                        # Morse-Smale parameters used to compute partitions
       knn: 15                                                  # k-nearest neighbors

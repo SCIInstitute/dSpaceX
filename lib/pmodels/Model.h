@@ -49,7 +49,7 @@ public:
   static const Eigen::RowVectorXf getNewLatentSpaceValue(const Eigen::RowVectorXf& fieldvalues, const Eigen::MatrixXf& z_coords,
                                                          float new_fieldval, float sigma = 0.25);
 
-  virtual Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const = 0;
+  virtual std::shared_ptr<Eigen::MatrixXf> evaluate(const Eigen::VectorXf &z_coord) const = 0;
 
   // TODO: create version of evaluate that produces new images for an array of z_coords rather than one at a time
   // virtual std::vector<Eigen::MatrixXf> evaluate(const Eigen::MatrixXf &z_coords, const bool writeToDisk = false,
@@ -79,7 +79,7 @@ class ShapeOddsModel : public Model
 public:
   ShapeOddsModel() : Model{ShapeOdds} {}
   ~ShapeOddsModel() = default;
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
+  std::shared_ptr<Eigen::MatrixXf> evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
 /* 
@@ -90,7 +90,7 @@ class PCAModel : public Model
 public:
   PCAModel() : Model{PCA} {}
   ~PCAModel() = default;
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override;
+  std::shared_ptr<Eigen::MatrixXf> evaluate(const Eigen::VectorXf &z_coord) const override;
 };
 
 /* 
@@ -101,8 +101,8 @@ class CustomModel : public Model
 public:
   CustomModel(std::string _name = std::string()) : Model{Custom}, name(std::move(_name)) {}
   ~CustomModel() = default;
-  Eigen::MatrixXf evaluate(const Eigen::VectorXf &z_coord) const override
-  { return Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>(); }
+  std::shared_ptr<Eigen::MatrixXf> evaluate(const Eigen::VectorXf &z_coord) const override
+  { return std::shared_ptr<Eigen::MatrixXf>(nullptr); }
   
   const std::string name;
 };

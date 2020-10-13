@@ -491,6 +491,11 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
   std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
 
+  bool mesh = modelNode["mesh"] && modelNode["mesh"].as<std::string>() == std::string("true");
+  if (mesh) {
+    std::cout << "This is a mesh model generating corresponding sets of points.\n";
+  }
+
   if (!modelNode["partitions"]) {
     std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
     return nullptr;
@@ -544,7 +549,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
-  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, mesh, rotate));
   std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << " samples using:\n";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
