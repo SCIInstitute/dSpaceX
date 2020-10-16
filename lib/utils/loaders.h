@@ -17,5 +17,5 @@ FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename);
 FortranLinalg::DenseVector<Precision> loadCSVColumn(std::string filename, std::string columnName);
 
 std::vector<std::string> loadCSVColumnNames(std::string filename);
- 
+
 }

@@ -74,12 +74,11 @@ Image::Image(std::string &&data, unsigned w, unsigned h, unsigned c) :
 }
 Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {
   // identify resolution and format
-  std::vector<unsigned char> png;
   lodepng::State state;
   unsigned error;
-  if (lodepng::load_file(png, filename))
+  if (lodepng::load_file(m_pngData, filename))
     throw std::runtime_error("error loading png");
-  if (lodepng_inspect(&m_width, &m_height, &state, png.data(), png.size()))
+  if (lodepng_inspect(&m_width, &m_height, &state, m_pngData.data(), m_pngData.size()))
     if (error) throw std::runtime_error("error loading png");
 
   // either load it as a single channel raw buffer or a 3-channel buffer
@@ -98,7 +97,7 @@ Image::Image(const std::string& filename, bool decompress) : m_decompressed(deco
   
   // decompress the png data to this Image's raw buffer
   if (decompress)
-    lodepng::decode(m_data, m_width, m_height, state, png);
+    lodepng::decode(m_data, m_width, m_height, state, m_pngData);
 }
 
 /// write image

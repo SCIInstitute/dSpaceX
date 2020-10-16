@@ -35,6 +35,12 @@ int main(int argc, char *argv[])
   py::scoped_interpreter guard{}; // start the interpreter and keep it alive
   py::print("Hello, World!"); // use the Python API
 
+  // lesson: operations between different type matrices do not compile
+  // Eigen::MatrixXf If = Eigen::MatrixXf::Random(1, 10);
+  // Eigen::MatrixXd Id = Eigen::MatrixXd::Random(1, 10);
+  // auto Ifd = If * Id;
+  // auto Ifpd = If + Id;
+
   py::module sys = py::module::import("sys");
   sys.attr("path").attr("insert")(1, "/Users/cam/code/dSpaceX");
 

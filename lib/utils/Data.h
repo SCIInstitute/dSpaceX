@@ -22,6 +22,4 @@ std::vector<T> toStdVec(const py::array_t<T>& pyvec) {
   return std::vector<T>(ptr, ptr + n);
 }
 
-
-
 } // dspacex

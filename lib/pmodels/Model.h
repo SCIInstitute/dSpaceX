@@ -25,6 +25,7 @@ public:
 
   Model(Type t = None) : type(t) {}
   virtual ~Model() = default;
+  
   void setModel(Eigen::MatrixXf _W, Eigen::MatrixXf _w0, Eigen::MatrixXf _Z) {
     W  = _W;
     w0 = _w0;

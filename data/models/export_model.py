@@ -1,8 +1,9 @@
 import numpy as np
+import pandas as pd
 import os
 
 
-def write_to_file(model_data, output_directory):
+def write_to_file(model_data, output_directory, precision = np.float32):
     """
     Write pca model to output directory
     :param output_file_name:
@@ -21,7 +22,14 @@ def write_to_file(model_data, output_directory):
             crystal_output_directory = os.path.join(p_level_output_directory, 'crystal-' + str(c_id))
             if not os.path.exists(crystal_output_directory):
                 os.makedirs(crystal_output_directory)
-            # export W, w0, and z
-            np.savetxt(os.path.join(crystal_output_directory, 'W.csv'), crystal_data['W'], delimiter=',')
-            np.savetxt(os.path.join(crystal_output_directory, 'w0.csv'), crystal_data['w0'], delimiter=',')
-            np.savetxt(os.path.join(crystal_output_directory, 'z.csv'), crystal_data['z'], delimiter=',')
+
+            # export W, w0, and z...
+            for V in ['W', 'w0', 'z']:
+                # ...as csvs
+                np.savetxt(os.path.join(crystal_output_directory, V + '.csv'), crystal_data[V], delimiter=',')
+
+                # ...and bins (with associated dims files)
+                np.tofile(os.path.join(crystal_output_directory, V + '.bin'), precision(crystal_data[V]))
+                dims = open(V + '.bin.dims', 'w')
+                dims.write(str(crystal_data[V].shape[0]) + ' ' + str(crystal_data[V].shape[1]) + ' ')
+                dims.write("float32") if precision == np.float32 else dims.write("float64")

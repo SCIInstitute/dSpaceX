@@ -241,7 +241,7 @@ def generate_thumbnails(input_config, output_directory):
     return output_config
 
 
-def calculate_distance(input_config, output_directory):
+def calculate_distance(input_config, output_directory, precision = np.float32):
     """
     Calculates the distances between designs shapes depending on shape_format
     :param input_config: dictionary containing configurations
@@ -306,8 +306,17 @@ def calculate_distance(input_config, output_directory):
         elif shape_format == 'mesh':
             distance = calculate_distance_mesh(shape_directory, metric=distance_type)
 
-    np.savetxt(output_directory + input_config['datasetName'] + '_distance.csv', distance, delimiter=',')
-    output_config['distances'] = {'format': 'csv', 'file': input_config['datasetName'] + '_distance.csv',
+    # save distance as csv and bin (w/ dims)
+    filename = os.path.join(output_directory, input_config['datasetName'] + '_distance')
+    np.savetxt(filename + '.csv'), distance, delimiter=',')
+
+    np.tofile(filename + '.bin'), precision(distance))
+    dims = open(filename + '.bin.dims', 'w')
+    dims.write(str(distance.shape[0]) + ' ' + str(distance.shape[1]) + ' ')
+    dims.write("float32") if precision == np.float32 else dims.write("float64")
+
+    # by default config to use bin
+    output_config['distances'] = {'format': 'bin', 'file': input_config['datasetName'] + '_distance.bin',
                                   'metric': distance_type}
     return output_config, distance
 

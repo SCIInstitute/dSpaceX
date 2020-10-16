@@ -100,6 +100,29 @@ public:
     return M;
   }
 
+  /*
+   * Reads a binary matrix written in the specified order (can be Eigen::RowMajor or Eigen::ColMajor).
+   */
+  template<typename T, Eigen::StorageOptions Order = Eigen::RowMajor>
+  static Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> readBinMatrix(const std::string &filename)
+  {
+    std::ifstream dims(filename + ".dims");
+    unsigned rows, cols;
+    std::string dtype;
+    dims >> rows >> cols >> dtype;
+
+    // ensure .bin is of correct type
+    if (dtype == "float32" && typeid(T) != typeid(float) || dtype == "float64" && typeid(T) != typeid(double))
+      throw std::runtime_error("Binary matrix of type " + dtype + " incompatible with requested type " + typeid(T).name());
+
+    // read file into a vector
+    std::ifstream vals(filename, std::ios::binary);
+    std::vector<char> data_vec = std::vector<char>(std::istreambuf_iterator<char>(vals), {});
+
+    // wrap vector data with a matrix and return it as an rvalue
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Order>> M(reinterpret_cast<T*>(data_vec.data()), rows, cols);
+    return std::move<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>>(M);
+  }
 
 };
 

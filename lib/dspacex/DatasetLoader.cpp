@@ -3,6 +3,7 @@
 #include <yaml-cpp/yaml.h>
 #include "utils/StringUtils.h"
 #include "utils/IO.h"
+#include "utils/utils.h"
 
 #include <memory>
 #include <iomanip>
@@ -584,17 +585,28 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   return ms_of_models;
 }
 
-// read the components of each model (Z, W, w0) from their respective csv files
+// read the components of each model (Z, W, w0) from their respective bin or csv files
+// TODO: make float or double optional or based on .bin type (this is an application-wide issue)
 void DatasetLoader::parseModel(const std::string& modelPath, Model& m, const std::vector<unsigned> &sample_indices)
 {
   // read W
-  auto W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
+  Eigen::MatrixXf W, w0, Z;
+  if (IO::fileExists(modelPath + "/W.bin"))
+    W = IO::readBinMatrix<float>(modelPath + "/W.bin");
+  else
+    W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
 
   // read w0
-  auto w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
+  if (IO::fileExists(modelPath + "/w0.bin"))
+    w0 = IO::readBinMatrix<float>(modelPath + "/w0.bin");
+  else
+    w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
 
   // read latent space Z
-  auto Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
+  if (IO::fileExists(modelPath + "/Z.bin"))
+    Z = IO::readBinMatrix<float>(modelPath + "/Z.bin");
+  else
+    Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
 
   // ShapeOdds models have z_coords for all samples, not only those used in their construction
   if (m.getType() == Model::ShapeOdds) {
@@ -648,7 +660,8 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
   }
   std::string format = distancesNode["format"].as<std::string>();
   if (format != "Linalg.DenseMatrix" &&
-      format != "csv") {
+      format != "csv" &&
+      format != "bin") {
     throw std::runtime_error(
         "Dataset config specifies unsupported distances format: " + format);
   }
@@ -668,6 +681,9 @@ FortranLinalg::DenseMatrix<Precision> DatasetLoader::parseDistances(
   } else if (format == "csv") {
     auto distances = HDProcess::loadCSVMatrix(path + filename);
 		return distances;
+  } else if (format == "bin") {
+    auto distances = IO::readBinMatrix<Precision, Eigen::ColMajor>(path + filename);
+		return toDenseMatrix<Precision>(distances);
   } else {
 		throw std::runtime_error(
 		  	"No loader configured to read " + format + " qoi file.");
