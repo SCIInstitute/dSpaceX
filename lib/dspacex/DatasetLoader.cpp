@@ -762,7 +762,7 @@ std::vector<Image> DatasetLoader::parseThumbnails(
     std::string path = createThumbnailPath(imageBasePath, i+indexOffset,
       imageSuffix, indexOffset, padIndices, thumbnailCount);
     std::cout << "Loading image: " << path << std::endl;
-    Image image(path, true/*decompress*/);
+    Image image(path, false/*decompress*/);
     thumbnails.push_back(image);
   }
 
