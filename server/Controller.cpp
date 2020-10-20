@@ -30,11 +30,7 @@
 #include <string>
 #include <chrono>
 #include <thread>
-#include <pybind11/embed.h>
 #include <pybind11/eigen.h>
-namespace py = pybind11;
-extern py::object thumbnail_renderer;
-extern py::object thumbnail_utils;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
 using Clock = std::chrono::steady_clock;
@@ -74,7 +70,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchDataset", std::bind(&Controller::fetchDataset, this, _1, _2)});
   m_commandMap.insert({"fetchKNeighbors", std::bind(&Controller::fetchKNeighbors, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
-  m_commandMap.insert({ "exportMorseSmaleDecomposition", std::bind(&Controller::exportMorseSmaleDecomposition, this, _1, _2)});
+  m_commandMap.insert({"exportMorseSmaleDecomposition", std::bind(&Controller::exportMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
@@ -242,7 +238,7 @@ void Controller::fetchKNeighbors(const Json::Value &request, Json::Value &respon
   int k = request["k"].asInt();
   if (k < 0) return setError(response, "invalid knn");
 
-  // TODO: Don't reprocess data if previous commands already did so.
+  // TODO: cache results of this search if it takes too long to repeat
   int n = m_currentDataset->getDistanceMatrix().N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
@@ -294,28 +290,28 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
  */
 void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response)
 {
-    response["field"] = m_currentField;
-    response["category"] = m_currentCategory.asString();
-    response["neighborhoodSize"] = m_currentKNN;
-    response["sigma"] = m_currentSigma;
-    response["smoothing"] = m_currentSmoothing;
-    response["crystalCurvepoints"] = m_currentNumCurvepoints;
-    response["depth"] = m_currentPersistenceDepth;
-    response["noise"] = m_currentAddNoise;
-    response["normalize"] = m_currentNormalize;
-    response["minPersistence"] = m_currentVizData->getMinPersistenceLevel();
+  response["field"] = m_currentField;
+  response["category"] = m_currentCategory.asString();
+  response["neighborhoodSize"] = m_currentKNN;
+  response["sigma"] = m_currentSigma;
+  response["smoothing"] = m_currentSmoothing;
+  response["crystalCurvepoints"] = m_currentNumCurvepoints;
+  response["depth"] = m_currentPersistenceDepth;
+  response["noise"] = m_currentAddNoise;
+  response["normalize"] = m_currentNormalize;
+  response["minPersistence"] = m_currentVizData->getMinPersistenceLevel();
 
-    auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
-    response["crystalPartitions"] = Json::Value(Json::arrayValue);
-    for (unsigned i = m_currentVizData->getMinPersistenceLevel(); i < m_currentVizData->getPersistence().N(); ++i) {
-        Json::Value item = Json::Value(Json::objectValue);
-        item["persistenceLevel"] = i;
-        item["crystalMembership"] = Json::Value(Json::arrayValue);
-        for (unsigned j = 0; j < crystal_partitions[i].N(); ++j) {
-            item["crystalMembership"].append(crystal_partitions[i](j));
-        }
-        response["crystalPartitions"].append(item);
+  auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
+  response["crystalPartitions"] = Json::Value(Json::arrayValue);
+  for (unsigned i = m_currentVizData->getMinPersistenceLevel(); i < m_currentVizData->getPersistence().N(); ++i) {
+    Json::Value item = Json::Value(Json::objectValue);
+    item["persistenceLevel"] = i;
+    item["crystalMembership"] = Json::Value(Json::arrayValue);
+    for (unsigned j = 0; j < crystal_partitions[i].N(); ++j) {
+      item["crystalMembership"].append(crystal_partitions[i](j));
     }
+    response["crystalPartitions"].append(item);
+  }
 }
 
 /**
@@ -760,7 +756,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     delta = 1.0;
     minval = minval + (maxval - minval) * percent;
   }
-  
+
+  // load a sample image to get dims of image created by model
+  const Image& sample_image = m_currentDataset->getThumbnail(0);
+
   if (modelset->generatesMeshPoints()) {
     for (unsigned i = 0; i < numZ; i++)
     {
@@ -774,18 +773,26 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
       // evaluate model at this coordinate
       std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);
 
-      // push to genthumbs so main thread can call the gl rendering function (through python, but gl nonetheless)
-      genthumbs.emplace_back(Thumbgen{I, /*function to use from model,*/ response});
-    }
+      if (!modelset->python_renderer_name.empty()) {
+        // push to genthumbs so main thread can call the gl rendering function (through python, but gl nonetheless)
+        genthumbs.emplace_back(Thumbgen{I, *modelset, /*sample_image.getWidth(), sample_image.getHeight(),*/ response});
+      }
+      else {
+        std::cerr << "WARNING: no Python render module for the mesh produced by this model.\n:";
+      }        
 
-    // wait until all thumbnails have been generated and added to response
-    while (!genthumbs.empty()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      // add field value to response
+      response["fieldvals"].append(fieldval);
+    }    
+        
+    if (modelset->python_renderer_mod) {
+      // wait until all thumbnails have been generated and added to response
+      while (!genthumbs.empty()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+      }
     }
   }
   else {
-    const Image& sample_image = m_currentDataset->getThumbnail(0); // just using this to get dims of image created by model
-
     for (unsigned i = 0; i < numZ; i++)
     {
       auto fieldval = minval + delta * i;
@@ -810,26 +817,39 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistence));
 }
 
-// Calls a custom python thumbnail generation function with the matrix produced by the model evaluation
-// <ctc> there should also be a custom model evalution function provided by the model
-// <ctc> this custom thumbnail generator should be provided by the model
-// <ctc> how can a model in the config.json specify python functions to call? Pretty easy actually since they're already str attrs
-void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, Json::Value &response) {
-  auto& ren = thumbnail_renderer;
+/*
+ * Calls a custom Python thumbnail generation function with the matrix produced by the model evaluation.
+ * - MUST be called from main thread (aka server)
+ * <ctc> there should also be a custom model evalution function provided by the model
+ * <ctc> this custom thumbnail generator should be provided by the model
+ * <ctc> how can a model in the config.json specify python functions to call? Pretty easy actually since they're already str attrs
+*/
+void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
+                                         const std::string& datapath, Json::Value &response) {
+  using namespace pybind11::literals;
+  if (!modelset.python_renderer) {
+    modelset.python_renderer_mod = py::module::import(modelset.python_renderer_name.c_str());
+    modelset.python_renderer = modelset.python_renderer_mod.attr("MeshRenderer")("datapath"_a = datapath);
+//todo: it needs a default sample image to determine polys; currently default in MeshRenderer ctor points to nanoparticles_mesh.       "default_mesh"_a = );
+  }
+  auto& utils = modelset.python_renderer_mod;
+  auto& ren = modelset.python_renderer;
 
   ren.attr("updateMesh")(*I);
   ren.attr("update")();
-  auto npvec = thumbnail_utils.attr("vtkToNumpy")(ren.attr("screenshot")()).cast<py::array_t<unsigned char>>();
+  auto npvec = utils.attr("toNumpy")(ren.attr("screenshot")()).cast<py::array_t<unsigned char>>();
 
   //Image image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
   Image image(dspacex::toStdVec(npvec), 300, 300, 3); // <ctc> dammit hard-coded size-- basically hard-coded anyway with sample img
 
+#if 0
   // <ctc> debug by also dumping the generated image
   std::ostringstream os;
   static int genidx{0};
   os << "/tmp/generated-thumbnail-" << std::setfill('0') << std::setw(3) << genidx++ << ".png";
   image.write(os.str());
-
+#endif
+  
   // add result image to response 
   addImageToResponse(response, image);
 }

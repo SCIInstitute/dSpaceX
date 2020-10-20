@@ -497,6 +497,18 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     std::cout << "This is a mesh model generating corresponding sets of points.\n";
   }
 
+  std::string python_evaluator{"None"};
+  if (modelNode["python_evaluator"]) {
+    python_evaluator = modelNode["python_evaluator"].as<std::string>();
+    std::cout << "Model provides custom evaluator Python module: " << python_evaluator << ".\n";
+  }
+
+  std::string python_renderer{"None"};
+  if (modelNode["python_renderer"]) {
+    python_renderer = modelNode["python_renderer"].as<std::string>();
+    std::cout << "Model provides custom thumbnail renderer Python module: " << python_renderer << ".\n";
+  }
+
   if (!modelNode["partitions"]) {
     std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
     return nullptr;
@@ -555,7 +567,9 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
     return nullptr;
-  } 
+  }
+  ms_of_models->setCustomEvaluator(python_evaluator);
+  ms_of_models->setCustomRenderer(python_renderer);
 
   int plvl_start = 0;
   if (modelNode["first_partition"]) {

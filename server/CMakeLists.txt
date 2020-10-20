@@ -16,11 +16,11 @@ SET(SERVER_SOURCE_FILES
   Controller.cpp
   dsxdyn.c)
 
-ADD_EXECUTABLE(dSpaceX ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES})
-target_include_directories(dSpaceX PUBLIC
+ADD_EXECUTABLE(dspacex_server ${SERVER_INCLUDE_FILES} ${SERVER_SOURCE_FILES})
+target_include_directories(dspacex_server PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include>)
-TARGET_LINK_LIBRARIES(dSpaceX
+TARGET_LINK_LIBRARIES(dspacex_server
   base64
   ${BLAS_LIBRARIES}
   pybind11::embed
@@ -37,3 +37,8 @@ TARGET_LINK_LIBRARIES(dSpaceX
   pthread
   ${ZLIB_LIBRARIES}
   )
+
+set_target_properties(dspacex_server PROPERTIES
+  OUTPUT_NAME dSpaceX
+  )
+

@@ -10,6 +10,8 @@
 #include <jsoncpp/json/json.h>
 #include <map>
 #include <functional>
+#include <pybind11/embed.h>
+namespace py = pybind11;
 
 namespace dspacex {
 
@@ -20,10 +22,19 @@ class Controller {
   Controller(const std::string &datapath_);
   void handleData(void *wsi, void *data);
   void handleText(void *wsi, const std::string &text);
+  
+  // Called by server since must be called from main thread (both vtk and pyrender use OpenGL).
+  // The Modelset owns the renderer, and it's imported on the first call to this function.
+  static void generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
+                                      const std::string& datapath, Json::Value &response);
 
-  // <ctc> pass the python function from the model
-  static void generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, /*the python function,*/ Json::Value &response);
-  struct Thumbgen { std::shared_ptr<Eigen::MatrixXf> I; /*the python function;*/ Json::Value &response; };
+  // List of these is populated by Controller thread and executed by server in main thread.
+  struct Thumbgen {
+    std::shared_ptr<Eigen::MatrixXf> I;
+    MSModelset& modelset;
+    // todo: image dims
+    Json::Value &response;
+  };
   std::list<Thumbgen> genthumbs;
   
  private:

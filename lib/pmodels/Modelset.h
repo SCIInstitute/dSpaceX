@@ -10,6 +10,8 @@
 #include "Model.h"
 
 #include <map>
+#include <pybind11/embed.h> // everything needed for embedding
+namespace py = pybind11;
 
 namespace dspacex {
 
@@ -79,6 +81,8 @@ public:
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }
   void setSamples(Eigen::VectorXf values) { samples = values; }
+  void setCustomEvaluator(std::string evaluator_name) { python_evaluator_name = evaluator_name; }
+  void setCustomRenderer(std::string renderer_name) { python_renderer_name = renderer_name; }
   
   PersistenceLevel& getPersistenceLevel(unsigned idx) { return persistence_levels[idx]; }
 
@@ -127,6 +131,16 @@ private:
   Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;
+
+public:
+  // Custom Python models for evaluation and renderering (if provided)
+  // struct python {
+    std::string python_evaluator_name;
+    py::object python_evaluator;      // model evaluation module
+    std::string python_renderer_name;
+    py::object python_renderer_mod;   // rendering module with renderer class and utils
+    py::object python_renderer;       // instantiated thumbnail renderer (it's costly to repeatedly reinstantiate this)
+  // };
 };
 
 

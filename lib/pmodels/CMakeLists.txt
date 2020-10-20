@@ -1,3 +1,5 @@
+find_package(pybind11 REQUIRED)
+
 SET(PMODELS_HEADER_FILES
   Modelset.h
   Model.h
@@ -16,4 +18,5 @@ TARGET_INCLUDE_DIRECTORIES(pmodels PUBLIC
 TARGET_LINK_LIBRARIES(pmodels
   dspacex
   dspacex_utils
+  pybind11::embed
   lodepng)
