@@ -5,7 +5,7 @@
 #include <iostream>
 #include <Eigen/Core>
 #include "imageutils/Image.h"
-#include "dspacex/Fieldtype.h"
+#include "dataset/Fieldtype.h"
 
 namespace dspacex {
 

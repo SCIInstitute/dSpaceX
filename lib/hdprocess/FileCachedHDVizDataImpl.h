@@ -5,7 +5,7 @@
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/Linalg.h"
 #include "HDVizData.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 
 #include <string>
 

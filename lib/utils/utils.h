@@ -1,16 +1,33 @@
 #pragma once
 
 #include "flinalg/Linalg.h"
-#include "dspacex/Precision.h"
+#include "DenseVectorSample.h"
+#include "flinalg/DenseMatrix.h"
+#include "hdprocess/HDGenericProcessor.h"
 
 #include <Eigen/Dense>
 
 namespace HDProcess {
 
-FortranLinalg::DenseMatrix<Precision> computeDistanceMatrix(
-    FortranLinalg::DenseMatrix<Precision> &x);
+template<typename T>
+FortranLinalg::DenseMatrix<T> computeDistanceMatrix(FortranLinalg::DenseMatrix<T> &x) {
+  std::vector<DenseVectorSample*> samples;
+  for (int j = 0; j < x.N(); j++) {
+    FortranLinalg::DenseVector<T> vector(x.M());
+    for (int i = 0; i < x.M(); i++) {
+      vector(i) = x(i, j);
+    }
+    DenseVectorSample *sample = new DenseVectorSample(vector);
+    samples.push_back(sample);
+  }
 
+  HDGenericProcessor<DenseVectorSample, DenseVectorEuclideanMetric> genericProcessor;
+  DenseVectorEuclideanMetric metric;
+  return genericProcessor.computeDistances(samples, metric);
 }
+
+} // HDProcess
+
 
 namespace dspacex {
 

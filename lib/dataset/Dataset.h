@@ -2,7 +2,7 @@
 
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 #include "imageutils/Image.h"
 #include "pmodels/Modelset.h"
 

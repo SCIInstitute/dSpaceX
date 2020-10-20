@@ -1,10 +1,10 @@
 #pragma once
 
-#include "dspacex/Dataset.h"
+#include "dataset/Dataset.h"
 #include "hdprocess/HDProcessResult.h"
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
-#include "dspacex/Fieldtype.h"
+#include "dataset/Fieldtype.h"
 #include "utils/DataExport.h"
 
 #include <jsoncpp/json/json.h>

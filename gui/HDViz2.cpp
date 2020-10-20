@@ -20,7 +20,7 @@
 #include "hdprocess/LegacyTopologyDataImpl.h"
 #include "hdprocess/util/DenseVectorSample.h"
 #include "hdprocess/util/csv/loaders.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 #include <tclap/CmdLine.h>
 
 #include <cassert>

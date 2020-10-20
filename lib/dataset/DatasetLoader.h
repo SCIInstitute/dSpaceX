@@ -4,7 +4,7 @@
 #include "flinalg/Linalg.h"
 #include "flinalg/LinalgIO.h"
 #include "imageutils/Image.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 #include <yaml-cpp/yaml.h>
 #include "pmodels/Modelset.h"
 

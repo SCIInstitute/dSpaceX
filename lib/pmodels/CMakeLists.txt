@@ -16,7 +16,7 @@ TARGET_INCLUDE_DIRECTORIES(pmodels PUBLIC
   $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>
   $<INSTALL_INTERFACE:include>)
 TARGET_LINK_LIBRARIES(pmodels
-  dspacex
+  dataset
   dspacex_utils
   pybind11::embed
   lodepng)

@@ -2,7 +2,7 @@
 
 #include "flinalg/DenseVector.h"
 #include "metrics/EuclideanMetric.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 
 
 class DenseVectorSample {

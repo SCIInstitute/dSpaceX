@@ -1,7 +1,7 @@
 #include <base64/base64.h>
 #include <boost/filesystem.hpp>
 #include "Controller.h"
-#include "dspacex/DatasetLoader.h"
+#include "dataset/DatasetLoader.h"
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/DenseVector.h"
 #include "flinalg/Linalg.h"
@@ -11,7 +11,7 @@
 #include "hdprocess/SimpleHDVizDataImpl.h"
 #include "hdprocess/TopologyData.h"
 #include <jsoncpp/json/json.h>
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 #include "serverlib/wst.h"
 #include "utils/DenseVectorSample.h"
 #include "utils/loaders.h"
@@ -1186,7 +1186,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
     m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix();
   } else if (m_currentDataset->hasSamplesMatrix()) {
     auto samplesMatrix = m_currentDataset->getSamplesMatrix();
-    m_currentDistanceMatrix = HDProcess::computeDistanceMatrix(samplesMatrix);
+    m_currentDistanceMatrix = HDProcess::computeDistanceMatrix<Precision>(samplesMatrix);
   } else {
     std::cerr << "processData failed: no distance matrix or samplesMatrix available\n";
     return false;

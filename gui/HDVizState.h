@@ -2,7 +2,7 @@
 
 #include "flinalg/LinalgIO.h"
 #include "hdprocess/HDVizData.h"
-#include "dspacex/Precision.h"
+#include "dataset/Precision.h"
 
 class HDVizState {
  public:

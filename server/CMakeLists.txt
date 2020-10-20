@@ -31,7 +31,7 @@ TARGET_LINK_LIBRARIES(dspacex_server
   jsoncpp
   pmodels
   dspacex_utils
-  dspacex
+  dataset
   libwsserver
   ${LAPACK_LIBRARIES}
   pthread
