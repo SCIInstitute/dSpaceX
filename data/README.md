@@ -37,7 +37,7 @@ already set up the server and/or the client then the conda environment should be
 3. Run the process_main.py python script, this takes one argument a JSON file which specifies data locations and settings
 for the tool, below we provide detailed examples of the JSON files.
 ```bash
-   <.../dSpaceX/data>$ python processor_main.py <path_to_your_config_file>/<file_name>.json 
+   <.../dSpaceX/data>$ python process_data.py <path_to_your_config_file>/<file_name>.json 
    ```
 
 ## The JSON file

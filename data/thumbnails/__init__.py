@@ -6,4 +6,4 @@ mesh renderer
 
 # shortcuts (with standardized names used for dSpaceX model evaluation
 from .vtk_mesh_renderer import vtkMeshRenderer as MeshRenderer
-from .vtk_mesh_renderer import vtkToNumpy as toNumpy
+#from .pyvista_mesh_renderer import pvMeshRenderer as MeshRenderer

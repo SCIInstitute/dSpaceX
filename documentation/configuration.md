@@ -138,8 +138,28 @@ models:
            sigma: 0.01
            num_interps: 500
 
+- fieldname: avg_field
+  type: pca
+  mesh: true
+  python_evaluator: None
+  python_renderer: data.thumbnails          # module must have MeshRenderer class
+  root: ms_partitions/avg_field_pca_model
+  persistences: persistence-?
+  crystals: crystal-?
+  padZeroes: false
+  partitions: ms_partitions.csv
+  first_partition: 21
+  ms:
+    knn: 15
+    sigma: 0.25
+    smooth: 15
+    depth: 20
+    noise: true
+    curvepoints: 50
+    normalize: true
+
   - fieldname: Angle
-    type: custom                                        # a new model type (no dynamic interpolation will be available, so precomputed should be provided)
+    type: custom                                        # a new model type (dynamic interpolation will require external evaluators and renderers and/or precomputed should be provided)
     root: custom_models/custom_model_param_Angle
     persistences: persistence-?
     crystals: crystal-?

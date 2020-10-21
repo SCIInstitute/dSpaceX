@@ -832,15 +832,14 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
     modelset.python_renderer = modelset.python_renderer_mod.attr("MeshRenderer")("datapath"_a = datapath);
 //todo: it needs a default sample image to determine polys; currently default in MeshRenderer ctor points to nanoparticles_mesh.       "default_mesh"_a = );
   }
-  auto& utils = modelset.python_renderer_mod;
   auto& ren = modelset.python_renderer;
 
-  ren.attr("updateMesh")(*I);
-  ren.attr("update")();
-  auto npvec = utils.attr("toNumpy")(ren.attr("screenshot")()).cast<py::array_t<unsigned char>>();
+  ren.attr("updateVertices")(*I);
+  auto npvec = ren.attr("getImage")().cast<py::array_t<unsigned char>>();
 
   //Image image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-  Image image(dspacex::toStdVec(npvec), 300, 300, 3); // <ctc> dammit hard-coded size-- basically hard-coded anyway with sample img
+  // <ctc> TODO: let caller (UI) request desired image size (could be thumbnail size, larger for zoomed, desired for sprite, etc)
+  Image image(dspacex::toStdVec(npvec), 300, 300, 3);
 
 #if 0
   // <ctc> debug by also dumping the generated image

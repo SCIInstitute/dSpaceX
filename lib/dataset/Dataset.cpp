@@ -19,6 +19,7 @@ const Image& Dataset::getThumbnail(int idx) const
   return m_thumbnails[idx];
 }
 
+//<ctc> cleanup
 // std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std::string& modelname, int p, int c)
 // {
 //   for (auto modelset : m_models[fieldname])
