@@ -211,10 +211,12 @@ std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coo
   std::shared_ptr<Eigen::MatrixXf> Ip(new Eigen::MatrixXf((Wt * z_coord) + w0));
   Eigen::MatrixXf& I(*Ip);
   
+#if 0 // this eliminates vertices when evaluating a corresponding-mesh model (that produces new vertices)
   // Ross said to get rid of anything below 0 and scale normalize the rest 2020.06.07
   for (unsigned i = 0; i < I.size(); i++) {
     I(i) = std::max(0.0f, I(i));
   }
+#endif
   
   // scale normalize so that all values are in range [0,1]. For each member X: X = (X - min) / (max - min).
   auto minval(I.minCoeff());

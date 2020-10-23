@@ -61,15 +61,21 @@ Image::Image(std::vector<unsigned char> &&data, unsigned w, unsigned h, unsigned
   if (c != 1 && c != 3 && c != 4) {
     throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
   }
+  if (data.size() != w * h * c) {
+    throw std::runtime_error("tried to initialize Image from an array of different size than expected");
+  }
 }
 
-// initialize by moving an input vector of the raw image
-Image::Image(std::string &&data, unsigned w, unsigned h, unsigned c) :
+// initialize by copying from string of the raw image
+Image::Image(const std::string &data, unsigned w, unsigned h, unsigned c) :
   m_width(w), m_height(h), m_format(c == 1 ? LCT_GREY : c == 3 ? LCT_RGB : LCT_RGBA),
   m_data(data.begin(), data.end()), m_decompressed(true)
 {
   if (c != 1 && c != 3 && c != 4) {
     throw std::runtime_error("Fixme: currently only support 1-, 3-, or 4-channel images");
+  }
+  if (data.length() != w * h * c) {
+    throw std::runtime_error("tried to initialize Image from an array of different size than expected");
   }
 }
 Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {

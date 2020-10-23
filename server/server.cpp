@@ -77,10 +77,11 @@ int main(int argc, char *argv[])
   // Keep server alive.
   static int snapshotidx = 0;
   while (wst_statusServer(0)) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));  // <ctc> maybe even make this shorter
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     while (!controller->genthumbs.empty()) {
       auto item(controller->genthumbs.front());
-      dspacex::Controller::generateCustomThumbnail(item.I, item.modelset, datapath, item.response);
+      dspacex::Controller::generateCustomThumbnail(item.I, item.modelset, item.response,
+                                                   item.width, item.height);
       controller->genthumbs.pop_front();
     }
   }

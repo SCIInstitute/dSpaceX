@@ -26,14 +26,15 @@ class Controller {
   // Called by server since must be called from main thread (both vtk and pyrender use OpenGL).
   // The Modelset owns the renderer, and it's imported on the first call to this function.
   static void generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
-                                      const std::string& datapath, Json::Value &response);
+                                      Json::Value &response, unsigned width, unsigned height);
+  static void initializeCustomRenderer(MSModelset& modelset, const std::string& default_mesh);
 
   // List of these is populated by Controller thread and executed by server in main thread.
   struct Thumbgen {
     std::shared_ptr<Eigen::MatrixXf> I;
     MSModelset& modelset;
-    // todo: image dims
     Json::Value &response;
+    unsigned width{300}, height{300};
   };
   std::list<Thumbgen> genthumbs;
   

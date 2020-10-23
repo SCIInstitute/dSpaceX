@@ -509,6 +509,14 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
     std::cout << "Model provides custom thumbnail renderer Python module: " << python_renderer << ".\n";
   }
 
+  std::string default_mesh;
+  if (modelNode["default_mesh"]) {
+    default_mesh = basePathOf(filePath) + modelNode["default_mesh"].as<std::string>();
+  }
+  else {
+    default_mesh = basePathOf(filePath) + std::string("default.ply");
+  }
+
   if (!modelNode["partitions"]) {
     std::cerr << "Model missing 'partitions' field (specifyies samples for the crystals at each persistence level).\n";
     return nullptr;
@@ -570,6 +578,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   }
   ms_of_models->setCustomEvaluator(python_evaluator);
   ms_of_models->setCustomRenderer(python_renderer);
+  ms_of_models->setDefaultMesh(default_mesh);
 
   int plvl_start = 0;
   if (modelNode["first_partition"]) {

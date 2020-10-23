@@ -19,7 +19,7 @@ class Image {
 
   Image(const unsigned char data[], unsigned w, unsigned h, unsigned c);
   Image(std::vector<unsigned char> &&data, unsigned w, unsigned h, unsigned c);
-  Image(std::string &&data, unsigned w, unsigned h, unsigned c);
+  Image(const std::string &data, unsigned w, unsigned h, unsigned c);
 
   /// write image (throw exception on failure)
   void write(const std::string& filename) const;
@@ -27,8 +27,8 @@ class Image {
   const std::vector<unsigned char> getData() const;     // returns uncompressed image data
   const std::vector<unsigned char> getPNGData() const;  // returns png-encoded (i.e., compressed) data
 
-  int getWidth() const { return m_width; }
-  int getHeight() const { return m_height; }
+  unsigned getWidth() const { return m_width; }
+  unsigned getHeight() const { return m_height; }
   int numChannels() const;
   Format getFormat() const;
   

@@ -28,6 +28,7 @@
 #include <functional>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <chrono>
 #include <thread>
 #include <pybind11/eigen.h>
@@ -719,9 +720,16 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto modelSigma = request["modelSigma"].asFloat();
   
   // try to find the requested model
+  time_point<Clock> start = Clock::now();
+
   auto modelset(m_currentDataset->getModelset(fieldname, modelname));
   auto persistence_idx = getAdjustedPersistenceLevelIdx(persistence, modelset);
   auto model(modelset ? modelset->getModel(persistence_idx, crystalId) : nullptr);
+
+  time_point<Clock> end = Clock::now();
+  milliseconds diff = duration_cast<milliseconds>(end - start);
+  std::cout << "model loaded in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+  start = end;
 
   // if there isn't a model or original images requested just show its original samples' images 
   bool showOrig = request["showOrig"].asBool();
@@ -773,9 +781,16 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
       // evaluate model at this coordinate
       std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);
 
+      end = Clock::now();
+      diff = duration_cast<milliseconds>(end - start);
+      std::cout << "model evaluated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+      start = end;
+
       if (!modelset->python_renderer_name.empty()) {
-        // push to genthumbs so main thread can call the gl rendering function (through python, but gl nonetheless)
-        genthumbs.emplace_back(Thumbgen{I, *modelset, /*sample_image.getWidth(), sample_image.getHeight(),*/ response});
+        // push to genthumbs so main thread can call the python rendering function
+        genthumbs.emplace_back(Thumbgen{I, *modelset, response,
+                                        sample_image.getWidth(),
+                                        sample_image.getHeight()});
       }
       else {
         std::cerr << "WARNING: no Python render module for the mesh produced by this model.\n:";
@@ -785,11 +800,18 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
       response["fieldvals"].append(fieldval);
     }    
         
-    if (modelset->python_renderer_mod) {
+    if (!modelset->python_renderer_name.empty()) {
+      start = Clock::now();
+
       // wait until all thumbnails have been generated and added to response
       while (!genthumbs.empty()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
       }
+
+      time_point<Clock> end = Clock::now();
+      milliseconds diff = duration_cast<milliseconds>(end - start);
+      std::cout << "waited for thumbnails (50ms at a time) for " << static_cast<float>(diff.count()) << " ms" << std::endl;
+      start = end;
     }
   }
   else {
@@ -818,30 +840,67 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 }
 
 /*
+ * Initialize custom Python shape renderer for this model.
+ * NOTE: must be called from main thread if renderer uses OpenGL (ex: vtk, pyvista, pyrender, itk)
+ */
+void Controller::initializeCustomRenderer(MSModelset& modelset, const std::string& default_mesh) {
+  using namespace pybind11::literals;
+
+  time_point<Clock> start = Clock::now();
+
+  modelset.python_renderer_mod = py::module::import(modelset.python_renderer_name.c_str());
+  auto &module = modelset.python_renderer_mod;
+
+  time_point<Clock> end = Clock::now();
+  std::cout << "MeshRenderer modules loaded in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
+  start = end;
+    
+  modelset.python_renderer = module.attr("MeshRenderer")("default_mesh"_a = default_mesh, "scale"_a = 1.0);
+
+  end = Clock::now();
+  std::cout << "MeshRenderer class created in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
+}
+
+/*
  * Calls a custom Python thumbnail generation function with the matrix produced by the model evaluation.
- * - MUST be called from main thread (aka server)
- * <ctc> there should also be a custom model evalution function provided by the model
- * <ctc> this custom thumbnail generator should be provided by the model
- * <ctc> how can a model in the config.json specify python functions to call? Pretty easy actually since they're already str attrs
+ * - MUST be called from main thread (aka main in server.cpp) if renderer uses OpenGL (most of them do)
 */
 void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
-                                         const std::string& datapath, Json::Value &response) {
+                                         Json::Value &response, unsigned width, unsigned height) {
   using namespace pybind11::literals;
+
   if (!modelset.python_renderer) {
-    modelset.python_renderer_mod = py::module::import(modelset.python_renderer_name.c_str());
-    modelset.python_renderer = modelset.python_renderer_mod.attr("MeshRenderer")("datapath"_a = datapath);
-//todo: it needs a default sample image to determine polys; currently default in MeshRenderer ctor points to nanoparticles_mesh.       "default_mesh"_a = );
+    initializeCustomRenderer(modelset, modelset.default_mesh);
   }
   auto& ren = modelset.python_renderer;
 
+  time_point<Clock> start = Clock::now();
+
   ren.attr("updateVertices")(*I);
-  auto npvec = ren.attr("getImage")().cast<py::array_t<unsigned char>>();
+  
+  time_point<Clock> end = Clock::now();
+  milliseconds diff = duration_cast<milliseconds>(end - start);
+  std::cout << "vertices updated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  start = end;
 
-  //Image image(toStdVec(numpyvec), sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels()));
-  // <ctc> TODO: let caller (UI) request desired image size (could be thumbnail size, larger for zoomed, desired for sprite, etc)
-  Image image(dspacex::toStdVec(npvec), 300, 300, 3);
+  py::list resolution;
+  resolution.append(width);
+  resolution.append(height);
+  auto npvec = ren.attr("getImage")("resolution"_a = resolution).cast<py::array_t<unsigned char>>();
 
-#if 0
+  end = Clock::now();
+  diff = duration_cast<milliseconds>(end - start);
+  std::cout << "image generated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  start = end;
+
+  Image image(dspacex::toStdVec(npvec), width, height, 3);
+
+  end = Clock::now();
+  diff = duration_cast<milliseconds>(end - start);
+  std::cout << "image generated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  start = end;
+
+#if 1
   // <ctc> debug by also dumping the generated image
   std::ostringstream os;
   static int genidx{0};
@@ -851,6 +910,11 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
   
   // add result image to response 
   addImageToResponse(response, image);
+
+  end = Clock::now();
+  diff = duration_cast<milliseconds>(end - start);
+  std::cout << "image added to response in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  start = end;
 }
 
 /**

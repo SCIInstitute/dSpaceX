@@ -37,21 +37,21 @@ Renders a 2d image (a "screenshot") of a mesh.
 
 """
 class pvMeshRenderer:
-    def __init__(self,
-                 datapath = './nanoparticles_mesh/unprocessed_data/shape_representations/',
-                 default_mesh = '1.ply', onscreen = False, singleview = False):
+    def __init__(self, default_mesh = '1.ply', scale = 1.3,
+                 onscreen = False, singleview = False):
         """
         :param offscreet: don't show a window
         :param singleview: render mesh only without silouettes along bottom
 
         """
-
-        self.datapath = datapath
+        
+        self.scale = scale
         shape = (1,1) if singleview else "1/3"
 
         # Create a polydata and load the default mesh.
         self.polydata = vtk.vtkPolyData()
-        self.plotter = pyvista.Plotter(notebook=False, off_screen=not onscreen, shape=shape, border=True)
+        self.plotter = pyvista.Plotter(notebook=False, off_screen=not onscreen,
+                                       shape=shape, border=True)
         self.plotter.set_background([1,1,1])
         self.loadNewMesh(default_mesh)
 
@@ -59,15 +59,20 @@ class pvMeshRenderer:
         if onscreen:
             self.plotter.show()
 
-    def loadNewMesh(self, meshname, color = [1.0, 0.766, 0.336]):
+    def loadNewMesh(self, filename, color = [1.0, 0.766, 0.336]):
         """
         Loads a new mesh and updates self.polydata.
         :param filename: mesh to load
         :param color: color of mesh to be rendered
         """
 
+        # make sure file can be read
+        if (not vtk.vtkPLYReader().CanReadFile(filename)):
+            print("ERROR: cannot load " + filename)
+            return
+            
         reader = vtk.vtkPLYReader()
-        reader.SetFileName(self.datapath + meshname)
+        reader.SetFileName(filename)
         reader.Update() # when this function is called from c++, reader.Update() causes:
             # dSpaceX[24453:12650119] dynamic_cast error 1: Both of the following type_info's should have public visibility.
             #                                               At least one of them is hidden.
@@ -83,23 +88,24 @@ class pvMeshRenderer:
             # xz view
             self.plotter.subplot(0)
             self.plotter.add_mesh(self.polydata, color=[0,0,0], name="sample")
-            self.plotter.view_xz(negative=True)
 
             # xy view
             self.plotter.subplot(1)
             self.plotter.add_mesh(self.polydata, color=[0,0,0], name="sample")
-            self.plotter.view_xy(negative=True)
 
             # yz view
             self.plotter.subplot(2)
             self.plotter.add_mesh(self.polydata, color=[0,0,0], name="sample")
-            self.plotter.view_yz(negative=True)
 
             # isometric view
             self.plotter.subplot(3)
 
-        self.plotter.isometric_view()
-        self.plotter.add_mesh(self.polydata, color=color, specular=0.5, specular_power=15, smooth_shading=True, name="sample")
+        # since it uses smooth shading, it creates a copy of polydata, so it
+        # must be re-added when vertices are updated (so save the color)
+        self.color = color
+        self.plotter.add_mesh(self.polydata, color=self.color, specular=0.5,
+                              specular_power=15, smooth_shading=True, name="sample")
+
         self.setCameraPos()
 
     def updateVertices(self, vertices = []):
@@ -117,6 +123,8 @@ class pvMeshRenderer:
             for i in range(len(vertices)):
                 points.SetPoint(i, vertices[i])
 
+        self.plotter.add_mesh(self.polydata, color=self.color, specular=0.5,
+                              specular_power=15, smooth_shading=True, name="sample")
         self.setCameraPos()
 
     #def updateFaces(self, faces = []):
@@ -131,16 +139,30 @@ class pvMeshRenderer:
         By default, use a position slightly closer than isometric_view.
         """
 
-        # activate main view
+        # reset camera pos in silhouette views
         if self.plotter.shape == (4,):
+            # xz view
+            self.plotter.subplot(0)
+            self.plotter.view_xz(negative=True)
+
+            # xy view
+            self.plotter.subplot(1)
+            self.plotter.view_xy(negative=True)
+
+            # yz view
+            self.plotter.subplot(2)
+            self.plotter.view_yz(negative=True)
+
+            # isometric view
             self.plotter.subplot(3)
 
+        # set camera pos in main view
         if not camera_pos:
-            self.plotter.reset_camera()
+            self.plotter.isometric_view()
             lf = numpy.asarray(self.plotter.camera_position[0])
             la = numpy.asarray(self.plotter.camera_position[1])
             vup = numpy.asarray(self.plotter.camera_position[2])
-            pos = (lf - la) / 1.3
+            pos = (lf - la) / self.scale
             self.plotter.camera_position = (pos, la, vup)
         else:
             self.plotter.camera_position = camera_pos    
@@ -150,5 +172,9 @@ class pvMeshRenderer:
         Returns a numpy array of the current view.
         """
 
-        return self.plotter.screenshot(return_img=True, window_size=resolution)
-        
+        img = self.plotter.screenshot(return_img=True, window_size=resolution)
+
+        # must return a copy or it gets lost on the way to the c++ caller
+        return img.copy()
+
+

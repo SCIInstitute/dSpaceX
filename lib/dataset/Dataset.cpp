@@ -19,21 +19,6 @@ const Image& Dataset::getThumbnail(int idx) const
   return m_thumbnails[idx];
 }
 
-//<ctc> cleanup
-// std::shared_ptr<Model> Dataset::getModel(const std::string& fieldname, const std::string& modelname, int p, int c)
-// {
-//   for (auto modelset : m_models[fieldname])
-//     if (modelset->modelName() == modelname)
-//       return modelset->getModel(p, c);
-
-//   return nullptr;
-// }
-
-// bool Dataset::hasModel(const std::string& fieldname, const std::string& modelname, int p, int c) const
-// {
-//   return const_cast<Dataset*>(this)->getModel(fieldname, modelname, p, c) ? true : false;
-// }
-
 std::shared_ptr<MSModelset> Dataset::getModelset(const std::string& fieldname, const std::string& modelname) {
   for (auto modelset : m_models[fieldname])
     if (modelset->modelName() == modelname)

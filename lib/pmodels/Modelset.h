@@ -83,6 +83,7 @@ public:
   void setSamples(Eigen::VectorXf values) { samples = values; }
   void setCustomEvaluator(std::string evaluator_name) { python_evaluator_name = evaluator_name; }
   void setCustomRenderer(std::string renderer_name) { python_renderer_name = renderer_name; }
+  void setDefaultMesh(std::string filename) { default_mesh = filename; }
   
   PersistenceLevel& getPersistenceLevel(unsigned idx) { return persistence_levels[idx]; }
 
@@ -138,6 +139,7 @@ public:
     std::string python_evaluator_name;
     py::object python_evaluator;      // model evaluation module
     std::string python_renderer_name;
+    std::string default_mesh;         // default mesh for rendering (corresponding meshes share the same faces)
     py::object python_renderer_mod;   // rendering module with renderer class and utils
     py::object python_renderer;       // instantiated thumbnail renderer (it's costly to repeatedly reinstantiate this)
   // };

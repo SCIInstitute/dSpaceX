@@ -68,6 +68,7 @@ function install_conda() {
        pybind11==2.5.0 \
        jupyter==1.0.0 \
        vtk==9.0.1 \
+       ctags==5.8 \
        scikit-image==0.17.2
   then return 1; fi
 
