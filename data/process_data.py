@@ -308,9 +308,9 @@ def calculate_distance(input_config, output_directory, precision = np.float32):
 
     # save distance as csv and bin (w/ dims)
     filename = os.path.join(output_directory, input_config['datasetName'] + '_distance')
-    np.savetxt(filename + '.csv'), distance, delimiter=',')
+    np.savetxt(filename + '.csv', distance, delimiter=',')
 
-    np.tofile(filename + '.bin'), precision(distance))
+    np.tofile(filename + '.bin', precision(distance))
     dims = open(filename + '.bin.dims', 'w')
     dims.write(str(distance.shape[0]) + ' ' + str(distance.shape[1]) + ' ')
     dims.write("float32") if precision == np.float32 else dims.write("float64")

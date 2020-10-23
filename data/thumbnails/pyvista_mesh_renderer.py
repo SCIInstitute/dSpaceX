@@ -53,7 +53,9 @@ class pvMeshRenderer:
         self.plotter = pyvista.Plotter(notebook=False, off_screen=not onscreen,
                                        shape=shape, border=True)
         self.plotter.set_background([1,1,1])
-        self.loadNewMesh(default_mesh)
+
+        if default_mesh:
+            self.loadNewMesh(default_mesh)
 
         # show interactive view if onscreen
         if onscreen:
