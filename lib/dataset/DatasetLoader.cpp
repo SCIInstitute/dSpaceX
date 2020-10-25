@@ -396,7 +396,10 @@ EmbeddingPair DatasetLoader::parseEmbedding(
 // In the config.yaml for the dataset:
 // models:
 //   - fieldname: Max Stress
-//     type: shapeodds                                            # could be shapeodds or sharedgp
+//     type: shapeodds                                            # could be shapeodds, pca, sharedgp, custom
+//     python_evaluator: None                                     # custom evaluator classname and its module
+//     python_renderer: [VolumeRenderer, data.thumbnails]         # custom renderer classname and its module
+//     python_renderer: [RendererName, module, meshname.ply]      # for meshes meshname used to initialize connected mesh faces
 //     root: shapeodds_models_maxStress                           # directory of models for this field
 //     persistences: persistence-?                                # persistence files
 //     crystals: crystal-?                                        # in each persistence dir are its crystals
@@ -479,6 +482,12 @@ bool setMSParams(MSModelset& modelset, const YAML::Node& ms) {
 
 std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNode, const std::string& filePath)
 {
+  if (!modelNode["root"]) {
+    std::cerr << "Model missing 'root' field.\n";
+    return nullptr;
+  }
+  std::string modelBasePath = basePathOf(filePath) + '/' + modelNode["root"].as<std::string>();
+
   if (!modelNode["fieldname"]) {
     std::cerr << "Model entry missing 'fieldname'.\n";
     return nullptr;
@@ -492,29 +501,20 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
   std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
 
-  bool mesh = modelNode["mesh"] && modelNode["mesh"].as<std::string>() == std::string("true");
-  if (mesh) {
-    std::cout << "This is a mesh model generating corresponding sets of points.\n";
-  }
-
-  std::string python_evaluator{"None"};
+  std::vector<std::string> python_evaluator;
   if (modelNode["python_evaluator"]) {
-    python_evaluator = modelNode["python_evaluator"].as<std::string>();
-    std::cout << "Model provides custom evaluator Python module: " << python_evaluator << ".\n";
+    python_evaluator = modelNode["python_evaluator"].as<std::vector<std::string>>();
+    std::cout << "Model provides custom python thumbnail evaluator\n";
   }
 
-  std::string python_renderer{"None"};
+  std::vector<std::string> python_renderer;
   if (modelNode["python_renderer"]) {
-    python_renderer = modelNode["python_renderer"].as<std::string>();
-    std::cout << "Model provides custom thumbnail renderer Python module: " << python_renderer << ".\n";
-  }
-
-  std::string default_mesh;
-  if (modelNode["default_mesh"]) {
-    default_mesh = basePathOf(filePath) + modelNode["default_mesh"].as<std::string>();
-  }
-  else {
-    default_mesh = basePathOf(filePath) + std::string("default.ply");
+    python_renderer = modelNode["python_renderer"].as<std::vector<std::string>>();
+    if (python_renderer.size() > 2) {
+      // first arg is assumed to be default filename to initialize renderer
+      python_renderer[2] = basePathOf(filePath) + '/' + python_renderer[2];
+    }
+    std::cout << "Model provides custom python thumbnail renderer\n";
   }
 
   if (!modelNode["partitions"]) {
@@ -526,19 +526,13 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   InputFormat partitions_format = InputFormat(partitions_suffix);
   std::cout << "Partitions file format: " << partitions_format << std::endl;
 
-  if (!modelNode["root"]) {
-    std::cerr << "Model missing 'root' field.\n";
-    return nullptr;
-  }
-  std::string modelsBasePath = basePathOf(filePath) + modelNode["root"].as<std::string>();
-
   if (!modelNode["persistences"]) {
     std::cerr << "Model missing 'persistences' field specifying base filename for persistence levels.\n";
     return nullptr;
   }
   std::string persistencesBase = modelNode["persistences"].as<std::string>();
   int persistenceNameLoc = persistencesBase.find('?');
-  std::string persistencesBasePath = modelsBasePath + '/' + persistencesBase.substr(0, persistenceNameLoc);
+  std::string persistencesBasePath = modelBasePath + '/' + persistencesBase.substr(0, persistenceNameLoc);
 
   if (!modelNode["crystals"]) {
     std::cerr << "Model missing 'crystals' field specifying base filename for the crystals at each level.\n";
@@ -565,12 +559,12 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   }
 
   // crystalPartitions: array of P persistence levels x N samples per level, indicating the crystal to which each sample belongs
-  auto partition_file = modelsBasePath + '/' + partitions;
+  auto partition_file = modelBasePath + '/' + partitions;
   Eigen::MatrixXi crystalPartitions(IO::readCSVMatrix<int>(partition_file));
   auto npersistences = crystalPartitions.rows(), nsamples = crystalPartitions.cols();
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
-  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, mesh, rotate));
+  auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
   std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << " samples using:\n";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
@@ -578,7 +572,6 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
   }
   ms_of_models->setCustomEvaluator(python_evaluator);
   ms_of_models->setCustomRenderer(python_renderer);
-  ms_of_models->setDefaultMesh(default_mesh);
 
   int plvl_start = 0;
   if (modelNode["first_partition"]) {

@@ -1,6 +1,13 @@
 #include "Model.h"
 #include "lodepng.h"
 
+#include <chrono>
+using Clock = std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using namespace std::literals::chrono_literals;
+
 namespace dspacex {
 
 Model::Type Model::strToType(const std::string& type) {
@@ -157,6 +164,8 @@ float Model::testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix
 std::shared_ptr<Eigen::MatrixXf> ShapeOddsModel::evaluate(const Eigen::VectorXf &z_coord) const
 //const bool writeToDisk, const std::string outpath, unsigned w, unsigned h) const
 {
+  time_point<Clock> start = Clock::now();
+
   // I = f(z):
   //  phi = W * z + w0
   //  I = 1 / ( 1 + e^(-phi) )
@@ -173,6 +182,9 @@ std::shared_ptr<Eigen::MatrixXf> ShapeOddsModel::evaluate(const Eigen::VectorXf 
   std::shared_ptr<Eigen::MatrixXf> I(new Eigen::MatrixXf(phi.array().inverse()));
   //std::cout << "I = 1 / (1 + e^(-phi)):\n" << I << std::endl;
   
+  time_point<Clock> end = Clock::now();
+  std::cout << "ShapeOdds model evaluated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
+
   // if (writeToDisk)
   // {
   //   Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> image = (I.array() * 255.0).cast<unsigned char>();
@@ -200,6 +212,8 @@ std::shared_ptr<Eigen::MatrixXf> ShapeOddsModel::evaluate(const Eigen::VectorXf 
 std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coord) const
                                    //const bool writeToDisk, const std::string outpath, unsigned w, unsigned h) const
 {
+  time_point<Clock> start = Clock::now();
+
   //evaluate this as a PCA model:
   // z = (x - w0)W^t  // computed using Model::getNewLatentSpaceValue (and not like this says)
   // x = zW + w0
@@ -224,6 +238,8 @@ std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coo
   auto maxval(I.maxCoeff());
   I.array() -= minval;
   I.array() /= (maxval - minval);
+
+  std::cout << "PCA model evaluated in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
 
   return Ip;
 }

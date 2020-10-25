@@ -6,5 +6,6 @@ mesh renderer
 """
 
 # shortcuts (with standardized names used for dSpaceX model evaluation
-#from .vtk_mesh_renderer import vtkMeshRenderer as MeshRenderer
 from .pyvista_mesh_renderer import pvMeshRenderer as MeshRenderer
+from .pyvista_volume_renderer import pvVolumeRenderer as VolumeRenderer
+

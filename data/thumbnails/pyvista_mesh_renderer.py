@@ -37,14 +37,16 @@ Renders a 2d image (a "screenshot") of a mesh.
 
 """
 class pvMeshRenderer:
-    def __init__(self, default_mesh = '1.ply', scale = 1.3,
+    def __init__(self, default = '1.ply', color = [1.0, 0.766, 0.336], scale = 1.3,
                  onscreen = False, singleview = False):
         """
         :param offscreet: don't show a window
         :param singleview: render mesh only without silouettes along bottom
-
+        :param scale: distance from camera to object (larger is closer)
+        :param color: color of mesh to be rendered
         """
         
+        self.color = color
         self.scale = scale
         shape = (1,1) if singleview else "1/3"
 
@@ -54,18 +56,17 @@ class pvMeshRenderer:
                                        shape=shape, border=True)
         self.plotter.set_background([1,1,1])
 
-        if default_mesh:
-            self.loadNewMesh(default_mesh)
+        if default:
+            self.loadNewMesh(default)
 
         # show interactive view if onscreen
         if onscreen:
             self.plotter.show()
 
-    def loadNewMesh(self, filename, color = [1.0, 0.766, 0.336]):
+    def loadNewMesh(self, filename):
         """
         Loads a new mesh and updates self.polydata.
         :param filename: mesh to load
-        :param color: color of mesh to be rendered
         """
 
         # make sure file can be read
@@ -102,13 +103,15 @@ class pvMeshRenderer:
             # isometric view
             self.plotter.subplot(3)
 
-        # since it uses smooth shading, it creates a copy of polydata, so it
-        # must be re-added when vertices are updated (so save the color)
-        self.color = color
+        # NOTE: since it uses smooth shading, it creates a copy of polydata, so
+        # mesh must be re-added when vertices are updated.
         self.plotter.add_mesh(self.polydata, color=self.color, specular=0.5,
                               specular_power=15, smooth_shading=True, name="sample")
 
         self.setCameraPos()
+
+    def update(self, param = []):
+        self.updateVertices(param)
 
     def updateVertices(self, vertices = []):
         """

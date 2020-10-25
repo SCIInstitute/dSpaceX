@@ -2,6 +2,12 @@
 #include "DatasetLoader.h"
 
 #include <algorithm>
+#include <chrono>
+using Clock = std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using namespace std::literals::chrono_literals;
 
 namespace dspacex {
 
@@ -61,5 +67,51 @@ const std::vector<float>& MSModelset::getCrystalSamples(int p, int c) {
   return *crystal.samples;
 }
 
+py::object& MSModelset::getCustomRenderer() {
+
+  if (!python_renderer) {
+    initializeCustomRenderer();
+  }
+
+  return python_renderer;
+}
+
+/*
+ * Initialize custom Python shape renderer for this model.
+ * MUST be called from main thread if renderer uses OpenGL (ex: vtk, pyvista, pyrender, itk)
+ */
+void MSModelset::initializeCustomRenderer() {
+  using namespace pybind11::literals;
+
+  // get the Python module containing the renderer
+  auto modname(custom_renderer[0]);
+  auto module = MSModelset::getPythonModule(modname);
+
+  time_point<Clock> start = Clock::now();
+
+  // instantiate renderer
+  std::string default_file = custom_renderer.size() > 2 ? custom_renderer[2] : "";
+  python_renderer = module.attr(custom_renderer[1].c_str())("default"_a = default_file, "scale"_a = 1.0);
+
+  std::cout << "Custom renderer created in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
+}
+
+/*
+ * Retrieves the requested Python module.
+ */
+py::object& MSModelset::getPythonModule(const std::string& modname) {
+
+  if (MSModelset::python_modules.find(modname) == MSModelset::python_modules.end()) {
+    time_point<Clock> start = Clock::now();
+
+    // import the requested module
+    MSModelset::python_modules[modname] = py::module::import(modname.c_str());
+
+    std::cout << modname <<" loaded in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
+  }
+
+  return MSModelset::python_modules[modname];
+}
+std::map<std::string, py::object> MSModelset::python_modules;
 
 } // dspacex

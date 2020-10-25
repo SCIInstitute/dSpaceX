@@ -31,7 +31,9 @@
 #include <vector>
 #include <chrono>
 #include <thread>
+#include <pybind11/embed.h>
 #include <pybind11/eigen.h>
+namespace py = pybind11;
 
 // This clock corresponds to CLOCK_MONOTONIC at the syscall level.
 using Clock = std::chrono::steady_clock;
@@ -172,7 +174,8 @@ void Controller::handleText(void *wsi, const std::string &text) {
       command(request, response);
       time_point<Clock> end = Clock::now();
       milliseconds diff = duration_cast<milliseconds>(end - start);
-      std::cout << "[" << messageId << "] " << commandName << " completed in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+      std::cout << "[" << messageId << "] " << commandName << " completed in "
+                << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
@@ -719,17 +722,17 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto crystalId = request["crystalID"].asInt();
   auto modelSigma = request["modelSigma"].asFloat();
   
-  // try to find the requested model
+
   time_point<Clock> start = Clock::now();
 
+  // try to find the requested model
   auto modelset(m_currentDataset->getModelset(fieldname, modelname));
   auto persistence_idx = getAdjustedPersistenceLevelIdx(persistence, modelset);
   auto model(modelset ? modelset->getModel(persistence_idx, crystalId) : nullptr);
 
-  time_point<Clock> end = Clock::now();
-  milliseconds diff = duration_cast<milliseconds>(end - start);
+  milliseconds diff = duration_cast<milliseconds>(Clock::now() - start);
   std::cout << "model loaded in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
-  start = end;
+
 
   // if there isn't a model or original images requested just show its original samples' images 
   bool showOrig = request["showOrig"].asBool();
@@ -768,97 +771,50 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // load a sample image to get dims of image created by model
   const Image& sample_image = m_currentDataset->getThumbnail(0);
 
-  if (modelset->generatesMeshPoints()) {
-    for (unsigned i = 0; i < numZ; i++)
-    {
-      // compute new field value and add it to response
-      auto fieldval = minval + delta * i;
-      response["fieldvals"].append(fieldval);
+  for (unsigned i = 0; i < numZ; i++)
+  {
+    // compute new field value and add it to response
+    auto fieldval = minval + delta * i;
+    response["fieldvals"].append(fieldval);
 
-      // get new latent space coordinate for this field_val
-      Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
+    // get new latent space coordinate for this field_val
+    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
 
-      // evaluate model at this coordinate
-      std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);
+    // evaluate model at this coordinate
+    std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);
 
-      end = Clock::now();
-      diff = duration_cast<milliseconds>(end - start);
-      std::cout << "model evaluated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
-      start = end;
-
-      if (!modelset->python_renderer_name.empty()) {
-        // push to genthumbs so main thread can call the python rendering function
-        genthumbs.emplace_back(Thumbgen{I, *modelset, response,
-                                        sample_image.getWidth(),
-                                        sample_image.getHeight()});
-      }
-      else {
-        std::cerr << "WARNING: no Python render module for the mesh produced by this model.\n:";
-      }        
-
-      // add field value to response
-      response["fieldvals"].append(fieldval);
-    }    
-        
-    if (!modelset->python_renderer_name.empty()) {
-      start = Clock::now();
-
-      // wait until all thumbnails have been generated and added to response
-      while (!genthumbs.empty()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-      }
-
-      time_point<Clock> end = Clock::now();
-      milliseconds diff = duration_cast<milliseconds>(end - start);
-      std::cout << "waited for thumbnails (50ms at a time) for " << static_cast<float>(diff.count()) << " ms" << std::endl;
-      start = end;
+    if (modelset->hasCustomRenderer()) {
+      // push to genthumbs list; main thread will call python rendering function
+      genthumbs.emplace_back(Thumbgen{I, *modelset, response, sample_image.getWidth(), sample_image.getHeight()});
     }
-  }
-  else {
-    for (unsigned i = 0; i < numZ; i++)
-    {
-      auto fieldval = minval + delta * i;
-
-      // get new latent space coordinate for this field_val
-      Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
-
-      // evaluate model at this coordinate
-      Eigen::MatrixXf I = *model->evaluate(z_coord);
-
+    else {
       // convert resultant matrix to a 2d image (* uses sample_image to determine dims)
-      Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
+      Image image(*I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
     
       // add result image to response 
       addImageToResponse(response, image);
-
-      // add field value to response
-      response["fieldvals"].append(fieldval);
     }
   }
   
-  response["msg"] = std::string("returning " + std::to_string(numZ) + " requested images predicted by " + modelname + " model at crystal " + std::to_string(crystalId) + " of persistence level " + std::to_string(persistence));
-}
+  if (modelset->hasCustomRenderer()) {
+    start = Clock::now();
 
-/*
- * Initialize custom Python shape renderer for this model.
- * NOTE: must be called from main thread if renderer uses OpenGL (ex: vtk, pyvista, pyrender, itk)
- */
-void Controller::initializeCustomRenderer(MSModelset& modelset, const std::string& default_mesh) {
-  using namespace pybind11::literals;
+    // wait until all thumbnails have been generated and added to response
+    while (!genthumbs.empty()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
 
-  time_point<Clock> start = Clock::now();
+    std::cout << "waited for " << numZ << " thumbnails (50ms at a time) for "
+              << duration_cast<milliseconds>(Clock::now() - start).count()
+              << " ms" << std::endl;
+  }
 
-  modelset.python_renderer_mod = py::module::import(modelset.python_renderer_name.c_str());
-  auto &module = modelset.python_renderer_mod;
-
-  time_point<Clock> end = Clock::now();
-  std::cout << "MeshRenderer modules loaded in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
-  start = end;
-    
-  modelset.python_renderer = module.attr("MeshRenderer")("default_mesh"_a = default_mesh, "scale"_a = 1.0);
-
-  end = Clock::now();
-  std::cout << "MeshRenderer class created in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
+  // inform caller of number and source of returned images
+  response["msg"] =
+    std::string("generated " + std::to_string(numZ) +
+                " P" + std::to_string(persistence) +
+                "-C" + std::to_string(crystalId) + " " +
+                modelname + "-predicted images.");
 }
 
 /*
@@ -868,39 +824,37 @@ void Controller::initializeCustomRenderer(MSModelset& modelset, const std::strin
 void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
                                          Json::Value &response, unsigned width, unsigned height) {
   using namespace pybind11::literals;
-
-  if (!modelset.python_renderer) {
-    initializeCustomRenderer(modelset, modelset.default_mesh);
-  }
-  auto& ren = modelset.python_renderer;
+  auto& ren = modelset.getCustomRenderer();
 
   time_point<Clock> start = Clock::now();
 
-  ren.attr("updateVertices")(*I);
+
+  // update renderer with new data
+  ren.attr("update")(*I);
   
   time_point<Clock> end = Clock::now();
-  milliseconds diff = duration_cast<milliseconds>(end - start);
-  std::cout << "vertices updated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  std::cout << "vertices updated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
   start = end;
 
+  // fetch new image
   py::list resolution;
   resolution.append(width);
   resolution.append(height);
   auto npvec = ren.attr("getImage")("resolution"_a = resolution).cast<py::array_t<unsigned char>>();
 
   end = Clock::now();
-  diff = duration_cast<milliseconds>(end - start);
-  std::cout << "image generated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  std::cout << "image generated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
   start = end;
 
+
+  // convert numpy array to Image 
   Image image(dspacex::toStdVec(npvec), width, height, 3);
 
   end = Clock::now();
-  diff = duration_cast<milliseconds>(end - start);
-  std::cout << "image generated in " << static_cast<float>(diff.count()) << " ms" << std::endl;
+  std::cout << "image generated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
   start = end;
 
-#if 1
+#if 0
   // <ctc> debug by also dumping the generated image
   std::ostringstream os;
   static int genidx{0};
@@ -908,13 +862,11 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
   image.write(os.str());
 #endif
   
+
   // add result image to response 
   addImageToResponse(response, image);
 
-  end = Clock::now();
-  diff = duration_cast<milliseconds>(end - start);
-  std::cout << "image added to response in " << static_cast<float>(diff.count()) << " ms" << std::endl;
-  start = end;
+  std::cout << "image added to response in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
 }
 
 /**

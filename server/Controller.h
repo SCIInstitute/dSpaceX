@@ -10,8 +10,6 @@
 #include <jsoncpp/json/json.h>
 #include <map>
 #include <functional>
-#include <pybind11/embed.h>
-namespace py = pybind11;
 
 namespace dspacex {
 
@@ -27,7 +25,6 @@ class Controller {
   // The Modelset owns the renderer, and it's imported on the first call to this function.
   static void generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSModelset& modelset,
                                       Json::Value &response, unsigned width, unsigned height);
-  static void initializeCustomRenderer(MSModelset& modelset, const std::string& default_mesh);
 
   // List of these is populated by Controller thread and executed by server in main thread.
   struct Thumbgen {

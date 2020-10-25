@@ -67,23 +67,23 @@ class MSModelset
 
 public:
   MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences,
-             bool mesh, bool rotateResult = false)
+             bool rotateResult = false)
     : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field),
-      num_samples(nSamples), samples(nSamples), meshModel(mesh), _rotate(rotateResult)
+      num_samples(nSamples), samples(nSamples), _rotate(rotateResult)
   { persistence_levels.resize(nPersistences); }
 
   auto modelType() const { return modeltype; }
   auto modelName() const { return modelname; }
   void setModelName(const std::string& name) { modelname = name; }
-  auto generatesMeshPoints() const { return meshModel; }
   auto rotate() const { return _rotate; }
   auto fieldName() const { return fieldname; }
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }
   void setSamples(Eigen::VectorXf values) { samples = values; }
-  void setCustomEvaluator(std::string evaluator_name) { python_evaluator_name = evaluator_name; }
-  void setCustomRenderer(std::string renderer_name) { python_renderer_name = renderer_name; }
-  void setDefaultMesh(std::string filename) { default_mesh = filename; }
+  void setCustomEvaluator(std::vector<std::string> evaluator) { custom_evaluator = evaluator; }
+  void setCustomRenderer(std::vector<std::string> renderer) { custom_renderer = renderer; }
+  auto hasCustomRenderer() const { return !custom_renderer.empty(); }
+  auto hasCustomEvaluator() const { return !custom_evaluator.empty(); }
   
   PersistenceLevel& getPersistenceLevel(unsigned idx) { return persistence_levels[idx]; }
 
@@ -119,6 +119,12 @@ public:
     params.noise = noise;
     params.normalize = normalize;
   }
+  
+  /// returns custom Python renderer, instantiating it if necessary
+  py::object& getCustomRenderer();
+  
+  /// returns custom Python evaluator, instantiating it if necessary
+  py::object& getCustomEvaluator();
 
 private:
   MSModelset();
@@ -127,25 +133,27 @@ private:
   std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
   unsigned num_samples;             // how many samples were used to compute this M-S (redundant if we have the samples themselves)
-  bool meshModel{false};            // a mesh model that generates corresponding sets of 3d points rather than images
   bool _rotate{false};              // whether model's results need to be rotated 90 degrees clockwise (e.g., old ShapeOdds models)
   Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;
 
-public:
-  // Custom Python models for evaluation and renderering (if provided)
-  // struct python {
-    std::string python_evaluator_name;
-    py::object python_evaluator;      // model evaluation module
-    std::string python_renderer_name;
-    std::string default_mesh;         // default mesh for rendering (corresponding meshes share the same faces)
-    py::object python_renderer_mod;   // rendering module with renderer class and utils
-    py::object python_renderer;       // instantiated thumbnail renderer (it's costly to repeatedly reinstantiate this)
-  // };
+  // Custom Python modules for evaluation and renderering (if provided)
+  std::vector<std::string> custom_evaluator;  // name, module, args
+  std::vector<std::string> custom_renderer;
+  py::object python_evaluator;      // custom model evaluation class instance
+  py::object python_renderer;       // custom thumbnail renderer class instance
+
+  /// creates an instance of the custom Python renderer
+  void initializeCustomRenderer();
+
+  /// creates an instance of the custom Python evaluator (TODO: use manual_test example)
+  void initializeCustomEvaluator();
+
+  /// returns requested python module, loading it if necessary
+  static py::object& getPythonModule(const std::string& name); 
+  static std::map<std::string, py::object> python_modules;
 };
-
-
 
 } // dspacex
 
