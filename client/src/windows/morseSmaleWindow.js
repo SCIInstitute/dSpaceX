@@ -96,12 +96,12 @@ class MorseSmaleWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
-      const { datasetId, k, persistenceLevel } = this.props.decomposition;
+      const { datasetId, persistenceLevel } = this.props.decomposition;
       const category = this.props.decomposition.decompositionCategory;
       const field = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, category, field, k, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, category, field, k, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, field, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, category, field, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         if (!regressionResponse.error && !extremaResponse.error) {
@@ -706,7 +706,7 @@ class MorseSmaleWindow extends React.Component {
     this.perspCamera.up.set(0, 0, 1);
     this.perspCamera.add(new THREE.PointLight(0xffffff));
     this.perspCamera.name = "camera";
-    this.updatePerspCamera(width, height);
+    this.updatePerspCamera(width, height, fov, this.state.boundingBox);
 
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
     this.perspControls.enabled = false;
