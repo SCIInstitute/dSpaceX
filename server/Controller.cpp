@@ -901,17 +901,19 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
     if (!m_currentDataset)
       throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
 
-    const Image& sample_image = m_currentDataset->getThumbnail(modelset.getPersistenceLevel(persistence_idx).crystals[crystalId].getSampleIndices()[i]);
+    auto sample_id = modelset.getPersistenceLevel(persistence_idx).crystals[crystalId].getSampleIndices()[i];
+    const Image& sample_image = m_currentDataset->getThumbnail(sample_id);
     unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
 
     //std::string outputBasepath(datapath + "/debug/outimages");
     //std::string outpath(outputBasepath + "/pidx" + std::to_string(persistence_idx) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
 
-    Eigen::MatrixXf I = *model->evaluate(model->getZCoord(i));//, false /*writeToDisk*/,
+    Eigen::MatrixXf z_coord(model->getZCoord(i));
+    Eigen::MatrixXf I = *model->evaluate(z_coord);//, false /*writeToDisk*/,
     //""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
 
     //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
-    float quality = Model::testEvaluateModel(model, model->getZCoord(i),
+    float quality = Model::testEvaluateModel(model, z_coord,
                                              sample_image);//, false /*writeToDisk*/, ""/*outputBasepath*/);
 
     std::cout << "Quality of generation of image for model at persistence_idx "

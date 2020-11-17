@@ -38,7 +38,7 @@ public:
   }
 
   const Eigen::MatrixXf& getZCoords() const { return Z; }
-  const Eigen::VectorXf& getZCoord(unsigned local_idx) const { return Z.row(local_idx); }
+  const Eigen::VectorXf getZCoord(unsigned local_idx) const { return Z.row(local_idx); }
 
   float minFieldValue() const { return minval; }
   float maxFieldValue() const { return maxval; }
@@ -56,7 +56,7 @@ public:
   // virtual std::vector<Eigen::MatrixXf> evaluate(const Eigen::MatrixXf &z_coords, const bool writeToDisk = false,
   //                                       const std::string outpath = "", unsigned w = 0, unsigned h = 0) const = 0;
 
-  static float testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
+  static float testEvaluateModel(std::shared_ptr<Model> model, const Eigen::VectorXf& z_coord,
                                  const Image &sampleImage);
 
   Type getType() const { return type; }

@@ -24,8 +24,8 @@ class Image {
   /// write image (throw exception on failure)
   void write(const std::string& filename) const;
 
-  const std::vector<unsigned char> getData() const;     // returns uncompressed image data
-  const std::vector<unsigned char> getPNGData() const;  // returns png-encoded (i.e., compressed) data
+  const std::vector<unsigned char>& getData() const;     // returns uncompressed image data
+  const std::vector<unsigned char>& getPNGData() const;  // returns png-encoded (i.e., compressed) data
 
   unsigned getWidth() const { return m_width; }
   unsigned getHeight() const { return m_height; }
@@ -36,6 +36,7 @@ class Image {
 
  private:
   LodePNGColorType m_format;
+  lodepng::State m_state;
   bool m_decompressed;
   unsigned m_width, m_height;
   std::vector<unsigned char> m_data;    // uncompressed image or float [0,1] data from EigenImage * 255.0

@@ -63,14 +63,8 @@ std::unique_ptr<Model> Model::create(Type t, const std::string& name) {
 // The contribution of the nearby original z_coords is larger than those farther away using a
 // Gaussian curve centered at the new sample, and sigma determine the width of this curve.
 //
-// 
 const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf& fieldvalues, const Eigen::MatrixXf& z_coords, float new_fieldval, float sigma)
 {
-  //debug: hardcode new fieldval
-  //new_fieldval = 0.62341;
-  //std::cout << "num_samples: " << sample_indices.size() << std::endl;
-  //std::cout << "z-size: " << z_coords.cols() << std::endl;
-
   // 1 / sqrt(2*pi*sigma) * e^0.5*((x-mu)/sigma)^2
   // x-mu is the differences between the field values
   // 
@@ -115,7 +109,7 @@ const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf&
 
 // verify evaluated model and how closely it corresponds to sample at that idx
 // return measured difference between generated sample and original, and ...
-float Model::testEvaluateModel(std::shared_ptr<Model> model, const Eigen::Matrix<float, 1, Eigen::Dynamic> &z_coord,
+float Model::testEvaluateModel(std::shared_ptr<Model> model, const Eigen::VectorXf& z_coord,
                                const Image &origImage)
 {
   //std::string outpath(basePath + "/p_idx_"/* + std::to_string(p)*/ + "-c_idx_"/* + std::to_string(c)*/ +"-z_idx_-"/* + std::to_string(z_idx)*/ + ".png");
@@ -219,6 +213,8 @@ std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coo
   // x = zW + w0
   // where z is the latent space (the passed in z_coord)
   // and x is the data space (the new image)
+
+  //std::cout << "PCAModel::evaluate: z_coord = " << z_coord << std::endl;
 
   Eigen::MatrixXf Wt(W);
   Wt.transposeInPlace();

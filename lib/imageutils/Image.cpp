@@ -80,30 +80,29 @@ Image::Image(const std::string &data, unsigned w, unsigned h, unsigned c) :
 }
 Image::Image(const std::string& filename, bool decompress) : m_decompressed(decompress) {
   // identify resolution and format
-  lodepng::State state;
   unsigned error;
   if (lodepng::load_file(m_pngData, filename))
     throw std::runtime_error("error loading png");
-  if (lodepng_inspect(&m_width, &m_height, &state, m_pngData.data(), m_pngData.size()))
+  if (lodepng_inspect(&m_width, &m_height, &m_state, m_pngData.data(), m_pngData.size()))
     if (error) throw std::runtime_error("error loading png");
 
   // either load it as a single channel raw buffer or a 3-channel buffer
-  if (state.info_png.color.colortype == LCT_GREY) {
-    state.info_raw.colortype = LCT_GREY;
+  if (m_state.info_png.color.colortype == LCT_GREY) {
+    m_state.info_raw.colortype = LCT_GREY;
     m_format = LCT_GREY;
   }
-  else if (state.info_png.color.colortype == LCT_RGBA) {
-    state.info_raw.colortype = LCT_RGBA;
+  else if (m_state.info_png.color.colortype == LCT_RGBA) {
+    m_state.info_raw.colortype = LCT_RGBA;
     m_format = LCT_RGBA;
   }
   else {
-    state.info_raw.colortype = LCT_RGB;
+    m_state.info_raw.colortype = LCT_RGB;
     m_format = LCT_RGB;
   }
   
   // decompress the png data to this Image's raw buffer
   if (decompress)
-    lodepng::decode(m_data, m_width, m_height, state, m_pngData);
+    lodepng::decode(m_data, m_width, m_height, m_state, m_pngData);
 }
 
 /// write image
@@ -112,13 +111,16 @@ void Image::write(const std::string& outpath) const {
     throw std::runtime_error("error writing png to " + outpath);
 }
 
-const std::vector<unsigned char> Image::getData() const {
-  if (!m_decompressed)
-    throw std::runtime_error("must decompress png on load");
+const std::vector<unsigned char>& Image::getData() const {
+  if (!m_decompressed) {
+    Image& me = const_cast<Image&>(*this);
+    lodepng::decode(me.m_data, me.m_width, me.m_height, me.m_state, me.m_pngData);
+    me.m_decompressed = true;
+  }
   return m_data;
 }
 
-const std::vector<unsigned char> Image::getPNGData() const {
+const std::vector<unsigned char>& Image::getPNGData() const {
   if (m_pngData.empty()) {
     unsigned error = lodepng::encode(const_cast<std::vector<unsigned char>&>(m_pngData), m_data, m_width, m_height, m_format, 8);
     if (error) {
