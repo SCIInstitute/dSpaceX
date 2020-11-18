@@ -702,6 +702,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
  *   modelSigma    - Gaussian sigma to use for generating new z_coord for shape
  *   showOrig      - simply return original samples for this crystal
  *   validate      - generate model-interpolated images using the z_coords it provided
+ *   diff_validate - return diffs of the model-interpolated images with the originals
  *   percent       - distance along crystal from which to find/generate sample (when only one is requested)
  */
 void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value &response) {
@@ -741,8 +742,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 
   // if requested, validate model by generating interpolated images using z_coords of its own samples
   bool validate = request["validate"].asBool();
-  if (validate)
-    return regenOriginalImagesForCrystal(*modelset, model, persistence_idx, crystalId, response);
+  if (validate) {
+    bool diff = request["return_diff"].asBool();
+    return regenOriginalImagesForCrystal(*modelset, model, persistence_idx, crystalId, diff, response);
+  }
 
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
@@ -768,8 +771,11 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     minval = minval + (maxval - minval) * percent;
   }
 
-  // load a sample image to get dims of image created by model
-  const Image& sample_image = m_currentDataset->getThumbnail(0);
+  // get dims of image to be created by model from one of the original samples
+  const Image& sample = m_currentDataset->getThumbnail(0);
+  auto width{sample.getWidth()};
+  auto height{sample.getHeight()};
+  auto numChannels{sample.numChannels()};
 
   for (unsigned i = 0; i < numZ; i++)
   {
@@ -785,11 +791,11 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
 
     if (modelset->hasCustomRenderer()) {
       // push to genthumbs list; main thread will call python rendering function
-      genthumbs.emplace_back(Thumbgen{I, *modelset, response, sample_image.getWidth(), sample_image.getHeight()});
+      genthumbs.emplace_back(Thumbgen{I, *modelset, response, width, height});
     }
     else {
-      // convert resultant matrix to a 2d image (* uses sample_image to determine dims)
-      Image image(*I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset->rotate());
+      // convert resultant matrix to a 2d image
+      Image image(*I, width, height, numChannels, modelset->rotate());
     
       // add result image to response 
       addImageToResponse(response, image);
@@ -886,15 +892,15 @@ int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenc
  * This returns a set of new samples (images) computed with the given ShapeOdds model for the
  * specified crystal at this persistence level using the latent space coordinates for each of
  * the original samples of model/crystal (each sample has a z_coord).
+ * Either add generated or difference image to response.
  */
-void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model, int persistence_idx, int crystalId, Json::Value &response) {
-  // interpolate the model using its original samples
-  std::cout << "regenOriginalImagesForCrystal\n";
-
+void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model,
+                                               int persistence_idx, int crystalId, bool compute_diff,
+                                               Json::Value &response) {
   auto samples(modelset.getCrystalSamples(persistence_idx, crystalId));
-  std::cout << "Testing all latent space variables computed for the " << samples.size() << " samples in this model.\n";
+  std::cout << "Testing all latent space variables computed for the "
+            << samples.size() << " samples in this crystal.\n";
 
-  //z coords are sorted by fieldvalue in Model::setFieldValues (TODO: not anymore, and not sure they need to be)
   for (auto i = 0; i < samples.size(); i++)
   {
     // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
@@ -902,27 +908,20 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
       throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
 
     auto sample_id = modelset.getPersistenceLevel(persistence_idx).crystals[crystalId].getSampleIndices()[i];
-    const Image& sample_image = m_currentDataset->getThumbnail(sample_id);
-    unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
-
-    //std::string outputBasepath(datapath + "/debug/outimages");
-    //std::string outpath(outputBasepath + "/pidx" + std::to_string(persistence_idx) + "-c" + std::to_string(crystalid) + "-z" + std::to_string(samples[i].idx) + ".png");
+    const Image& orig = m_currentDataset->getThumbnail(sample_id);
+    auto width{orig.getWidth()};
+    auto height{orig.getHeight()};
+    auto numChannels{orig.numChannels()};
 
     Eigen::MatrixXf z_coord(model->getZCoord(i));
-    Eigen::MatrixXf I = *model->evaluate(z_coord);//, false /*writeToDisk*/,
-    //""/*outpath*/, sample_image.getWidth(), sample_image.getHeight());
+    Eigen::MatrixXf I = *model->evaluate(z_coord);
 
-    //todo: simplify this to use the images passed in rather than re-generating (rename to compareImages)
-    float quality = Model::testEvaluateModel(model, z_coord,
-                                             sample_image);//, false /*writeToDisk*/, ""/*outputBasepath*/);
-
-    std::cout << "Quality of generation of image for model at persistence_idx "
-              << persistence_idx << ", crystalid " << crystalId << ": " << quality << std::endl;
-
-    // add image to response
-    Image image(I, sample_image.getWidth(), sample_image.getHeight(), sample_image.numChannels(), modelset.rotate());
+    Image image(I, width, height, numChannels, modelset.rotate());
+    if (compute_diff) {
+      image -= orig;
+    }
     addImageToResponse(response, image);
-
+    
     // add field value to response
     response["fieldvals"].append(samples[i]);
   }
@@ -990,11 +989,10 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   for (auto sample: fieldvalues_and_indices)
   {
     // load thumbnail corresponding to this z_idx
-    const Image& sample_image = m_currentDataset->getThumbnail(sample.idx);
-    unsigned sampleWidth = sample_image.getWidth(), sampleHeight = sample_image.getHeight();
+    const Image& orig = m_currentDataset->getThumbnail(sample.idx);
 
     // add image to response
-    addImageToResponse(response, sample_image);  // todo: add index to response so drawer can display it
+    addImageToResponse(response, orig);  // todo: add index to response so drawer can display it
 
     // add field value to response
     response["fieldvals"].append(sample.val);

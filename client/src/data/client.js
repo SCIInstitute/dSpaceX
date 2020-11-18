@@ -343,7 +343,7 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal(datasetId, category, fieldname, persistence, crystalID, modelname, numSamples, modelSigma, showOrig, validate, percent) {
+  fetchNImagesForCrystal(datasetId, category, fieldname, persistence, crystalID, modelname, numSamples, modelSigma, showOrig, validate, return_diff, percent) {
     let command = {
       name: 'fetchNImagesForCrystal',
       datasetId: datasetId,
@@ -356,6 +356,7 @@ class Client {
       modelSigma: modelSigma,
       showOrig: showOrig,
       validate: validate,
+      return_diff: return_diff,
       percent: percent
     };
     return this._createCommandPromise(command);

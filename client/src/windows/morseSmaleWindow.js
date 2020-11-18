@@ -34,6 +34,7 @@ class MorseSmaleWindow extends React.Component {
                    p1: new Vector3(),
                  },
       validate: false,                  // when crystal selected, use model's z_coords to reconstruct original shapes
+      diff_validate: false,             // return diff of these with original images
     };
 
     this.client = this.props.dsxContext.client;
@@ -305,6 +306,9 @@ class MorseSmaleWindow extends React.Component {
     case 'q': // validate model by interpolating original z-coords to fill drawer when crystal selected
       this.state.validate = !this.state.validate;
       break;
+    case 'd': // return diff when validating
+      this.state.diff_validate = !this.state.diff_validate;
+      break;
     }
     this.renderScene();
   }
@@ -485,7 +489,7 @@ class MorseSmaleWindow extends React.Component {
         });
 
         // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
-        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate);
+        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
       }
 
       // ensure current position of selected point on crystal is visible

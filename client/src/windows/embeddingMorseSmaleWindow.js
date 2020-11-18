@@ -103,7 +103,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * @param {bool} validate - generate model-interpolated images using the z_coords it provided
    * @param {float} percent - distance along crystal from which to find/generate sample (when only one is requested)
    */
-  async evalModelForCrystal(crystalID, numSamples, showOrig, validate, percent = 0.0) {
+  async evalModelForCrystal(crystalID, numSamples, showOrig, validate, diff_validate, percent = 0.0) {
     // Ask server to compute the N new images for this crystal using the requested model, then add them to the drawer
     // If model doesn't exist or showOrig is true, returns original samples for this crystal.
     let result = await this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
@@ -116,6 +116,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                                        this.props.decomposition.modelSigma,
                                        showOrig,
                                        validate,
+                                       diff_validate,
                                        percent)
     const thumbnails = result.thumbnails.map((thumbnail, i) => {
       return {

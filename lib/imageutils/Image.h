@@ -7,6 +7,9 @@
 
 namespace dspacex {
 
+/*
+ * Simple class for 2d images passed between server, gui, and Python.
+ */
 class Image {
   enum Format { GREY, RGB, RGBA, UNKNOWN };
   
@@ -33,6 +36,9 @@ class Image {
   Format getFormat() const;
   
   unsigned char getPixel(unsigned i) const;
+
+  /// computes abs of difference between the images
+  Image& operator-=(const Image& img);
 
  private:
   LodePNGColorType m_format;

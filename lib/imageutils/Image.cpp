@@ -143,4 +143,20 @@ unsigned char Image::getPixel(unsigned i) const {
   return getData()[i];
 }
 
+Image& Image::operator-=(const Image& img) {
+  if (m_width != img.m_width ||
+      m_height != img.m_height ||
+      numChannels() != img.numChannels()) {
+    throw std::runtime_error("cannot compare different size images");
+  }
+  
+  this->getData(); // ensure m_data vector is filled
+  auto imgdata{img.getData()};
+  for (auto i = 0; i < imgdata.size(); i++) {
+    m_data[i] = std::abs(static_cast<int>(m_data[i]) - static_cast<int>(imgdata[i]));
+  }
+
+  return *this;
+}
+
 } // dspacex
