@@ -1,5 +1,6 @@
 #include "Modelset.h"
 #include "DatasetLoader.h"
+#include "utils.h"
 
 #include <algorithm>
 #include <chrono>
@@ -61,10 +62,10 @@ std::vector<std::shared_ptr<Model>> MSModelset::getAllModels()
 /* 
  * returns fieldvals for the set of samples associated with this crystal
  */
-const std::vector<float>& MSModelset::getCrystalFieldvals(int p, int c) {
+const std::vector<Precision>& MSModelset::getCrystalFieldvals(int p, int c) {
   auto& crystal(persistence_levels[p].crystals[c]);
   if (!crystal.fieldvals) {
-    crystal.fieldvals = std::make_unique<std::vector<float>>();
+    crystal.fieldvals = std::make_unique<std::vector<Precision>>();
 
     // set fieldvalue for each sample
     unsigned i{0};
@@ -82,6 +83,18 @@ const std::vector<float>& MSModelset::getCrystalFieldvals(int p, int c) {
     }
   }
   return *crystal.fieldvals;
+}
+
+/* 
+ * returns sigma for evaluating the model associated with this crystal
+ */
+Precision MSModelset::getCrystalSigma(int p, int c) {
+  auto& crystal(persistence_levels[p].crystals[c]);
+  if (crystal.sigma == -1) {
+    crystal.sigma = dspacex::computeSigma(getCrystalFieldvals(p, c));
+  }
+
+  return crystal.sigma;
 }
 
 py::object& MSModelset::getCustomRenderer() {

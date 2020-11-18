@@ -60,7 +60,7 @@ std::unique_ptr<Model> Model::create(Type t, const std::string& name) {
 //
 const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf& fieldvalues, const Eigen::MatrixXf& z_coords, float new_fieldval, float sigma)
 {
-  // 1 / sqrt(2*pi*sigma) * e^0.5*((x-mu)/sigma)^2
+  // 1 / sqrt(2*pi)*sigma * e^0.5*((x-mu)/sigma)^2
   // x-mu is the differences between the field values
   // 
   // sigma should be used to only include a subset of nearby fieldvalues to average its value
@@ -83,7 +83,7 @@ const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf&
   //std::cout << "difference / -2sigma^2:\n" << fieldvals << std::endl;
   fieldvals = fieldvals.array().exp();
   //std::cout << "e^(difference / -2sigma^2):\n" << fieldvals << std::endl;
-  float denom = sqrt(2.0 * M_PI * sigma);
+  float denom = sqrt(2.0 * M_PI) * sigma;
   //std::cout << "denom (sqrt(2*pi*sigma):\n" << denom << std::endl;
   fieldvals /= denom;
   //std::cout << "Gaussian matrix of difference:\n" << fieldvals << std::endl;
@@ -94,7 +94,9 @@ const Eigen::RowVectorXf Model::getNewLatentSpaceValue(const Eigen::RowVectorXf&
 
   MatrixXf output = fieldvals * z_coords;
   //std::cout << "output before division:\n" << output << std::endl;
-  output /= summation;
+  const double eps = 1e-5;
+  output /= (summation + eps);
+
   //RowVectorXf output = (fieldvals * z_coords) / summation;
   //std::cout << "new z_coord:\n" << output << std::endl;
   //std::cout << "for comparison, here's the first z_coord from the training data:\n" << z_coords.row(0) << std::endl;

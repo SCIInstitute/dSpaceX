@@ -43,7 +43,8 @@ class MSModelset
     std::vector<ValueIndexPair> samples;
     std::shared_ptr<Model> model;
     std::unique_ptr<std::vector<Precision>> fieldvals;  // cache fieldvals needed to evaluate model each time
-
+    Precision sigma{-1};
+    
     friend class MSModelset;
   };
 
@@ -96,6 +97,9 @@ public:
 
   /// returns set of fieldvals associated with a crystal
   const std::vector<Precision>& getCrystalFieldvals(int persistence, int crystalid);
+
+  /// returns sigma for evaluating the model associated with this crystal
+  Precision getCrystalSigma(int persistence, int crystalid);
 
   /// returns all models (*unused, and costly since it will read every model in this set)
   std::vector<std::shared_ptr<Model>> getAllModels();

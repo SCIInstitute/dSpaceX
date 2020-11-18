@@ -6,6 +6,7 @@
 #include "hdprocess/HDGenericProcessor.h"
 
 #include <Eigen/Dense>
+#include <limits>
 
 namespace HDProcess {
 
@@ -44,5 +45,15 @@ static FortranLinalg::DenseMatrix<T> toDenseMatrix(Eigen::Matrix<T, Eigen::Dynam
 
   return std::move(ret);
 }
+
+/*
+ * Return best sigma for this set of field values.
+ * - compute pairwise distances between all given field values (i.e. fieldvalues) -- this will result in a symmetric matrix with zeros on the diagonal. all entries don't have to be computed as abs(x1 - x2) = abs(x2 - x1)
+ * - set diagonal entries to a very large value
+ * - compute min distance (entry) for each row
+ * - compute average distance across all rows
+ * - sigma = a factor times this average distance
+ */
+Precision computeSigma(const std::vector<Precision>& vals);
 
 } // dspacex

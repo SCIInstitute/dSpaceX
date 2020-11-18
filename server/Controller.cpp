@@ -700,7 +700,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
  *   crystalID     - crystal of the given persistence level
  *   modelname     - model from which to fetch interpolated samples
  *   numSamples    - number of evenly-spaced samples of the field at which to generate new latent images
- *   modelSigma    - Gaussian sigma to use for generating new z_coord for shape
+ *   sigmaScale    - Scale of Gaussian sigma used for generating new z_coord for shape
  *   showOrig      - simply return original samples for this crystal
  *   validate      - generate model-interpolated images using the z_coords it provided
  *   diff_validate - return diffs of the model-interpolated images with the originals
@@ -722,8 +722,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto fieldname = request["fieldname"].asString();
   auto modelname = request["modelname"].asString();
   auto crystalId = request["crystalID"].asInt();
-  auto modelSigma = request["modelSigma"].asFloat();
-  
+
 
   time_point<Clock> start = Clock::now();
 
@@ -772,6 +771,10 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     minval = minval + (maxval - minval) * percent;
   }
 
+  // get sigma to determine width of samples to use
+  Precision sigmaScale = static_cast<Precision>(request["sigmaScale"].asInt());
+  sigmaScale *= modelset->getCrystalSigma(persistence_idx, crystalId);
+
   // get dims of image to be created by model from one of the original samples
   const Image& sample = m_currentDataset->getThumbnail(0);
   auto width{sample.getWidth()};
@@ -785,7 +788,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     response["fieldvals"].append(fieldval);
 
     // get new latent space coordinate for this field_val
-    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, modelSigma);
+    Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, sigmaScale);
 
     // evaluate model at this coordinate
     std::shared_ptr<Eigen::MatrixXf> I = model->evaluate(z_coord);

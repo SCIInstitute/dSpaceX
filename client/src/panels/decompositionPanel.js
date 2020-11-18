@@ -42,7 +42,7 @@ class DecompositionPanel extends React.Component {
 
       interpolationModel: this.props.dataset.models ? this.props.dataset.models[0].name.trim() : 'None',
       model: {
-        sigma: 0.01,
+        sigmaScale: 1,
       },
 
       decompositionMode: 'Morse-Smale',
@@ -196,7 +196,6 @@ class DecompositionPanel extends React.Component {
     // overview: - when component state updates, fetch the new decomposition only if the mode or field changes
     //           - category triggers a field change, so doesn't need to be checked here
     //           - if ms params change, don't recompute unless user clicks the button to do so
-
     if (prevState.decompositionMode !== this.state.decompositionMode ||
         prevState.decompositionField !== this.state.decompositionField) {
       // console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
@@ -207,7 +206,7 @@ class DecompositionPanel extends React.Component {
       this.updateDataModel();
     }
     else if (prevState.interpolationModel !== this.state.interpolationModel ||
-             prevState.model.sigma !== this.state.model.sigma) {
+             prevState.model.sigmaScale !== this.state.model.sigmaScale) {
       this.updatePropsConfig();
     }
     else {
@@ -227,7 +226,7 @@ class DecompositionPanel extends React.Component {
       decompositionField: this.state.decompositionField,
       persistenceLevel: this.state.persistenceLevel,
       interpolationModel: this.state.interpolationModel,      
-      modelSigma: this.state.model.sigma,
+      sigmaScale: this.state.model.sigmaScale,
       ms: this.state.ms,
     });
   }
@@ -318,11 +317,11 @@ class DecompositionPanel extends React.Component {
     });
   }
 
-  handleModelSigmaChange(event) {
-    let sigma = parseFloat(event.target.value);
-    if (!isNaN(sigma)) {
+  handleModelSigmaScaleChange(event) {
+    let sigmaScale = parseInt(event.target.value);
+    if (!isNaN(sigmaScale)) {
       this.setState((prevState) => ({
-        model: { ...prevState.model, sigma:sigma },
+        model: { ...prevState.model, sigmaScale:sigmaScale },
       }));
     }
   }
@@ -698,11 +697,13 @@ class DecompositionPanel extends React.Component {
 
                   { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
                   <TextField
-                    label="Gaussian Kernel Sigma"
+                    label="Gaussian Sigma Scale"
                     id="model-sigma"
-                    defaultValue={this.state.model.sigma}
+                    defaultValue={this.state.model.sigmaScale}
                     size="small"
-                    onChange={this.handleModelSigmaChange.bind(this)}
+                    type="number"
+                    InputProps={{ inputProps:{ min:1, max:10 } }}
+                    onChange={this.handleModelSigmaScaleChange.bind(this)}
                   />
 
                 </div>
