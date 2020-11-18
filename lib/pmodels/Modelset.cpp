@@ -17,10 +17,14 @@ bool MSModelset::hasModel(int p, int c) const
 }
 
 /* 
- * returns model crystal of persistence level, creating/reading it if necessary
- * TODO: use persistence range for this complex to facilitae global persistence passed to getModel function
- *       i.e., when only a subset of N of the P total M-S persistences is used, desired p is in range [0,P-1], and pidx = p - N.
- *             Don't make the called precalculate this since it forces them to know too much about the modelset.
+ * Returns Model of crystal c in persistence level p, creating/reading it if necessary.
+ *
+ * TODO: Use persistence range for this MSModelset's M-S complex to allow the global
+ *       persistence to be passed to this function rather than make the caller precalculate
+ *       this since it forces them to know too much about the modelset.
+ *
+ *       i.e., when only a subset of N of the P total M-S persistences is
+ *       used, desired p is in range [0, P-1], and pidx = p - N.
  */
 std::shared_ptr<Model> MSModelset::getModel(int p, int c)
 {
@@ -31,10 +35,10 @@ std::shared_ptr<Model> MSModelset::getModel(int p, int c)
   if (!model) {
     DatasetLoader::parseModel(persistence_levels[p].crystals[c].modelPath,
                               *(model = Model::create(modeltype, modelname)),
-                              persistence_levels[p].crystals[c].sample_indices);
+                              persistence_levels[p].crystals[c].samples);
 
     // set fieldvalue bounds of model
-    std::vector<float> bounds(getCrystalSamples(p, c));
+    std::vector<float> bounds(getCrystalFieldvals(p, c));
     auto minmax = std::minmax_element(bounds.begin(), bounds.end());
     model->setBounds(std::pair<float, float>(*minmax.first, *minmax.second));
   }
@@ -55,16 +59,29 @@ std::vector<std::shared_ptr<Model>> MSModelset::getAllModels()
 }
 
 /* 
- * returns set of samples associated with this crystal
+ * returns fieldvals for the set of samples associated with this crystal
  */
-const std::vector<float>& MSModelset::getCrystalSamples(int p, int c) {
+const std::vector<float>& MSModelset::getCrystalFieldvals(int p, int c) {
   auto& crystal(persistence_levels[p].crystals[c]);
-  if (!crystal.samples) {
-    crystal.samples = std::make_unique<std::vector<float>>();
-    for (auto idx : crystal.sample_indices)
-      crystal.samples->push_back(samples[idx]);
+  if (!crystal.fieldvals) {
+    crystal.fieldvals = std::make_unique<std::vector<float>>();
+
+    // set fieldvalue for each sample
+    unsigned i{0};
+    for (auto& sample : crystal.samples) {
+      sample.val = fieldvals[sample.idx];
+      sample.local_idx = i++;
+    }
+
+    // sort samples by increasing fieldvalue
+    std::sort(crystal.samples.begin(), crystal.samples.end(), ValueIndexPair::compare);
+    
+    // create cache of fieldvals (used for generating z_coords)
+    for (auto sample : crystal.samples) {
+      crystal.fieldvals->push_back(sample.val);
+    }
   }
-  return *crystal.samples;
+  return *crystal.fieldvals;
 }
 
 py::object& MSModelset::getCustomRenderer() {

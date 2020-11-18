@@ -169,7 +169,7 @@ std::shared_ptr<Eigen::MatrixXf> PCAModel::evaluate(const Eigen::VectorXf &z_coo
 Eigen::MatrixXf Model::fetchInterpolation(int idx, int interpolationSet) const
 {
   // TODO
-  return Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>();
+  return Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic>();
 }
 
 } // dspacex

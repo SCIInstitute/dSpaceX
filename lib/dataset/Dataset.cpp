@@ -123,7 +123,7 @@ Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared
     m_dataset->m_modelNames.push_back(modelset->modelName());
   
   m_dataset->m_msModelFields.push_back(fieldname);
-  modelset->setSamples(m_dataset->getFieldvalues(fieldname));
+  modelset->setFieldvals(m_dataset->getFieldvalues(fieldname));
   m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));
   return (*this);
 }

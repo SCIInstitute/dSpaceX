@@ -4,6 +4,7 @@
 #include "utils/StringUtils.h"
 #include "utils/IO.h"
 #include "utils/utils.h"
+#include "Dataset/ValueIndexPair.h"
 
 #include <memory>
 #include <iomanip>
@@ -602,34 +603,34 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModel(const YAML::Node& modelNod
 }
 
 // read the components of each model (Z, W, w0) from their respective bin or csv files
-// TODO: make float or double optional or based on .bin type (this is an application-wide issue)
-void DatasetLoader::parseModel(const std::string& modelPath, Model& m, const std::vector<unsigned> &sample_indices)
+void DatasetLoader::parseModel(const std::string& modelPath, Model& m,
+                               const std::vector<ValueIndexPair> &samples)
 {
   // read W
   Eigen::MatrixXf W, w0, Z;
   if (IO::fileExists(modelPath + "/W.bin"))
-    W = IO::readBinMatrix<float>(modelPath + "/W.bin");
+    W = IO::readBinMatrix<Precision>(modelPath + "/W.bin");
   else
-    W = IO::readCSVMatrix<float>(modelPath + "/W.csv");
+    W = IO::readCSVMatrix<Precision>(modelPath + "/W.csv");
 
   // read w0
   if (IO::fileExists(modelPath + "/w0.bin"))
-    w0 = IO::readBinMatrix<float>(modelPath + "/w0.bin");
+    w0 = IO::readBinMatrix<Precision>(modelPath + "/w0.bin");
   else
-    w0 = IO::readCSVMatrix<float>(modelPath + "/w0.csv");
+    w0 = IO::readCSVMatrix<Precision>(modelPath + "/w0.csv");
 
   // read latent space Z
   if (IO::fileExists(modelPath + "/Z.bin"))
-    Z = IO::readBinMatrix<float>(modelPath + "/Z.bin");
+    Z = IO::readBinMatrix<Precision>(modelPath + "/Z.bin");
   else
-    Z = IO::readCSVMatrix<float>(modelPath + "/Z.csv");
+    Z = IO::readCSVMatrix<Precision>(modelPath + "/Z.csv");
 
-  // ShapeOdds models have z_coords for all samples, not only those used in their construction
+  // ShapeOdds models have z_coords for all samples, not only those used for their construction
   if (m.getType() == Model::ShapeOdds) {
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> z_coords(sample_indices.size(), Z.cols());
+    Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic> z_coords(samples.size(), Z.cols());
     auto i = 0;
-    for (auto idx : sample_indices)
-       z_coords.row(i++) = Z.row(idx);
+    for (auto sample : samples)
+       z_coords.row(i++) = Z.row(sample.idx);
     Z = z_coords;
   }
   

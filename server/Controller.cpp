@@ -12,6 +12,7 @@
 #include "hdprocess/TopologyData.h"
 #include <jsoncpp/json/json.h>
 #include "dataset/Precision.h"
+#include "dataset/ValueIndexPair.h"
 #include "serverlib/wst.h"
 #include "utils/DenseVectorSample.h"
 #include "utils/loaders.h"
@@ -755,7 +756,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   std::cout << std::endl;
   
   // get the vector of values for the field
-  auto samples(modelset->getCrystalSamples(persistence_idx, crystalId));
+  auto samples(modelset->getCrystalFieldvals(persistence_idx, crystalId));
   Eigen::Map<Eigen::VectorXf> fieldvals(samples.data(), samples.size());
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
@@ -897,23 +898,19 @@ int Controller::getAdjustedPersistenceLevelIdx(const unsigned desired_persistenc
 void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared_ptr<Model> model,
                                                int persistence_idx, int crystalId, bool compute_diff,
                                                Json::Value &response) {
-  auto samples(modelset.getCrystalSamples(persistence_idx, crystalId));
+  auto samples(modelset.getPersistenceLevel(persistence_idx).crystals[crystalId].getSamples());
   std::cout << "Testing all latent space variables computed for the "
             << samples.size() << " samples in this crystal.\n";
 
-  for (auto i = 0; i < samples.size(); i++)
+  for (auto sample: samples)
   {
-    // load thumbnail corresponding to this z_idx for comparison to evaluated model at same z_idx (they should be close)
-    if (!m_currentDataset)
-      throw std::runtime_error("ERROR: tried to access controller's current dataset, but it's NULL.");
-
-    auto sample_id = modelset.getPersistenceLevel(persistence_idx).crystals[crystalId].getSampleIndices()[i];
-    const Image& orig = m_currentDataset->getThumbnail(sample_id);
+    // load thumbnail corresponding to this z_idx for comparison of model at same z_idx (they should be close)
+    const Image& orig = m_currentDataset->getThumbnail(sample.idx);
     auto width{orig.getWidth()};
     auto height{orig.getHeight()};
     auto numChannels{orig.numChannels()};
 
-    Eigen::MatrixXf z_coord(model->getZCoord(i));
+    Eigen::MatrixXf z_coord(model->getZCoord(sample.local_idx));
     Eigen::MatrixXf I = *model->evaluate(z_coord);
 
     Image image(I, width, height, numChannels, modelset.rotate());
@@ -923,7 +920,7 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
     addImageToResponse(response, image);
     
     // add field value to response
-    response["fieldvals"].append(samples[i]);
+    response["fieldvals"].append(sample.val);
   }
 
   response["msg"] = std::string("returning interpolated images by model at crystal " + std::to_string(crystalId) + " of persistence_idx" + std::to_string(persistence_idx));
@@ -931,6 +928,7 @@ void Controller::regenOriginalImagesForCrystal(MSModelset &modelset, std::shared
 
 /* 
  * Returns vector of global sample ids and their fieldvalue for the samples from which the crystal is comprised.
+ * Used when Model == None since there is no Modelset in that case.
  */
 std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std::string &fieldname,
                                                    unsigned persistence, unsigned crystalid, bool sort) {
@@ -979,14 +977,11 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
   int persistence = getPersistence(request, response);
   if (persistence < 0) return; // response will contain the error
 
-  std::string fieldname = request["fieldname"].asString();
-  int crystalid = request["crystalID"].asInt();
-  std::cout << "fetchCrystalOriginalSampleImages: datasetId is "<<m_currentDatasetId<<", persistence is "<<persistence<<", crystalid is "<<crystalid<<std::endl;
+  auto fieldname = request["fieldname"].asString();
+  auto crystalid = request["crystalID"].asInt();
+  auto samples(getSamples(category, fieldname, persistence, crystalid));
 
-  auto fieldvalues_and_indices(getSamples(category, fieldname, persistence, crystalid));
-  std::cout << "Returning images for the " << fieldvalues_and_indices.size() << " samples in this crystal.\n";
-
-  for (auto sample: fieldvalues_and_indices)
+  for (auto sample: samples)
   {
     // load thumbnail corresponding to this z_idx
     const Image& orig = m_currentDataset->getThumbnail(sample.idx);
@@ -998,7 +993,7 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
     response["fieldvals"].append(sample.val);
   }
 
-  response["msg"] = std::string("returning " + std::to_string(fieldvalues_and_indices.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
+  response["msg"] = std::string("returning original " + std::to_string(samples.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));
 }
 
 /**

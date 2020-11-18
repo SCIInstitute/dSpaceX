@@ -3,6 +3,7 @@ SET(DATASET_HEADER_FILES
   Fieldtype.h
   DatasetLoader.h
   Dataset.h
+  ValueIndexPair.h
 )
 
 SET(DATASET_SOURCE_FILES

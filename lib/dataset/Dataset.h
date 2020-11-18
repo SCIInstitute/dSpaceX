@@ -88,12 +88,6 @@ class Dataset {
     return m_models;
   }
 
-  /// is there a Model associated with this field, modelname, persistence, and crystal?
-  //bool hasModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal) const;
-
-  /// return specific Model associated with this field, modelname, persistence, and crystal
-  //std::shared_ptr<Model> getModel(const std::string& fieldname, const std::string& modelname, int persistence, int crystal);
-
   /// return MSModelset associated with this field and modelname
   std::shared_ptr<MSModelset> getModelset(const std::string& fieldname, const std::string& modelname);
 

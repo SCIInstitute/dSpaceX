@@ -111,9 +111,9 @@ public:
     std::string dtype;
     dims >> rows >> cols >> dtype;
 
-    // ensure .bin is of correct type
+    // ensure .bin is of correct type (TODO: enable conversion to requested type)
     if (dtype == "float32" && typeid(T) != typeid(float) || dtype == "float64" && typeid(T) != typeid(double))
-      throw std::runtime_error("Binary matrix of type " + dtype + " incompatible with requested type " + typeid(T).name());
+      throw std::runtime_error("Binary matrix of type " + dtype + " incompatible with requested type " + typeid(T).name() + "\n\tNOTE: This input matrix can be converted here fairly easily, but better to use data/convert/binarize() Python function to convert the matrix to the desired precision.");
 
     // read file into a vector
     std::ifstream vals(filename, std::ios::binary);

@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include "imageutils/Image.h"
 #include "dataset/Fieldtype.h"
+#include "dataset/Precision.h"
 
 namespace dspacex {
 

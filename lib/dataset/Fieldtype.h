@@ -39,13 +39,4 @@ struct Fieldtype {
   const static int Unknown = -1;
 };
 
-/// fieldvalue and the index of its sample in the full set of samples for a dataset
-struct ValueIndexPair
-{
-  float val;
-  unsigned idx;
-
-  static bool compare(const ValueIndexPair &p, const ValueIndexPair &q) { return p.val < q.val; }
-};
-
 } // dspacex

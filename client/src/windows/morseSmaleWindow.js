@@ -395,7 +395,9 @@ class MorseSmaleWindow extends React.Component {
     }
     else {
       this.state.evalModel.inProgress = true;
-      this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/, false /*validate*/, percent).then((image) => {
+      this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/,
+                                     false /*validate*/, false /* diff_validate */,
+                                     percent).then((image) => {
         //console.log("evalModel("+percent+") complete! setting image");
         this.setImage(image);
         this.state.evalModel.inProgress = false;

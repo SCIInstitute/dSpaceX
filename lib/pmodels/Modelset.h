@@ -6,6 +6,7 @@
 #pragma once
 
 #include "dataset/Precision.h"
+#include "dataset/ValueIndexPair.h"
 #include "utils/StringUtils.h"
 #include "Model.h"
 
@@ -32,16 +33,16 @@ class MSModelset
    */
   struct Crystal
   {
-    void addSampleIndex(unsigned n) { sample_indices.push_back(n); }
-    unsigned numSamples() const { sample_indices.size(); }
-    const std::vector<unsigned>& getSampleIndices() const { return sample_indices; }
+    void addSampleIndex(unsigned n) { samples.push_back(ValueIndexPair{n}); }
+    unsigned numSamples() const { samples.size(); }
+    const std::vector<ValueIndexPair>& getSamples() const { return samples; }
     void setModelPath(const std::string& path) { modelPath = path; }
   
   private:
     std::string modelPath;
-    std::vector<unsigned> sample_indices;
+    std::vector<ValueIndexPair> samples;
     std::shared_ptr<Model> model;
-    std::unique_ptr<std::vector<float>> samples;  // cache samples since they're needed to evaluate model each time
+    std::unique_ptr<std::vector<Precision>> fieldvals;  // cache fieldvals needed to evaluate model each time
 
     friend class MSModelset;
   };
@@ -69,7 +70,7 @@ public:
   MSModelset(Model::Type mtype, const std::string& field, unsigned nSamples, unsigned nPersistences,
              bool rotateResult = false)
     : modeltype(mtype), modelname(Model::typeToStr(mtype)), fieldname(field),
-      num_samples(nSamples), samples(nSamples), _rotate(rotateResult)
+      num_samples(nSamples), fieldvals(nSamples), _rotate(rotateResult)
   { persistence_levels.resize(nPersistences); }
 
   auto modelType() const { return modeltype; }
@@ -79,7 +80,7 @@ public:
   auto fieldName() const { return fieldname; }
   auto numSamples() const { return num_samples; }
   auto numPersistenceLevels() const { return persistence_levels.size(); }
-  void setSamples(Eigen::VectorXf values) { samples = values; }
+  void setFieldvals(Eigen::VectorXf values) { fieldvals = values; }
   void setCustomEvaluator(std::vector<std::string> evaluator) { custom_evaluator = evaluator; }
   void setCustomRenderer(std::vector<std::string> renderer) { custom_renderer = renderer; }
   auto hasCustomRenderer() const { return !custom_renderer.empty(); }
@@ -93,8 +94,8 @@ public:
   /// returns the model at the specified crystal of the specified persistence level
   std::shared_ptr<Model> getModel(int persistence, int crystal);
 
-  /// returns set of samples associated with a crystal
-  const std::vector<float>& getCrystalSamples(int persistence, int crystalid);
+  /// returns set of fieldvals associated with a crystal
+  const std::vector<Precision>& getCrystalFieldvals(int persistence, int crystalid);
 
   /// returns all models (*unused, and costly since it will read every model in this set)
   std::vector<std::shared_ptr<Model>> getAllModels();
@@ -132,9 +133,9 @@ private:
   Model::Type modeltype;            // type of models in this complex (pca, shapeodds, sharedgp, etc)
   std::string modelname;            // name of models in this complex
   std::string fieldname;            // name of field for which this M-S complex was computed
-  unsigned num_samples;             // how many samples were used to compute this M-S (redundant if we have the samples themselves)
+  unsigned num_samples;             // how many samples were used to compute this M-S
   bool _rotate{false};              // whether model's results need to be rotated 90 degrees clockwise (e.g., old ShapeOdds models)
-  Eigen::VectorXf samples;          // the samples of the dataset for this field (a copy of... fixme)
+  Eigen::VectorXf fieldvals;        // the fieldvals of the samples for this field
   MSParams params;
   std::vector<PersistenceLevel> persistence_levels;
 
