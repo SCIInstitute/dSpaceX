@@ -135,8 +135,11 @@ py::object& MSModelset::getPythonModule(const std::string& modname) {
     time_point<Clock> start = Clock::now();
 
     // import the requested module
-    MSModelset::python_modules[modname] = py::module::import(modname.c_str());
-
+    try {
+      MSModelset::python_modules[modname] = py::module::import(modname.c_str());
+    } catch(std::exception e) {
+      std::cerr << "Could not find custom Python thumbnail renderer. Set `--scriptspath` on server start.";
+    }
     std::cout << modname <<" loaded in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
   }
 

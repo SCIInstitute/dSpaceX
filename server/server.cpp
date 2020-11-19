@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   OptionParser parser = OptionParser().description("dSpaceX Server");
   parser.add_option("-p", "--port").dest("port").type("int").set_default(kDefaultPort).help("server port");
   parser.add_option("-d", "--datapath").dest("datapath").help("path to datasets");
-  parser.add_option("-s", "--scriptspath").dest("scriptspath").help("path to data processing scripts").set_default("../..");
+  parser.add_option("-s", "--scriptspath").dest("scriptspath").help("path to Python data processing scripts").set_default("../..");
   const optparse::Values &options = parser.parse_args(argc, argv);
   const std::vector<std::string> args = parser.args();
 
