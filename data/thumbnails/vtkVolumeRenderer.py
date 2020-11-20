@@ -18,31 +18,8 @@ class vtkVolumeRenderer:
             default = '/Users/cam/data/dSpaceX/latest/nanoparticles_volume/unprocessed_data/shape_representations/Images.0002.nrrd'
         self.loadNewVolume(default)
 
-        # TODO: add some shadows and material properties
-        # self.plotter.add_volume(evol.copy(), name="sample", show_scalar_bar=False, cmap='binary',
-        #                         shade=True, diffuse=1.0, specular=0.5, specular_power=15)
-
-
         # colors
         colors = vtk.vtkNamedColors()
-
-        # Create transfer mappings of scalar value to opacity and color.
-        # from a (the only?!) vtk example, a proton field
-        # opacityTransferFunction = vtk.vtkPiecewiseFunction()
-        # opacityTransferFunction.AddPoint(20, 0.0)
-        # opacityTransferFunction.AddPoint(255, 0.2)
-        # colorTransferFunction = vtk.vtkColorTransferFunction()
-        # colorTransferFunction.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
-        # colorTransferFunction.AddRGBPoint(64.0, 1.0, 0.0, 0.0)
-        # colorTransferFunction.AddRGBPoint(128.0, 0.0, 0.0, 1.0)
-        # colorTransferFunction.AddRGBPoint(192.0, 0.0, 1.0, 0.0)
-        # colorTransferFunction.AddRGBPoint(255.0, 0.0, 0.2, 0.0)
-
-        # blue to orange from ken morland's site
-        # colorTransferFunction.SetColorSpaceToDiverging()
-        # colorTransferFunction.AddRGBPoint(0.0, 0.06, 0.04, 0.4);
-        # colorTransferFunction.AddRGBPoint(1.0, 0.811765, 0.345098, 0.113725);
-        
 
         # volume properties
         volumeProperty = vtk.vtkVolumeProperty()
@@ -51,12 +28,9 @@ class vtkVolumeRenderer:
         alphaChannelFunc.AddPoint(0, 0.0)
         alphaChannelFunc.AddPoint(255, 0.25)
         colorFunc = vtk.vtkColorTransferFunction()
-        #colorFunc.AddRGBPoint(0, 0.0, 0.0, 0.0)
         colorFunc.AddRGBPoint(0, color[0]/2.0, color[1]/2.0, color[2]/2.0)
         colorFunc.AddRGBPoint(255, color[0], color[1], color[2])
 
-        # volumeProperty.SetColor(colorTransferFunction)
-        # volumeProperty.SetScalarOpacity(opacityTransferFunction)
         volumeProperty.SetColor(colorFunc)
         volumeProperty.SetScalarOpacity(alphaChannelFunc)
         volumeProperty.ShadeOn()
@@ -65,14 +39,7 @@ class vtkVolumeRenderer:
         volumeProperty.SetSpecular(1.5)
         volumeProperty.SetSpecularPower(15)
         
-        # self.volumeProperty.SetScalarOpacity(self.alphaChannelFunc)
-        # self.volumeProperty.SetColor(self.colorFunc)
-
-        # self.volumeProperty.SetColor(colors.GetColor("CustomColor"))
-
-
         # volume
-        #volumeMapper = vtk.vtkFixedPointVolumeRayCastMapper()
         volumeMapper = vtk.vtkGPUVolumeRayCastMapper()
         volumeMapper.SetInputConnection(self.dataImporter.GetOutputPort())
         self.volume = vtk.vtkVolume()
@@ -91,11 +58,6 @@ class vtkVolumeRenderer:
 
         # camera
         cam = self.ren.GetActiveCamera()
-        # cam.Azimuth(-37.5)
-        # cam.Elevation(30.0)
-        # cam.SetPosition([1,0.5,1])
-        # cam.SetFocalPoint([0,0,0])
-        #cam.SetDistance(50)
         cam.SetViewUp([-1,0,0])
         cam.SetPosition([140,140,140])
         cam.SetFocalPoint([49.5,49.5,49.5])
@@ -105,7 +67,6 @@ class vtkVolumeRenderer:
         print(cam.GetFocalPoint())
         print(cam.GetViewUp())
         self.ren.ResetCameraClippingRange()
-        #self.ren.ResetCamera()
         print(cam.GetPosition())
         print(cam.GetFocalPoint())
         print(cam.GetViewUp())
@@ -131,7 +92,7 @@ class vtkVolumeRenderer:
     def update(self, param = []):
         self.updateVolume(param)
 
-    def updateVolume(self, vol = [], shape = []):
+    def updateVolume(self, vol = [], shape = [100,100,100]):  # hack: either pass from c++ or use default's
         if len(vol) == 0:
             print("ERROR: empty volume, ignoring")
             return
@@ -144,10 +105,8 @@ class vtkVolumeRenderer:
         # can we do this from c++? or just pass vol dims
         if len(shape) != 0:
             print("shape passed: " + str(shape))
-            evol = np.reshape(vol, shape)    # todo: just set vol=np.reshape... (just need to make sure it works with c++ passed data)
-            arr = (evol * 255).astype('uint8')
-        else:
-            arr = (vol * 255).astype('uint8')
+            vol = np.reshape(vol, shape)
+        arr = (vol * 255).astype('uint8')
 
         print("volume shape: " + str(vol.shape))
         data_string = arr.tobytes()
