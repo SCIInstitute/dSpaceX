@@ -69,6 +69,7 @@ function install_conda() {
        jupyter==1.0.0 \
        vtk==9.0.1 \
        ctags==5.8 \
+       libzip==1.7.3 \
        scikit-image==0.17.2
   then return 1; fi
 
