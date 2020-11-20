@@ -840,7 +840,11 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
 
 
   // update renderer with new data
-  ren.attr("update")(*I);
+  try {
+    ren.attr("update")(*I);
+  } catch(std::exception) {
+    std::cerr << "error updating extern renderer. Ignoring\n";
+  }
   
   time_point<Clock> end = Clock::now();
   std::cout << "vertices updated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
@@ -860,10 +864,6 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
   // convert numpy array to Image 
   Image image(dspacex::toStdVec(npvec), width, height, 3);
 
-  end = Clock::now();
-  std::cout << "image generated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;
-  start = end;
-
 #if 0
   // <ctc> debug by also dumping the generated image
   std::ostringstream os;
@@ -875,8 +875,6 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
 
   // add result image to response 
   addImageToResponse(response, image);
-
-  std::cout << "image added to response in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
 }
 
 /**

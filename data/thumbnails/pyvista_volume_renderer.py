@@ -28,8 +28,8 @@ Renders a 2d image (a "screenshot") of a volume.
 
 """
 class pvVolumeRenderer:
-    def __init__(self, default = '1.nrrd', color = [1.0, 0.766, 0.336], scale = 1.3,
-                 onscreen = False, singleview = False):
+    def __init__(self, default = '/Users/cam/data/dSpaceX/latest/nanoparticles_volume/unprocessed_data/shape_representations/Images.0001.nrrd',
+                 color = [1.0, 0.766, 0.336], scale = 1.3, onscreen = False, singleview = True):
         """
         :param offscreet: don't show a window
         :param singleview: render volume only without silouettes along bottom
@@ -69,25 +69,21 @@ class pvVolumeRenderer:
         if self.plotter.shape == (4,):
             # xz view
             self.plotter.subplot(0)
-            self.plotter.add_volume(vol[0], name="sample")
-            #self.plotter.add_volume(self.polydata, color=[0,0,0], name="sample")
+            self.plotter.add_volume(vol[0], name="sample", show_scalar_bar=False, cmap='binary')
 
             # xy view
             self.plotter.subplot(1)
-            self.plotter.add_volume(vol[0], name="sample")
-            #self.plotter.add_volume(self.polydata, color=[0,0,0], name="sample")
+            self.plotter.add_volume(vol[0], name="sample", show_scalar_bar=False, cmap='binary')
 
             # yz view
             self.plotter.subplot(2)
-            self.plotter.add_volume(vol[0], name="sample")
-            #self.plotter.add_volume(self.polydata, color=[0,0,0], name="sample")
+            self.plotter.add_volume(vol[0], name="sample", show_scalar_bar=False, cmap='binary')
 
             # isometric view
             self.plotter.subplot(3)
 
-        self.plotter.add_volume(vol[0], name="sample")
-        # self.plotter.add_volume(self.polydata, color=self.color, specular=0.5,
-        #                       specular_power=15, smooth_shading=True, name="sample")
+        self.plotter.add_volume(vol[0], name="sample", show_scalar_bar=False, cmap='prism',
+                                shade=True, diffuse=1.0, specular=0.5, specular_power=15)
 
         self.setCameraPos()
 
@@ -103,9 +99,10 @@ class pvVolumeRenderer:
             print("ERROR: empty volume, ignoring")
             return
 
-        self.plotter.add_volume(vol[0], name="sample")
-        # self.plotter.add_volume(self.polydata, color=self.color, specular=0.5,
-        #                       specular_power=15, smooth_shading=True, name="sample")
+        #evol = numpy.reshape(vol,(100,100,100))  #hack hack hack (need to do this from c++? pass vol dims?)
+
+        self.plotter.add_volume(evol.copy(), name="sample", show_scalar_bar=False, cmap='prism',
+                                shade=True, diffuse=1.0, specular=0.5, specular_power=15, mapper='fixed_point')
         self.setCameraPos()
                 
     def getCameraPos(self):
