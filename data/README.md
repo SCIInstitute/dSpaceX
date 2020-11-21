@@ -5,27 +5,29 @@ files that the **dSpaceX** server and UI require, including:
 
 - The config.yaml which specifics the location and format of the processed data.
 - A distance matrix between the design shape representations.
-- The 2D embeddings of the design shape representations. The default embeddings
-  are t-SNE, MDS, and Isomap.
+- The 2D embeddings of the design shape representations.  
+  The default embeddings are t-SNE, MDS, and Isomap.
 - Thumbnails of the design shape representations.
-- (TODO) The Morse-Smale decomposition.
-- The latent space models for design prediction; currently only generates PCA models. 
+- The latent space models for design prediction  
+  Currently generates PCA models. 
 
 Currently, there are two paths through the tool. Either a user can generate all
 the initial data (distances, embeddings, configs, etc) or they can generate a
-latent space model based on a Morse-Smale partition of the data.
+latent space model based on a Morse-Smale partitioning of the data generated
+using the **dSpaceX** GUI.
 
-The JSON file needs to specify the location of the original data, including, the
+The JSON file needs to specify the location of the original data, including the
 input parameters, the quantities of interest, and the design shape
-representation — usually these are images or volumes.  Below we describe how to
-use the tool and provide helpful examples.
+representation — usually these are images or volumes.
+
+Below we describe how to use the tool and provide helpful examples.
 
 This README assumes you have already cloned the **dSpaceX** repository.
 
 ## Setup
 In order to run the pre-processing tool the **dSpaceX** conda environment needs to
 be created and activated. If you have already set up the server and/or the
-client then the conda environment should be created, if not follow these steps:
+client then the conda environment should already exist, if not follow these steps:
 
 1. In the terminal, navigate to the **dSpaceX** directory (this will be wherever you
    cloned the **dSpaceX** repository)
@@ -36,8 +38,7 @@ client then the conda environment should be created, if not follow these steps:
    ```
 
 ## Running the data processing Tool
-1. Activate the **dSpaceX** conda environment — note that the **dSpaceX** conda
-   environment is all lower case).
+1. Activate the `dspacex` conda environment (note that it is all lower case).
 
 ```bash
    conda activate dspacex
@@ -200,7 +201,13 @@ embedding you want to provide.
 }
 ```
 
-### Creating a Latent Space Model
+## Partitioning datasets
+
+Once the initial processing of the data is complete it is now possible to load and explore the dataset using **dSpaceX**. The first aspect of exploring datasets is to use the Morse-Smale computation on a selected field--Quantity of Interest (QoI) or Design Parameter-- in order to identify various similarities of the dataset samples.
+
+See [Morse-Smale Decomposition](../documentation/configuration.md#morse-smale-decomposition) for details.
+
+## Creating a Latent Space Model
 To create a latent space model include the field generateModel to notify the
 tool you want to generate a model.  You will also need to provide the data
 partitioning, the shape representations, and the exiting output directory.  The

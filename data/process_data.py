@@ -147,6 +147,7 @@ def preprocess_data(config):
     output_directory = os.path.join(output_directory, '')
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
+    # FIXME: verify there are the same number of samples as specified (currently silently fails)
     output_config = {'name': config['datasetName'], 'samples': {'count': config['numberSamples']}}
 
     # PARAMETERS AND QOIS
@@ -309,8 +310,7 @@ def calculate_distance(input_config, output_directory, precision = np.float32):
     # save distance as csv and bin (w/ dims)
     filename = os.path.join(output_directory, input_config['datasetName'] + '_distance')
     np.savetxt(filename + '.csv', distance, delimiter=',')
-
-    np.tofile(filename + '.bin', precision(distance))
+    np.asarray(precision(distance)).tofile(filename + '.bin')
     dims = open(filename + '.bin.dims', 'w')
     dims.write(str(distance.shape[0]) + ' ' + str(distance.shape[1]) + ' ')
     dims.write("float32") if precision == np.float32 else dims.write("float64")
@@ -399,4 +399,5 @@ if __name__ == "__main__":
     config_path = sys.argv[1]
     with open(config_path) as json_file:
         _config = json.load(json_file)
+    os.chdir(os.path.dirname(config_path))
     process_data(_config)
