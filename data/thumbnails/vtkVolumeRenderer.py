@@ -10,7 +10,7 @@ class vtkVolumeRenderer:
     """
     Renders a 2d thumbnail from a volume
     """
-    def __init__(self, default = '', color = [1.0, 0.766, 0.336], scale = 1.3):
+    def __init__(self, default = '', color = [1.0, 0.766, 0.336], scale = 1.25):
 
         # Create the importer and load a volume (gets things warmed up)
         self.dataImporter = vtk.vtkImageImport()
@@ -62,14 +62,7 @@ class vtkVolumeRenderer:
         cam.SetPosition([140,140,140])
         cam.SetFocalPoint([49.5,49.5,49.5])
         cam.Zoom(scale)
-
-        print(cam.GetPosition())
-        print(cam.GetFocalPoint())
-        print(cam.GetViewUp())
         self.ren.ResetCameraClippingRange()
-        print(cam.GetPosition())
-        print(cam.GetFocalPoint())
-        print(cam.GetViewUp())
 
         self.renWin.SetWindowName('TwistyTurnyNanoparticle')
 
@@ -89,6 +82,23 @@ class vtkVolumeRenderer:
         self.n = 0
         self.update(vol[0])
 
+    def show(self):
+        renderInteractor = vtk.vtkRenderWindowInteractor()
+        renderInteractor.SetRenderWindow(self.renWin)
+
+        # A simple function to be called when the user decides to quit the application.
+        def exitCheck(obj, event):
+            if obj.GetEventPending() != 0:
+                obj.SetAbortRender(1)
+
+        # Tell the application to use the function as an exit check.
+        self.renWin.AddObserver("AbortCheckEvent", exitCheck)
+
+        renderInteractor.Initialize()
+        # Because nothing will be rendered without any input, we order the first render manually
+        #  before control is handed over to the main-loop.
+        renderInteractor.Start()
+
     def update(self, param = []):
         self.updateVolume(param)
 
@@ -104,11 +114,9 @@ class vtkVolumeRenderer:
 
         # can we do this from c++? or just pass vol dims
         if len(shape) != 0:
-            print("shape passed: " + str(shape))
             vol = np.reshape(vol, shape)
         arr = (vol * 255).astype('uint8')
 
-        print("volume shape: " + str(vol.shape))
         data_string = arr.tobytes()
         self.dataImporter.CopyImportVoidPointer(data_string, len(data_string))
         self.dataImporter.SetDataScalarTypeToUnsignedChar()

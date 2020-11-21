@@ -3,14 +3,8 @@ import re
 import PIL.Image
 import thumbnails
 
-# import nrrd
-# from PIL import Image, ImageDraw
-# from skimage import measure
 
-# from thumbnails.thumbnail_utils import generate_image_from_vertices_and_faces
-
-
-def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
+def generate_volume_thumbnails(shape_directory, output_directory, scale = 1.25):
     """
     Generates thumbnails from voxels
     :param shape_directory: Directory where voxels are saved
@@ -18,10 +12,10 @@ def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
     :param scale: A scaling value so that the designs are within the thumbnails, usually the default is sufficient
     """
     # Get all possible volumees
-    shapes = glob(shape_directory + '*.nrrd')
+    shapes = glob(shape_directory + '/*.nrrd')
 
     # instantiate volume renderer
-    ren = thumbnails.VolumeRenderer(default_volume = '')
+    ren = thumbnails.VolumeRenderer(scale = scale)
 
     # For each volume format generate thumbnail
     for index, shape_file in enumerate(shapes):
@@ -31,7 +25,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, scale=10):
 
         ren.loadNewVolume(shape_file)
         image = PIL.Image.fromarray(ren.getImage())
-        image.save(output_directory + str(shape_id) + '.png')
+        image.save(output_directory + '/' + str(shape_id) + '.png')
 
     # Necessary so next line prints on new line
     print('', end='\n')
