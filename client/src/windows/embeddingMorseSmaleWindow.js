@@ -225,6 +225,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                                selectedDesigns={this.props.selectedDesigns}
                                onDesignSelection={this.props.onDesignSelection}
                                activeDesigns={this.props.activeDesigns}
+                               drawerImages={this.state.drawerImages}
                                numberOfWindows={this.props.numberOfWindows}/>
             </div>
 

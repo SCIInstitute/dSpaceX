@@ -15,6 +15,7 @@ class EmbeddingWindow extends React.Component {
     super(props);
 
     this.state = {
+      drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
       renderEdges: false,
       renderThumbnails: false,
       colorThumbnails: false,
@@ -113,6 +114,12 @@ class EmbeddingWindow extends React.Component {
       this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
       this.renderScene();
     }
+
+    // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)
+    if (this.state.drawerAdded == false && this.props.drawerImages.length > 0) {
+      this.resizeCanvas();
+      this.state.drawerAdded = true;
+    }
   }
 
   /**
@@ -147,9 +154,6 @@ class EmbeddingWindow extends React.Component {
    * Initialized the renderer, camera, and scene for Three.js
    */
   init() {
-    //<ctc> debugging vars
-    this.nResizes = 0;
-
     // canvas
     let canvas = this.refs.embeddingCanvas;
     let gl = canvas.getContext('webgl');
@@ -361,7 +365,6 @@ class EmbeddingWindow extends React.Component {
   resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
-    console.log('['+ this.nResizes++ +'] embeddingWindow resizing canvas from '+this.refs.embeddingCanvas.width+' x '+this.refs.embeddingCanvas.height+' to '+width+' x '+height);
 
     // Resize renderer
     this.renderer.setSize(width, height, false);
