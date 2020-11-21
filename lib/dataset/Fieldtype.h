@@ -22,20 +22,24 @@ struct Fieldtype {
 
   Fieldtype(const int type) : kind(type) {}
 
-  operator int() const { return kind; } // enables comparison using ==
-  bool valid() { return kind == DesignParameter || kind == QoI; }
+  operator int() const { assert(valid()); return kind; } // enables comparison using ==
+  bool valid() const { return kind == DesignParameter || kind == QoI || kind == Unknown; }
   std::string asString() { // For exporting ms complex
     switch(kind) {
-        case DesignParameter:
-          return "Design Parameter";
-        case QoI:
-          return "QoI";
+      case DesignParameter:
+        return "Design Parameter";
+      case QoI:
+        return "QoI";
+      case Unknown:
+        return "Unknown Fieldtype";
+      default:
+        return "ERROR: Invalid Fieldtype";
     }
   }
 
   int kind;
-  const static int DesignParameter = 0;
-  const static int QoI = 1;
+  const static int DesignParameter = 5;
+  const static int QoI = 10;
   const static int Unknown = -1;
 };
 
