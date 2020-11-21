@@ -1,4 +1,5 @@
 #include "Dataset.h"
+#include "utils.h"
 
 #include <algorithm>
 
@@ -31,7 +32,7 @@ std::shared_ptr<MSModelset> Dataset::getModelset(const std::string& fieldname, c
  * getFieldvalues
  * returns Eigen::Map wrapping the vector of values for a given field
  */
-Eigen::Map<Eigen::VectorXf> Dataset::getFieldvalues(const std::string &name, Fieldtype type)
+Eigen::Map<Eigen::VectorXf> Dataset::getFieldvalues(const std::string &name, Fieldtype type, bool normalized)
 {
   // try to find the index of the data in both parameters and qois since it'll be needed anyway
   auto pnames = getParameterNames();
@@ -53,14 +54,14 @@ Eigen::Map<Eigen::VectorXf> Dataset::getFieldvalues(const std::string &name, Fie
     case Fieldtype::DesignParameter:
       if (ploc != std::end(pnames)) {
         int index = std::distance(pnames.begin(), ploc);
-        FortranLinalg::DenseVector<Precision> values = getParameterVector(index);
+        FortranLinalg::DenseVector<Precision> values = getParameterVector(index, normalized);
         return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
       }      
       break;
     case Fieldtype::QoI:
       if (qloc != std::end(qnames)) {
         int index = std::distance(qnames.begin(), qloc);
-        FortranLinalg::DenseVector<Precision> values = getQoiVector(index);
+        FortranLinalg::DenseVector<Precision> values = getQoiVector(index, normalized);
         return Eigen::Map<Eigen::VectorXf>(values.data(), values.N());
       }
   }
@@ -101,12 +102,14 @@ Dataset::Builder& Dataset::Builder::withDistanceMatrix(FortranLinalg::DenseMatri
 Dataset::Builder& Dataset::Builder::withParameter(std::string name, FortranLinalg::DenseVector<Precision> &parameter) {
   m_dataset->m_parameterNames.push_back(name);
   m_dataset->m_parameters.push_back(parameter);
+  m_dataset->m_normalized_parameters.push_back(normalize(parameter));
   return (*this);
 }
 
 Dataset::Builder& Dataset::Builder::withQoi(std::string name, FortranLinalg::DenseVector<Precision> &qoi) {
   m_dataset->m_qoiNames.push_back(name);
   m_dataset->m_qois.push_back(qoi);
+  m_dataset->m_normalized_qois.push_back(normalize(qoi));
   return (*this);
 }
 
@@ -123,7 +126,7 @@ Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared
     m_dataset->m_modelNames.push_back(modelset->modelName());
   
   m_dataset->m_msModelFields.push_back(fieldname);
-  modelset->setFieldvals(m_dataset->getFieldvalues(fieldname));
+  modelset->setFieldvals(m_dataset->getFieldvalues(fieldname, Fieldtype::Unknown, false /*normalized*/));
   m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));
   return (*this);
 }

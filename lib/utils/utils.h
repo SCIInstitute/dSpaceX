@@ -56,4 +56,30 @@ static FortranLinalg::DenseMatrix<T> toDenseMatrix(Eigen::Matrix<T, Eigen::Dynam
  */
 Precision computeSigma(const std::vector<Precision>& vals);
 
+/*
+ * Returns a normalized copy of the given values.
+ */
+FortranLinalg::DenseVector<Precision> normalize(const FortranLinalg::DenseVector<Precision>& vals);
+
+///display the min, max, avg, var, sdv for this array
+template<typename T>
+void displayFieldStats(const T& arr) {
+  auto minval(arr.minCoeff());
+  auto maxval(arr.maxCoeff());
+  auto meanval(arr.mean());
+  std::cout << "\tmin: " << minval << std::endl;
+  std::cout << "\tmax: " << maxval << std::endl;
+  std::cout << "\tavg: " << meanval << std::endl;
+
+  //compute variance
+  {
+    Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(arr);
+    copyvals.array() -= meanval;
+    copyvals.array() = copyvals.array().square();
+    auto variance(copyvals.sum() / (copyvals.size()-1));
+    std::cout << "\tvar: " << variance << std::endl;
+    std::cout << "\tsdv: " << sqrt(variance) << std::endl;
+  }
+}
+
 } // dspacex

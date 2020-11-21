@@ -48,8 +48,8 @@ class Dataset {
     return m_distanceMatrix;
   }
 
-  FortranLinalg::DenseVector<Precision>& getQoiVector(int i) {
-    return m_qois[i];
+  FortranLinalg::DenseVector<Precision>& getQoiVector(int i, bool normalized = false) {
+    return normalized ? m_normalized_qois[i] : m_qois[i];
   }
 
   std::vector<std::string>& getQoiNames() {
@@ -68,8 +68,8 @@ class Dataset {
     return m_modelNames;
   }
 
-  FortranLinalg::DenseVector<Precision>& getParameterVector(int i) {
-    return m_parameters[i];
+  FortranLinalg::DenseVector<Precision>& getParameterVector(int i, bool normalized = false) {
+    return normalized ? m_normalized_parameters[i] : m_parameters[i];
   }
 
   std::vector<std::string>& getParameterNames() {
@@ -95,7 +95,8 @@ class Dataset {
   const Image& getThumbnail(int idx) const;
 
   /// return the field values for the given field (of the specified type, otherwise the first with that name)
-  Eigen::Map<Eigen::VectorXf> getFieldvalues(const std::string &name, Fieldtype type = Fieldtype::Unknown);
+  Eigen::Map<Eigen::VectorXf> getFieldvalues(const std::string &name, Fieldtype type = Fieldtype::Unknown,
+                                             bool normalized = false);
 
   // Builder includes necessary functions for a user to build and return a dSpaceX Dataset
   class Builder {
@@ -124,6 +125,8 @@ class Dataset {
   FortranLinalg::DenseMatrix<Precision> m_distanceMatrix;
   std::vector<FortranLinalg::DenseVector<Precision>> m_qois;
   std::vector<FortranLinalg::DenseVector<Precision>> m_parameters;
+  std::vector<FortranLinalg::DenseVector<Precision>> m_normalized_qois;
+  std::vector<FortranLinalg::DenseVector<Precision>> m_normalized_parameters;
   std::vector<std::string> m_qoiNames;
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;

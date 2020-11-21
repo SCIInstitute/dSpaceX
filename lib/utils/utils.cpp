@@ -45,4 +45,30 @@ Precision computeSigma(const std::vector<Precision>& vals) {
   return mins.sum() / vals.size();
 }
 
+FortranLinalg::DenseVector<Precision> normalize(const FortranLinalg::DenseVector<Precision>& values) {
+  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> _values(const_cast<FortranLinalg::DenseVector<Precision>&>(values).data(), values.N());
+  FortranLinalg::DenseVector<Precision> ret(values.N()); 
+  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> _ret(ret.data(), ret.N());
+  _ret = _values;
+
+  auto showStats(true);
+  if (showStats) {
+    std::cout << "Raw field stats:\n";
+    displayFieldStats(_ret);
+  }
+
+  // Scale normalize so that all values are in range [0,1]: for each member X: X = (X - min) / (max - min).
+  auto minval(_ret.minCoeff());
+  auto maxval(_ret.maxCoeff());
+  _ret.array() -= minval;
+  _ret.array() /= (maxval - minval);
+
+  if (showStats) {
+    std::cout << "Scale-normalized field stats:\n";
+    displayFieldStats(_ret);
+  }
+
+  return ret;
+}
+
 } // dspacex

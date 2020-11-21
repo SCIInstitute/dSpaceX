@@ -431,7 +431,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
     auto embedding = m_currentDataset->getEmbeddingMatrix(embeddingId);
     auto name = m_currentDataset->getEmbeddingNames()[embeddingId];
 
-    // TODO: Factor out a normalizing routine.
+    // TODO: Factor out a normalizing routine. [see normalize in utils.h]
     float minX = embedding(0, 0);
     float maxX = embedding(0, 0);
     float minY = embedding(0, 1);
@@ -478,7 +478,7 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   }
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(m_currentField, m_currentCategory);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(m_currentField, m_currentCategory, m_currentNormalize);
   if (!fieldvals.data())
     return setError(response, "Invalid fieldname or empty field");
 
@@ -630,7 +630,7 @@ void Controller::fetchParameter(const Json::Value &request, Json::Value &respons
 
   // get the vector of values for the requested field
   std::string parameterName = request["parameterName"].asString();
-  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(parameterName, Fieldtype::DesignParameter);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(parameterName, Fieldtype::DesignParameter, false /*normalized*/);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -650,7 +650,7 @@ void Controller::fetchQoi(const Json::Value &request, Json::Value &response) {
 
   // get the vector of values for the requested field
   std::string qoiName = request["qoiName"].asString();
-  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(qoiName, Fieldtype::QoI);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(qoiName, Fieldtype::QoI, false /*normalized*/);
   if (!fieldvals.data())
     return setError(response, "invalid fieldname");
   
@@ -936,7 +936,7 @@ std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std
   std::vector<ValueIndexPair> fieldvalues_and_indices;
 
   // get the vector of values for the field
-  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(fieldname, category);
+  Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(fieldname, category, false /*normalized*/);
   if (!fieldvals.data()) {
     std::cerr << "Invalid fieldname or empty field\n";
     return fieldvalues_and_indices;
@@ -1123,27 +1123,6 @@ bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldn
            m_currentNormalize       == normalize);
 }
 
-///display the min, max, avg, var, sdv for this array
-template<typename T>
-void displayFieldStats(const T& arr) {
-  auto minval(arr.minCoeff());
-  auto maxval(arr.maxCoeff());
-  auto meanval(arr.mean());
-  std::cout << "\tmin: " << minval << std::endl;
-  std::cout << "\tmax: " << maxval << std::endl;
-  std::cout << "\tavg: " << meanval << std::endl;
-
-  //compute variance
-  {
-    Eigen::Matrix<Precision, Eigen::Dynamic, 1> copyvals(arr);
-    copyvals.array() -= meanval;
-    copyvals.array() = copyvals.array().square();
-    auto variance(copyvals.sum() / (copyvals.size()-1));
-    std::cout << "\tvar: " << variance << std::endl;
-    std::cout << "\tsdv: " << sqrt(variance) << std::endl;
-  }
-}
-
 /**
  * Checks if the requested dataset has been processed. If not, processes the data.
  *
@@ -1162,31 +1141,13 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   std::cout << "computing nnmscomplex for fieldname: " << fieldname << "..." << std::endl;
 
   // get the vector of values for the requested field
-  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> fieldvals = m_currentDataset->getFieldvalues(fieldname, category);
+  Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> fieldvals = m_currentDataset->getFieldvalues(fieldname, category, normalize);
   if (!fieldvals.data()) {
     std::cerr << "Controller::processData failed: invalid fieldname or empty field.\n";
     return false;
   }
 
-  // normalize fieldvals if requested
-  if (normalize) {
-    auto showStats(true);
-    if (showStats) {
-      std::cout << "Raw field stats:\n";
-      displayFieldStats(fieldvals);
-    }
-
-    // Scale normalize so that all values are in range [0,1]: for each member X: X = (X - min) / (max - min).
-    auto minval(fieldvals.minCoeff());
-    auto maxval(fieldvals.maxCoeff());
-    fieldvals.array() -= minval;
-    fieldvals.array() /= (maxval - minval);
-
-    if (showStats) {
-      std::cout << "Scale-normalized field stats:\n";
-      displayFieldStats(fieldvals);
-    }
-  }
+  
 
   // clear current computation results
   m_currentVizData = nullptr;
