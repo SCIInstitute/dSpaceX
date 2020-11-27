@@ -371,12 +371,13 @@ class Client {
    * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleRegression(datasetId, category, fieldname, persistence) {
+  fetchMorseSmaleRegression(datasetId, category, fieldname, layout, persistence) {
     let command = {
       name: 'fetchMorseSmaleRegression',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      layout: layout,
       persistence: persistence,
     };
     return this._createCommandPromise(command);
@@ -391,12 +392,13 @@ class Client {
    * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleExtrema(datasetId, category, fieldname, persistence) {
+  fetchMorseSmaleExtrema(datasetId, category, fieldname, layout, persistence) {
     let command = {
       name: 'fetchMorseSmaleExtrema',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      layout: layout,
       persistence: persistence,
     };
     return this._createCommandPromise(command);

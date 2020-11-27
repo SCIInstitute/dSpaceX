@@ -107,9 +107,10 @@ public:
   static Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> readBinMatrix(const std::string &filename)
   {
     std::ifstream dims(filename + ".dims");
-    unsigned rows, cols;
+    unsigned rows{0}, cols{0};
     std::string dtype;
     dims >> rows >> cols >> dtype;
+    if (rows == 0 || cols == 0) { throw(std::runtime_error("num rows or cols is zero for binary file containing matrix")); }
 
     // ensure .bin is of correct type (TODO: enable conversion to requested type)
     if (dtype == "float32" && typeid(T) != typeid(float) || dtype == "float64" && typeid(T) != typeid(double))
@@ -117,6 +118,7 @@ public:
 
     // read file into a vector
     std::ifstream vals(filename, std::ios::binary);
+    if (!vals.is_open()) { throw(std::runtime_error("could not open binary file for reading matrix")); }
     std::vector<char> data_vec = std::vector<char>(std::istreambuf_iterator<char>(vals), {});
 
     // wrap vector data with a matrix and return it as an rvalue

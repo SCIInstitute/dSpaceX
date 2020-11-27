@@ -5,15 +5,10 @@
 #include "flinalg/DenseMatrix.h"
 #include "flinalg/Linalg.h"
 #include "dataset/Precision.h"
+#include "HDVizLayout.h"
 
 #include <string>
 #include <vector>
-
-enum class HDVizLayout : char {
-    ISOMAP  = 0,
-    PCA = 1,
-    PCA2 = 2,
-};
 
 class HDVizData {
   public:

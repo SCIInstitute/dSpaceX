@@ -507,7 +507,8 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
   if (persistence < 0) return; // response will contain the error
 
   // Get points for regression line
-  auto layout = m_currentVizData->getLayout(HDVizLayout::ISOMAP, persistence);
+  auto layoutType = HDVizLayout(request["layout"].asString());
+  auto layout = m_currentVizData->getLayout(layoutType, persistence);
   int rows = m_currentVizData->getNumberOfSamples();
   double points[rows][3];
   double colors[rows][3];
@@ -559,7 +560,8 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
   int persistence = getPersistence(request, response);
   if (persistence < 0) return; // response will contain the error
 
-  auto extremaLayout = m_currentVizData->getExtremaLayout(HDVizLayout::ISOMAP, persistence);
+  auto layoutType = HDVizLayout(request["layout"].asString());
+  auto extremaLayout = m_currentVizData->getExtremaLayout(layoutType, persistence);
   auto extremaNormalized = m_currentVizData->getExtremaNormalized(persistence);
   auto extremaValues = m_currentVizData->getExtremaValues(persistence);
 

@@ -198,16 +198,19 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
     // Compute scaling factors
     FortranLinalg::DenseVector<Precision> isoDiff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxIso, m_data->LminIso);
     Precision rISO = std::max(isoDiff(0), isoDiff(1));
+    if (rISO <= 0.0) { rISO = 0.1; } // give it something to scale by if layouts are degenerate
     FortranLinalg::Linalg<Precision>::Scale(isoDiff, 0.5f, isoDiff);
     FortranLinalg::Linalg<Precision>::Add(isoDiff, m_data->LminIso, isoDiff);
 
     FortranLinalg::DenseVector<Precision> pcaDiff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxPCA, m_data->LminPCA);
     Precision rPCA = std::max(pcaDiff(0), pcaDiff(1));
+    if (rPCA <= 0.0) { rPCA = 0.1; }
     FortranLinalg::Linalg<Precision>::Scale(pcaDiff, 0.5f, pcaDiff);
     FortranLinalg::Linalg<Precision>::Add(pcaDiff, m_data->LminPCA, pcaDiff);
 
     FortranLinalg::DenseVector<Precision> pca2Diff = FortranLinalg::Linalg<Precision>::Subtract(m_data->LmaxPCA2, m_data->LminPCA2);
     Precision rPCA2 = std::max(pca2Diff(0), pca2Diff(1));
+    if (rPCA2 <= 0.0) { rPCA2 = 0.1; }
     FortranLinalg::Linalg<Precision>::Scale(pca2Diff, 0.5f, pca2Diff);
     FortranLinalg::Linalg<Precision>::Add(pca2Diff, m_data->LminPCA2, pca2Diff);
 

@@ -20,9 +20,9 @@ struct Fieldtype {
       kind = Unknown;
   }
 
-  Fieldtype(const int type) : kind(type) {}
+  Fieldtype(const char type) : kind(type) {}
 
-  operator int() const { assert(valid()); return kind; } // enables comparison using ==
+  operator char() const { assert(valid()); return kind; } // enables comparison using ==
   bool valid() const { return kind == DesignParameter || kind == QoI || kind == Unknown; }
   std::string asString() { // For exporting ms complex
     switch(kind) {
@@ -37,10 +37,10 @@ struct Fieldtype {
     }
   }
 
-  int kind;
-  const static int DesignParameter = 5;
-  const static int QoI = 10;
-  const static int Unknown = -1;
+  char kind;
+  const static char DesignParameter = 5;
+  const static char QoI = 10;
+  const static char Unknown = -1;
 };
 
 } // dspacex

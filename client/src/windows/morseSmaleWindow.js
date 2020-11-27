@@ -101,8 +101,8 @@ class MorseSmaleWindow extends React.Component {
       const category = this.props.decomposition.decompositionCategory;
       const field = this.props.decomposition.decompositionField;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, category, field, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, category, field, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, field, "pca2", persistenceLevel), //this.props.decomposition.crystalsLayout
+        this.client.fetchMorseSmaleExtrema(datasetId, category, field, "pca2", persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         if (!regressionResponse.error && !extremaResponse.error) {

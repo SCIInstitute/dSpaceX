@@ -37,7 +37,7 @@ class HDProcessor {
 
  private:  
   void computeAnalysisForLevel(NNMSComplex<Precision> &msComplex, 
-    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression = true);
+    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression = true, unsigned knn = 10);
   void computeRegressionForCrystal(unsigned int crystalIndex, unsigned int persistenceLevel, 
     Precision sigma, int nSamples,
     std::vector<std::vector<unsigned int>> &Xi,
@@ -52,7 +52,7 @@ class HDProcessor {
     int nExt, int nSamples, unsigned int persistenceLevel);
   void computeIsomapLayout(FortranLinalg::DenseMatrix<Precision> &S, 
     std::vector<FortranLinalg::DenseMatrix<Precision>> &ScrystalIDs, 
-    int nExt, int nSamples, unsigned int persistenceLevel);
+    int nExt, int nSamples, unsigned int persistenceLevel, unsigned knn);
   void fit(FortranLinalg::DenseMatrix<Precision> &E, FortranLinalg::DenseMatrix<Precision> &Efit);
   void addNoise(FortranLinalg::DenseVector<Precision> &v);
 

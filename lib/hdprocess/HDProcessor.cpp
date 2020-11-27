@@ -117,7 +117,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/, knn);
   }
 
   // detach and return processed result
@@ -229,7 +229,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::process(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigma, true /*computeRegression*/);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigma, true /*computeRegression*/, knn);
   }
 
   // detach and return processed result
@@ -244,7 +244,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::process(
  * @param[in] sigma Bandwidth for inverse regression.
  */
 void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
-    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression) {
+    unsigned int persistenceLevel, int nSamples, Precision sigma, bool computeRegression, unsigned knn) {
   // Number of extrema in current crystal
   // int nExt = persistence.N() - persistenceLevel + 1;      // jonbronson commented out 8/16/17
   msComplex.mergePersistence(persistence(persistenceLevel));
@@ -466,7 +466,7 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   computePCAExtremaLayout(S, ScrystalIDs, nExt, nSamples, persistenceLevel);
 
   //----- Isomap extrema / PCA curves layout 
-  computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, persistenceLevel);     
+  computeIsomapLayout(S, ScrystalIDs, nExt, nSamples, persistenceLevel, knn);
 
 
   S.deallocate();
@@ -837,10 +837,12 @@ void HDProcessor::computePCAExtremaLayout(DenseMatrix<Precision> &S,
  */
 void HDProcessor::computeIsomapLayout(DenseMatrix<Precision> &S, 
     std::vector<DenseMatrix<Precision>> &ScrystalIDs, 
-    int nExt, int nSamples, unsigned int persistenceLevel) {
+    int nExt, int nSamples, unsigned persistenceLevel, unsigned knn) {
   // Do an isomap layout.
   EuclideanMetric<Precision> metric;
   unsigned int dim = 2; 
+
+  // fills distances of the nearest neighbors
   SparseMatrix<Precision> adj(nExt, nExt, std::numeric_limits<Precision>::max());
   for (unsigned int i=0; i < crystals.N(); i++) {
     Precision dist = 0; 
@@ -857,12 +859,11 @@ void HDProcessor::computeIsomapLayout(DenseMatrix<Precision> &S,
   }
 
 
-  KNNNeighborhood<Precision> nh(10);
+  KNNNeighborhood<Precision> nh(knn);
   Isomap<Precision> isomap(&nh, dim);
   DenseMatrix<Precision> isoL = isomap.embedAdj(adj);
 
-
-  // Align extrema to previous etxrema
+  // Align extrema to previous extrema
   if (extsOrig.size() != 0) {
     fit(isoL, extremaPosIso);
   } else {
