@@ -203,7 +203,8 @@ class MorseSmaleWindow extends React.Component {
         || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
         || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
         || prevDecomposition.k !== currentDecomposition.k
-        || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
+        || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
+        || prevDecomposition.ms !== currentDecomposition.ms);
   }
 
   /**

@@ -319,9 +319,9 @@ class DecompositionPanel extends React.Component {
 
   handleCurveLayoutChange(event) {
     let layout = event.target.value;
-    this.setState({
-      curveLayout: layout,
-    });
+    this.setState((prevState) => ({
+      ms: { ...prevState.ms, layout: layout }, 
+    }));
   }
 
   handleRecomputeMorseSmale() {
@@ -586,7 +586,7 @@ class DecompositionPanel extends React.Component {
                 onChange={this.handleInterpolationModelChange.bind(this)} 
                 inputProps={{ name: 'model', id: 'model-field' }}>
                 {this.state.selection.modellist.map((modelname) =>
-                  <MenuItem value={modelname}>
+                  <MenuItem value={modelname} key={modelname} >
                     <em>{modelname}</em>
                   </MenuItem>)}
               </Select>
@@ -692,13 +692,13 @@ class DecompositionPanel extends React.Component {
                         name: 'layout',
                         id: 'layout-field',
                       }}>
-                      <MenuItem value='iso'>
+                      <MenuItem value='iso' key='iso'>
                         <em>Isomap</em>
                       </MenuItem>
-                      <MenuItem value='pca'>
+                      <MenuItem value='pca' key='pca'>
                         <em>PCA</em>
                       </MenuItem>
-                      <MenuItem value='pca2'>
+                      <MenuItem value='pca2' key='pca2'>
                         <em>PCA2</em>
                       </MenuItem>
                     </Select>
