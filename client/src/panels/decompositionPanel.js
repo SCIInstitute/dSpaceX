@@ -35,19 +35,23 @@ class DecompositionPanel extends React.Component {
 
     this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
 
+    let defaultField = this.props.dataset.qoiNames ? this.props.dataset.qoiNames[0] : '';
+    let defaultModelList = this.props.dataset.qoiNames && props.fieldModels ? props.fieldModels.get(defaultField) : [];
+    let defaultModel = this.props.dataset.qoiNames && props.fieldModels ? defaultModelList[0] : '';
+
     this.state = {
-      devMode: true,
-
       datasetId: this.props.dataset.datasetId,
-
-      interpolationModel: this.props.dataset.models ? this.props.dataset.models[0].name.trim() : 'None',
-      model: {
-        sigmaScale: 1,
-      },
 
       decompositionMode: 'Morse-Smale',
       decompositionCategory: 'qoi',
-      decompositionField: this.props.dataset.qoiNames ? this.props.dataset.qoiNames[0] : '',
+
+      decompositionField: defaultField,
+      interpolationModel: defaultModel,
+      selection: {
+        fieldname: defaultField,  // todo: replace decompositionField and interpolationModel
+        modelname: defaultModel,
+        modellist: defaultModelList,
+      },
 
       ms: {
         knn: 15,
@@ -57,6 +61,11 @@ class DecompositionPanel extends React.Component {
         depth: 20,
         noise: true,
         normalize: true,
+        layout: 'pca2',
+      },
+
+      model: {
+        sigmaScale: 1,
       },
 
       // decomposition state
@@ -90,7 +99,8 @@ class DecompositionPanel extends React.Component {
    * @return {boolean}
    */
   decompositionConfigValid() {
-    const { decompositionMode, decompositionCategory, decompositionField } = this.state;
+    const { decompositionMode, decompositionCategory, interpolationModel } = this.state;
+    const { fieldname, modelname } = this.state.selection;
 
     // Verify category (geometry and precomputed not yet supported)
     if (!(decompositionCategory == 'parameter' ||
@@ -100,9 +110,15 @@ class DecompositionPanel extends React.Component {
       return false;
     }
 
-    // Ensure a field is selected
-    if (!decompositionField) {
+    // Ensure a field is selected (and model should at least be 'None'
+    if (!fieldname) {
       console.log('decompositionPanel current configuration is invalid:\n\tno field selected');
+      return false;
+    }
+
+    // Model should at least be 'None'
+    if (!modelname) {
+      console.log('decompositionPanel current configuration is invalid:\n\tno model selected');
       return false;
     }
 
@@ -301,6 +317,13 @@ class DecompositionPanel extends React.Component {
     }));
   }
 
+  handleCurveLayoutChange(event) {
+    let layout = event.target.value;
+    this.setState({
+      curveLayout: layout,
+    });
+  }
+
   handleRecomputeMorseSmale() {
     this.fetchDecomposition();
   }
@@ -345,6 +368,9 @@ class DecompositionPanel extends React.Component {
     let field = event.target.value;
     this.setState({
       decompositionField: field,
+      selection: { fieldname: field,
+                   modelname: this.props.fieldModels.get(field)[0],
+                   models: this.props.fieldModels.get(field) },
     });
   }
 
@@ -354,9 +380,10 @@ class DecompositionPanel extends React.Component {
    */
   handleInterpolationModelChange(event) {
     let model = event.target.value;
-    this.setState({
+    this.setState((prevState) => ({
       interpolationModel: model,
-    });
+      selection: { ...prevState.selection, modelname: model, }
+    }));
   }
 
   /**
@@ -558,12 +585,9 @@ class DecompositionPanel extends React.Component {
                 style={{ width:'100%' }}
                 onChange={this.handleInterpolationModelChange.bind(this)} 
                 inputProps={{ name: 'model', id: 'model-field' }}>
-                <MenuItem value='None'>
-                  <em>None</em>
-                </MenuItem>
-                {this.props.dataset.models && this.props.dataset.models.map((model) =>
-                  <MenuItem key={model.id} value={model.name.trim()}>
-                    <em>{model.name}</em>
+                {this.state.selection.modellist.map((modelname) =>
+                  <MenuItem value={modelname}>
+                    <em>{modelname}</em>
                   </MenuItem>)}
               </Select>
             </FormControl>
@@ -580,11 +604,13 @@ class DecompositionPanel extends React.Component {
                 <div style={{ display: 'flex', flexDirection: 'column',
                   width: '100%', boxSizing: 'border-box' }}>
 
+                  <div style={{ height:'30px', display: 'flex', justifyContent: 'center' }}>Computation</div>
+
                   <FormControl className={classes.formControl}
                     disabled={!this.props.enabled}
                     style={{ width: '100%',
                       boxSizing: 'border-box' }}>
-                    <InputLabel htmlFor='mode-field'>Partitioning Algorithm</InputLabel>
+                    <InputLabel htmlFor='mode-field'>Method</InputLabel>
                     <Select ref="decompositionCombo"
                       disabled={!this.props.enabled || !this.props.dataset}
                       value={this.state.decompositionMode}
@@ -611,27 +637,30 @@ class DecompositionPanel extends React.Component {
                     onChange={this.handleMSknnChange.bind(this)}
                   />
 
-                  {/* Sigma */}
-                  <TextField
-                    label="Regression Bandwidth"
-                    id="ms-sigma"
-                    defaultValue={this.state.ms.sigma}
-                    size="small"
-                    onChange={this.handleMSSigmaChange.bind(this)}
-                  />
-
                   {/* Smooth */}
                   <TextField
-                    label="Topology Smoothing"
+                    label="Regression Bandwidth"
                     id="ms-smooth"
                     defaultValue={this.state.ms.smooth}
                     size="small"
                     onChange={this.handleMSSmoothChange.bind(this)}
                   />
 
+
+                  <div style={{ height:'25px' }}></div>
+                  <div style={{ height:'15px', display: 'flex', justifyContent: 'center' }}>Layout</div>
+        
+                  {/* Scale normalize checkbox */}
+                  <FormControlLabel
+                    control={<Checkbox checked={this.state.ms.normalize}
+                      onChange={this.handleMSNormalizeChange.bind(this)}
+                      name="msNormalizeCheckbox" />}
+                    label="Normalize"
+                  />
+
                   {/* Depth */}
                   <TextField
-                    label="Persistence Depth"
+                    label="Max Persistences"
                     id="ms-depth"
                     defaultValue={this.state.ms.depth}
                     size="small"
@@ -640,44 +669,48 @@ class DecompositionPanel extends React.Component {
                     onChange={this.handleMSDepthChange.bind(this)}
                   />
 
-                  {/* Curve points */}
+                  {/* Sigma */}
                   <TextField
-                    label="Crystal Curve Points"
-                    id="ms-curvepoints"
-                    defaultValue={this.state.ms.curvepoints}
+                    label="Curve Smoothing"
+                    id="ms-sigma"
+                    defaultValue={this.state.ms.sigma}
                     size="small"
-                    type="number"
-                    InputProps={{ inputProps:{ min:3 } }}
-                    onChange={this.handleMSCurvePointsChange.bind(this)}
+                    onChange={this.handleMSSigmaChange.bind(this)}
                   />
 
-                  {/* checkboxes */}
-                  <FormControl component="fieldset" >
-                    {/* <FormLabel component="legend">Field</FormLabel> */}
-                    <FormGroup>
-                      {/* Add noise */}
-                      <FormControlLabel
-                        control={<Checkbox checked={this.state.ms.noise}
-                          onChange={this.handleMSNoiseChange.bind(this)}
-                          name="msNoiseCheckbox" />}
-                        label="Add noise"
-                      />
-
-                      {/* Scale normalize */}
-                      <FormControlLabel
-                        control={<Checkbox checked={this.state.ms.normalize}
-                          onChange={this.handleMSNormalizeChange.bind(this)}
-                          name="msNormalizeCheckbox" />}
-                        label="Normalize"
-                      />
-                    </FormGroup>
-                    <FormHelperText>Field</FormHelperText>
+                  <FormControl className={classes.formControl}
+                    disabled={!this.props.enabled}
+                    style={{ width: '100%',
+                      boxSizing: 'border-box' }}>
+                    <InputLabel htmlFor='layout-field'>Layout</InputLabel>
+                    <Select ref="curveLayout"
+                      disabled={!this.props.enabled || !this.props.dataset}
+                      value={this.state.ms.layout}
+                      style={{ width:'100%' }}
+                      onChange={this.handleCurveLayoutChange.bind(this)}
+                      inputProps={{
+                        name: 'layout',
+                        id: 'layout-field',
+                      }}>
+                      <MenuItem value='iso'>
+                        <em>Isomap</em>
+                      </MenuItem>
+                      <MenuItem value='pca'>
+                        <em>PCA</em>
+                      </MenuItem>
+                      <MenuItem value='pca2'>
+                        <em>PCA2</em>
+                      </MenuItem>
+                    </Select>
                   </FormControl>
+
+
+                  <div style={{ height:'25px' }}></div>
 
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
                   <ButtonGroup orientation="vertical" >
-                    { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Recompute</Button> }
-                    { this.state.devMode && <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Export</Button> }
+                    { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Refresh</Button> }
+                    { <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Save</Button> }
                   </ButtonGroup>
                 </div>
               </AccordionDetails>
@@ -687,7 +720,7 @@ class DecompositionPanel extends React.Component {
             <Accordion disabled={!this.props.enabled} defaultExpanded={false}
               style={{ paddingLeft:'0px', margin:'1px' }}>
               <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
-                <Typography>Prediction</Typography>
+                <Typography>Model Eval</Typography>
               </AccordionSummary>
               <AccordionDetails style={{ paddingLeft: '0px',
                 paddingRight: '10px', margin: '1px', width: '100%',
@@ -762,6 +795,7 @@ class DecompositionPanel extends React.Component {
               ] : []
             }
 
+      { /* these don't make much sense
             <div style={{ height:'5px' }}></div>
             <List style={{ maxHeight:'200px', overflow:'auto' }}>
               {
@@ -777,6 +811,7 @@ class DecompositionPanel extends React.Component {
                 ))
               }
             </List>
+      */ }
           </div>
         </AccordionDetails>
       </Accordion>

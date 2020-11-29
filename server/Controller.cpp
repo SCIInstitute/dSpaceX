@@ -213,22 +213,36 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
   response["datasetId"] = m_currentDatasetId;
   response["name"] = m_currentDataset->getName();
   response["numberOfSamples"] = m_currentDataset->numberOfSamples();
+
+  // all parameters and qois and their models
+  response["fields"] = Json::Value(Json::arrayValue);
+  std::vector<std::string> fields;
+
+  // the design parameter and qoi names (todo: consolidate these on the server)
   response["parameterNames"] = Json::Value(Json::arrayValue);
-  for (std::string parameterName : m_currentDataset->getParameterNames()) {
-    response["parameterNames"].append(parameterName);
+  for (std::string name : m_currentDataset->getParameterNames()) {
+    response["parameterNames"].append(name);
+    fields.push_back(name);
   }
   response["qoiNames"] = Json::Value(Json::arrayValue);
-  for (std::string qoiName : m_currentDataset->getQoiNames()) {
-    response["qoiNames"].append(qoiName);
+  for (std::string name : m_currentDataset->getQoiNames()) {
+    response["qoiNames"].append(name);
+    fields.push_back(name);
   }
-  auto modelNames = m_currentDataset->getModelNames();
-  if (modelNames.size() > 0)
-    response["models"] = Json::Value(Json::arrayValue);
-  for (unsigned int i = 0; i < modelNames.size(); ++i) {
-    Json::Value modelObject(Json::objectValue);
-    modelObject["name"] = modelNames[i];
-    modelObject["id"] = i;
-    response["models"].append(modelObject);
+
+  // assemble the models for each field
+  for (auto fieldname : fields) {
+    Json::Value fieldObject(Json::objectValue);
+    fieldObject["name"] = fieldname;
+    //fieldObject["type"] = <todo>:
+
+    Json::Value modelNames = Json::Value(Json::arrayValue);
+    for (auto modelname : m_currentDataset->getModelNames(fieldname)) {
+      modelNames.append(modelname);
+    }
+    fieldObject["models"] = modelNames;
+
+    response["fields"].append(fieldObject);
   }
 }
 

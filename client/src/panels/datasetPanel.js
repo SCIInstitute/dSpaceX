@@ -77,6 +77,7 @@ class DatasetPanel extends React.Component {
     this.setState({ datasetName });
     let datasetId = this.datasetMap.get(datasetName);
     this.client.fetchDataset(datasetId).then(function(dataset) {
+
       this.setState({
         dataset: {
           id: datasetId,

@@ -254,6 +254,7 @@ class WindowPanel extends React.Component {
         <DecompositionPanel
           enabled={this.props.enabled}
           dataset={this.props.dataset}
+          fieldModels={this.props.fieldModels}
           onDecompositionChange={this.handleDecompositionChange}
           client={this.client}/>
       </React.Fragment>

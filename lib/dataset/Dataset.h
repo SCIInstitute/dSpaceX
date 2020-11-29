@@ -64,9 +64,7 @@ class Dataset {
     return m_embeddingNames;
   }
 
-  std::vector<std::string>& getModelNames() {
-    return m_modelNames;
-  }
+  std::vector<std::string> getModelNames(const std::string& fieldname);
 
   FortranLinalg::DenseVector<Precision>& getParameterVector(int i, bool normalized = false) {
     return normalized ? m_normalized_parameters[i] : m_parameters[i];
@@ -131,8 +129,7 @@ class Dataset {
   std::vector<std::string> m_parameterNames;
   std::vector<FortranLinalg::DenseMatrix<Precision>> m_embeddings;
   std::vector<std::string> m_embeddingNames;
-  std::vector<std::string> m_modelNames;      // Names of individual models (e.g., PCA1, PCA2 for diff params used to compute PCA)
-  ModelMap m_models;                  // map of fields' sets of models associated with crystals in a Morse-Smale decomposition 
+  ModelMap m_models;         // map of fields' sets of models associated with crystals in a Morse-Smale decomposition 
   std::vector<std::string> m_msModelFields;
   std::vector<Image> m_thumbnails;
   std::string m_name;

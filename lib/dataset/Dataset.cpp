@@ -21,11 +21,23 @@ const Image& Dataset::getThumbnail(int idx) const
 }
 
 std::shared_ptr<MSModelset> Dataset::getModelset(const std::string& fieldname, const std::string& modelname) {
-  for (auto modelset : m_models[fieldname])
-    if (modelset->modelName() == modelname)
-      return modelset;
-
+  if (m_models.find(fieldname) != m_models.end()) {
+    for (auto modelset : m_models[fieldname])
+      if (modelset->modelName() == modelname)
+        return modelset;
+  }
   return nullptr;
+}
+
+std::vector<std::string> Dataset::getModelNames(const std::string& fieldname) {
+  std::vector<std::string> names{"None"};
+  if (m_models.find(fieldname) != m_models.end()) {
+    for (auto modelset : m_models[fieldname]) {
+      names.push_back(modelset->modelName());
+    }
+  }
+
+  return names;
 }
 
 /*
@@ -120,11 +132,6 @@ Dataset::Builder& Dataset::Builder::withEmbedding(std::string name, FortranLinal
 }
 
 Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared_ptr<MSModelset> modelset) {
-  // only add model name if it doesn't already exist
-  auto it = std::find(m_dataset->m_modelNames.begin(), m_dataset->m_modelNames.end(), modelset->modelName());
-  if (it == m_dataset->m_modelNames.end())
-    m_dataset->m_modelNames.push_back(modelset->modelName());
-  
   m_dataset->m_msModelFields.push_back(fieldname);
   modelset->setFieldvals(m_dataset->getFieldvalues(fieldname, Fieldtype::Unknown, false /*normalized*/));
   m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));

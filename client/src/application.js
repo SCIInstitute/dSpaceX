@@ -74,6 +74,7 @@ class Application extends React.Component {
       selectedDesigns: new Set(),
       parameters: [],
       qois: [],
+      fieldModels: [],
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -168,14 +169,24 @@ class Application extends React.Component {
    * @param {object} dataset
    */
   onDatasetChange(dataset) {
-    const { datasetId, parameterNames, qoiNames } = dataset;
+    const { datasetId, parameterNames, qoiNames, fields } = dataset;
+
+    // create a map of fields and their models (can we send one from the server?)
+    let fieldModels = new Map();
+    for (let i=0; i < fields.length; i++) {
+      let name = fields[i].name;
+      let models = [];
+      for (let m=0; m < fields[i].models.length; m++) {
+        models.push(fields[i].models[m]);
+      }
+      fieldModels.set(name, models);
+    }
+
     Promise.all([
       this.getParameters(datasetId, parameterNames),
       this.getQois(datasetId, qoiNames),
       this.client.fetchEmbeddingsList(datasetId),
-//      this.client.fetchModelsList(datasetId),
     ]).then((results) => {
-//      const [parameters, qois, embeddingList, modelList] = results;
       const [parameters, qois, embeddingList] = results;
       this.setState({
         currentDataset: dataset,
@@ -185,8 +196,8 @@ class Application extends React.Component {
         filters: [],
         parameters: parameters,
         qois: qois,
+        fieldModels: fieldModels,
         embeddings: embeddingList.embeddings,
-//        models: modelList.models,
       });
     });
   }
@@ -483,6 +494,7 @@ class Application extends React.Component {
                       onConfigChange={this.onWindowConfigChange}
                       dataset={this.state.currentDataset}
                       enabled={this.state.connected}
+                      fieldModels={this.state.fieldModels}
                       embeddings={this.state.embeddings}/>
                   );
                 }) : []
