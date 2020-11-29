@@ -206,6 +206,18 @@ class WindowPanel extends React.Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
+        <div style={{ height:'8px' }}></div>
+        <Accordion disabled={!this.props.enabled || !this.props.dataset}
+                   defaultExpanded={false} style={{ paddingLeft:'0px', margin:'1px' }}>
+          <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
+            <Typography>Embedding</Typography>
+          </AccordionSummary>
+          <AccordionDetails style={{ paddingLeft: '1px',
+                            paddingRight: '0px', margin: '1px', width: '100%',
+                            boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', flexDirection: 'column',
+                 width: '100%', boxSizing: 'border-box' }}>
+
         {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
           disabled={!this.props.enabled || !this.props.dataset}>
@@ -248,6 +260,10 @@ class WindowPanel extends React.Component {
             </MenuItem>
           </Select>
         </FormControl>
+
+        </div>
+        </AccordionDetails>
+        </Accordion>
 
         {/* Decomposition Panel */}
         <div style={{ height:'8px' }}/>

@@ -766,10 +766,12 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   // interpolate the model for the given samples
   auto numZ = request["numSamples"].asInt();
   auto percent = request["percent"].asFloat();
+  /*
   std::cout << "fetchNImagesForCrystal: " << numZ << " samples requested for crystal "<<crystalId<<" of persistence level "<<persistence <<"; datasetId is "<<m_currentDatasetId<<", fieldname is "<<fieldname<<", modelname is " << modelname;
   if (numZ == 1) std::cout << " (percent is " << percent << ")";
   std::cout << std::endl;
-  
+  */  
+
   // get the vector of values for the field
   auto samples(modelset->getCrystalFieldvals(persistence_idx, crystalId));
   Eigen::Map<Eigen::VectorXf> fieldvals(samples.data(), samples.size());
@@ -835,12 +837,14 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
               << " ms" << std::endl;
   }
 
+  /*
   // inform caller of number and source of returned images
   response["msg"] =
     std::string("generated " + std::to_string(numZ) +
                 " P" + std::to_string(persistence) +
                 "-C" + std::to_string(crystalId) + " " +
                 modelname + "-predicted images.");
+  */
 }
 
 /*
@@ -1150,11 +1154,14 @@ bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldn
 bool Controller::processData(Fieldtype category, std::string fieldname, int knn, int num_samples,
                              double sigma, double smoothing, bool add_noise, int num_persistences,
                              bool normalize) {
-  if (m_currentTopoData && !processDataParamsChanged(category, fieldname, knn, num_samples, sigma, smoothing,
-                                                     add_noise, num_persistences, normalize))
+  if (m_currentTopoData &&
+      !processDataParamsChanged(category, fieldname, knn, num_samples, sigma, smoothing,
+                                add_noise, num_persistences, normalize)) {
     return true;
+  }
 
   std::cout << "computing nnmscomplex for fieldname: " << fieldname << "..." << std::endl;
+  time_point<Clock> start = Clock::now();
 
   // get the vector of values for the requested field
   Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> fieldvals = m_currentDataset->getFieldvalues(fieldname, category, normalize);
@@ -1162,8 +1169,6 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
     std::cerr << "Controller::processData failed: invalid fieldname or empty field.\n";
     return false;
   }
-
-  
 
   // clear current computation results
   m_currentVizData = nullptr;
@@ -1204,13 +1209,15 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   m_currentCategory = category;
   m_currentField = fieldname;
   m_currentKNN = knn;
-        m_currentNumCurvepoints = num_samples;
+  m_currentNumCurvepoints = num_samples;
   m_currentSigma = sigma;
   m_currentSmoothing = smoothing;
   m_currentAddNoise = add_noise;
-        m_currentPersistenceDepth = num_persistences;
+  m_currentPersistenceDepth = num_persistences;
   m_currentNormalize = normalize;
   
+  std::cout << "computation complete (" << duration_cast<milliseconds>(Clock::now() - start).count() << " ms)\n";
+
   return true;
 }
 

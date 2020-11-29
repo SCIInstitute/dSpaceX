@@ -125,7 +125,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
         id: i,
       };
     });
-    console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
+    //console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);
 
     // if more than one sample, fill the drawer, otherwise just return the image
     if (numSamples > 1) {
@@ -253,7 +253,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               {drawerImages.map((tile) => (
               <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
                 <Paper className={classes.paper}>
-                  <Typography>{'Design: ' + tile.id}</Typography>
+                  <Typography>{'Design: ' + (parseInt(tile.id)+1)}</Typography>
                   <Typography>{tile.val.toFixed(5)}</Typography>
 
                   <img alt={'Image:' + tile.id} key={tile.id}

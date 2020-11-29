@@ -86,7 +86,7 @@ class DecompositionPanel extends React.Component {
   clearDecompositionState() {
     this.setState({
       persistenceLevel: -1,
-      minPersistence: -1,
+      minPersistence: 0,
       maxPersistence: -1,
       complexSizes: [],
       crystals: [],
@@ -160,11 +160,12 @@ class DecompositionPanel extends React.Component {
   async fetchDecomposition() {
     if (this.decompositionConfigValid()) {
       if (this.state.decompositionMode == 'Morse-Smale') {
+        this.clearDecompositionState();
         let datasetId = this.state.datasetId;
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+field+' from server...\n');
+        //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+field+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId,
           category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
@@ -217,12 +218,13 @@ class DecompositionPanel extends React.Component {
       // console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
       this.fetchDecomposition();
     } else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
-      console.log('Persistence level changed from '
-          + prevState.persistenceLevel +' to '+this.state.persistenceLevel+', updating data model...');
+      // console.log('Persistence level changed from '
+      //     + prevState.persistenceLevel +' to '+this.state.persistenceLevel+', updating data model...');
       this.updateDataModel();
     }
     else if (prevState.interpolationModel !== this.state.interpolationModel ||
-             prevState.model.sigmaScale !== this.state.model.sigmaScale) {
+             prevState.model.sigmaScale !== this.state.model.sigmaScale ||
+             prevState.ms.layout !== this.state.ms.layout) {
       this.updatePropsConfig();
     }
     else {
@@ -355,9 +357,30 @@ class DecompositionPanel extends React.Component {
    */
   handleDecompositionCategoryChange(event) {
     let category = event.target.value;
-    this.setState({
-      decompositionCategory: category,
-    });
+    if (this.state.decompositionCategory != category) {
+      let field = '';
+      switch (category) {
+      case 'parameter':
+        field = this.props.dataset.parameterNames[0];
+        break;
+      case 'qoi':
+        field = this.props.dataset.qoiNames[0];
+        break;
+      default:
+        break;
+      }
+      let modellist = this.props.fieldModels.get(field);
+      let model = modellist[0];
+
+      this.setState({
+        decompositionCategory: category,
+        interpolationModel: model,
+        decompositionField: field,
+        selection: { fieldname: field,
+                     modelname: model,
+                     modellist: modellist, }
+      });
+    }
   }
 
   /**
@@ -370,7 +393,7 @@ class DecompositionPanel extends React.Component {
       decompositionField: field,
       selection: { fieldname: field,
                    modelname: this.props.fieldModels.get(field)[0],
-                   models: this.props.fieldModels.get(field) },
+                   modellist: this.props.fieldModels.get(field) },
     });
   }
 
@@ -384,6 +407,8 @@ class DecompositionPanel extends React.Component {
       interpolationModel: model,
       selection: { ...prevState.selection, modelname: model, }
     }));
+    // todo: update ms params used for this model and disable their modification
+    //       enable modification of m-s params when model is 'None'
   }
 
   /**
@@ -400,7 +425,7 @@ class DecompositionPanel extends React.Component {
         let category = this.state.decompositionCategory;
         let field = this.state.decompositionField;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
+        //console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
         await this.client.fetchMorseSmalePersistence(datasetId, category, field, persistence,
                                                      knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
@@ -421,8 +446,8 @@ class DecompositionPanel extends React.Component {
       }
     }
     else {
-      console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel (' + persistence +
-                  ') out of range (' + this.state.minPersistence + ', ' + this.state.maxPersistence + ')');
+      // console.log('decompositionPanel.updateDataModel failed: \n\tpersistenceLevel (' + persistence +
+      //             ') out of range (' + this.state.minPersistence + ', ' + this.state.maxPersistence + ')');
       this.setState({ crystals: [] });
     }
   }
@@ -483,14 +508,14 @@ class DecompositionPanel extends React.Component {
       case 'parameter':
         items = this.props.dataset.parameterNames.map((name) => (
           <MenuItem value={name} key={name}>
-            {name}
+            <em>{name}</em>
           </MenuItem>
         ));
         break;
       case 'qoi':
         items = this.props.dataset.qoiNames.map((name) => (
           <MenuItem value={name} key={name}>
-            {name}
+            <em>{name}</em>
           </MenuItem>
         ));
         break;
@@ -514,14 +539,13 @@ class DecompositionPanel extends React.Component {
       }
     }
     return (
-      // TODO: set disabled only when there's no case data.
       <Accordion disabled={!this.props.enabled || !this.props.dataset}
         defaultExpanded={true} style={{ paddingLeft:'0px', margin:'1px' }}>
         <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
           <Typography>Decomposition</Typography>
         </AccordionSummary>
-        <AccordionDetails style={{ paddingLeft: '15px',
-          paddingRight: '10px', margin: '1px', width: '100%',
+        <AccordionDetails style={{ paddingLeft: '1px',
+          paddingRight: '0px', margin: '1px', width: '100%',
           boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', flexDirection: 'column',
             width: '100%', boxSizing: 'border-box' }}>
@@ -574,6 +598,18 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
 
+            { /* Prediction Model Selection */}
+            <Accordion disabled={!this.props.enabled} defaultExpanded={false}
+              style={{ paddingLeft:'0px', margin:'1px' }}>
+              <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
+                <Typography>Modeling</Typography>
+              </AccordionSummary>
+              <AccordionDetails style={{ paddingLeft: '0px',
+                paddingRight: '0px', margin: '1px', width: '100%',
+                boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column',
+                  width: '100%', boxSizing: 'border-box' }}>
+
             {/* Interpolation Model Dropdown */}
             <FormControl className={classes.formControl}
               disabled={!this.props.enabled}
@@ -592,6 +628,21 @@ class DecompositionPanel extends React.Component {
               </Select>
             </FormControl>
 
+                  { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
+                  <TextField
+                    label="Gaussian Sigma Scale"
+                    id="model-sigma"
+                    defaultValue={this.state.model.sigmaScale}
+                    size="small"
+                    type="number"
+                    InputProps={{ inputProps:{ min:1, max:10 } }}
+                    onChange={this.handleModelSigmaScaleChange.bind(this)}
+                  />
+
+                </div>
+              </AccordionDetails>
+            </Accordion>
+
             {/* Partitioning Algorithm */ }
             <Accordion disabled={!this.props.enabled} defaultExpanded={false}
               style={{ paddingLeft:'0px', margin:'1px' }}>
@@ -599,7 +650,7 @@ class DecompositionPanel extends React.Component {
                 <Typography>Partitioning</Typography>
               </AccordionSummary>
               <AccordionDetails style={{ paddingLeft: '0px',
-                paddingRight: '10px', margin: '1px', width: '100%',
+                paddingRight: '0px', margin: '1px', width: '100%',
                 boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', flexDirection: 'column',
                   width: '100%', boxSizing: 'border-box' }}>
@@ -646,10 +697,6 @@ class DecompositionPanel extends React.Component {
                     onChange={this.handleMSSmoothChange.bind(this)}
                   />
 
-
-                  <div style={{ height:'25px' }}></div>
-                  <div style={{ height:'15px', display: 'flex', justifyContent: 'center' }}>Layout</div>
-        
                   {/* Scale normalize checkbox */}
                   <FormControlLabel
                     control={<Checkbox checked={this.state.ms.normalize}
@@ -678,66 +725,12 @@ class DecompositionPanel extends React.Component {
                     onChange={this.handleMSSigmaChange.bind(this)}
                   />
 
-                  <FormControl className={classes.formControl}
-                    disabled={!this.props.enabled}
-                    style={{ width: '100%',
-                      boxSizing: 'border-box' }}>
-                    <InputLabel htmlFor='layout-field'>Layout</InputLabel>
-                    <Select ref="curveLayout"
-                      disabled={!this.props.enabled || !this.props.dataset}
-                      value={this.state.ms.layout}
-                      style={{ width:'100%' }}
-                      onChange={this.handleCurveLayoutChange.bind(this)}
-                      inputProps={{
-                        name: 'layout',
-                        id: 'layout-field',
-                      }}>
-                      <MenuItem value='iso' key='iso'>
-                        <em>Isomap</em>
-                      </MenuItem>
-                      <MenuItem value='pca' key='pca'>
-                        <em>PCA</em>
-                      </MenuItem>
-                      <MenuItem value='pca2' key='pca2'>
-                        <em>PCA2</em>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-
-
-                  <div style={{ height:'25px' }}></div>
-
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
+                  <div style={{ height:'10px' }}></div>
                   <ButtonGroup orientation="vertical" >
                     { <Button size="small" onClick={this.handleRecomputeMorseSmale.bind(this)}>Refresh</Button> }
                     { <Button size="small" onClick={this.handleExportMorseSmale.bind(this)}>Save</Button> }
                   </ButtonGroup>
-                </div>
-              </AccordionDetails>
-            </Accordion>
-
-            { /* Prediction Model Selection */}
-            <Accordion disabled={!this.props.enabled} defaultExpanded={false}
-              style={{ paddingLeft:'0px', margin:'1px' }}>
-              <AccordionSummary expandIcon={ <ExpandMoreIcon/> }>
-                <Typography>Model Eval</Typography>
-              </AccordionSummary>
-              <AccordionDetails style={{ paddingLeft: '0px',
-                paddingRight: '10px', margin: '1px', width: '100%',
-                boxSizing: 'border-box' }}>
-                <div style={{ display: 'flex', flexDirection: 'column',
-                  width: '100%', boxSizing: 'border-box' }}>
-
-                  { /* Interpolation Model [Gaussian] sigma bandwidth parameter */ }
-                  <TextField
-                    label="Gaussian Sigma Scale"
-                    id="model-sigma"
-                    defaultValue={this.state.model.sigmaScale}
-                    size="small"
-                    type="number"
-                    InputProps={{ inputProps:{ min:1, max:10 } }}
-                    onChange={this.handleModelSigmaScaleChange.bind(this)}
-                  />
 
                 </div>
               </AccordionDetails>
@@ -745,6 +738,34 @@ class DecompositionPanel extends React.Component {
 
             { /* Histogram of data partitions (each consisting of n subpartitions) */ }
             <div style={{ height:'15px' }}></div>
+
+            <FormControl className={classes.formControl}
+                         disabled={!this.props.enabled}
+                         style={{ width: '100%',
+                         boxSizing: 'border-box' }}>
+              <InputLabel htmlFor='layout-field'>Layout</InputLabel>
+              <Select ref="curveLayout"
+                      disabled={!this.props.enabled || !this.props.dataset}
+                      value={this.state.ms.layout}
+                      style={{ width:'100%' }}
+                      onChange={this.handleCurveLayoutChange.bind(this)}
+                      inputProps={{
+                      name: 'layout',
+                      id: 'layout-field',
+                      }}>
+                <MenuItem value='iso' key='iso'>
+                  <em>Isomap</em>
+                </MenuItem>
+                <MenuItem value='pca' key='pca'>
+                  <em>PCA</em>
+                </MenuItem>
+                <MenuItem value='pca2' key='pca2'>
+                  <em>PCA2</em>
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            <div style={{ height:'10px' }}></div>
             {
               persistenceLevels.length > 0 ? [
                 <Histogram key="histogram" size={[190, 100]}

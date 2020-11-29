@@ -201,6 +201,7 @@ class MorseSmaleWindow extends React.Component {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
         || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
         || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+        || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
         || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
         || prevDecomposition.k !== currentDecomposition.k
         || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -273,6 +274,11 @@ class MorseSmaleWindow extends React.Component {
    */
   resizeCanvas = () => {
     let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+
+    // update sprite's aspect ratio
+    const old_aspect = this.perspCamera.aspect;
+    const new_aspect = width / height;
+    this.imageSprite.scale.y *= new_aspect / old_aspect;
 
     // update camera
     this.updateCamera(width, height);
@@ -363,7 +369,10 @@ class MorseSmaleWindow extends React.Component {
    * @param {data} raw base64 [png] image data
    */
   setImage(data) {
-    if (data !== undefined) {
+    if (data !== undefined && this.props.decomposition.interpolationModel !== 'None') {
+
+      let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
+      const aspect = width / height;
 
       // load the new image sent from the server
       this.textureLoader.load(
@@ -372,7 +381,7 @@ class MorseSmaleWindow extends React.Component {
           this.imageSprite.visible = true;
           this.imageSprite.material.needsUpdate = true;
           this.imageSprite.scale.x = this.spriteScale;
-          this.imageSprite.scale.y = texture.image.height / texture.image.width * this.spriteScale;
+          this.imageSprite.scale.y = texture.image.height / texture.image.width * this.spriteScale * aspect;
           this.renderScene();
         }.bind(this));
     }
@@ -384,12 +393,9 @@ class MorseSmaleWindow extends React.Component {
   /*
    * Get a single sample at the given percent along the selected crystal
    * @param {float} percent along current crystal to evaluate (in range [0,1])
-   * todo:
-   *  - if no model, hide sprites
-   *  - show adjacent sprites at field's value closest <= and >= to this percent along crystal
    */
   async evalModel(percent) {
-    console.log("evalModel("+percent+")");
+    //console.log("evalModel("+percent+")");
     let crystalID = this.pickedCrystal.name;
     if (this.state.evalModel.inProgress) {
       this.state.evalModel.next = { crystalID, percent };
@@ -471,8 +477,8 @@ class MorseSmaleWindow extends React.Component {
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
 
-      if (intersectedObjects[0].object !== this.crystalPosObject && intersectedObjects[0].object !== this.pickedCrystal) {
-        console.log('New crystal selected (' + crystalID + ')');
+      if (intersectedObjects[0].object !== this.crystalPosObject) {
+        //console.log('New crystal selected (' + crystalID + ')');
         // otherwise picked active pointer along curve, or already selected curve, so do nothing
 
         // ensure previously selected object is back to unselected opacity
@@ -664,9 +670,9 @@ class MorseSmaleWindow extends React.Component {
     this.textureLoader = new THREE.TextureLoader();
 
     // imageSprite
-    this.spriteScale = 0.25;
+    this.spriteScale = 0.4;
     this.imageSprite = new THREE.Sprite();
-    this.imageSprite.position.set(0,-0.85,0); // position of center of sprite
+    this.imageSprite.position.set(0.7,-0.7,0.0); // position of center of sprite
     this.imageSprite.visible = false;
     this.uiScene.add(this.imageSprite);
 
