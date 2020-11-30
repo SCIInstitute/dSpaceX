@@ -62,6 +62,26 @@ class EmbeddingWindow extends React.Component {
   }
 
   /**
+   * If any of the decomposition settings have changed returns true
+   * for new decomposition
+   * @param {object} prevDecomposition - the previous decomposition
+   * @param {object} currentDecomposition - the current decomposition
+   * @return {boolean} true if any of the decomposition settings have changed.
+   * 
+   * WARNING: CUT AND PASTED FUNCTION ALSO IN MorseSmaleWindow
+   */
+  isNewDecomposition(prevDecomposition, currentDecomposition) {
+    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
+            || prevDecomposition.category !== currentDecomposition.category
+            || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+            || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
+            || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
+            || prevDecomposition.k !== currentDecomposition.k
+            || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
+            || prevDecomposition.ms !== currentDecomposition.ms);
+  }
+
+  /**
    * Called by react when this component receives new proprs or context or
    * when the state changes.
    * The data needed to draw teh embedding is fetched here.
@@ -88,11 +108,11 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, decompositionCategory, decompositionField } = this.props.decomposition;
+      const { datasetId, k, persistenceLevel, category, decompositionField } = this.props.decomposition;
       const { embedding } = this.props;
       Promise.all([
         this.client.fetchSingleEmbedding(datasetId, embedding.id, k,
-          persistenceLevel, decompositionCategory, decompositionField),
+          persistenceLevel, category, decompositionField),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
         const [graphResult, thumbnailResult] = results;
@@ -132,22 +152,6 @@ class EmbeddingWindow extends React.Component {
     this.refs.embeddingCanvas.removeEventListener('mousedown', this.handleMouseDownEvent);
     this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveEvent);
     this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
-  }
-
-  /**
-   * If any of the decomposition setting have changed returns true for
-   * new decomposition
-   * @param {object} prevDecomposition
-   * @param {object} currentDecomposition
-   * @return {boolean} true if any of the decomposition setting have chagned
-   */
-  isNewDecomposition(prevDecomposition, currentDecomposition) {
-    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
-        || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
-        || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
-        || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
-        || prevDecomposition.k !== currentDecomposition.k
-        || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel);
   }
 
   /**

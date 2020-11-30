@@ -43,12 +43,12 @@ class DecompositionPanel extends React.Component {
       datasetId: this.props.dataset.datasetId,
 
       decompositionMode: 'Morse-Smale',
-      decompositionCategory: 'qoi',
 
       decompositionField: defaultField,
       interpolationModel: defaultModel,
       selection: {
         fieldname: defaultField,  // todo: replace decompositionField and interpolationModel
+        category: 'qoi',
         modelname: defaultModel,
         modellist: defaultModelList,
       },
@@ -99,14 +99,14 @@ class DecompositionPanel extends React.Component {
    * @return {boolean}
    */
   decompositionConfigValid() {
-    const { decompositionMode, decompositionCategory, interpolationModel } = this.state;
-    const { fieldname, modelname } = this.state.selection;
+    const { decompositionMode, interpolationModel } = this.state;
+    const { fieldname, category, modelname } = this.state.selection;
 
     // Verify category (geometry and precomputed not yet supported)
-    if (!(decompositionCategory == 'parameter' ||
-          decompositionCategory == 'qoi')) {
+    if (!(category == 'parameter' ||
+          category == 'qoi')) {
       console.log('decompositionPanel current configuration is invalid:' +
-          '\n\tcategory '+decompositionCategory+' not yet supported');
+          '\n\tcategory '+category+' not yet supported');
       return false;
     }
 
@@ -162,12 +162,11 @@ class DecompositionPanel extends React.Component {
       if (this.state.decompositionMode == 'Morse-Smale') {
         this.clearDecompositionState();
         let datasetId = this.state.datasetId;
-        let category = this.state.decompositionCategory;
-        let field = this.state.decompositionField;
+        const { fieldname, category } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
-        //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+field+' from server...\n');
+        //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+fieldname+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId,
-          category, field, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+          category, fieldname, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
               // console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
@@ -240,7 +239,7 @@ class DecompositionPanel extends React.Component {
     this.props.onDecompositionChange({
       datasetId: this.state.datasetId,
       decompositionMode: this.state.decompositionMode,
-      decompositionCategory: this.state.decompositionCategory,
+      category: this.state.selection.category,
       decompositionField: this.state.decompositionField,
       persistenceLevel: this.state.persistenceLevel,
       interpolationModel: this.state.interpolationModel,      
@@ -357,7 +356,7 @@ class DecompositionPanel extends React.Component {
    */
   handleDecompositionCategoryChange(event) {
     let category = event.target.value;
-    if (this.state.decompositionCategory != category) {
+    if (this.state.selection.category != category) {
       let field = '';
       switch (category) {
       case 'parameter':
@@ -373,10 +372,10 @@ class DecompositionPanel extends React.Component {
       let model = modellist[0];
 
       this.setState({
-        decompositionCategory: category,
         interpolationModel: model,
         decompositionField: field,
         selection: { fieldname: field,
+                     category: category,
                      modelname: model,
                      modellist: modellist, }
       });
@@ -389,12 +388,13 @@ class DecompositionPanel extends React.Component {
    */
   handleDecompositionFieldChange(event) {
     let field = event.target.value;
-    this.setState({
+    this.setState((prevState) => ({
       decompositionField: field,
-      selection: { fieldname: field,
+      selection: { ...prevState.selection,
+                   fieldname: field,
                    modelname: this.props.fieldModels.get(field)[0],
                    modellist: this.props.fieldModels.get(field) },
-    });
+    }));
   }
 
   /**
@@ -422,11 +422,10 @@ class DecompositionPanel extends React.Component {
         // annoying (and error prone) to have to send all the
         // same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
-        let category = this.state.decompositionCategory;
-        let field = this.state.decompositionField;
+        const { fieldname, category } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
-        await this.client.fetchMorseSmalePersistence(datasetId, category, field, persistence,
+        await this.client.fetchMorseSmalePersistence(datasetId, category, fieldname, persistence,
                                                      knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
@@ -504,7 +503,7 @@ class DecompositionPanel extends React.Component {
    */
   _getDecompositionFieldMenuItems() {
     let items = [];
-    switch (this.state.decompositionCategory) {
+    switch (this.state.selection.category) {
       case 'parameter':
         items = this.props.dataset.parameterNames.map((name) => (
           <MenuItem value={name} key={name}>
@@ -555,7 +554,7 @@ class DecompositionPanel extends React.Component {
               disabled={!this.props.enabled || !this.props.dataset}>
               <InputLabel htmlFor='category-input'>Field Category</InputLabel>
               <Select ref="categoryCombo"
-                value={this.state.decompositionCategory || ''}
+                value={this.state.selection.category || ''}
                 onChange={this.handleDecompositionCategoryChange.bind(this)} inputProps={{
                   name: 'category',
                   id: 'category-input',
@@ -581,7 +580,7 @@ class DecompositionPanel extends React.Component {
             { /* Field Dropdown */ }
             <FormControl className={classes.formControl}
               disabled={ !this.props.enabled || !this.props.dataset
-                || !this.state.decompositionCategory}>
+                || !this.state.selection.category}>
               <InputLabel htmlFor='field-input'>Field</InputLabel>
               <Select ref="fieldCombo"
                 value={this.state.decompositionField || ''}

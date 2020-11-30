@@ -81,6 +81,26 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * If any of the decomposition settings have changed returns true
+   * for new decomposition
+   * @param {object} prevDecomposition - the previous decomposition
+   * @param {object} currentDecomposition - the current decomposition
+   * @return {boolean} true if any of the decomposition settings have changed.
+   * 
+   * WARNING: CUT AND PASTED FUNCTION ALSO IN EmbeddingWindow
+   */
+  isNewDecomposition(prevDecomposition, currentDecomposition) {
+    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
+            || prevDecomposition.category !== currentDecomposition.category
+            || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+            || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
+            || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
+            || prevDecomposition.k !== currentDecomposition.k
+            || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
+            || prevDecomposition.ms !== currentDecomposition.ms);
+  }
+
+  /**
    * Called by react when this component receives new props or context or
    * when the state changes.
    * The data needed to draw the Morse-Smale decomposition it fetched here.
@@ -98,7 +118,7 @@ class MorseSmaleWindow extends React.Component {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
       const { datasetId, persistenceLevel } = this.props.decomposition;
-      const category = this.props.decomposition.decompositionCategory;
+      const category = this.props.decomposition.category;
       const field = this.props.decomposition.decompositionField;
       const layout = this.props.decomposition.ms.layout;
       Promise.all([
@@ -188,24 +208,6 @@ class MorseSmaleWindow extends React.Component {
     if (this.pickedCrystal !== undefined) {
       this.projectExtrema(this.pickedCrystal);
     }
-  }
-
-  /**
-   * If any of the decomposition settings have changed returns true
-   * for new decomposition
-   * @param {object} prevDecomposition - the previous decomposition
-   * @param {object} currentDecomposition - the current decomposition
-   * @return {boolean} true if any of the decomposition settings have changed.
-   */
-  isNewDecomposition(prevDecomposition, currentDecomposition) {
-    return (prevDecomposition.datasetId !== currentDecomposition.datasetId
-        || prevDecomposition.decompositionCategory !== currentDecomposition.decompositionCategory
-        || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
-        || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
-        || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
-        || prevDecomposition.k !== currentDecomposition.k
-        || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
-        || prevDecomposition.ms !== currentDecomposition.ms);
   }
 
   /**
