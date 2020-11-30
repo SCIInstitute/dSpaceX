@@ -44,7 +44,6 @@ class DecompositionPanel extends React.Component {
 
       decompositionMode: 'Morse-Smale',
 
-      interpolationModel: defaultModel,
       selection: {
         fieldname: defaultField,
         category: 'qoi',
@@ -98,7 +97,7 @@ class DecompositionPanel extends React.Component {
    * @return {boolean}
    */
   decompositionConfigValid() {
-    const { decompositionMode, interpolationModel } = this.state;
+    const { decompositionMode } = this.state;
     const { fieldname, category, modelname } = this.state.selection;
 
     // Verify category (geometry and precomputed not yet supported)
@@ -220,7 +219,7 @@ class DecompositionPanel extends React.Component {
       //     + prevState.persistenceLevel +' to '+this.state.persistenceLevel+', updating data model...');
       this.updateDataModel();
     }
-    else if (prevState.interpolationModel !== this.state.interpolationModel ||
+    else if (prevState.selection.modelname !== this.state.selection.modelname ||
              prevState.model.sigmaScale !== this.state.model.sigmaScale ||
              prevState.ms.layout !== this.state.ms.layout) {
       this.updatePropsConfig();
@@ -241,7 +240,7 @@ class DecompositionPanel extends React.Component {
       category: this.state.selection.category,
       fieldname: this.state.selection.fieldname,
       persistenceLevel: this.state.persistenceLevel,
-      interpolationModel: this.state.interpolationModel,      
+      modelname: this.state.selection.modelname,
       sigmaScale: this.state.model.sigmaScale,
       ms: this.state.ms,
     });
@@ -371,7 +370,6 @@ class DecompositionPanel extends React.Component {
       let model = modellist[0];
 
       this.setState({
-        interpolationModel: model,
         selection: { fieldname: field,
                      category: category,
                      modelname: model,
@@ -401,7 +399,6 @@ class DecompositionPanel extends React.Component {
   handleInterpolationModelChange(event) {
     let model = event.target.value;
     this.setState((prevState) => ({
-      interpolationModel: model,
       selection: { ...prevState.selection, modelname: model, }
     }));
     // todo: update ms params used for this model and disable their modification
@@ -613,7 +610,7 @@ class DecompositionPanel extends React.Component {
               boxSizing: 'border-box' }}>
               <InputLabel htmlFor='model-field'>Model</InputLabel>
               <Select ref="interpolationCombo"
-                value={this.state.interpolationModel}
+                value={this.state.selection.modelname}
                 style={{ width:'100%' }}
                 onChange={this.handleInterpolationModelChange.bind(this)} 
                 inputProps={{ name: 'model', id: 'model-field' }}>

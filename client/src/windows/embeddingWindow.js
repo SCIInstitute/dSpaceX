@@ -74,7 +74,7 @@ class EmbeddingWindow extends React.Component {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
-            || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
+            || prevDecomposition.modelname !== currentDecomposition.modelname
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel

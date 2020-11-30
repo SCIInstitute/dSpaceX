@@ -111,7 +111,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
                                        this.props.decomposition.fieldname,
                                        this.props.decomposition.persistenceLevel,
                                        crystalID,
-                                       this.props.decomposition.interpolationModel,
+                                       this.props.decomposition.modelname,
                                        numSamples,
                                        this.props.decomposition.sigmaScale,
                                        showOrig,

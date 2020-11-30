@@ -93,7 +93,7 @@ class MorseSmaleWindow extends React.Component {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
-            || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
+            || prevDecomposition.modelname !== currentDecomposition.modelname
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -369,7 +369,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {data} raw base64 [png] image data
    */
   setImage(data) {
-    if (data !== undefined && this.props.decomposition.interpolationModel !== 'None') {
+    if (data !== undefined && this.props.decomposition.modelname !== 'None') {
 
       let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
       const aspect = width / height;
