@@ -44,10 +44,9 @@ class DecompositionPanel extends React.Component {
 
       decompositionMode: 'Morse-Smale',
 
-      decompositionField: defaultField,
       interpolationModel: defaultModel,
       selection: {
-        fieldname: defaultField,  // todo: replace decompositionField and interpolationModel
+        fieldname: defaultField,
         category: 'qoi',
         modelname: defaultModel,
         modellist: defaultModelList,
@@ -213,7 +212,7 @@ class DecompositionPanel extends React.Component {
     //           - category triggers a field change, so doesn't need to be checked here
     //           - if ms params change, don't recompute unless user clicks the button to do so
     if (prevState.decompositionMode !== this.state.decompositionMode ||
-        prevState.decompositionField !== this.state.decompositionField) {
+        prevState.selection.fieldname !== this.state.selection.fieldname) {
       // console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
       this.fetchDecomposition();
     } else if (prevState.persistenceLevel !== this.state.persistenceLevel) {
@@ -240,7 +239,7 @@ class DecompositionPanel extends React.Component {
       datasetId: this.state.datasetId,
       decompositionMode: this.state.decompositionMode,
       category: this.state.selection.category,
-      decompositionField: this.state.decompositionField,
+      fieldname: this.state.selection.fieldname,
       persistenceLevel: this.state.persistenceLevel,
       interpolationModel: this.state.interpolationModel,      
       sigmaScale: this.state.model.sigmaScale,
@@ -373,7 +372,6 @@ class DecompositionPanel extends React.Component {
 
       this.setState({
         interpolationModel: model,
-        decompositionField: field,
         selection: { fieldname: field,
                      category: category,
                      modelname: model,
@@ -389,7 +387,6 @@ class DecompositionPanel extends React.Component {
   handleDecompositionFieldChange(event) {
     let field = event.target.value;
     this.setState((prevState) => ({
-      decompositionField: field,
       selection: { ...prevState.selection,
                    fieldname: field,
                    modelname: this.props.fieldModels.get(field)[0],
@@ -583,7 +580,7 @@ class DecompositionPanel extends React.Component {
                 || !this.state.selection.category}>
               <InputLabel htmlFor='field-input'>Field</InputLabel>
               <Select ref="fieldCombo"
-                value={this.state.decompositionField || ''}
+                value={this.state.selection.fieldname || ''}
                 onChange={this.handleDecompositionFieldChange.bind(this)} inputProps={{
                   name: 'field',
                   id: 'field-input',

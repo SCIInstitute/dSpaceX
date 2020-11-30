@@ -92,7 +92,7 @@ class MorseSmaleWindow extends React.Component {
   isNewDecomposition(prevDecomposition, currentDecomposition) {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
             || prevDecomposition.category !== currentDecomposition.category
-            || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+            || prevDecomposition.fieldname !== currentDecomposition.fieldname
             || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
@@ -117,13 +117,11 @@ class MorseSmaleWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
-      const { datasetId, persistenceLevel } = this.props.decomposition;
-      const category = this.props.decomposition.category;
-      const field = this.props.decomposition.decompositionField;
+      const { fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;
       const layout = this.props.decomposition.ms.layout;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, category, field, layout, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, category, field, layout, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, fieldname, layout, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, category, fieldname, layout, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         if (!regressionResponse.error && !extremaResponse.error) {

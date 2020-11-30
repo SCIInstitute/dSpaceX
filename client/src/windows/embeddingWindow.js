@@ -73,7 +73,7 @@ class EmbeddingWindow extends React.Component {
   isNewDecomposition(prevDecomposition, currentDecomposition) {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
             || prevDecomposition.category !== currentDecomposition.category
-            || prevDecomposition.decompositionField !== currentDecomposition.decompositionField
+            || prevDecomposition.fieldname !== currentDecomposition.fieldname
             || prevDecomposition.interpolationModel !== currentDecomposition.interpolationModel
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
@@ -94,7 +94,7 @@ class EmbeddingWindow extends React.Component {
       return;
     }
 
-    if (this.props.decomposition.decompositionField === null) {
+    if (this.props.decomposition.fieldname === null) {
       return;
     }
 
@@ -108,11 +108,11 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, category, decompositionField } = this.props.decomposition;
+      const { datasetId, k, persistenceLevel, category, fieldname } = this.props.decomposition;
       const { embedding } = this.props;
       Promise.all([
         this.client.fetchSingleEmbedding(datasetId, embedding.id, k,
-          persistenceLevel, category, decompositionField),
+          persistenceLevel, category, fieldname),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
         const [graphResult, thumbnailResult] = results;

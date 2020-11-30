@@ -108,7 +108,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     // If model doesn't exist or showOrig is true, returns original samples for this crystal.
     let result = await this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
                                        this.props.decomposition.category,
-                                       this.props.decomposition.decompositionField,
+                                       this.props.decomposition.fieldname,
                                        this.props.decomposition.persistenceLevel,
                                        crystalID,
                                        this.props.decomposition.interpolationModel,
