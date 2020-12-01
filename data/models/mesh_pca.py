@@ -41,6 +41,13 @@ def get_data_matrix(directory):
     all_shapes_array = np.row_stack(shapes_list)
     return all_shapes_array
 
+def compute_pca_model(crystal_samples, batch_size=20):
+    transformer = IncrementalPCA(batch_size=batch_size)
+    transformer.fit(crystal_samples)
+    W  = transformer.components_
+    w0 = transformer.mean_
+    z  = np.matmul((crystal_samples - w0), W.T)
+    return W, w0, z
 
 def generate_mesh_pca_model(shape_directory, partition_directory, batch_size=50):
     """
@@ -68,13 +75,9 @@ def generate_mesh_pca_model(shape_directory, partition_directory, batch_size=50)
         crystal_ids = np.unique(crystal_membership)
         for c_id in crystal_ids:
             crystal_samples_index = (crystal_membership == c_id)
-            crystal_samples = data_matrix[crystal_samples_index]
-            transformer = IncrementalPCA(batch_size=batch_size)
-            transformer.fit(crystal_samples)
-            W = transformer.components_
-            w0 = transformer.mean_
-            z = np.matmul((crystal_samples - w0), W.T)
-            model = {'crystalID': c_id, 'W': W, 'w0': w0, 'z': z}
+            crystal_samples       = data_matrix[crystal_samples_index]
+            W, w0, z              = compute_pca_model(crystal_samples, batch_size=batch_size)
+            model                 = {'crystalID': c_id, 'W': W, 'w0': w0, 'z': z}
             pca_model_for_persistence['models'].append(model)
         all_pca_models.append(pca_model_for_persistence)
     return all_pca_models

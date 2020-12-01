@@ -17,6 +17,10 @@ import yaml
 from distances.nrrd_distances import calculate_distance_volume
 from distances.png_distances import calculate_distance_png
 from distances.mesh_distances import calculate_distance_mesh
+from distances.pca_distances import calculate_pca_distance_volume
+from distances.pca_distances import calculate_pca_distance_png
+from distances.pca_distances import calculate_pca_distance_mesh
+
 from thumbnails.volume_thumbnails import generate_volume_thumbnails
 from thumbnails.mesh_thumbnails import generate_mesh_thumbnails
 from utils import run_external_script
@@ -297,6 +301,13 @@ def calculate_distance(input_config, output_directory, precision = np.float32):
         method_name = input_config['distance']['methodName']
         arguments = input_config['distance']['arguments'] if 'arguments' in input_config['distance'] else None
         distance = run_external_script(script_directory, module_name, method_name, arguments=arguments)
+    elif distance_type == 'pca':
+        if shape_format == 'volume':
+            distance = calculate_pca_distance_volume(shape_directory)
+        elif shape_format == 'image':
+            distance = calculate_pca_distance_png(shape_directory)
+        elif shape_format == 'mesh':
+            distance = calculate_pca_distance_mesh(shape_directory)
     else:
         # print('Calculating ' + distance_type + ' distance.')
         # print('\n')
@@ -327,7 +338,7 @@ def verify_distance_type(distance_type):
     :param distance_type: Type of distance to calculate
     :return:
     """
-    supported_distances = ['precomputed', 'script', 'cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan',
+    supported_distances = ['pca','precomputed', 'script', 'cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan',
                            'braycurtis', 'canberra', 'chebyshev', 'correlation', 'dice', 'hamming', 'jaccard',
                            'kulsinski', 'mahalanobis', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
                            'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule']
