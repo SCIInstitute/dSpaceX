@@ -1,10 +1,10 @@
 from glob import glob
 import re
 import PIL.Image
-import thumbnails
+from thumbnails import MeshRenderer
 
 
-def generate_mesh_thumbnails(shape_directory, output_directory):
+def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.3):
     """
     Generate mesh thumbnails from .stl, .ply, or .obj files.
     :param shape_directory: Directory that contains mesh shapes
@@ -16,7 +16,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory):
     shapes.extend(glob(shape_directory + '*.obj'))
 
     # instantiate mesh renderer
-    ren = thumbnails.MeshRenderer(default_mesh = '')
+    ren = MeshRenderer(default_mesh = '', scale = scale)
 
     # For each mesh format generate thumbnail
     for index, shape_file in enumerate(shapes):
@@ -25,7 +25,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory):
               ((100 * index / len(shapes)), index, len(shapes)), end='\r')
 
         ren.loadNewMesh(shape_file)
-        image = PIL.Image.fromarray(ren.getImage())
+        image = PIL.Image.fromarray(ren.getImage(resolution))
         image.save(output_directory + str(shape_id) + '.png')
         
     print('', end='\n')

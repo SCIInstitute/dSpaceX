@@ -3,9 +3,10 @@ import numpy as np
 import re
 from sklearn.metrics import pairwise_distances
 
-import models.png_pca as png_pca
-import models.mesh_pca as mesh_pca
-import models.volume_pca as volume_pca
+from models import png_pca
+from models import png_pca
+from models import  mesh_pca
+from models import volume_pca
 
     
 def calculate_pca_distance_volume(directory, batch_size=20):
@@ -19,7 +20,7 @@ def calculate_pca_distance_volume(directory, batch_size=20):
     """
     data_matrix = volume_pca.get_data_matrix(directory)
 
-    print('Calculating PCA Distance', end='\n')
+    #print('Calculating PCA Distance', end='\n')
 
     _,_,z = volume_pca.compute_pca_model(data_matrix, batch_size=batch_size)
             
@@ -36,7 +37,7 @@ def calculate_pca_distance_png(directory, n_components=0.97):
     """
     data_matrix = png_pca.get_data_matrix(directory)
 
-    print('Calculating PCA Distance', end='\n')
+    #print('Calculating PCA Distance', end='\n')
 
     _,_,z = png_pca.compute_pca_model(data_matrix, n_components=n_components)
             
@@ -54,7 +55,7 @@ def calculate_pca_distance_mesh(directory, batch_size=20):
     """
     data_matrix = mesh_pca.get_data_matrix(directory)
 
-    print('Calculating PCA Distance', end='\n')
+    #print('Calculating PCA Distance', end='\n')
 
     _,_,z = mesh_pca.compute_pca_model(data_matrix, batch_size=batch_size)
             

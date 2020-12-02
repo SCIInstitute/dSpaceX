@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 
-def write_to_file(model_data, output_directory, precision = np.float32):
+def write_to_file(model_data, output_directory, write_csv = False, precision = np.float32):
     """
     Write pca model to output directory
     :param output_file_name:
@@ -26,7 +26,8 @@ def write_to_file(model_data, output_directory, precision = np.float32):
             # export W, w0, and z...
             for V in ['W', 'w0', 'z']:
                 # ...as csvs
-                np.savetxt(os.path.join(crystal_output_directory, V + '.csv'), crystal_data[V], delimiter=',')
+                if (write_csv):
+                    np.savetxt(os.path.join(crystal_output_directory, V + '.csv'), crystal_data[V], delimiter=',')
 
                 # ...and bins (with associated dims files)
                 np.tofile(os.path.join(crystal_output_directory, V + '.bin'), precision(crystal_data[V]))

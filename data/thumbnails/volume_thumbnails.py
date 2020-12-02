@@ -1,10 +1,10 @@
 from glob import glob
 import re
 import PIL.Image
-import thumbnails
+from thumbnails import VolumeRenderer
 
 
-def generate_volume_thumbnails(shape_directory, output_directory, scale = 1.25):
+def generate_volume_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.25):
     """
     Generates thumbnails from voxels
     :param shape_directory: Directory where voxels are saved
@@ -15,7 +15,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, scale = 1.25):
     shapes = glob(shape_directory + '/*.nrrd')
 
     # instantiate volume renderer
-    ren = thumbnails.VolumeRenderer(scale = scale)
+    ren = VolumeRenderer(scale = scale)
 
     # For each volume format generate thumbnail
     for index, shape_file in enumerate(shapes):
@@ -24,7 +24,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, scale = 1.25):
               ((100 * index / len(shapes)), index, len(shapes)), end='\r')
 
         ren.loadNewVolume(shape_file)
-        image = PIL.Image.fromarray(ren.getImage())
+        image = PIL.Image.fromarray(ren.getImage(resolution))
         image.save(output_directory + '/' + str(shape_id) + '.png')
 
     # Necessary so next line prints on new line

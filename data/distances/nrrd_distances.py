@@ -15,9 +15,7 @@ def calculate_distance_volume(directory, metric='hamming'):
     Calculates the distance between binary volumes saved as .nrrd files.
     This method is for small volumes that fit in memory.
     :param metric: The distance metric to calculate.
-    Supported metrics include: cityblock, cosine, euclidean, l1, l2, manhattan, barycurtis, canberra, chebysheve, correlation,
-    dice, hamming, jaccard, kulsinski, nahlanobi, minkowski, regerstandimoto, russellrao, seuclidean, sokalmichener, sokalsneath,
-    sqeuclidean, yule
+    Supported metrics include: ["pca", "cityblock", "cosine", "euclidean", "l1", "l2", "manhattan", "braycurtis", "canberra", "chebyshev", "correlation", "dice", "hamming", "jaccard", "kulsinski", "mahalanobis", "minkowski", "rogerstanimoto", "russellrao", "seuclidean", "sokalmichener", "sokalsneath", "sqeuclidean", "yule"],
     :param directory: The directory that contains the volumes.
     :return: pairwise distance matrix between every volume.
     """
@@ -41,9 +39,7 @@ def calculate_distance_volume_streaming(directory, metric='hamming', number_of_b
     Calculates the distance between binary volumes saved as .nrrd files.
     This method is for large volumes that do not fit in to memory.
     :param metric: The distance metric to calculate.
-    Supported metrics include: cityblock, cosine, euclidean, l1, l2, manhattan, barycurtis, canberra, chebysheve, correlation,
-    dice, hamming, jaccard, kulsinski, nahlanobi, minkowski, regerstandimoto, russellrao, seuclidean, sokalmichener, sokalsneath,
-    sqeuclidean, yule
+    Supported metrics include: ["pca", "cityblock", "cosine", "euclidean", "l1", "l2", "manhattan", "braycurtis", "canberra", "chebyshev", "correlation", "dice", "hamming", "jaccard", "kulsinski", "mahalanobis", "minkowski", "rogerstanimoto", "russellrao", "seuclidean", "sokalmichener", "sokalsneath", "sqeuclidean", "yule"],
     :param directory: The directory that contains the volumes.
     :param number_of_blocks: Because volumes require significant memory this computation is done by loading
     a portion of the volumes into memory and performing the computation. The "portion of the volumes" are called blocks,
