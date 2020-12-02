@@ -394,9 +394,9 @@ def calculate_embeddings(metrics, input_config, output_directory):
         tsne = TSNE(n_components=2, metric='precomputed').fit_transform(distance)
         mds = MDS(n_components=2, dissimilarity='precomputed').fit_transform(distance)
         isomap = Isomap(n_components=2, metric='precomputed').fit_transform(distance)
-        np.savetxt(os.path.join(output_directory, input_config['datasetName'] + '_tsne.csv'), tsne, delimiter=',')
-        np.savetxt(os.path.join(output_directory, input_config['datasetName'] + '_mds.csv'), mds, delimiter=',')
-        np.savetxt(os.path.join(output_directory, input_config['datasetName'] + '_isomap.csv'), isomap, delimiter=',')
+        np.savetxt(os.path.join(output_directory, metric + '_tsne.csv'), tsne, delimiter=',')
+        np.savetxt(os.path.join(output_directory, metric + '_mds.csv'), mds, delimiter=',')
+        np.savetxt(os.path.join(output_directory, metric + '_isomap.csv'), isomap, delimiter=',')
 
         embedding_metric = []
         embedding_metric.append({'name': 't-SNE', 'file': 'embeddings/' + metric + '_tsne.csv'})
