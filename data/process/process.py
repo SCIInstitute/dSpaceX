@@ -249,7 +249,7 @@ def generate_thumbnails(input_config, output_directory):
             img = Image.open(file)
             img.save(os.path.join(output_directory, str(image_id) + '.png'))
 
-    output_config['thumbnails'] = {'format': 'png', 'files': 'thumbnails/?.png', 'offset': 1, 'padZeros': 'false'}
+    output_config['thumbnails'] = {'format': 'png', 'files': 'thumbnails/?.png', 'offset': 1, 'padZeros': input_config['padZeros']}
     return output_config
 
 
@@ -280,7 +280,6 @@ def calculate_distances(input_config, output_directory, precision = np.float32):
         print('We\'re sorry we do not currently support the ' + input_config['shapeFormat'] +
               ' shape format. Supported formats include nrrd (volume), mesh (volume) and png (image).')
         print('Closing data, please fix config and run again.')
-        shutil.rmtree(output_directory)
         sys.exit()
 
     distances = []
@@ -298,7 +297,6 @@ def calculate_distances(input_config, output_directory, precision = np.float32):
             print('We\'re sorry we do not currently support the ' + distance_type +
                   ' distance calculations. Supported distance calculations are listed in the README.')
             print('Closing data, please fix config and run again.')
-            shutil.rmtree(output_directory)
             sys.exit()
 
         # FIXME: distances is currently just assumed to be an array types

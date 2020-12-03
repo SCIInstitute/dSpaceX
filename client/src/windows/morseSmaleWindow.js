@@ -81,19 +81,19 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * If any of the decomposition settings have changed returns true
-   * for new decomposition
+   * Test for any decomposition settings changed that require new crystals to be shown.
+   *
    * @param {object} prevDecomposition - the previous decomposition
    * @param {object} currentDecomposition - the current decomposition
    * @return {boolean} true if any of the decomposition settings have changed.
    * 
-   * WARNING: CUT AND PASTED FUNCTION ALSO IN EmbeddingWindow
+   * NOTE: Similar to function in EmbeddingWindow, but items checked aren't the same. 
    */
   isNewDecomposition(prevDecomposition, currentDecomposition) {
     return (prevDecomposition.datasetId !== currentDecomposition.datasetId
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
-            || prevDecomposition.modelname !== currentDecomposition.modelname
+/*          || prevDecomposition.modelname !== currentDecomposition.modelname  // don't redraw when model [de]selected */
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -135,6 +135,14 @@ class MorseSmaleWindow extends React.Component {
                       +regressionResponse.error_msg+'\n\t extremaResponse: '+extremaResponse.error_msg);
         }
       });
+    }
+
+    // if model changed and crystal selected, re-select the crystal to evaluate new model
+    if (prevProps.decomposition &&
+        prevProps.decomposition.modelname !== this.props.decomposition.modelname &&
+        this.pickedCrystal !== undefined) {
+      let crystalID = this.pickedCrystal.name;
+      this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
     }
 
     // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)

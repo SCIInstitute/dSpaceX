@@ -15,7 +15,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, resolution = [
     shapes = glob(shape_directory + '/*.nrrd')
 
     # instantiate volume renderer
-    ren = VolumeRenderer(scale = scale)
+    ren = VolumeRenderer(scale = scale, default = shapes[0]) # default is needed to "warm up" the [vtk] thumbnail renderer
 
     # For each volume format generate thumbnail
     for index, shape_file in enumerate(shapes):
