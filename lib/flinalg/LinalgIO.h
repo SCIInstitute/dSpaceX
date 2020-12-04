@@ -19,9 +19,25 @@ namespace FortranLinalg{
 template <typename TPrecision>
 class LinalgIO{
 
+  static bool compareHeader(std::string header_filename, std::string type) {
+    std::ifstream hdr;
+    hdr.open(header_filename.c_str());
+    
+    std::string token;
+    getline(hdr, token);
+
+    return token.compare(type) == 0;
+  }
 
   public:
+  
+  static bool isDenseVectorHeader(const std::string &header_filename){
+    return compareHeader(header_filename, "DenseVector");
+  }
 
+  static bool isDenseMatrixHeader(const std::string &header_filename){
+    return compareHeader(header_filename, "DenseMatrix");
+  }
   
   //Read Vector from header file
   static DenseVector<TPrecision> readVector(const std::string &filename){

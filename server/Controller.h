@@ -38,21 +38,21 @@ class Controller {
  private:
   Controller() = delete;
   
-  bool verifyFieldname(Fieldtype type, const std::string &name);
+  bool verifyFieldname(Fieldtype type, const std::string &name) const;
 
   void configureCommandHandlers();
   void configureAvailableDatasets(const std::string &rootPath);
 
   bool maybeLoadDataset(const Json::Value &request, Json::Value &response);
   bool loadDataset(int datasetId);
-  bool verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, int curvepoints,
-                               double sigma, double smoothing, bool addnoise, int depth,
+  bool verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, std::string metric,
+                               int curvepoints, double sigma, double smoothing, bool addnoise, int depth,
                                bool normalize, Json::Value &response);
-  bool processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
-                                double sigma, double smoothing, bool add_noise,
+  bool processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, std::string metric,
+                                int num_samples, double sigma, double smoothing, bool add_noise,
                                 int num_persistences, bool normalize);
   bool maybeProcessData(const Json::Value &request, Json::Value &response);
-  bool processData(Fieldtype category, std::string fieldname, int knn,
+  bool processData(Fieldtype category, std::string fieldname, int knn, std::string metric,
                    int num_samples = 55, double sigma = 0.25, double smoothing = 15.0,
                    bool add_noise = true /* duplicate values risk erroroneous M-S */,
                    int num_persistences = -1 /* generates all persistence levels */,
@@ -67,12 +67,11 @@ class Controller {
   void fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
-  void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
   void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
-  //  void fetchModelsList(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
+  void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);
@@ -101,6 +100,7 @@ class Controller {
   std::string m_currentField;
   Fieldtype m_currentCategory{Fieldtype::Unknown};
   int m_currentKNN{15};
+  std::string m_currentDistanceMetric;
   int m_currentNumCurvepoints{50};
   double m_currentSigma{0.25};
   double m_currentSmoothing{15.0};

@@ -77,11 +77,11 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"exportMorseSmaleDecomposition", std::bind(&Controller::exportMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
+  m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
-  m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -136,9 +136,8 @@ void Controller::configureAvailableDatasets(const std::string &path) {
   }
 }
 
-// verifyFieldname
 // ensure the fieldname exists in this Controller's dataset
-bool Controller::verifyFieldname(Fieldtype type, const std::string &name)
+bool Controller::verifyFieldname(Fieldtype type, const std::string &name) const
 {
   if (type == Fieldtype::QoI) {
     auto qois = m_currentDataset->getQoiNames();
@@ -215,7 +214,6 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
   response["numberOfSamples"] = m_currentDataset->numberOfSamples();
 
   // all parameters and qois and their models
-  response["fields"] = Json::Value(Json::arrayValue);
   std::vector<std::string> fields;
 
   // the design parameter and qoi names (todo: consolidate these on the server)
@@ -230,19 +228,29 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
     fields.push_back(name);
   }
 
-  // assemble the models for each field
-  for (auto fieldname : fields) {
-    Json::Value fieldObject(Json::objectValue);
-    fieldObject["name"] = fieldname;
-    //fieldObject["type"] = <todo>:
+  // the set of distance metrics, their sets of fields, and fields' sets of models
+  response["distanceMetrics"] = Json::Value(Json::arrayValue);
+  for (auto metricname : m_currentDataset->getDistanceMetricNames()) {
+    Json::Value metricObject(Json::objectValue);
+    metricObject["name"] = metricname;
 
-    Json::Value modelNames = Json::Value(Json::arrayValue);
-    for (auto modelname : m_currentDataset->getModelNames(fieldname)) {
-      modelNames.append(modelname);
+    // assemble the fields and models for each field
+    metricObject["fields"] = Json::Value(Json::arrayValue);
+    for (auto fieldname : fields) {
+      Json::Value fieldObject(Json::objectValue);
+      fieldObject["name"] = fieldname;
+      //fieldObject["type"] = <todo>:
+
+      Json::Value modelNames = Json::Value(Json::arrayValue);
+      for (auto modelname : m_currentDataset->getModelNames(metricname, fieldname)) {
+        modelNames.append(modelname);
+      }
+      fieldObject["models"] = modelNames;
+
+      metricObject["fields"].append(fieldObject);
     }
-    fieldObject["models"] = modelNames;
 
-    response["fields"].append(fieldObject);
+    response["distanceMetrics"].append(metricObject);
   }
 }
 
@@ -257,11 +265,17 @@ void Controller::fetchKNeighbors(const Json::Value &request, Json::Value &respon
   int k = request["k"].asInt();
   if (k < 0) return setError(response, "invalid knn");
 
+  auto metric = request["metric"].asString();
+  if (metric.empty()) {
+    metric = "l2";
+    std::cerr << "need to set a metric!\n";
+  } //<ctc> temp hack // return setError(response, "invalid distance metric");
+
   // TODO: cache results of this search if it takes too long to repeat
-  int n = m_currentDataset->getDistanceMatrix().N();
+  int n = m_currentDataset->getDistanceMatrix(metric).N();
   auto KNN = FortranLinalg::DenseMatrix<int>(k, n);
   auto KNND = FortranLinalg::DenseMatrix<Precision>(k, n);
-  Distance<Precision>::findKNN(m_currentDataset->getDistanceMatrix(), KNN, KNND);
+  Distance<Precision>::findKNN(m_currentDataset->getDistanceMatrix(metric), KNN, KNND);
 
   response["datasetId"] = m_currentDatasetId;
   response["k"] = k;
@@ -436,14 +450,15 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
   if (!maybeProcessData(request, response))
     return; // response will contain the error
 
-
   // get requested persistence level
   int persistence = getPersistence(request, response);
   if (persistence < 0) return; // response will contain the error
 
-  if (m_currentDataset->numberOfEmbeddings() > 0) {
-    auto embedding = m_currentDataset->getEmbeddingMatrix(embeddingId);
-    auto name = m_currentDataset->getEmbeddingNames()[embeddingId];
+  auto metric = request["metric"].asString();
+
+  if (m_currentDataset->numberOfEmbeddings(metric) > 0) {
+    auto embedding = m_currentDataset->getEmbeddingMatrix(metric, embeddingId);
+    auto name = m_currentDataset->getEmbeddingNames(metric)[embeddingId];
 
     // TODO: Factor out a normalizing routine. [see normalize in utils.h]
     float minX = embedding(0, 0);
@@ -627,7 +642,8 @@ void Controller::fetchEmbeddingsList(const Json::Value &request, Json::Value &re
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
 
-  auto embeddingNames = m_currentDataset->getEmbeddingNames();
+  auto metric = request["metric"].asString();
+  auto embeddingNames = m_currentDataset->getEmbeddingNames(metric);
   response["embeddings"] = Json::Value(Json::arrayValue);
   for (unsigned int i = 0; i < embeddingNames.size(); ++i) {
     Json::Value embeddingObject(Json::objectValue);
@@ -713,6 +729,7 @@ void Controller::fetchThumbnails(const Json::Value &request, Json::Value &respon
  *   category      - e.g., qoi or param (used to get fieldvalues)
  *   fieldname     - e.g., one of the QoIs
  *   persistence   - persistence level of the M-S for this field of the dataset
+ *   metric        - distance matrix used to compute the M-S for this field  // <ctc> needed>?
  *   crystalID     - crystal of the given persistence level
  *   modelname     - model from which to fetch interpolated samples
  *   numSamples    - number of evenly-spaced samples of the field at which to generate new latent images
@@ -738,12 +755,13 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto fieldname = request["fieldname"].asString();
   auto modelname = request["modelname"].asString();
   auto crystalId = request["crystalID"].asInt();
+  auto metric = request["metric"].asString();
 
 
   time_point<Clock> start = Clock::now();
 
   // try to find the requested model
-  auto modelset(m_currentDataset->getModelset(fieldname, modelname));
+  auto modelset(m_currentDataset->getModelset(metric, fieldname, modelname));
   auto persistence_idx = getAdjustedPersistenceLevelIdx(persistence, modelset);
   auto model(modelset ? modelset->getModel(persistence_idx, crystalId) : nullptr);
 
@@ -1064,8 +1082,8 @@ bool Controller::maybeLoadDataset(const Json::Value &request, Json::Value &respo
 /**
  * Check to see if parameters of request are valid to process data
  */
-bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, int curvepoints,
-                                         double sigma, double smoothing, bool addnoise, int depth,
+bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, std::string metric,
+                                         int curvepoints, double sigma, double smoothing, bool addnoise, int depth,
                                          bool normalize, Json::Value &response) {
 
   // category of the passed fieldname (design param or qoi)
@@ -1079,6 +1097,12 @@ bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldna
     setError(response, "invalid fieldname");
     return false;
   }
+
+  // metric of distance matrix
+  if (!m_currentDataset->hasDistanceMatrix(metric)) {
+    setError(response, "invalid distance metric");
+    return false;
+  }  
   
   // M-S computation params
   if (knn < 0) {
@@ -1110,6 +1134,7 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
   auto category    = request.isMember("category")    ? Fieldtype(request["category"].asString()) : m_currentCategory;
   auto fieldname   = request.isMember("fieldname")   ? request["fieldname"].asString()           : m_currentField;
   auto knn         = request.isMember("knn")         ? request["knn"].asInt()                    : m_currentKNN;
+  auto metric      = request.isMember("metric")      ? request["metric"].asString()              : m_currentDistanceMetric;
   auto curvepoints = request.isMember("curvepoints") ? request["curvepoints"].asInt()            : m_currentNumCurvepoints;
   auto sigma       = request.isMember("sigma")       ? request["sigma"].asFloat()                : m_currentSigma;
   auto smoothing   = request.isMember("smooth")      ? request["smooth"].asFloat()               : m_currentSmoothing;
@@ -1117,10 +1142,11 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
   auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentPersistenceDepth;
   auto normalize   = request.isMember("normalize")   ? request["normalize"].asBool()              : m_currentNormalize;
 
-  if (!verifyProcessDataParams(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize, response))
+  if (!verifyProcessDataParams(category, fieldname, knn, metric, curvepoints, sigma,
+                               smoothing, addnoise, depth, normalize, response))
     return false; // response will contain the error
 
-  if (!processData(category, fieldname, knn, curvepoints, sigma, smoothing, addnoise, depth, normalize)) {
+  if (!processData(category, fieldname, knn, metric, curvepoints, sigma, smoothing, addnoise, depth, normalize)) {
     setError(response, "failed to process data");
     return false;
   }
@@ -1129,17 +1155,18 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
 }
 
 /// Avoid regeneration of data if parameters haven't changed
-bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, int num_samples,
-                                          double sigma, double smoothing, bool add_noise,
+bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, std::string metric,
+                                          int num_samples, double sigma, double smoothing, bool add_noise,
                                           int num_persistences, bool normalize) {
   return !(m_currentCategory        == category &&
            m_currentField           == fieldname &&
            m_currentKNN             == knn &&
-           m_currentNumCurvepoints == num_samples &&
+           m_currentDistanceMetric  == metric &&
+           m_currentNumCurvepoints  == num_samples &&
            m_currentSigma           == sigma &&
            m_currentSmoothing       == smoothing &&
            m_currentAddNoise        == add_noise &&
-           m_currentPersistenceDepth == num_persistences &&
+           m_currentPersistenceDepth== num_persistences &&
            m_currentNormalize       == normalize);
 }
 
@@ -1151,11 +1178,11 @@ bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldn
  * Returns true if no need to process or process successful, 
  * false if processing failed.
  */
-bool Controller::processData(Fieldtype category, std::string fieldname, int knn, int num_samples,
-                             double sigma, double smoothing, bool add_noise, int num_persistences,
-                             bool normalize) {
+bool Controller::processData(Fieldtype category, std::string fieldname, int knn, std::string metric,
+                             int num_samples, double sigma, double smoothing, bool add_noise,
+                             int num_persistences, bool normalize) {
   if (m_currentTopoData &&
-      !processDataParamsChanged(category, fieldname, knn, num_samples, sigma, smoothing,
+      !processDataParamsChanged(category, fieldname, knn, metric, num_samples, sigma, smoothing,
                                 add_noise, num_persistences, normalize)) {
     return true;
   }
@@ -1175,13 +1202,13 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   m_currentTopoData = nullptr;
 
   // load or generate the distance matrix 
-  if (m_currentDataset->hasDistanceMatrix()) {
-    m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix();
-  } else if (m_currentDataset->hasSamplesMatrix()) {
-    auto samplesMatrix = m_currentDataset->getSamplesMatrix();
-    m_currentDistanceMatrix = HDProcess::computeDistanceMatrix<Precision>(samplesMatrix);
+  if (m_currentDataset->hasDistanceMatrix(metric)) {
+    m_currentDistanceMatrix = m_currentDataset->getDistanceMatrix(metric);
+  } else if (m_currentDataset->hasGeometryMatrix()) {
+    auto geometrysMatrix = m_currentDataset->getGeometryMatrix();
+    m_currentDistanceMatrix = HDProcess::computeDistanceMatrix<Precision>(geometrysMatrix);
   } else {
-    std::cerr << "processData failed: no distance matrix or samplesMatrix available\n";
+    std::cerr << "processData failed: no distance matrix or geometrysMatrix available\n";
     return false;
   }
 

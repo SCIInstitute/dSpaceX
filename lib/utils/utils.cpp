@@ -17,6 +17,18 @@ std::string uniqueFilename(const std::string &baseName, const std::string &ext) 
   return filename + ".csv";
 }
 
+std::string filepath(std::string basepath, std::string filename) {
+  size_t found = basepath.find_last_of("/\\");
+  std::string path = basepath.substr(0,found);
+  if(path.empty()) {
+    path = "./";
+  }
+  if (path[path.size() - 1] != '/') {
+    path = path + "/";
+  }
+  return path + filename;
+}
+
 Precision computeSigma(const std::vector<Precision>& vals) {
   // compute pairwise distances
   using DistMat = Eigen::Matrix<Precision, Eigen::Dynamic, Eigen::Dynamic>;

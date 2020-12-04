@@ -33,6 +33,11 @@ FortranLinalg::DenseMatrix<T> computeDistanceMatrix(FortranLinalg::DenseMatrix<T
 namespace dspacex {
 
 /*
+ * Return a loadable path for filePath, prepending ./ if not already included.
+ */
+std::string filepath(std::string basepath, std::string filename);
+
+/*
  * Converts mat to a FortranLinalg::DenseMatrix, taking data from mat (thus non-const and empty of data at the end).
  */
 template<typename T>

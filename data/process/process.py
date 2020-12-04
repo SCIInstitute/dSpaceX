@@ -168,7 +168,7 @@ def preprocess_data(config):
     parameters_df = pd.read_csv(config['parametersFile'])
     # TODO calculate summary statistics for each parameter (mean, mode, variance, these could be displayed in client)
     parameters_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_Parameters.csv'), index=False)
-    output_config['parameters'] = {'format': 'csv', 'file': config['datasetName'] + '_Parameters.csv'}
+    output_config['parameters'] = {'file': config['datasetName'] + '_Parameters.csv'}
 
     if 'qoisFile' not in config:
         print('The QoIs file is a required field. Please, update config and run again.')
@@ -178,7 +178,7 @@ def preprocess_data(config):
     qois_df = pd.read_csv(config['qoisFile'])
     # TODO calculate summary statistics for each qoi (mean, mode, variance, these could be displayed in client)
     qois_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_QoIs.csv'), index=False)
-    output_config['qois'] = {'format': 'csv', 'file': config['datasetName'] + '_QoIs.csv'}
+    output_config['qois'] = {'file': config['datasetName'] + '_QoIs.csv'}
 
     # THUMBNAILS
     if config['generateThumbnails']:

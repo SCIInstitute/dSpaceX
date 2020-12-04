@@ -121,7 +121,8 @@ void MSModelset::initializeCustomRenderer() {
 
   // instantiate renderer
   std::string default_file = custom_renderer.size() > 2 ? custom_renderer[2] : "";
-  python_renderer = module.attr(custom_renderer[1].c_str())("default"_a = default_file, "scale"_a = 1.0);
+  float scale = custom_renderer.size() > 3 ? std::stof(custom_renderer[3]) : 1.25;
+  python_renderer = module.attr(custom_renderer[1].c_str())("default"_a = default_file, "scale"_a = scale);
 
   std::cout << "Custom renderer created in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
 }
@@ -143,7 +144,7 @@ py::object& MSModelset::getPythonModule(const std::string& modname) {
     std::cout << modname <<" loaded in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
   }
 
-  return MSModelset::python_modules[modname];
+  return MSModelset::python_modules.at(modname);
 }
 std::map<std::string, py::object> MSModelset::python_modules;
 
