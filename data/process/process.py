@@ -13,6 +13,7 @@ import shutil
 import sys
 from sklearn.manifold import TSNE, Isomap, MDS
 import yaml
+import time
 
 from distances.nrrd_distances import calculate_distance_volume
 from distances.png_distances import calculate_distance_png
@@ -42,6 +43,8 @@ def process_data(config):
     generate a new model.
     :param config: dictionary containing configurations
     """
+    tic = time.perf_counter()
+
     if 'generateModel' in config and config['generateModel'] is True:
         generate_model(config)
     elif 'makePredictions' in config and config['makePredictions'] is True:
@@ -49,6 +52,9 @@ def process_data(config):
         # TODO need to implement offline predictions/interpolations
     else:
         preprocess_data(config)
+
+    toc = time.perf_counter()
+    print(f"Data processing completed in {toc - tic:0.4f} seconds")
 
 
 def generate_model(config):

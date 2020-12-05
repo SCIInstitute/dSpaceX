@@ -218,6 +218,8 @@ class WindowPanel extends React.Component {
             <div style={{ display: 'flex', flexDirection: 'column',
                  width: '100%', boxSizing: 'border-box' }}>
 
+{/* put fieldtype, field, and metric selection up here.*/}
+
         {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
           disabled={!this.props.enabled || !this.props.dataset}>

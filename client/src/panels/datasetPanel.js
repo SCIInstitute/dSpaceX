@@ -84,6 +84,7 @@ class DatasetPanel extends React.Component {
           numberOfSamples: dataset.numberOfSamples,
           parameterNames: dataset.parameterNames,
           qoiNames: dataset.qoiNames,
+          distanceMetrics: dataset.distanceMetrics,
         },
       });
       this.props.onDatasetChange(dataset);
@@ -175,6 +176,22 @@ class DatasetPanel extends React.Component {
                 <span style={{ color:textColor }}>
                   { this.state.dataset ?
                     this.state.dataset.qoiNames.length :
+                    '--' }
+                </span>
+              </div>
+            </ListItem>
+            <ListItem style={{ paddingLeft:'0px', paddingRight:'5px' }}>
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{ color:textColor }}>
+                  {'# Distance Metrics: '}
+                </span>
+                <span style={{ color:textColor }}>
+                  { this.state.dataset ?
+                    this.state.dataset.distanceMetrics.length :
                     '--' }
                 </span>
               </div>

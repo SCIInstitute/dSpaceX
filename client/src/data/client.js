@@ -422,10 +422,11 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchEmbeddingsList(datasetId) {
+  fetchEmbeddingsList(datasetId, metric) {
     const command = {
       name: 'fetchEmbeddingsList',
       datasetId: datasetId,
+      metric: metric,
     };
     return this._createCommandPromise(command);
   }

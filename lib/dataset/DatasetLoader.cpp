@@ -123,16 +123,9 @@ std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &basePath)
 
   if (config["modelsets"]) {
     auto metricModelsets = DatasetLoader::parseMetricModelsets(config, basePath);
-    for (auto modelsets : metricModelsets)
+    for (auto modelsets : metricModelsets) {
       builder.withModelsets(modelsets.first, modelsets.second);
-
-    // old version sets fieldvals and carefully moves modelset. Need to check this over to get it right since the parser can't actually set the fieldvals, so the ModelMap it passes can't be complete! Committing now since most everything else is okay.
-// Dataset::Builder& Dataset::Builder::withModel(std::string fieldname, std::shared_ptr<MSModelset> modelset) {
-//   m_dataset->m_msModelFields.push_back(fieldname);
-//   modelset->setFieldvals(m_dataset->getFieldvalues(fieldname, Fieldtype::Unknown, false /*normalized*/));
-//   m_dataset->m_models[modelset->fieldName()].push_back(std::move(modelset));
-//   return (*this);
-// }
+    }
   }
 
   if (config["thumbnails"]) {
@@ -744,17 +737,21 @@ DatasetBuilder& DatasetBuilder::withEmbeddings(std::string metric, std::vector<E
   return (*this);
 }
 
-DatasetBuilder& DatasetBuilder::withModelsets(std::string metric, ModelMap& modelsets) {
+DatasetBuilder& DatasetBuilder::withModelsets(std::string metric, ModelMap& modelmap) {
   if (!m_dataset->hasDistanceMetric(metric)) {
     throw std::runtime_error("tried to add modelsets for unknown metric " + metric);
   }
 
   // add the fields that have modelssets for this metric
-  for (auto modelmap : modelsets) {
-    m_dataset->m_msModelFields[metric].push_back(modelmap.first);
+  for (auto models : modelmap) {
+    auto fieldname = models.first;
+    m_dataset->m_msModelFields[metric].push_back(fieldname);
+    for (auto modelset : models.second) {
+      modelset->setFieldvals(m_dataset->getFieldvalues(fieldname, Fieldtype::Unknown, false));
+      m_dataset->m_models[metric][fieldname].push_back(modelset);
+    }
   }
-  // ...and take the whole map
-  m_dataset->m_models[metric] = modelsets;
+  return (*this);
 }
 
 DatasetBuilder& DatasetBuilder::withName(std::string name) {

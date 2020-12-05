@@ -74,7 +74,8 @@ class Application extends React.Component {
       selectedDesigns: new Set(),
       parameters: [],
       qois: [],
-      fieldModels: [],
+      distanceMetrics: [],
+      currentMetric: null,
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -169,23 +170,31 @@ class Application extends React.Component {
    * @param {object} dataset
    */
   onDatasetChange(dataset) {
-    const { datasetId, parameterNames, qoiNames, fields } = dataset;
+    const { datasetId, parameterNames, qoiNames, distanceMetrics } = dataset;
 
-    // create a map of fields and their models (can we send one from the server?)
-    let fieldModels = new Map();
-    for (let i=0; i < fields.length; i++) {
-      let name = fields[i].name;
-      let models = [];
-      for (let m=0; m < fields[i].models.length; m++) {
-        models.push(fields[i].models[m]);
+    // create a map of distanceMetrics and their fields and their fields' models
+    let distancesMap = new Map();
+    for (let d=0; d < distanceMetrics.length; d++) {
+      let metric = distanceMetrics[d].name;
+      let fields = distanceMetrics[d].fields;
+
+      let fieldModels = new Map();
+      for (let i=0; i < fields.length; i++) {
+        let name = fields[i].name;
+        let models = [];
+        for (let m=0; m < fields[i].models.length; m++) {
+          models.push(fields[i].models[m]);
+        }
+        fieldModels.set(name, models);
       }
-      fieldModels.set(name, models);
+      distancesMap.set(metric, fieldModels);
     }
+    let currentMetric = distancesMap.keys().next().value;
 
     Promise.all([
       this.getParameters(datasetId, parameterNames),
       this.getQois(datasetId, qoiNames),
-      this.client.fetchEmbeddingsList(datasetId),
+      this.client.fetchEmbeddingsList(datasetId, currentMetric),
     ]).then((results) => {
       const [parameters, qois, embeddingList] = results;
       this.setState({
@@ -196,7 +205,7 @@ class Application extends React.Component {
         filters: [],
         parameters: parameters,
         qois: qois,
-        fieldModels: fieldModels,
+        distanceMetrics: distancesMap,
         embeddings: embeddingList.embeddings,
       });
     });
@@ -494,7 +503,7 @@ class Application extends React.Component {
                       onConfigChange={this.onWindowConfigChange}
                       dataset={this.state.currentDataset}
                       enabled={this.state.connected}
-                      fieldModels={this.state.fieldModels}
+                      distanceMetrics={this.state.distanceMetrics}
                       embeddings={this.state.embeddings}/>
                   );
                 }) : []
