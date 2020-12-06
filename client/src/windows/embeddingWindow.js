@@ -29,6 +29,7 @@ class EmbeddingWindow extends React.Component {
     this.zoomRate = 1.1;
     this.previousX = 0;
     this.previousY = 0;
+    this.adjacency = null;
 
     this.client = this.props.dsxContext.client;
 

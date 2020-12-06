@@ -487,7 +487,8 @@ class MorseSmaleWindow extends React.Component {
     if (intersectedObjects.length) {
       let crystalID = intersectedObjects[0].object.name;
 
-      if (intersectedObjects[0].object !== this.crystalPosObject) {
+      if (intersectedObjects[0].object !== this.crystalPosObject &&
+          intersectedObjects[0].object !== this.pickedCrystal) {
         //console.log('New crystal selected (' + crystalID + ')');
         // otherwise picked active pointer along curve, or already selected curve, so do nothing
 
