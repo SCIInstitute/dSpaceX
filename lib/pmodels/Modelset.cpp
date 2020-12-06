@@ -121,8 +121,8 @@ void MSModelset::initializeCustomRenderer() {
 
   // instantiate renderer
   std::string default_file = custom_renderer.size() > 2 ? custom_renderer[2] : "";
-  float scale = custom_renderer.size() > 3 ? std::stof(custom_renderer[3]) : 1.25;
-  python_renderer = module.attr(custom_renderer[1].c_str())("default"_a = default_file, "scale"_a = scale);
+  getImageScale = custom_renderer.size() > 3 ? std::stof(custom_renderer[3]) : 1.25;
+  python_renderer = module.attr(custom_renderer[1].c_str())("default"_a = default_file);
 
   std::cout << "Custom renderer created in " << duration_cast<milliseconds>(Clock::now() - start).count() << " ms" << std::endl;
 }

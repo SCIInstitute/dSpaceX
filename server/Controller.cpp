@@ -852,7 +852,8 @@ void Controller::generateCustomThumbnail(std::shared_ptr<Eigen::MatrixXf> I, MSM
   py::list resolution;
   resolution.append(width);
   resolution.append(height);
-  auto npvec = ren.attr("getImage")("resolution"_a = resolution).cast<py::array_t<unsigned char>>();
+  auto npvec = ren.attr("getImage")("resolution"_a = resolution,
+                                    "scale"_a = modelset.getImageScale).cast<py::array_t<unsigned char>>();
 
   end = Clock::now();
   std::cout << "image generated in " << duration_cast<milliseconds>(end - start).count() << " ms" << std::endl;

@@ -131,6 +131,9 @@ public:
   /// returns custom Python evaluator, instantiating it if necessary
   py::object& getCustomEvaluator();
 
+  // scale set in config.yaml and used in call to getImage (todo: move to controller, let gui pass it)
+  float getImageScale{1.0f};
+
 private:
   MSModelset();
 
