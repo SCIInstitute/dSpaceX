@@ -175,6 +175,8 @@ class MorseSmaleWindow extends React.Component {
 
     // left click to select and slide
     if (event.button === 0 && this.pick(this.getPickPosition(event))) {
+      let hasModel = this.props.decomposition.modelname !== "None";
+      this.continuousInterpolation = hasModel;
       this.controls.enabled = false;
     }
   }
@@ -513,12 +515,10 @@ class MorseSmaleWindow extends React.Component {
       // interactive model evaluation
       let hasModel = this.props.decomposition.modelname !== "None";
       if (hasModel) {
-        this.continuousInterpolation = true;
         this.crystalPosObject.visible = true;
         this.handleContinuousInterpolationMouseMove(normalizedPosition);
       }
       else {
-        this.continuousInterpolation = false;
         this.crystalPosObject.visible = false;
         this.renderScene(); // be sure scene still gets re-rendered so new crystal is highlighted
       }
@@ -848,7 +848,8 @@ class MorseSmaleWindow extends React.Component {
       }
 
       // and re-hide the crystalPosObject if we're not using it
-      this.crystalPosObject.visible = this.continuousInterpolation;
+      let hasModel = this.props.decomposition.modelname !== "None";
+      this.crystalPosObject.visible = hasModel;
     }
 
     // ...and finally, the UI
