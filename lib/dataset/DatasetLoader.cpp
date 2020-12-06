@@ -275,7 +275,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(const YAML::Node &embeddingNode, con
        root: shapeodds_models_maxStress                           # directory of models for this field
        persistences: persistence-?                                # persistence files
        crystals: crystal-?                                        # in each persistence dir are its crystals
-       padZeroes: false                                           # for both persistence and crystal dirs/files
+       padZeros: false                                           # for both persistence and crystal dirs/files
        partitions: CantileverBeam_CrystalPartitions_maxStress.csv # has 20 lines of varying length and 20 persistence levels
        rotate: false                                              # the shape produced by this model needs to be rotated 90 degrees
        ms:                                                        # Morse-Smale parameters used to compute partitions
@@ -453,12 +453,12 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModelset(const YAML::Node& model
   crystalsBasename = crystalsBasename.substr(0, crystalIndexLoc);
 
   bool padIndices = false;
-  if (modelNode["padZeroes"]) {
-    std::string padZeroes = modelNode["padZeroes"].as<std::string>();
-    if (padZeroes == "true") {
+  if (modelNode["padZeros"]) {
+    std::string padZeros = modelNode["padZeros"].as<std::string>();
+    if (padZeros == "true") {
       padIndices = true;
-    } else if (padZeroes != "false") {
-      std::cerr << "Model's padZeroes contains invalid value: " << padZeroes << std::endl;
+    } else if (padZeros != "false") {
+      std::cerr << "Model's padZeros contains invalid value: " << padZeros << std::endl;
       return nullptr;
     }
   }
@@ -615,10 +615,10 @@ std::vector<DistancePair> DatasetLoader::parseDistances(const YAML::Node &config
 
 std::string DatasetLoader::createThumbnailPath(const std::string& imageBasePath, int index,
     const std::string imageSuffix, unsigned int indexOffset,
-    bool padZeroes, unsigned int thumbnailCount) {
+    bool padZeros, unsigned int thumbnailCount) {
   std::string imageName = std::to_string(index);
 
-  if (padZeroes) {
+  if (padZeros) {
     unsigned digitCount = paddedStringWidth(indexOffset + thumbnailCount);
     imageName = paddedIndexString(index, digitCount);
   }
@@ -651,12 +651,12 @@ std::vector<Image> DatasetLoader::parseThumbnails(
   std::string imageSuffix = imagePath.substr(imageNameLoc + 1);
 
   bool padIndices = false;
-  if (thumbnailsNode["padZeroes"]) {
-    std::string padZeroes = thumbnailsNode["padZeroes"].as<std::string>();
-    if (padZeroes == "true") {
+  if (thumbnailsNode["padZeros"]) {
+    std::string padZeros = thumbnailsNode["padZeros"].as<std::string>();
+    if (padZeros == "true") {
       padIndices = true;
-    } else if (padZeroes != "false") {
-      throw std::runtime_error("Dataset's padZeroes contains invalid value: " + padZeroes);
+    } else if (padZeros != "false") {
+      throw std::runtime_error("Dataset's padZeros contains invalid value: " + padZeros);
     }
   }
 

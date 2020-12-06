@@ -76,7 +76,6 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmaleDecomposition", std::bind(&Controller::fetchMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"exportMorseSmaleDecomposition", std::bind(&Controller::exportMorseSmaleDecomposition, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
-  m_commandMap.insert({"fetchMorseSmaleCrystal", std::bind(&Controller::fetchMorseSmaleCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
@@ -242,8 +241,8 @@ void Controller::fetchDataset(const Json::Value &request, Json::Value &response)
       //fieldObject["type"] = <todo>:
 
       Json::Value modelNames = Json::Value(Json::arrayValue);
-      for (auto modelname : m_currentDataset->getModelNames(metricname, fieldname)) {
-        modelNames.append(modelname);
+      for (auto name : m_currentDataset->getModelNames(metricname, fieldname)) {
+        modelNames.append(name);
       }
       fieldObject["models"] = modelNames;
 
@@ -391,45 +390,6 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
     crystalObject["maxIndex"] = crystal->getMaxSample();
     crystalObject["numberOfSamples"] = static_cast<int>(crystal->getAllSamples().size());
     response["complex"]["crystals"].append(crystalObject);
-  }
-
-  // TODO: Add crystal adjacency information
-}
-
-/**
- * Handle the command to fetch the details of a single crystal in a persistence level.
- */
-// TODO: NOT USED BY ANYTHING!
-void Controller::fetchMorseSmaleCrystal(const Json::Value &request, Json::Value &response) {
-  if (!maybeLoadDataset(request, response))
-    return setError(response, "invalid datasetId");
-
-  if (!maybeProcessData(request, response))
-    return; // response will contain the error
-
-  // get requested persistence level
-  int persistence = getPersistence(request, response);
-  if (persistence < 0) return; // response will contain the error
-
-  std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(persistence);
-
-  int crystalId = request["crystalId"].asInt();
-  if (crystalId < 0 || crystalId >= complex->getCrystals().size())
-    return setError(response, "invalid crystal id");
-
-  std::shared_ptr<Crystal> crystal = complex->getCrystals()[crystalId];
-
-  response["datasetId"] = m_currentDatasetId;
-  response["decompositionMode"] = "Morse-Smale";
-  response["persistence"] = persistence;
-  response["crystalId"] = crystalId;
-  response["crystal"] = Json::Value(Json::objectValue);
-  response["crystal"]["minIndex"] = crystal->getMinSample();
-  response["crystal"]["maxIndex"] = crystal->getMaxSample();
-  response["crystal"]["sampleIndexes"] = Json::Value(Json::arrayValue);
-  for (unsigned int i = 0; i < crystal->getAllSamples().size(); i++) {
-    unsigned int index = crystal->getAllSamples()[i];
-    response["crystal"]["sampleIndexes"].append(index);
   }
 
   // TODO: Add crystal adjacency information
@@ -1235,6 +1195,7 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   // save current processing state to avoid unnecessary recomputation
   m_currentCategory = category;
   m_currentField = fieldname;
+  m_currentDistanceMetric = metric;
   m_currentKNN = knn;
   m_currentNumCurvepoints = num_samples;
   m_currentSigma = sigma;

@@ -180,6 +180,7 @@ class DatasetPanel extends React.Component {
                 </span>
               </div>
             </ListItem>
+            <Divider/>
             <ListItem style={{ paddingLeft:'0px', paddingRight:'5px' }}>
               <div style={{
                 width: '100%',

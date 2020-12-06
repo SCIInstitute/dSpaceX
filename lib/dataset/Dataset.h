@@ -34,7 +34,7 @@ class Dataset {
   }
 
   int numberOfModels(std::string metric) {
-    if (!hasDistanceMetric(metric)) {
+    if (hasModelsAtDistanceMetric(metric)) {
       return m_models.at(metric).size();
     }
     else {
@@ -50,6 +50,10 @@ class Dataset {
     return m_geometryMatrix;
   }
 
+  bool hasModelsAtDistanceMetric(std::string metric) const {
+    return hasDistanceMetric(metric) && m_models.find(metric) != m_models.end();
+  }
+
   bool hasDistanceMetric(std::string metric) const {
     return std::find(m_distanceMetricNames.begin(),
                      m_distanceMetricNames.end(),
@@ -63,7 +67,7 @@ class Dataset {
   }
   
   FortranLinalg::DenseMatrix<Precision>& getDistanceMatrix(std::string metric) {
-    if (!hasDistanceMatrix(metric)) {
+    if (hasDistanceMatrix(metric)) {
       return m_distances.at(metric);
     }
     else throw std::runtime_error("unknown distance matrix requested");
@@ -100,7 +104,7 @@ class Dataset {
     return m_distanceMetricNames;
   }
 
-  const std::vector<std::string>& getModelNames(std::string metric, const std::string& fieldname) const;
+  std::vector<std::string> getModelNames(std::string metric, const std::string& fieldname) const;
 
   FortranLinalg::DenseVector<Precision>& getParameterVector(int i, bool normalized = false) {
     return normalized ? m_normalized_parameters[i] : m_parameters[i];
@@ -118,8 +122,8 @@ class Dataset {
     return m_thumbnails;
   }
 
-  ModelMap& getModels(std::string metric) {
-    if (!hasDistanceMetric(metric)) {
+  ModelMap& getModels(std::string metric) {    
+    if (!hasModelsAtDistanceMetric(metric)) {
       throw std::runtime_error("tried to fetch model for unknown metric " + metric);
     }
     else {

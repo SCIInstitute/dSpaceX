@@ -75,6 +75,7 @@ class EmbeddingWindow extends React.Component {
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
             || prevDecomposition.modelname !== currentDecomposition.modelname
+            || prevDecomposition.metric !== currentDecomposition.metric
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -108,10 +109,10 @@ class EmbeddingWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, category, fieldname } = this.props.decomposition;
+      const { datasetId, k, persistenceLevel, category, fieldname, metric } = this.props.decomposition;
       const { embedding } = this.props;
       Promise.all([
-        this.client.fetchSingleEmbedding(datasetId, embedding.id, k,
+        this.client.fetchSingleEmbedding(datasetId, metric, embedding.id, k,
           persistenceLevel, category, fieldname),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {

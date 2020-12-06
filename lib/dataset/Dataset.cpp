@@ -13,26 +13,25 @@ const Image& Dataset::getThumbnail(int idx) const
 }
 
 std::shared_ptr<MSModelset> Dataset::getModelset(std::string metric, const std::string& fieldname, const std::string& modelname) {
-  if (!hasDistanceMetric(metric)) {
-    throw std::runtime_error("tried to fetch modelset for unknown metric " + metric);
-  }
-  if (m_models.at(metric).find(fieldname) != m_models.at(metric).end()) {
-    for (auto modelset : m_models.at(metric).at(fieldname))
-      if (modelset->modelName() == modelname)
-        return modelset;
+  if (hasModelsAtDistanceMetric(metric)) {
+    if (m_models.at(metric).find(fieldname) != m_models.at(metric).end()) {
+      for (auto modelset : m_models.at(metric).at(fieldname)) {
+        if (modelset->modelName() == modelname) {
+          return modelset;
+        }
+      }
+    }
   }
   return nullptr;
 }
 
-const std::vector<std::string>& Dataset::getModelNames(std::string metric, const std::string& fieldname) const {
+std::vector<std::string> Dataset::getModelNames(std::string metric, const std::string& fieldname) const {
   std::vector<std::string> names{"None"};
-  if (!hasDistanceMetric(metric)) {
-    throw std::runtime_error("tried to fetch model names for unknown metric " + metric);
-  }
-
-  if (m_models.at(metric).find(fieldname) != m_models.at(metric).end()) {
-    for (auto modelset : m_models.at(metric).at(fieldname)) {
-      names.push_back(modelset->modelName());
+  if (hasModelsAtDistanceMetric(metric)) {
+    if (m_models.at(metric).find(fieldname) != m_models.at(metric).end()) {
+      for (auto modelset : m_models.at(metric).at(fieldname)) {
+        names.push_back(modelset->modelName());
+      }
     }
   }
   return std::move(names);

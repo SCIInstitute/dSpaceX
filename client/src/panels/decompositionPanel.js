@@ -35,16 +35,24 @@ class DecompositionPanel extends React.Component {
 
     this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
 
-    let defaultField = this.props.dataset.qoiNames ? this.props.dataset.qoiNames[0] : '';
-    let defaultModelList = this.props.dataset.qoiNames && props.fieldModels ? props.fieldModels.get(defaultField) : [];
-    let defaultModel = this.props.dataset.qoiNames && props.fieldModels ? defaultModelList[0] : '';
+    let distanceMetrics = props.distanceMetrics;
+    let metric = props.currentDistanceMetric;
+
+    let defaultField = props.dataset.qoiNames ? props.dataset.qoiNames[0] : '';
+    let defaultModelList =
+        props.dataset.qoiNames && distanceMetrics && distanceMetrics.get(metric)
+        ? distanceMetrics.get(metric).get(defaultField) : [];
+    let defaultModel =
+        props.dataset.qoiNames && distanceMetrics && distanceMetrics.get(metric)
+        ? defaultModelList[0] : '';
 
     this.state = {
-      datasetId: this.props.dataset.datasetId,
+      datasetId: props.dataset.datasetId,
 
       decompositionMode: 'Morse-Smale',
 
       selection: {
+        metric: metric,
         fieldname: defaultField,
         category: 'qoi',
         modelname: defaultModel,
@@ -75,7 +83,11 @@ class DecompositionPanel extends React.Component {
       sliderPersistence: null, // just some bogus thing to keep around to handle slider and pulldown updates
     };
 
-    this.client = this.props.dsxContext.client;
+    this.client = props.dsxContext.client;
+  }
+
+  fieldModels(field) {
+    return this.props.distanceMetrics.get(this.state.selection.metric).get(field);
   }
 
   /**
@@ -160,11 +172,11 @@ class DecompositionPanel extends React.Component {
       if (this.state.decompositionMode == 'Morse-Smale') {
         this.clearDecompositionState();
         let datasetId = this.state.datasetId;
-        const { fieldname, category } = this.state.selection;
+        const { fieldname, category, metric } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+fieldname+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId,
-          category, fieldname, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+                    category, fieldname, metric, knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
               // console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
@@ -207,10 +219,14 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
+    // update current selection state if distance matrix changed
+    this.state.selection.metric = this.props.currentDistanceMetric;  // <ctc> not quite the right place for this...
+
     // overview: - when component state updates, fetch the new decomposition only if the mode or field changes
     //           - category triggers a field change, so doesn't need to be checked here
     //           - if ms params change, don't recompute unless user clicks the button to do so
     if (prevState.decompositionMode !== this.state.decompositionMode ||
+        prevState.selection.metric !== this.state.selection.metric ||
         prevState.selection.fieldname !== this.state.selection.fieldname) {
       // console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
       this.fetchDecomposition();
@@ -239,6 +255,7 @@ class DecompositionPanel extends React.Component {
       decompositionMode: this.state.decompositionMode,
       category: this.state.selection.category,
       fieldname: this.state.selection.fieldname,
+      metric: this.state.selection.metric,
       persistenceLevel: this.state.persistenceLevel,
       modelname: this.state.selection.modelname,
       sigmaScale: this.state.model.sigmaScale,
@@ -366,7 +383,7 @@ class DecompositionPanel extends React.Component {
       default:
         break;
       }
-      let modellist = this.props.fieldModels.get(field);
+      let modellist = this.fieldModels(field);
       let model = modellist[0];
 
       this.setState({
@@ -387,8 +404,8 @@ class DecompositionPanel extends React.Component {
     this.setState((prevState) => ({
       selection: { ...prevState.selection,
                    fieldname: field,
-                   modelname: this.props.fieldModels.get(field)[0],
-                   modellist: this.props.fieldModels.get(field) },
+                   modelname: this.fieldModels(field)[0],
+                   modellist: this.fieldModels(field) },
     }));
   }
 
@@ -416,10 +433,10 @@ class DecompositionPanel extends React.Component {
         // annoying (and error prone) to have to send all the
         // same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
-        const { fieldname, category } = this.state.selection;
+        const { fieldname, category, metric } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
-        await this.client.fetchMorseSmalePersistence(datasetId, category, fieldname, persistence,
+        await this.client.fetchMorseSmalePersistence(datasetId, category, fieldname, metric, persistence,
                                                      knn, sigma, smooth, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {

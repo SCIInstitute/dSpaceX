@@ -183,12 +183,13 @@ class Client {
    * @param {number} k number of neighbors.
    * @return {Promise}
    */
-  fetchMorseSmaleDecomposition(datasetId, category, fieldname, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
+  fetchMorseSmaleDecomposition(datasetId, category, fieldname, metric, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmaleDecomposition',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      metric: metric,
       knn: knn,
       sigma: sigma,
       smooth: smooth,
@@ -223,12 +224,13 @@ class Client {
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmalePersistence(datasetId, category, fieldname, persistence, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
+  fetchMorseSmalePersistence(datasetId, category, fieldname, metric, persistence, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmalePersistenceLevel',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      metric: metric,
       persistence: persistence,
       knn: knn,
       sigma: sigma,
@@ -237,50 +239,6 @@ class Client {
       depth: depth,
       curvepoints: curvepoints,
       normalize: normalize,
-    };
-    return this._createCommandPromise(command);
-  }
-
-  /**
-   * Fetch the details of a single crystal of a persistence level.
-   * @param {string} datasetId
-   * @param {string} category design parameter or qoi
-   * @param {string} fieldname
-   * @param {number} k number of neighbors.
-   * @param {number} persistenceLevel
-   * @param {number} crystalId
-   * @return {Promise}
-   */
-  // TODO: NOT USED BY ANYTHING!
-  fetchMorseSmaleCrystal(datasetId, category, fieldname, k, persistenceLevel, crystalId) {
-    let command = {
-      name: 'fetchMorseSmaleCrystal', //but there's a server function with this name
-      datasetId: datasetId,
-      category: category,
-      fieldname: fieldname,
-      k: k,
-      persistenceLevel: persistenceLevel,
-      crystalId: crystalId,
-    };
-    return this._createCommandPromise(command);
-  }
-
-  /**
-   * Fetch the details of a set of crystals of a persistence level.
-   * @param {string} datasetId
-   * @param {number} k number of neighbors.
-   * @param {number} persistenceLevel
-   * @param {array} crystalIds
-   * @return {Promise}
-   */
-  // TODO: NOT USED BY ANYTHING!
-  fetchMorseSmaleCrystals(datasetId, k, persistenceLevel, crystalIds) {
-    let command = {
-      name: 'fetchMorseSmaleCrystals', //not even a server function with this name
-      datasetId: datasetId,
-      k: k,
-      persistenceLevel: persistenceLevel,
-      crystalIds: crystalIds,
     };
     return this._createCommandPromise(command);
   }
@@ -295,10 +253,11 @@ class Client {
    * @param {string} fieldName
    * @return {Promise}
    */
-  fetchSingleEmbedding(datasetId, embeddingId, k, persistenceLevel, category, fieldName) {
+  fetchSingleEmbedding(datasetId, metric, embeddingId, k, persistenceLevel, category, fieldName) {
     let command = {
       name: 'fetchSingleEmbedding',
       datasetId: datasetId,
+      metric: metric,
       embeddingId: embeddingId,
       k: k,
       persistence: persistenceLevel,
@@ -343,12 +302,13 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchNImagesForCrystal(datasetId, category, fieldname, persistence, crystalID, modelname, numSamples, sigmaScale, showOrig, validate, return_diff, percent) {
+  fetchNImagesForCrystal(datasetId, category, fieldname, metric, persistence, crystalID, modelname, numSamples, sigmaScale, showOrig, validate, return_diff, percent) {
     let command = {
       name: 'fetchNImagesForCrystal',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      metric: metric,
       persistence: persistence,
       crystalID: crystalID,
       modelname: modelname,
@@ -371,12 +331,13 @@ class Client {
    * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleRegression(datasetId, category, fieldname, layout, persistence) {
+  fetchMorseSmaleRegression(datasetId, category, fieldname, metric, layout, persistence) {
     let command = {
       name: 'fetchMorseSmaleRegression',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      metric: metric,
       layout: layout,
       persistence: persistence,
     };
@@ -392,12 +353,13 @@ class Client {
    * @param {number} persistence
    * @return {Promise}
    */
-  fetchMorseSmaleExtrema(datasetId, category, fieldname, layout, persistence) {
+  fetchMorseSmaleExtrema(datasetId, category, fieldname, metric,layout, persistence) {
     let command = {
       name: 'fetchMorseSmaleExtrema',
       datasetId: datasetId,
       category: category,
       fieldname: fieldname,
+      metric: metric,
       layout: layout,
       persistence: persistence,
     };

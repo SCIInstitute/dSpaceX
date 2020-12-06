@@ -109,6 +109,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     let result = await this.client.fetchNImagesForCrystal(this.props.decomposition.datasetId,
                                        this.props.decomposition.category,
                                        this.props.decomposition.fieldname,
+                                       this.props.decomposition.metric,
                                        this.props.decomposition.persistenceLevel,
                                        crystalID,
                                        this.props.decomposition.modelname,

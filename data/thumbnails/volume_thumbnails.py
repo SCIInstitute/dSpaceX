@@ -1,4 +1,5 @@
 from glob import glob
+from os import path
 import re
 import PIL.Image
 from thumbnails import VolumeRenderer
@@ -13,6 +14,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, resolution = [
     """
     # Get all possible volumees
     shapes = glob(shape_directory + '/*.nrrd')
+    padding = '0%dd' % len(str(len(shapes)))
 
     # instantiate volume renderer
     ren = VolumeRenderer(scale = scale, default = shapes[0]) # default is needed to "warm up" the [vtk] thumbnail renderer
@@ -25,7 +27,8 @@ def generate_volume_thumbnails(shape_directory, output_directory, resolution = [
 
         ren.loadNewVolume(shape_file)
         image = PIL.Image.fromarray(ren.getImage(resolution))
-        image.save(output_directory + '/' + str(shape_id) + '.png')
+        filename = path.join(output_directory, format(shape_id, padding) + '.png')
+        image.save(filename)
 
     # Necessary so next line prints on new line
     print('', end='\n')

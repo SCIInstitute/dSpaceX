@@ -53,7 +53,7 @@ private:
 
   static std::string createThumbnailPath(const std::string& imageBasePath,
       int index, const std::string imageSuffix, unsigned int indexOffset,
-      bool padZeroes, unsigned int thumbnailCount);
+      bool padZeros, unsigned int thumbnailCount);
 };
 
 // Builder includes necessary functions for a user to build and return a dSpaceX Dataset

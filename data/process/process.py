@@ -173,7 +173,7 @@ def preprocess_data(config):
     print('Reading parameters...')
     parameters_df = pd.read_csv(config['parametersFile'])
     # TODO calculate summary statistics for each parameter (mean, mode, variance, these could be displayed in client)
-    parameters_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_Parameters.csv'), index=False)
+    parameters_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_Parameters.csv'), index=False, header=True)
     output_config['parameters'] = {'file': config['datasetName'] + '_Parameters.csv'}
 
     if 'qoisFile' not in config:
@@ -183,7 +183,7 @@ def preprocess_data(config):
     print('Reading QoIs...')
     qois_df = pd.read_csv(config['qoisFile'])
     # TODO calculate summary statistics for each qoi (mean, mode, variance, these could be displayed in client)
-    qois_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_QoIs.csv'), index=False)
+    qois_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_QoIs.csv'), index=False, header=True)
     output_config['qois'] = {'file': config['datasetName'] + '_QoIs.csv'}
 
     # THUMBNAILS
@@ -208,7 +208,7 @@ def preprocess_data(config):
     with open(os.path.join(output_directory, 'config.yaml'), 'w') as file:
         yaml.dump(output_config, file, default_flow_style=False, sort_keys=False, line_break=2)
     print('Data processing complete.')
-    print('Run the dSpaceX server with: --datapath ' + output_directory)
+    print('Run the dSpaceX server with: --datapath ' + os.path.abspath(output_directory))
     print('Happy Exploring!')
 
 
@@ -250,12 +250,13 @@ def generate_thumbnails(input_config, output_directory):
     elif shape_format == 'image':
         print('Generating thumbnails from image.')
         image_files = glob(shape_directory + '*.png')
+        padding = '0' + str(len(image_files)) + 'd'
         for file in image_files:
             image_id = list(map(int, re.findall(r'\d+', file)))[-1]
             img = Image.open(file)
-            img.save(os.path.join(output_directory, str(image_id) + '.png'))
+            img.save(os.path.join('thumbnails', format(image_id, padding) + '.png'))
 
-    output_config['thumbnails'] = {'format': 'png', 'files': 'thumbnails/?.png', 'offset': 1, 'padZeros': input_config['padZeros']}
+    output_config['thumbnails'] = {'format': 'png', 'files': os.path.join('thumbnails', '?.png'), 'offset': 1, 'padZeros': True}
     return output_config
 
 
@@ -343,7 +344,7 @@ def calculate_distances(input_config, output_directory, precision = np.float32):
 
         distances.append(distance)
         new_distance = {'metric': distance_type,
-                        'file': 'distances/' + distance_type + '_distance.bin'}
+                        'file': os.path.join('distances', distance_type + '_distance.bin')}
 
         if new_distance in distances_config:
             print('WARNING: ' + distance_type + ' already computed! Using most recent version')

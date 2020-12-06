@@ -1,3 +1,4 @@
+import Divider from '@material-ui/core/Divider';
 import { Accordion, AccordionDetails, AccordionSummary } from '@material-ui/core';
 import DecompositionPanel from './decompositionPanel.js';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -28,6 +29,7 @@ class WindowPanel extends React.Component {
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
       embeddingAlgorithm: this.props.embeddings[0] ? this.props.embeddings[0].name.trim() : 'None',
+      distanceMetric: this.props.currentDistanceMetric,
       visualizationQoi: null,
       xAttributeGroup: this.props.config.xAttributeGroup,
       xAttribute: this.props.config.xAttribute,
@@ -47,6 +49,7 @@ class WindowPanel extends React.Component {
     this.handleMarkerAttribute = this.handleMarkerAttribute.bind(this);
     this.handleEmbeddingAlgorithmChange = this.handleEmbeddingAlgorithmChange.bind(this);
     this.handleDecompositionChange = this.handleDecompositionChange.bind(this);
+    this.handleDistanceMetricChange = this.handleDistanceMetricChange.bind(this);
 
     this.getTableOptions = this.getTableOptions.bind(this);
     this.getGraphOptions = this.getGraphOptions.bind(this);
@@ -60,6 +63,9 @@ class WindowPanel extends React.Component {
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevState != this.state) {
+      // if (this.props.onDistanceMetricChange) {  // <ctc> this caused props.selectedDesigns to disappear
+      //   this.props.onDistanceMetricChange(this.state.distanceMetric);
+      // }
       if (this.props.onConfigChange) {
         this.props.onConfigChange(this.state);
       }
@@ -157,6 +163,17 @@ class WindowPanel extends React.Component {
   }
 
   /**
+   * Handle the metric algorithm changing.
+   * @param {object} event
+   */
+  handleDistanceMetricChange(event) {
+    let metric = event.target.value;
+    this.setState({
+      distanceMetric: metric,
+    });
+  }
+
+  /**
    * Handle the decomposition changing.
    * @param {object} decomposition
    */
@@ -206,6 +223,30 @@ class WindowPanel extends React.Component {
     const { classes } = this.props;
     return (
       <React.Fragment>
+
+        <div style={{ height:'8px' }}></div>
+        <Divider/>
+        <div style={{ height:'8px' }}></div>
+
+        {/* fieldtype, field, and metric selection */}
+
+        {/* Distance Metric Dropdown */}
+        <FormControl className={classes.formControl}
+          disabled={!this.props.enabled}>
+          <InputLabel htmlFor='distmetric-field'>Distance Metric</InputLabel>
+          <Select ref="distMetricCombo"
+            value={this.state.distanceMetric}
+            onChange={this.handleDistanceMetricChange} inputProps={{
+              name: 'distmetric',
+              id: 'distmetric-input',
+            }}>
+            {[...this.props.distanceMetrics.keys()].map((metric) =>
+              <MenuItem key={metric} value={metric}>
+                <em>{metric}</em>
+              </MenuItem>)}
+          </Select>
+        </FormControl>
+
         <div style={{ height:'8px' }}></div>
         <Accordion disabled={!this.props.enabled || !this.props.dataset}
                    defaultExpanded={false} style={{ paddingLeft:'0px', margin:'1px' }}>
@@ -217,8 +258,6 @@ class WindowPanel extends React.Component {
                             boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', flexDirection: 'column',
                  width: '100%', boxSizing: 'border-box' }}>
-
-{/* put fieldtype, field, and metric selection up here.*/}
 
         {/* Embedding Algorithm Dropdown */}
         <FormControl className={classes.formControl}
@@ -272,7 +311,8 @@ class WindowPanel extends React.Component {
         <DecompositionPanel
           enabled={this.props.enabled}
           dataset={this.props.dataset}
-          fieldModels={this.props.fieldModels}
+          distanceMetrics={this.props.distanceMetrics}
+          currentDistanceMetric={this.state.distanceMetric}
           onDecompositionChange={this.handleDecompositionChange}
           client={this.client}/>
       </React.Fragment>

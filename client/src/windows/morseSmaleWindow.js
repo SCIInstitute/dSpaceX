@@ -22,7 +22,7 @@ class MorseSmaleWindow extends React.Component {
 
     this.selectedOpacity = 1.0;
     this.unselectedOpacity = 0.80;
-    this.numInterpolants = 8; // how many samples to generate using current model [to fill drawer]
+    this.numInterpolants = 10; // how many samples to generate using current model [to fill drawer]
 
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
@@ -94,6 +94,7 @@ class MorseSmaleWindow extends React.Component {
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
 /*          || prevDecomposition.modelname !== currentDecomposition.modelname  // don't redraw when model [de]selected */
+            || prevDecomposition.metric !== currentDecomposition.metric
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -117,11 +118,11 @@ class MorseSmaleWindow extends React.Component {
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
-      const { fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;
+      const { metric, fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;
       const layout = this.props.decomposition.ms.layout;
       Promise.all([
-        this.client.fetchMorseSmaleRegression(datasetId, category, fieldname, layout, persistenceLevel),
-        this.client.fetchMorseSmaleExtrema(datasetId, category, fieldname, layout, persistenceLevel),
+        this.client.fetchMorseSmaleRegression(datasetId, category, fieldname, metric, layout, persistenceLevel),
+        this.client.fetchMorseSmaleExtrema(datasetId, category, fieldname, metric, layout, persistenceLevel),
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         if (!regressionResponse.error && !extremaResponse.error) {
@@ -174,7 +175,6 @@ class MorseSmaleWindow extends React.Component {
 
     // left click to select and slide
     if (event.button === 0 && this.pick(this.getPickPosition(event))) {
-      this.continuousInterpolation = true;
       this.controls.enabled = false;
     }
   }
@@ -510,12 +510,19 @@ class MorseSmaleWindow extends React.Component {
         this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
       }
 
-      // ensure current position of selected point on crystal is visible
-      this.crystalPosObject.visible = true;
-
-      // evaluate model at selected point along crystal
-      this.handleContinuousInterpolationMouseMove(normalizedPosition);
-
+      // interactive model evaluation
+      let hasModel = this.props.decomposition.modelname !== "None";
+      if (hasModel) {
+        this.continuousInterpolation = true;
+        this.crystalPosObject.visible = true;
+        this.handleContinuousInterpolationMouseMove(normalizedPosition);
+      }
+      else {
+        this.continuousInterpolation = false;
+        this.crystalPosObject.visible = false;
+        this.renderScene(); // be sure scene still gets re-rendered so new crystal is highlighted
+      }
+    
       return true; // curve picked and now we can be sliding along it to dynamically interpolate model
     }
 
@@ -839,6 +846,9 @@ class MorseSmaleWindow extends React.Component {
       for (var item of scene) {
         item.visible = true;
       }
+
+      // and re-hide the crystalPosObject if we're not using it
+      this.crystalPosObject.visible = this.continuousInterpolation;
     }
 
     // ...and finally, the UI

@@ -75,7 +75,7 @@ class Application extends React.Component {
       parameters: [],
       qois: [],
       distanceMetrics: [],
-      currentMetric: null,
+      currentDistanceMetric: null,
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -90,6 +90,7 @@ class Application extends React.Component {
     this.onDesignLasso = this.onDesignLasso.bind(this);
     this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
     this.onCrystalSelection = this.onCrystalSelection.bind(this);
+    this.onDistanceMetricChange = this.onDistanceMetricChange.bind(this);
     this.changeFilterOperation = this.changeFilterOperation.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
@@ -206,6 +207,7 @@ class Application extends React.Component {
         parameters: parameters,
         qois: qois,
         distanceMetrics: distancesMap,
+        currentDistanceMetric: currentMetric,
         embeddings: embeddingList.embeddings,
       });
     });
@@ -277,6 +279,18 @@ class Application extends React.Component {
   onCrystalSelection(crystalSamples) {
     let selectedDesigns = new Set(crystalSamples);
     this.setState({ selectedDesigns });
+  }
+
+  /**
+   * Handles updating everything when distance metric is changed
+   * @param {Array<int>} crystalSamples
+   */
+  onDistanceMetricChange(metric) {
+    let selectedDesigns = new Set();
+    this.setState({
+      selectedDesigns: selectedDesigns,
+      currentDistanceMetric: metric,
+    });
   }
 
   /**
@@ -504,6 +518,9 @@ class Application extends React.Component {
                       dataset={this.state.currentDataset}
                       enabled={this.state.connected}
                       distanceMetrics={this.state.distanceMetrics}
+                      currentDistanceMetric={[...this.state.distanceMetrics.keys()].filter(
+                        (emb) => emb.name === windowConfig.distanceMetric)[0]}  
+                      onDistanceMetricChange={this.onDistanceMetricChange}
                       embeddings={this.state.embeddings}/>
                   );
                 }) : []
