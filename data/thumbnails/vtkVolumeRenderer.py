@@ -59,11 +59,7 @@ class vtkVolumeRenderer:
         self.ren.SetBackground(colors.GetColor3d("Wheat"))
 
         # camera
-        cam = self.ren.GetActiveCamera()
-        cam.SetViewUp([-1,0,0])
-        cam.SetPosition([140,140,140])
-        cam.SetFocalPoint([49.5,49.5,49.5])
-        self.ren.ResetCameraClippingRange()
+        self.resetCamera()
 
         self.renWin.SetWindowName('TwistyTurnyNanoparticle')
 
@@ -72,6 +68,15 @@ class vtkVolumeRenderer:
         self.w2if.SetInput(self.renWin)
         self.w2if.SetInputBufferTypeToRGB()
         self.w2if.ReadFrontBufferOff()
+
+    def resetCamera(self, scale = 1.25):
+        self.ren.ResetCamera()
+        cam = self.ren.GetActiveCamera()
+        cam.Zoom(scale)
+        cam.SetViewUp([-1,0,0])
+        cam.SetPosition([140,140,140])
+        cam.SetFocalPoint([49.5,49.5,49.5])
+        self.ren.ResetCameraClippingRange()
 
     def loadNewVolume(self, filename):
         try:
@@ -133,9 +138,7 @@ class vtkVolumeRenderer:
     def getImage(self, resolution = [300,300], scale = 1.25):
         # update and return the vtk image
         self.renWin.SetSize(resolution)
-        cam = self.ren.GetActiveCamera()
-        cam.Zoom(scale)
-
+        self.resetCamera(scale)
         self.renWin.Render()
         self.w2if.Modified()
         self.w2if.Update()
