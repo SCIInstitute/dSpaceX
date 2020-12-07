@@ -49,7 +49,7 @@ namespace dspacex {
 using namespace std::placeholders;
 
 // Maximum number of directories from root path to seek config.yaml files
-const int MAX_DATASET_DEPTH = 3;
+const int MAX_DATASET_DEPTH = 6;
 
 
 Controller::Controller(const std::string &datapath_) : datapath(datapath_) {

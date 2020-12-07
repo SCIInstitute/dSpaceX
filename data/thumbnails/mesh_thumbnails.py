@@ -17,7 +17,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [30
     padding = '0%dd' % len(str(len(shapes)))
 
     # instantiate mesh renderer
-    ren = MeshRenderer(default = shapes[0], scale = scale)
+    ren = MeshRenderer()
 
     # For each mesh format generate thumbnail
     for index, shape_file in enumerate(shapes):
@@ -26,7 +26,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [30
               ((100 * index / len(shapes)), index, len(shapes)), end='\r')
 
         ren.loadNewMesh(shape_file)
-        image = PIL.Image.fromarray(ren.getImage(resolution))
+        image = PIL.Image.fromarray(ren.getImage(resolution, scale))
         filename = path.join(output_directory, format(shape_id, padding) + '.png')
         image.save(filename)
         

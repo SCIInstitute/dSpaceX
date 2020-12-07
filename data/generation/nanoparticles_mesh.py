@@ -9,9 +9,8 @@ import trimesh
 def generate_nano_meshes(parameter_csv, output_directory):
     parameter_df = pd.read_csv(parameter_csv)
 
-    output_directory = os.path.join(output_directory, '')
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    os.makedirs(output_directory, exist_ok=True)
+    padding = '0%dd' % len(str(len(parameter_df)))
 
     for sample in parameter_df.itertuples():
         print('shape %i / %i' % (sample.Index, len(parameter_df.index)), end='\r')
@@ -21,7 +20,8 @@ def generate_nano_meshes(parameter_csv, output_directory):
         X, Y, Z, tri_indices = nano_formula_3d(sample.m, sample.n1, sample.n2, sample.n3, sample.a, sample.b, 100000)
         # It is critical that process=False in the below constructor or else the meshes will not be in correspondence
         shape_mesh = trimesh.Trimesh(vertices=np.column_stack((X, Y, Z)), faces=tri_indices, process=False)
-        shape_mesh.export(output_directory + str(sample.Index + 1) + '.ply', 'ply')
+        filename = os.path.join(output_directory, format(sample.Index + 1, padding) + '.ply')
+        shape_mesh.export(filename, 'ply')
 
 
 def nano_formula_3d(m, n1, n2, n3, a, b, num_points):

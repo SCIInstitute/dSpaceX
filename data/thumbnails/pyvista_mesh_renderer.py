@@ -37,7 +37,7 @@ Renders a 2d image (a "screenshot") of a mesh.
 
 """
 class pvMeshRenderer:
-    def __init__(self, default = '1.ply', color = [1.0, 0.766, 0.336], scale = 1.3,
+    def __init__(self, default = '', color = [1.0, 0.766, 0.336], scale = 1.3,
                  onscreen = False, singleview = False):
         """
         :param offscreet: don't show a window
@@ -138,7 +138,7 @@ class pvMeshRenderer:
     def getCameraPos(self):
         return self.plotter.camera_position
 
-    def setCameraPos(self, camera_pos = None):
+    def setCameraPos(self, camera_pos = None, scale = None):
         """
         Sets camera position in main view.
         By default, use a position slightly closer than isometric_view.
@@ -167,15 +167,16 @@ class pvMeshRenderer:
             lf = numpy.asarray(self.plotter.camera_position[0])
             la = numpy.asarray(self.plotter.camera_position[1])
             vup = numpy.asarray(self.plotter.camera_position[2])
-            pos = (lf - la) / self.scale
+            pos = (lf - la) / (scale if scale else self.scale)
             self.plotter.camera_position = (pos, la, vup)
         else:
             self.plotter.camera_position = camera_pos    
 
-    def getImage(self, resolution = [300,300]):
+    def getImage(self, resolution = [300,300], scale = 1.1):
         """
         Returns a numpy array of the current view.
         """
+        self.setCameraPos(None, scale)
 
         img = self.plotter.screenshot(return_img=True, window_size=resolution)
 

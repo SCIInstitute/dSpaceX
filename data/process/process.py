@@ -240,13 +240,21 @@ def generate_thumbnails(input_config, output_directory):
                                                     ' Please, update config using mesh, image, or volume and run again')
         return
 
+    thumbnail_resolution = [300,300]
+    if 'thumbnail_resolution' in input_config:
+        thumbnail_resolution = input_config['thumbnail_resolution']
+        
+    thumbnail_scale = 1.0
+    if 'thumbnail_scale' in input_config:
+        thumbnail_scale = input_config['thumbnail_scale']
+
     # Generate thumbnails
     if shape_format == 'volume':
         print('Generating thumbnails from volume.')
-        generate_volume_thumbnails(shape_directory, output_directory)
+        generate_volume_thumbnails(shape_directory, output_directory, thumbnail_resolution, thumbnail_scale)
     elif shape_format == 'mesh':
         print('Generating thumbnails from mesh.')
-        generate_mesh_thumbnails(shape_directory, output_directory)
+        generate_mesh_thumbnails(shape_directory, output_directory, thumbnail_resolution, thumbnail_scale)
     elif shape_format == 'image':
         print('Generating thumbnails from image.')
         image_files = glob(shape_directory + '*.png')
@@ -336,7 +344,8 @@ def calculate_distances(input_config, output_directory, precision = np.float32):
 
         # save distance as .bin (w/ dims) and .csv (plain text for debugging)
         filename = os.path.join(output_directory, distance_type + '_distance')
-        np.savetxt(filename + '.csv', distance, delimiter=',')
+        if 'saveDistancesDebug' in output_config:
+            np.savetxt(filename + '.csv', distance, delimiter=',')
         np.asarray(precision(distance)).tofile(filename + '.bin')
         dims = open(filename + '.bin.dims', 'w')
         dims.write(str(distance.shape[0]) + ' ' + str(distance.shape[1]) + ' ')
