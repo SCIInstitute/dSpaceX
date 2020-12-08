@@ -75,7 +75,6 @@ class Application extends React.Component {
       parameters: [],
       qois: [],
       distanceMetrics: [],
-      currentDistanceMetric: null,
     };
 
     this.connectButtonClicked = this.connectButtonClicked.bind(this);
@@ -90,7 +89,6 @@ class Application extends React.Component {
     this.onDesignLasso = this.onDesignLasso.bind(this);
     this.onDisplayFilterDrawer = this.onDisplayFilterDrawer.bind(this);
     this.onCrystalSelection = this.onCrystalSelection.bind(this);
-    this.onDistanceMetricChange = this.onDistanceMetricChange.bind(this);
     this.changeFilterOperation = this.changeFilterOperation.bind(this);
     this.onAddFilter = this.onAddFilter.bind(this);
     this.onUpdateFilter = this.onUpdateFilter.bind(this);
@@ -207,7 +205,6 @@ class Application extends React.Component {
         parameters: parameters,
         qois: qois,
         distanceMetrics: distancesMap,
-        currentDistanceMetric: currentMetric,
         embeddings: embeddingList.embeddings,
       });
     });
@@ -232,11 +229,20 @@ class Application extends React.Component {
    */
   onWindowConfigChange(config) {
     let prevConfig = this.state.windows[config.id];
+
+    // if a new distance metric was chosen, clear selected designs
+    let selectedDesigns = this.state.selectedDesigns;
+    if (prevConfig.distanceMetric !== config.distanceMetric
+        || prevConfig.decomposition !== config.decomposition) {
+      selectedDesigns = new Set();
+    }
+
     let newConfig = Object.assign(prevConfig, config);
     let windows = this.state.windows;
     windows[config.id] = newConfig;
     this.setState({
       windows: windows,
+      selectedDesigns: selectedDesigns,
     });
   }
 
@@ -279,18 +285,6 @@ class Application extends React.Component {
   onCrystalSelection(crystalSamples) {
     let selectedDesigns = new Set(crystalSamples);
     this.setState({ selectedDesigns });
-  }
-
-  /**
-   * Handles updating everything when distance metric is changed
-   * @param {Array<int>} crystalSamples
-   */
-  onDistanceMetricChange(metric) {
-    let selectedDesigns = new Set();
-    this.setState({
-      selectedDesigns: selectedDesigns,
-      currentDistanceMetric: metric,
-    });
   }
 
   /**
@@ -518,9 +512,6 @@ class Application extends React.Component {
                       dataset={this.state.currentDataset}
                       enabled={this.state.connected}
                       distanceMetrics={this.state.distanceMetrics}
-                      currentDistanceMetric={[...this.state.distanceMetrics.keys()].filter(
-                        (emb) => emb.name === windowConfig.distanceMetric)[0]}  
-                      onDistanceMetricChange={this.onDistanceMetricChange}
                       embeddings={this.state.embeddings}/>
                   );
                 }) : []
@@ -591,6 +582,8 @@ class Application extends React.Component {
                           decomposition={windowConfig.decomposition}
                           embedding={this.state.embeddings.filter(
                             (emb) => emb.name === windowConfig.embeddingAlgorithm)[0]}
+                          distanceMetric={[...this.state.distanceMetrics.keys()].filter(
+                            (metric) => metric === windowConfig.distanceMetric)[0]}  
                           dataset={this.state.currentDataset}
                           selectedDesigns={this.state.selectedDesigns}
                           numberOfWindows={this.state.windows.length}

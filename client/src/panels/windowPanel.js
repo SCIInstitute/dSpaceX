@@ -29,7 +29,7 @@ class WindowPanel extends React.Component {
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
       embeddingAlgorithm: this.props.embeddings[0] ? this.props.embeddings[0].name.trim() : 'None',
-      distanceMetric: this.props.currentDistanceMetric,
+      distanceMetric: this.props.distanceMetrics ? this.props.distanceMetrics.keys().next().value.trim() : 'None',
       visualizationQoi: null,
       xAttributeGroup: this.props.config.xAttributeGroup,
       xAttribute: this.props.config.xAttribute,
@@ -63,9 +63,6 @@ class WindowPanel extends React.Component {
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevState != this.state) {
-      // if (this.props.onDistanceMetricChange) {  // <ctc> this caused props.selectedDesigns to disappear
-      //   this.props.onDistanceMetricChange(this.state.distanceMetric);
-      // }
       if (this.props.onConfigChange) {
         this.props.onConfigChange(this.state);
       }
@@ -312,7 +309,7 @@ class WindowPanel extends React.Component {
           enabled={this.props.enabled}
           dataset={this.props.dataset}
           distanceMetrics={this.props.distanceMetrics}
-          currentDistanceMetric={this.state.distanceMetric}
+          distanceMetric={this.state.distanceMetric}
           onDecompositionChange={this.handleDecompositionChange}
           client={this.client}/>
       </React.Fragment>

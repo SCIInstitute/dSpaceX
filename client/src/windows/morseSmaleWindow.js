@@ -94,7 +94,6 @@ class MorseSmaleWindow extends React.Component {
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
 /*          || prevDecomposition.modelname !== currentDecomposition.modelname  // don't redraw when model [de]selected */
-            || prevDecomposition.metric !== currentDecomposition.metric
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -115,10 +114,11 @@ class MorseSmaleWindow extends React.Component {
     }
 
     if (prevProps.decomposition === null
-      || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+        || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
-      const { metric, fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;
+      const { fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;
+      const metric = this.props.distanceMetric;
       const layout = this.props.decomposition.ms.layout;
       Promise.all([
         this.client.fetchMorseSmaleRegression(datasetId, category, fieldname, metric, layout, persistenceLevel),
@@ -312,12 +312,11 @@ class MorseSmaleWindow extends React.Component {
     case 'r': // reset view
       this.controls.reset();   // resets camera to original position
       break;
-    case '+': //increase numInterpolants
-    case '=': //increase numInterpolants
+    case ']': //increase numInterpolants
       this.numInterpolants++;
       console.log("numInterpolants increased to " + this.numInterpolants)
       break;
-    case '-': //decrease numInterpolants
+    case '[': //decrease numInterpolants
       this.numInterpolants = Math.max(1, this.numInterpolants - 1);
       console.log("numInterpolants decreased to " + this.numInterpolants)
       break;

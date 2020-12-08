@@ -592,7 +592,7 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
 
   response["crystalSamples"] = Json::Value(Json::arrayValue);
   for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
-    if(crystal_partition(i) == crystalID) {
+    if(crystal_partition(i) == crystalID) {  // but a sample can belong to more than one crystal, so how is that managed?
       response["crystalSamples"].append(i);
     }
   }

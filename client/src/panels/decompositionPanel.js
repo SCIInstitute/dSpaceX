@@ -36,7 +36,7 @@ class DecompositionPanel extends React.Component {
     this._getDecompositionFieldMenuItems = this._getDecompositionFieldMenuItems.bind(this);
 
     let distanceMetrics = props.distanceMetrics;
-    let metric = props.currentDistanceMetric;
+    let metric = props.distanceMetric;
 
     let defaultField = props.dataset.qoiNames ? props.dataset.qoiNames[0] : '';
     let defaultModelList =
@@ -52,7 +52,6 @@ class DecompositionPanel extends React.Component {
       decompositionMode: 'Morse-Smale',
 
       selection: {
-        metric: metric,
         fieldname: defaultField,
         category: 'qoi',
         modelname: defaultModel,
@@ -87,7 +86,7 @@ class DecompositionPanel extends React.Component {
   }
 
   fieldModels(field) {
-    return this.props.distanceMetrics.get(this.state.selection.metric).get(field);
+    return this.props.distanceMetrics.get(this.props.distanceMetric).get(field);
   }
 
   /**
@@ -172,7 +171,8 @@ class DecompositionPanel extends React.Component {
       if (this.state.decompositionMode == 'Morse-Smale') {
         this.clearDecompositionState();
         let datasetId = this.state.datasetId;
-        const { fieldname, category, metric } = this.state.selection;
+        const metric = this.props.distanceMetric;
+        const { fieldname, category } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+fieldname+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId,
@@ -219,14 +219,11 @@ class DecompositionPanel extends React.Component {
    * @param {object} snapshot
    */
   componentDidUpdate(prevProps, prevState, snapshot) {
-    // update current selection state if distance matrix changed
-    this.state.selection.metric = this.props.currentDistanceMetric;  // <ctc> not quite the right place for this...
-
-    // overview: - when component state updates, fetch the new decomposition only if the mode or field changes
-    //           - category triggers a field change, so doesn't need to be checked here
-    //           - if ms params change, don't recompute unless user clicks the button to do so
+    // - when component state updates, fetch the new decomposition only if the mode, field or distance metric changes
+    // - category triggers a field change, so doesn't need to be checked here
+    // - if ms params change, don't recompute unless user clicks the button to do so
     if (prevState.decompositionMode !== this.state.decompositionMode ||
-        prevState.selection.metric !== this.state.selection.metric ||
+        prevProps.distanceMetric !== this.props.distanceMetric ||
         prevState.selection.fieldname !== this.state.selection.fieldname) {
       // console.log('decompositionPanel.componentDidUpdate: field changed, fetching new decomposition...');
       this.fetchDecomposition();
@@ -255,7 +252,6 @@ class DecompositionPanel extends React.Component {
       decompositionMode: this.state.decompositionMode,
       category: this.state.selection.category,
       fieldname: this.state.selection.fieldname,
-      metric: this.state.selection.metric,
       persistenceLevel: this.state.persistenceLevel,
       modelname: this.state.selection.modelname,
       sigmaScale: this.state.model.sigmaScale,
@@ -433,7 +429,8 @@ class DecompositionPanel extends React.Component {
         // annoying (and error prone) to have to send all the
         // same parameters to this function as to fetchDecomposition (fixme)
         let datasetId = this.state.datasetId;
-        const { fieldname, category, metric } = this.state.selection;
+        const metric = this.props.distanceMetric;
+        const { fieldname, category } = this.state.selection;
         const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.updateDataModel: fetching persistence level '+persistence+' of decomposition...\n');
         await this.client.fetchMorseSmalePersistence(datasetId, category, fieldname, metric, persistence,
@@ -705,6 +702,14 @@ class DecompositionPanel extends React.Component {
                     defaultValue={this.state.ms.smooth}
                     size="small"
                     onChange={this.handleMSSmoothChange.bind(this)}
+                  />
+
+                  {/* Add noise */}
+                  <FormControlLabel
+                    control={<Checkbox checked={this.state.ms.noise}
+                      onChange={this.handleMSNoiseChange.bind(this)}
+                      name="msNoiseCheckbox" />}
+                    label="Add noise"
                   />
 
                   {/* Scale normalize checkbox */}

@@ -25,7 +25,7 @@ class EmbeddingWindow extends React.Component {
 
     // Used to zoom and translate embedding
     this.maxScale = 10;
-    this.minScale = 1;
+    this.minScale = 0.05;
     this.zoomRate = 1.1;
     this.previousX = 0;
     this.previousY = 0;
@@ -76,7 +76,6 @@ class EmbeddingWindow extends React.Component {
             || prevDecomposition.category !== currentDecomposition.category
             || prevDecomposition.fieldname !== currentDecomposition.fieldname
             || prevDecomposition.modelname !== currentDecomposition.modelname
-            || prevDecomposition.metric !== currentDecomposition.metric
             || prevDecomposition.decompositionMode !== currentDecomposition.decompositionMode
             || prevDecomposition.k !== currentDecomposition.k
             || prevDecomposition.persistenceLevel !== currentDecomposition.persistenceLevel
@@ -86,7 +85,7 @@ class EmbeddingWindow extends React.Component {
   /**
    * Called by react when this component receives new proprs or context or
    * when the state changes.
-   * The data needed to draw teh embedding is fetched here.
+   * The data needed to draw the embedding is fetched here.
    * @param {object} prevProps
    * @param {object} prevState
    * @param {object} prevContext
@@ -108,12 +107,13 @@ class EmbeddingWindow extends React.Component {
     // Or has been updated so we need to load the data
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
-      || prevProps.embedding !== this.props.embedding) {
+      || prevProps.embedding !== this.props.embedding
+      || prevProps.distanceMetric !== this.props.distanceMetric) {
       this.resetScene();
-      const { datasetId, k, persistenceLevel, category, fieldname, metric } = this.props.decomposition;
-      const { embedding } = this.props;
+      const { datasetId, k, persistenceLevel, category, fieldname } = this.props.decomposition;
+      const { embedding, distanceMetric } = this.props;
       Promise.all([
-        this.client.fetchSingleEmbedding(datasetId, metric, embedding.id, k,
+        this.client.fetchSingleEmbedding(datasetId, distanceMetric, embedding.id, k,
           persistenceLevel, category, fieldname),
         this.client.fetchThumbnails(datasetId),
       ]).then((results) => {
@@ -128,9 +128,8 @@ class EmbeddingWindow extends React.Component {
         this.renderScene();
       });
     }
-
     // Selected designs changed or state has changed
-    if (prevProps.selectedDesigns !== this.props.selectedDesigns || prevState !== this.state) {
+    else if (prevProps.selectedDesigns !== this.props.selectedDesigns || prevState !== this.state) {
       this.resetScene();
       this.addEdgesToScene(this.adjacency, this.layout);
       this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
@@ -414,7 +413,7 @@ class EmbeddingWindow extends React.Component {
     this.refs.embeddingCanvas.addEventListener('mouseup', this.handleMouseReleaseEvent, { passive:true });
 
     // if mouse gets released without moving, we'll try to select a design
-    this.setState({ selectingDesign:true });
+    this.state.selectingDesign = true;
 
     // if mouse moves, translate viewpoint until released
     this.previousX = event.offsetX;
@@ -431,7 +430,7 @@ class EmbeddingWindow extends React.Component {
     let dx = this.previousX - event.offsetX;
     let dy = this.previousY - event.offsetY;
     if (Math.abs(dx + dy) > allowed) { 
-      this.setState({ selectingDesign:false });
+      this.state.selectingDesign = false;
       this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
 
       // now we're panning, so let that function be used to (passively) handle mouse moves events after this
@@ -471,15 +470,13 @@ class EmbeddingWindow extends React.Component {
    */
   handleMouseReleaseEvent(event) {
     this.refs.embeddingCanvas.removeEventListener('mouseup', this.handleMouseReleaseEvent);
-    if (this.state.selectingDesign)
-      this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
-    else
-      this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveForPanning);
+    this.refs.embeddingCanvas.removeEventListener('mousemove', this.catchMouseMoveEvent);
+    this.refs.embeddingCanvas.removeEventListener('mousemove', this.handleMouseMoveForPanning);
 
     // handle left click release if we're selecting
     const leftClick = 0;
     if (this.state.selectingDesign && event.button === leftClick) {
-      this.setState({ selectingDesign:false });
+      this.state.selectingDesign = false;
 
       const pickPosition = this.getPickPosition(event);
       const pickedObject = this.pickHelper.pick(pickPosition,
@@ -509,8 +506,10 @@ class EmbeddingWindow extends React.Component {
         this.setState({ renderThumbnails:!this.state.renderThumbnails });
         break;
       case 'i': // Increase thumbnail size
+      case '=':
+      case '+':
         if (this.state.renderThumbnails) {
-          newScale = this.state.thumbnailScale + 0.25;
+          newScale = this.state.thumbnailScale + 0.05;
           if (newScale > this.maxScale) {
             newScale = this.maxScale;
           }
@@ -518,8 +517,9 @@ class EmbeddingWindow extends React.Component {
         }
         break;
       case 'd': // decrease thumbnail size
+      case '-':
         if (this.state.renderThumbnails) {
-          newScale = this.state.thumbnailScale - 0.25;
+          newScale = this.state.thumbnailScale - 0.05;
           if (newScale < this.minScale) {
             newScale = this.minScale;
           }
