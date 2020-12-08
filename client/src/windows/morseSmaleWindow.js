@@ -730,7 +730,7 @@ class MorseSmaleWindow extends React.Component {
     const aspect = width / height;
     const near = 0.001;
     const far = 100;
-    let perspPosition = new THREE.Vector3(0, -6, 0.5);
+    let perspPosition = new THREE.Vector3(4, -6, 1);
     this.perspCamera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     this.perspCamera.position.copy(perspPosition);
     this.perspCamera.up.set(0, 0, 1);

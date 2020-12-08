@@ -305,47 +305,52 @@ def calculate_distances(input_config, output_directory, precision = np.float32):
         distances_config = []
 
     for distNode in input_config['distances']:
-        distance_type = distNode.lower()
+        distance_type = None
 
-        # Verify we can perform calculation, if we can't clean up output directory and shut down processing pipeline
-        if verify_distance_type(distance_type) is False:
-            print('We\'re sorry we do not currently support the ' + distance_type +
-                  ' distance calculations. Supported distance calculations are listed in the README.')
-            print('Closing data, please fix config and run again.')
-            sys.exit()
-
-        # FIXME: distances is currently just assumed to be an array types
-        if distance_type == 'precomputed':
-            print('Distance is precomputed, loading from file.')
-            distance = np.genfromtxt(distNode['file'], delimiter=',')
-        elif distance_type == 'script':
-            print('Script for distance provided, calling script.')
-            script_directory = distNode['script']
-            module_name = distNode['moduleName']
-            method_name = distNode['methodName']
-            arguments = distNode['arguments'] if 'arguments' in distNode else None
-            distance = run_external_script(script_directory, module_name, method_name, arguments=arguments)
-        elif distance_type == 'pca':
-            print('Calculating pca distance...\n')
-            if shape_format == 'volume':
-                distance = calculate_pca_distance_volume(shape_directory)
-            elif shape_format == 'image':
-                distance = calculate_pca_distance_png(shape_directory)
-            elif shape_format == 'mesh':
-                distance = calculate_pca_distance_mesh(shape_directory)
+        if type(distNode) == dict:
+            if distNode['type'].startswith('precomputed'):
+                print('Distance is precomputed, loading from file.')
+                distance_type = distNode['type']
+                distance = np.genfromtxt(distNode['file'], delimiter=',')
+            elif distNode['type'] == 'script':
+                print('Script for distance provided, calling script.')
+                script_directory = distNode['script']
+                module_name = distNode['moduleName']
+                method_name = distNode['methodName']
+                distance_type = module_name+'.'+methodName
+                arguments = distNode['arguments'] if 'arguments' in distNode else None
+                distance = run_external_script(script_directory, module_name, method_name, arguments=arguments)
         else:
-            print('Calculating ' + distance_type + ' distance...\n')
-            if shape_format == 'volume':
-                distance = calculate_distance_volume(shape_directory, metric=distance_type)
-            elif shape_format == 'image':
-                distance = calculate_distance_png(shape_directory, metric=distance_type)
-            elif shape_format == 'mesh':
-                distance = calculate_distance_mesh(shape_directory, metric=distance_type)
-
-        # save distance as .bin (w/ dims) and .csv (plain text for debugging)
+            distance_type = distNode.lower()
+            if verify_distance_type(distance_type):
+                if distance_type == 'pca':
+                    print('Calculating pca distance...\n')
+                    if shape_format == 'volume':
+                        distance = calculate_pca_distance_volume(shape_directory)
+                    elif shape_format == 'image':
+                        distance = calculate_pca_distance_png(shape_directory)
+                    elif shape_format == 'mesh':
+                        distance = calculate_pca_distance_mesh(shape_directory)
+                else:
+                    print('Calculating ' + distance_type + ' distance...\n')
+                    if shape_format == 'volume':
+                        distance = calculate_distance_volume(shape_directory, metric=distance_type)
+                    elif shape_format == 'image':
+                        distance = calculate_distance_png(shape_directory, metric=distance_type)
+                    elif shape_format == 'mesh':
+                        distance = calculate_distance_mesh(shape_directory, metric=distance_type)
+            else:
+                print('We\'re sorry we do not currently support ' + string(distNode) +
+                      ' distance calculations. Supported distance calculations are listed in the README.')
+                return None
+                
+        # save distance
         filename = os.path.join(output_directory, distance_type + '_distance')
+
         if 'saveDistancesDebug' in output_config:
             np.savetxt(filename + '.csv', distance, delimiter=',')
+
+        # save as bin w/ bin.dims
         np.asarray(precision(distance)).tofile(filename + '.bin')
         dims = open(filename + '.bin.dims', 'w')
         dims.write(str(distance.shape[0]) + ' ' + str(distance.shape[1]) + ' ')
