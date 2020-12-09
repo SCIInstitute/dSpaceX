@@ -46,7 +46,10 @@ class Distance {
       for (unsigned int i = 0; i < d.N(); i++){
         // TODO: Replace with row extraction.
         for (unsigned int j = 0; j < d.N(); j++){
-          distances[j] = d(j,i);
+          if (i == j)
+            distances[j] = std::numeric_limits<TPrecision>::max();
+          else
+            distances[j] = d(j,i);
         }
       
         MinHeap<TPrecision> minHeap(distances, d.N());

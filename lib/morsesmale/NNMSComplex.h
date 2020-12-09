@@ -129,6 +129,14 @@ class NNMSComplex {
       KNND = FortranLinalg::DenseMatrix<TPrecision>(knn, m_sampleCount);
       Distance<TPrecision>::findKNN(distances, KNN, KNND);
 
+      // std::cout << "KNN:\n";
+      // for (auto i=0; i<KNN.N(); i++) {
+      //   for (auto j=0; j<KNN.M(); j++) {
+      //     std::cout << KNN(i,j) << " ";
+      //   }
+      //   std::cout << std::endl;
+      //}
+
       // std::cout << "KNND[" << KNND.M() << "," << KNND.N() << "]" << std::endl;
       // for (unsigned int i = 0; i < KNND.M() && i < 5; i++) {
       //   for (unsigned int j = 0; j < KNND.N() && j < 5; j++) {
@@ -433,6 +441,7 @@ private:
               ext = nExt;
               nExt++;
               if (e==0) {
+                std::cout << i <<"th sample wins! gotta max: " << extIndex <<std::endl;
                 nMax++;
               }
             }
