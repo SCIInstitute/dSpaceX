@@ -19,7 +19,8 @@ class EmbeddingWindow extends React.Component {
       renderEdges: false,
       renderThumbnails: false,
       colorThumbnails: false,
-      thumbnailScale: 1,
+      thumbnailScale: 1.0,
+      nodeSize: 0.01,
       selectingDesign: false,
     };
 
@@ -254,7 +255,7 @@ class EmbeddingWindow extends React.Component {
   addNodesToScene(nodeCoordinates, nodeColors) {
     nodeCoordinates.forEach((coord, index) => {
       // Add Circle
-      let nodeGeometry = new THREE.CircleGeometry(0.01, 32);
+      let nodeGeometry = new THREE.CircleGeometry(this.state.nodeSize, 32);
 
       // If design is selected color, else grey
       let nodeMaterial;
@@ -310,11 +311,16 @@ class EmbeddingWindow extends React.Component {
     const canvas = this.refs.embeddingCanvas;
     const canvasWidth = canvas.clientWidth;
     const canvasHeight = canvas.clientHeight;
+    const scale = this.state.thumbnailScale / canvasWidth;
+
     nodeCoordinates.forEach((coord, index) => {
       const thumbnailWidth = thumbnails[index].width;
       const thumbnailHeight = thumbnails[index].height;
-      const nodeGeometry = new THREE.BoxGeometry(this.state.thumbnailScale*thumbnailWidth/canvasWidth,
-        this.state.thumbnailScale*thumbnailHeight/canvasHeight, 0);
+
+      // todo: using a sprite here like in morseSmaleWindow might be faster
+      const nodeGeometry = new THREE.BoxGeometry(
+        scale * thumbnailWidth,
+        scale * thumbnailHeight, 0);
 
       // Color based on QoI if enabled, if not enabled selected design is colored orange
       // to match the gallery view.
@@ -515,6 +521,9 @@ class EmbeddingWindow extends React.Component {
           }
           this.setState({ thumbnailScale:newScale });
         }
+        else {
+          this.setState({ nodeSize : this.state.nodeSize + 0.001 });
+        }
         break;
       case 'd': // decrease thumbnail size
       case '-':
@@ -524,6 +533,9 @@ class EmbeddingWindow extends React.Component {
             newScale = this.minScale;
           }
           this.setState({ thumbnailScale:newScale });
+        }
+        else {
+          this.setState({ nodeSize : Math.max(0.001, this.state.nodeSize - 0.001) });
         }
         break;
       case 'c': // enable color for thumbnail

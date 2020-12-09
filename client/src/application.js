@@ -72,6 +72,7 @@ class Application extends React.Component {
       windows: [],
       filters: [],
       selectedDesigns: new Set(),
+      crystalDesigns: null,
       parameters: [],
       qois: [],
       distanceMetrics: [],
@@ -200,6 +201,7 @@ class Application extends React.Component {
         currentDataset: dataset,
         windows: [],
         selectedDesigns: new Set(),
+        crystalDesigns: null,
         union: true,
         filters: [],
         parameters: parameters,
@@ -232,9 +234,11 @@ class Application extends React.Component {
 
     // if a new distance metric was chosen, clear selected designs
     let selectedDesigns = this.state.selectedDesigns;
+    let crystalDesigns = this.state.crystalDesigns;
     if (prevConfig.distanceMetric !== config.distanceMetric
         || prevConfig.decomposition !== config.decomposition) {
       selectedDesigns = new Set();
+      crystalDesigns = null;
     }
 
     let newConfig = Object.assign(prevConfig, config);
@@ -243,6 +247,7 @@ class Application extends React.Component {
     this.setState({
       windows: windows,
       selectedDesigns: selectedDesigns,
+      crystalDesigns: crystalDesigns,
     });
   }
 
@@ -259,12 +264,17 @@ class Application extends React.Component {
       let selectedDesigns = new Set(this.state.selectedDesigns);
       selectedDesigns.add(id);
       this.setState({ selectedDesigns });
-    } else { 
+    }
+    else if (id !== -1) {
       let selectedDesigns = new Set();
-      if (id !== -1) {
-        selectedDesigns.add(id);
-      }
+      selectedDesigns.add(id);
       this.setState({ selectedDesigns });
+    }
+    else if (this.state.crystalDesigns !== null) {
+      this.setState({ selectedDesigns: this.state.crystalDesigns });
+    }
+    else { 
+      this.setState({ selectedDesigns: new Set() });
     }
   }
   
@@ -284,7 +294,7 @@ class Application extends React.Component {
    */
   onCrystalSelection(crystalSamples) {
     let selectedDesigns = new Set(crystalSamples);
-    this.setState({ selectedDesigns });
+    this.setState({ selectedDesigns: selectedDesigns, crystalDesigns: selectedDesigns });
   }
 
   /**
