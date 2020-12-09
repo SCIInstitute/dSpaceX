@@ -292,8 +292,11 @@ class Application extends React.Component {
    * Handles updating of selected samples based on crystal selection
    * @param {Array<int>} crystalSamples
    */
-  onCrystalSelection(crystalSamples) {
+  onCrystalSelection(crystalSamples /*, todo: maxima, minima*/) {
     let selectedDesigns = new Set(crystalSamples);
+    // let designsArray = Array.from(selectedDesigns.values());
+    // designsArray.sort(function(a, b){return a - b});
+    // console.log("selected shape ids: " + designsArray.toString());
     this.setState({ selectedDesigns: selectedDesigns, crystalDesigns: selectedDesigns });
   }
 

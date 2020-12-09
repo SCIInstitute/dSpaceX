@@ -251,6 +251,8 @@ class NNMSComplex {
       return extremaIndex.N();
     }; 
 
+    FortranLinalg::DenseVector<int> getExtremaIndex() { return extremaIndex; }
+
     //return extrema indicies (first row is max, secon is min) for each crystal
     FortranLinalg::DenseMatrix<int> getCrystals(){
        FortranLinalg::DenseMatrix<int> e(2, pcrystals.size());
@@ -344,19 +346,21 @@ private:
       FortranLinalg::DenseMatrix<TPrecision> G = FortranLinalg::DenseMatrix<TPrecision>(2, m_sampleCount);
       FortranLinalg::Linalg<TPrecision>::Zero(G);
 
+      // Ross added this Dec 2020.  This prevents longer connections from dominating.
+      float gradient_exp = 1.0f + 1.0e-4;
 
       // Compute steepest asc/descending neighbors
       for (unsigned int i = 0; i < m_sampleCount; i++) {
         for (unsigned int k=1; k<KNN.M(); k++) {
           int j = KNN(k, i);
-          double d = sqrt(KNND(k, i));
+          double d = pow(KNND(k, i), gradient_exp);
           double g = ys(j) - ys(i);  // <ctc> but this can be zero... (if d = 0 below)
           if (d == 0 ) {
             g = 0;   //<ctc> but what if d != 0, then is it okay for g to be zero?
           } else {
             g = g / d; //<ctc> g shouldn't be zero... (or does it even matter? maybe it's implicit and the last or first is the winner regardless)
           }
-          
+
           if (G(0, i) < g) {
             G(0, i) = g;
             KNNG(0, i) = j;

@@ -5,7 +5,6 @@ SET(UTILS_HEADER_FILES
   MinHeap.h
   Random.h 
   StringUtils.h
-  DataExport.h
   utils.h
   loaders.h
   Data.h
@@ -13,7 +12,6 @@ SET(UTILS_HEADER_FILES
 
 SET(UTILS_SOURCE_FILES
   StringUtils.cpp
-  DataExport.cpp
   utils.cpp
   loaders.cpp
 )

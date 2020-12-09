@@ -123,7 +123,7 @@ class EmbeddingMorseSmaleWindow extends React.Component {
       return {
         img: thumbnail,
         val: result.fieldvals[i],
-        id: i,
+        id: result.sampleids[i],
       };
     });
     //console.log('fetchNImagesForCrystal returned ' + result.thumbnails.length + ' images; msg: ' + result.msg);

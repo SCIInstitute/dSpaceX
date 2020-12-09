@@ -21,7 +21,8 @@ struct HDProcessResult {
   std::vector<FortranLinalg::DenseVector<int>> crystalPartitions;   // CrystalPartitions_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaValues; // ExtremaValues_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaWidths; // ExtremaWidths_[level].data.hdr
-    
+  std::vector<int> extremaIndex; // samples to which each extrema is associated
+  
   // Layout Data 
   FortranLinalg::DenseVector<Precision> LminPCA;       // PCAMin.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr  

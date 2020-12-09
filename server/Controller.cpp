@@ -80,7 +80,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
-  m_commandMap.insert({"fetchCrystalPartition", std::bind(&Controller::fetchCrystalPartition, this, _1, _2)});
+  m_commandMap.insert({"fetchCrystal", std::bind(&Controller::fetchCrystal, this, _1, _2)});
   m_commandMap.insert({"fetchParameter", std::bind(&Controller::fetchParameter, this, _1, _2)});
   m_commandMap.insert({"fetchQoi", std::bind(&Controller::fetchQoi, this, _1, _2)});
   m_commandMap.insert({"fetchThumbnails", std::bind(&Controller::fetchThumbnails, this, _1, _2)});
@@ -329,16 +329,30 @@ void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json:
   response["normalize"] = m_currentNormalize;
   response["minPersistence"] = m_currentVizData->getMinPersistenceLevel();
 
-  auto crystal_partitions = m_currentVizData->getAllCrystalPartitions();
-  response["crystalPartitions"] = Json::Value(Json::arrayValue);
-  for (unsigned i = m_currentVizData->getMinPersistenceLevel(); i < m_currentVizData->getPersistence().N(); ++i) {
-    Json::Value item = Json::Value(Json::objectValue);
-    item["persistenceLevel"] = i;
-    item["crystalMembership"] = Json::Value(Json::arrayValue);
-    for (unsigned j = 0; j < crystal_partitions[i].N(); ++j) {
-      item["crystalMembership"].append(crystal_partitions[i](j));
+  // array of sample ids and extrema of each crystal in each persistence
+  response["persistences"] = Json::Value(Json::arrayValue);
+  auto crystals = m_currentVizData->getAllCrystals();
+  auto extrema = m_currentVizData->getAllExtrema();
+  for (auto p = m_currentVizData->getMinPersistenceLevel(); p < m_currentVizData->getPersistence().N(); ++p) {
+    Json::Value persistence = Json::Value(Json::objectValue);
+    persistence["persistenceLevel"] = p;
+    persistence["crystals"] = Json::Value(Json::arrayValue);
+    persistence["extrema"] = Json::Value(Json::arrayValue);
+    for (auto c = 0; c < crystals[p].size(); ++c) {
+      Json::Value crystal = Json::Value(Json::objectValue);
+      crystal["ids"] = Json::Value(Json::arrayValue);
+      for (auto id: crystals[p][c]) {
+        crystal["ids"].append(id);
+      }
+      
+      Json::Value extremanode = Json::Value(Json::objectValue);
+      extremanode["max"] = extrema[p][c].first;
+      extremanode["min"] = extrema[p][c].second;
+      crystal["extrema"] = extremanode;
+
+      persistence["crystals"].append(crystal);
     }
-    response["crystalPartitions"].append(item);
+    response["persistence"].append(persistence);
   }
 }
 
@@ -570,7 +584,10 @@ void Controller::fetchMorseSmaleExtrema(const Json::Value &request, Json::Value 
   }
 }
 
-void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &response) {
+/*
+ * Returns samples belonging to this crystal and ids of its extrema.
+ */
+void Controller::fetchCrystal(const Json::Value &request, Json::Value &response) {
   if (!maybeLoadDataset(request, response))
     return setError(response, "invalid datasetId");
 
@@ -584,14 +601,17 @@ void Controller::fetchCrystalPartition(const Json::Value &request, Json::Value &
   // the crystal id to look for in this persistence level
   int crystalID = request["crystalID"].asInt();
 
-  auto crystal_partition = m_currentVizData->getCrystalPartitions(persistence);
-
+  // ALL samples belonging to this crystal, including its extrema
   response["crystalSamples"] = Json::Value(Json::arrayValue);
-  for(unsigned int i = 0; i < crystal_partition.N(); ++i) {
-    if(crystal_partition(i) == crystalID) {  // but a sample can belong to more than one crystal, so how is that managed?
-      response["crystalSamples"].append(i);
-    }
+  for (auto id: m_currentVizData->getAllCrystals()[persistence][crystalID]) {
+    response["crystalSamples"].append(id);
   }
+
+  // the sample ids of this crystal's extrema
+  auto extrema = m_currentVizData->getAllExtrema()[persistence][crystalID];
+  response["crystalExtrema"] = Json::Value(Json::arrayValue);
+  response["crystalExtrema"].append(extrema.first);  // max
+  response["crystalExtrema"].append(extrema.second); // min
 }
 
 void Controller::fetchEmbeddingsList(const Json::Value &request, Json::Value &response) {
@@ -938,17 +958,12 @@ std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std
   }
 
   // create a vector of global sample ids and their fieldvalue for the samples from which this crystal is comprised
-  FortranLinalg::DenseVector<int> &crystal_partition(m_currentVizData->getCrystalPartitions(persistence));
-  Eigen::Map<Eigen::VectorXi> partitions(crystal_partition.data(), crystal_partition.N());
-  for (unsigned i = 0; i < partitions.size(); i++)
-  {
-    if (partitions(i) == crystalid)
-    {
-      ValueIndexPair sample;
-      sample.idx = i;
-      sample.val = fieldvals(i);
-      fieldvalues_and_indices.push_back(sample);
-    }
+  auto crystal = m_currentVizData->getAllCrystals()[persistence][crystalid];
+  for (auto i: crystal) {
+    ValueIndexPair sample;
+    sample.idx = i;
+    sample.val = fieldvals(i);
+    fieldvalues_and_indices.push_back(sample);
   }
 
   // sort it by increasing fieldvalue
@@ -987,6 +1002,9 @@ void Controller::fetchCrystalOriginalSampleImages(const Json::Value &request, Js
 
     // add field value to response
     response["fieldvals"].append(sample.val);
+
+    // add sample ids to response
+    response["sampleids"].append(sample.idx);
   }
 
   response["msg"] = std::string("returning original " + std::to_string(samples.size()) + " images for crystal " + std::to_string(crystalid) + " of persistence level " + std::to_string(persistence));

@@ -18,12 +18,10 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseVector<Precision>& getY();
     FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
     FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);
-    FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel);
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
         HDVizLayout layout, int persistenceLevel);
-  std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions() override { return std::vector<FortranLinalg::DenseVector<int>>(); } //ugh
   
     // Extrema Layouts
     FortranLinalg::DenseVector<Precision>& getExtremaValues(int persistenceLevel);

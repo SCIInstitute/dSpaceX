@@ -59,7 +59,7 @@ class DecompositionPanel extends React.Component {
       },
 
       ms: {
-        knn: 4,
+        knn: 8,
         datasigma: 0.0,
         curvesigma: 0.5,
         curvepoints: 50,

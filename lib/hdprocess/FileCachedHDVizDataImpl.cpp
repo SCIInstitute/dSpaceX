@@ -69,12 +69,6 @@ FortranLinalg::DenseMatrix<int>& FileCachedHDVizDataImpl::getCrystals(int persis
   return edges;
 }    
 
-FortranLinalg::DenseVector<int>& FileCachedHDVizDataImpl::getCrystalPartitions(int persistenceLevel) {
-  // TODO: Implement this function.
-  FortranLinalg::DenseVector<int> x;
-  return x;
-}
-
 std::vector<FortranLinalg::DenseMatrix<Precision>>& FileCachedHDVizDataImpl::getLayout(
     HDVizLayout layout, int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);

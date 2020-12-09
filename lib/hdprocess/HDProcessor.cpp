@@ -1,5 +1,4 @@
 #include "HDProcessor.h"
-#include "utils/DataExport.h"
 
 Precision MAX = std::numeric_limits<Precision>::max();
 
@@ -114,6 +113,9 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   m_result->IsoExtremaLayout.resize(persistence.N());
   m_result->IsoLayout.resize(persistence.N());
 
+  // bring along the extremaIndex in order to ensure shared samples are included with a crystal
+  auto extremaIndex = msComplex.getExtremaIndex();
+  std::copy(extremaIndex.data(), extremaIndex.data() + extremaIndex.N(), std::back_inserter(m_result->extremaIndex));
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){

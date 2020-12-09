@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 class HDVizData {
   public:
@@ -18,9 +19,16 @@ class HDVizData {
     virtual FortranLinalg::DenseMatrix<Precision>& getX() = 0;
     virtual FortranLinalg::DenseVector<Precision>& getY() = 0;
     virtual FortranLinalg::DenseMatrix<int>& getNearestNeighbors() = 0;
+
+    // returns extrema indices (max, min) for each crystal
     virtual FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel) = 0;
-    virtual FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel) = 0;
-    virtual std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions() = 0;
+
+    // return ALL sample ids for each crystal (including its extrema) of each persistence level
+    virtual const std::vector<std::vector<std::vector<int>>>& getAllCrystals() = 0;
+
+    // return max (first) and min (second) for each crystal of each persistence level
+    virtual const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() = 0;
+
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
     virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
     virtual std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(

@@ -19,7 +19,7 @@ class EmbeddingWindow extends React.Component {
       renderEdges: false,
       renderThumbnails: false,
       colorThumbnails: false,
-      thumbnailScale: 1.0,
+      thumbnailScale: 0.25,
       nodeSize: 0.01,
       selectingDesign: false,
     };
@@ -253,6 +253,11 @@ class EmbeddingWindow extends React.Component {
    * @param {array} nodeColors
    */
   addNodesToScene(nodeCoordinates, nodeColors) {
+    if (nodeCoordinates)
+      console.log("adding " + nodeCoordinates.length.toString() + " nodes to scene");
+    else
+      console.log("called addNodesToScene with null nodeCoordinates");
+
     nodeCoordinates.forEach((coord, index) => {
       // Add Circle
       let nodeGeometry = new THREE.CircleGeometry(this.state.nodeSize, 32);
@@ -511,8 +516,12 @@ class EmbeddingWindow extends React.Component {
       case 't': // Enable/disable thumbnails
         this.setState({ renderThumbnails:!this.state.renderThumbnails });
         break;
-      case 'i': // Increase thumbnail size
-      case '=':
+      case 'i': // show sample ids
+        //this.setState({ renderIds:!this.state.renderIds });
+      //todo: how do we draw text in the node?
+      // https://threejs.org/docs/#api/en/geometries/TextGeometry (but this _can't_ be efficient)
+      break;
+      case '=': // Increase thumbnail size
       case '+':
         if (this.state.renderThumbnails) {
           newScale = this.state.thumbnailScale + 0.05;
@@ -522,11 +531,10 @@ class EmbeddingWindow extends React.Component {
           this.setState({ thumbnailScale:newScale });
         }
         else {
-          this.setState({ nodeSize : this.state.nodeSize + 0.001 });
+          this.setState({ nodeSize : this.state.nodeSize + 0.002 });
         }
         break;
-      case 'd': // decrease thumbnail size
-      case '-':
+      case '-': // decrease thumbnail size
         if (this.state.renderThumbnails) {
           newScale = this.state.thumbnailScale - 0.05;
           if (newScale < this.minScale) {
@@ -535,7 +543,7 @@ class EmbeddingWindow extends React.Component {
           this.setState({ thumbnailScale:newScale });
         }
         else {
-          this.setState({ nodeSize : Math.max(0.001, this.state.nodeSize - 0.001) });
+          this.setState({ nodeSize : Math.max(0.001, this.state.nodeSize - 0.002) });
         }
         break;
       case 'c': // enable color for thumbnail

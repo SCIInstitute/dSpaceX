@@ -5,7 +5,6 @@
 #include "hdprocess/HDVizData.h"
 #include "hdprocess/TopologyData.h"
 #include "dataset/Fieldtype.h"
-#include "utils/DataExport.h"
 
 #include <jsoncpp/json/json.h>
 #include <map>
@@ -69,7 +68,7 @@ class Controller {
   void exportMorseSmaleDecomposition(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleRegression(const Json::Value &request, Json::Value &response);
   void fetchMorseSmaleExtrema(const Json::Value &request, Json::Value &response);
-  void fetchCrystalPartition(const Json::Value &request, Json::Value &response);
+  void fetchCrystal(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);

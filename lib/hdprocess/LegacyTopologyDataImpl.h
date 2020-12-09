@@ -44,13 +44,13 @@ class LegacyMorseSmaleComplexImpl : public MorseSmaleComplex {
  */
 class LegacyCrystalImpl : public Crystal{
  public:
-  LegacyCrystalImpl(unsigned int minIndex, unsigned int maxIndex, std::vector<unsigned int> samples) : 
+  LegacyCrystalImpl(unsigned int minIndex, unsigned int maxIndex, std::vector<int> samples) :
       m_minIndex(minIndex), m_maxIndex(maxIndex), m_samples(samples) {}
   virtual unsigned int getMaxSample() { return m_minIndex; }
   virtual unsigned int getMinSample() { return m_maxIndex; }  
-  virtual std::vector<unsigned int>& getAllSamples() { return m_samples; }
+  virtual std::vector<int>& getAllSamples() { return m_samples; }
  private:
   unsigned int m_minIndex;
   unsigned int m_maxIndex;
-  std::vector<unsigned int> m_samples;
+  std::vector<int> m_samples;
 };

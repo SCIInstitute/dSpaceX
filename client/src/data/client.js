@@ -366,9 +366,9 @@ class Client {
     return this._createCommandPromise(command);
   }
 
-  fetchCrystalPartition(datasetId, persistence, crystalID) {
+  fetchCrystal(datasetId, persistence, crystalID) {
     let command = {
-      name: 'fetchCrystalPartition',
+      name: 'fetchCrystal',
       datasetId: datasetId,
       persistence: persistence,
       crystalID: crystalID,

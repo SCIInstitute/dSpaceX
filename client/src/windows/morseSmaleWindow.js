@@ -128,9 +128,9 @@ class MorseSmaleWindow extends React.Component {
       ]).then((response) => {
         const [regressionResponse, extremaResponse] = response;
         if (!regressionResponse.error && !extremaResponse.error) {
-          this.regressionCurves = regressionResponse;
           this.addRegressionCurvesToScene(regressionResponse);
           this.addExtremaToScene(extremaResponse.extrema);
+          this.pickCrystal(this.regressionCurves[0]); // automatically pick first crystal
           this.renderScene();
         }
         else {
@@ -470,6 +470,41 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * Change picked crystal
+   */
+  pickCrystal(crystal) {
+    if (!crystal) {
+      console.log("error: tried to pick null crystal!");  // not expected to ever be called with null
+      return;
+    }
+
+    let crystalID = crystal.name;
+    console.log('New crystal selected (' + crystalID + ')');
+
+    const { datasetId, persistenceLevel } = this.props.decomposition;
+
+    // ensure previously selected object is back to unselected opacity
+    if (this.pickedCrystal) {
+      this.pickedCrystal.material.opacity = this.unselectedOpacity;
+    }
+
+    // set newly-selected crystal as picked
+    this.pickedCrystal = crystal;
+    this.pickedCrystal.material.opacity = this.selectedOpacity;
+
+    // project extrema of selected crystal to screen space to compute distance along curve
+    this.projectExtrema(this.pickedCrystal);
+
+    // highlight this crystal's samples in the other views (e.g., embedding window)
+    this.client.fetchCrystal(datasetId, persistenceLevel, crystalID).then((result) => {
+      this.props.onCrystalSelection(result.crystalSamples);
+    });
+
+    // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
+    this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
+  }
+
+  /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
    * @return returns false if nothing picked and scene rotation can continue
@@ -480,38 +515,17 @@ class MorseSmaleWindow extends React.Component {
     }
 
     // Get intersected object
-    const { datasetId, persistenceLevel } = this.props.decomposition;
     this.raycaster.setFromCamera(normalizedPosition, this.camera);
     let intersectedObjects = this.raycaster.intersectObjects(this.scene.children);
     intersectedObjects = intersectedObjects.filter((io) => io.object.name !== '');
 
     if (intersectedObjects.length) {
-      let crystalID = intersectedObjects[0].object.name;
+      let crystal = intersectedObjects[0].object;
 
-      if (intersectedObjects[0].object !== this.crystalPosObject &&
-          intersectedObjects[0].object !== this.pickedCrystal) {
-        //console.log('New crystal selected (' + crystalID + ')');
-        // otherwise picked active pointer along curve, or already selected curve, so do nothing
-
-        // ensure previously selected object is back to unselected opacity
-        if (this.pickedCrystal) {
-          this.pickedCrystal.material.opacity = this.unselectedOpacity;
-        }
-
-        // set newly-selected crystal as picked
-        this.pickedCrystal = intersectedObjects[0].object;
-        this.pickedCrystal.material.opacity = this.selectedOpacity;
-
-        // project extrema of selected crystal to screen space to compute distance along curve
-        this.projectExtrema(this.pickedCrystal);
-
-        // highlight this crystal's samples in the other views (e.g., embedding window)
-        this.client.fetchCrystalPartition(datasetId, persistenceLevel, crystalID).then((result) => {
-          this.props.onCrystalSelection(result.crystalSamples);
-        });
-
-        // evaluate the current model for this crystal to fill the drawer (parent component updates drawer)
-        this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
+      // If this is a new crystal, pick it.
+      // otherwise, picked active pointer along curve, or already selected curve, so do nothing
+      if (crystal !== this.crystalPosObject && crystal !== this.pickedCrystal) {
+        this.pickCrystal(crystal);
       }
 
       // interactive model evaluation
@@ -655,6 +669,7 @@ class MorseSmaleWindow extends React.Component {
       curveMesh.translateOnAxis(dir, dist);
 
       this.scene.add(curveMesh);
+      this.regressionCurves.push(curveMesh);  // save these in order to automatically select a crystal when ms updated
 
       // add to scene bounding box
       curveGeometry.computeBoundingBox();
@@ -819,6 +834,7 @@ class MorseSmaleWindow extends React.Component {
     this.scene.add(this.camera);        // camera MUST be added to scene for it's light to work
     this.scene.add(this.ambientLight);
 
+    this.regressionCurves = [];
     this.pickedCrystal = undefined;
     this.crystalPosObject = this.addSphere(this.scene, new THREE.Vector3(), new THREE.Color('darkorange'), 0.03 /*radius*/);
     this.crystalPosObject.visible = false;

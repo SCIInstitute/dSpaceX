@@ -8,7 +8,7 @@ class Crystal {
  public:
   virtual unsigned int getMaxSample() = 0;
   virtual unsigned int getMinSample() = 0;
-  virtual std::vector<unsigned int>& getAllSamples() = 0; 
+  virtual std::vector<int>& getAllSamples() = 0; 
   // virtual std::vector<SampleType> getReconstruction() = 0;
 };
 

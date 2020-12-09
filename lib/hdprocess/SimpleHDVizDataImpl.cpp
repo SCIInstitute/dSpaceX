@@ -168,6 +168,43 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     }
   }
 
+  // get the set of points belonging to each crystal, appending the extrema samples if missing
+  // use crystals _partitions_ (to which extrema they belong) to compile sets of samples for each.
+  auto num_persistences = result->crystals.size();
+  crystals.resize(num_persistences);
+  extrema.resize(num_persistences);
+
+  for (auto p = 0; p < num_persistences; p++) {
+    auto num_samples = result->crystalPartitions[p].N();  // same for all persistences
+    auto num_crystals = result->crystals[p].N();
+    crystals[p].resize(num_crystals);
+    extrema[p].resize(num_crystals);
+
+    // add the sample id to its crystal
+    for (auto id = 0; id < num_samples; id++) {
+      crystals[p][result->crystalPartitions[p](id)].push_back(id);
+    }
+
+    // add the extrema
+    for (auto c = 0; c < num_crystals; c++) {
+      auto max = result->crystals[p](0,c);
+      auto min = result->crystals[p](1,c);
+      auto max_id = result->extremaIndex[max];
+      auto min_id = result->extremaIndex[min];
+
+      // ...to the crystals
+      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), max_id) == crystals[p][c].end())
+        crystals[p][c].push_back(max_id);
+      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), min_id) == crystals[p][c].end())
+        crystals[p][c].push_back(min_id);
+
+      // ...to the extrema pairs for each crystal
+      extrema[p][c].first = max_id;
+      extrema[p][c].second = min_id;
+    }
+  }
+  // celebrate 
+
   computeScaledLayouts();
   //
 } // END CONSTRUCTOR
@@ -277,17 +314,6 @@ FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getNearestNeighbors() {
 FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getCrystals(int persistenceLevel) {  
   return m_data->crystals[persistenceLevel];
 }    
-
-/**
- *
- */
-FortranLinalg::DenseVector<int>& SimpleHDVizDataImpl::getCrystalPartitions(int persistenceLevel) {
-  return m_data->crystalPartitions[persistenceLevel];
-}
-
-std::vector<FortranLinalg::DenseVector<int>> SimpleHDVizDataImpl::getAllCrystalPartitions() {
-    return m_data->crystalPartitions;
-}
 
 /**
  *

@@ -18,9 +18,11 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<Precision>& getX();
     FortranLinalg::DenseVector<Precision>& getY();
     FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
-    FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);    
-    FortranLinalg::DenseVector<int>& getCrystalPartitions(int persistenceLevel);
-    std::vector<FortranLinalg::DenseVector<int>> getAllCrystalPartitions();
+    FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);
+  
+    const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() { return extrema; }
+    const std::vector<std::vector<std::vector<int>>>& getAllCrystals() { return crystals; }
+
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getLayout(
@@ -105,6 +107,7 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCAExtremaLayout;
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCA2ExtremaLayout;
 
-
+  std::vector<std::vector<std::vector<int>>> crystals;   // samples in each crystal of each persistence level
+  std::vector<std::vector<std::pair<int, int>>> extrema; // max (first) and min sample of each crystal's extrema
 };
 
