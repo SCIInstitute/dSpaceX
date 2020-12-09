@@ -4,7 +4,7 @@ import re
 import PIL.Image
 from thumbnails import MeshRenderer
 
-def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.3):
+def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.25, silouettes = True):
     """
     Generate mesh thumbnails from .stl, .ply, or .obj files.
     :param shape_directory: Directory that contains mesh shapes
@@ -17,7 +17,7 @@ def generate_mesh_thumbnails(shape_directory, output_directory, resolution = [30
     padding = '0%dd' % len(str(len(shapes)))
 
     # instantiate mesh renderer
-    ren = MeshRenderer()
+    ren = MeshRenderer(singleview = not silouettes)
 
     # For each mesh format generate thumbnail
     for index, shape_file in enumerate(shapes):

@@ -114,7 +114,9 @@ class MorseSmaleWindow extends React.Component {
     }
 
     if (prevProps.decomposition === null
-        || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)) {
+        || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
+        //|| prevProps.distanceMetric !== this.props.distanceMetric
+       ) {
       this.resetScene();
       // object unpacking (a javascript thing, props is inherited from the React component)
       const { fieldname, category, datasetId, persistenceLevel } = this.props.decomposition;

@@ -16,13 +16,13 @@ using namespace FortranLinalg;
  * @param[in] nSamples Number of samples for regression curve. 
  * @param[in] persistence Number of persistence levels to compute.
  * @param[in] randdom Whether to apply random noise to input function.
- * @param[in] sigma Bandwidth for inverse regression.
- * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
+ * @param[in] invRegressionSigma Bandwidth for inverse regression (curve smoothing)
+ * @param[in] dataSmoothSigma data smoothing (filter out noise)
  */
 std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
     DenseMatrix<Precision> d, DenseVector<Precision> field,
     int knn, int nSamples, int persistenceArg, bool random,
-    Precision sigmaArg, Precision sigmaSmooth) {
+    Precision invRegressionSigma, Precision dataSmoothSigma) {
   // TODO: Assert(field.N() == d.M() && d.M() == d.N())
 
   // Initialize processing result output object.
@@ -44,7 +44,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   }
      
   // Compute Morse-Smale complex    
-  NNMSComplex<Precision> msComplex(d, field, knn, sigmaSmooth > 0, sigmaSmooth*sigmaSmooth, true /*compute distances version*/);
+  NNMSComplex<Precision> msComplex(d, field, knn, dataSmoothSigma > 0, dataSmoothSigma*dataSmoothSigma, true /*compute distances version*/);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
@@ -117,7 +117,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigmaArg, true /*computeRegression*/, knn);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, invRegressionSigma, true /*computeRegression*/, knn);
   }
 
   // detach and return processed result
@@ -133,13 +133,13 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
  * @param[in] nSamples Number of samples for regression curve. 
  * @param[in] persistenceArg Number of persistence levels to compute.
  * @param[in] randArg Whether to apply random noise to input function.
- * @param[in] sigma Bandwidth for inverse regression.
- * @param[in] sigmaSmooth Bandwidth for inverse regression. (diff?)
+ * @param[in] invRegressionSigma Bandwidth for inverse regression (curve smoothing)
+ * @param[in] dataSmoothSigma data smoothing (filter out noise)
  */
 std::unique_ptr<HDProcessResult>  HDProcessor::process(  
   DenseMatrix<Precision> x, DenseVector<Precision> y,  
   int knn, int nSamples, int persistenceArg, 
-  bool randArg, Precision sigma, Precision sigmaSmooth) {
+  bool randArg, Precision invRegressionSigma, Precision dataSmoothSigma) {
 
   // Initialize processing result output object.
   m_result.reset(new HDProcessResult());
@@ -154,7 +154,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::process(
   }
      
   // Compute Morse-Smale complex
-  NNMSComplex<Precision> msComplex(Xall, yall, knn, sigmaSmooth > 0, 0.01, sigmaSmooth*sigmaSmooth);
+  NNMSComplex<Precision> msComplex(Xall, yall, knn, dataSmoothSigma > 0, 0.01, dataSmoothSigma*dataSmoothSigma);
   
   // Store persistence levels
   persistence = msComplex.getPersistence();
@@ -229,7 +229,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::process(
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
-    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, sigma, true /*computeRegression*/, knn);
+    computeAnalysisForLevel(msComplex, persistenceLevel, nSamples, invRegressionSigma, true /*computeRegression*/, knn);
   }
 
   // detach and return processed result

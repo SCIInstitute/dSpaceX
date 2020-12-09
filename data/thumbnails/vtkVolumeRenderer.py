@@ -10,7 +10,7 @@ class vtkVolumeRenderer:
     """
     Renders a 2d thumbnail from a volume
     """
-    def __init__(self, default = '', color = [1.0, 0.766, 0.336]):
+    def __init__(self, default = '', color = [1.0, 0.766, 0.336], singleview = True):
 
         # Create the importer and load a volume (gets things warmed up)
         self.dataImporter = vtk.vtkImageImport()

@@ -183,7 +183,7 @@ class Client {
    * @param {number} k number of neighbors.
    * @return {Promise}
    */
-  fetchMorseSmaleDecomposition(datasetId, category, fieldname, metric, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
+  fetchMorseSmaleDecomposition(datasetId, category, fieldname, metric, knn, datasigma, curvesigma, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmaleDecomposition',
       datasetId: datasetId,
@@ -191,8 +191,8 @@ class Client {
       fieldname: fieldname,
       metric: metric,
       knn: knn,
-      sigma: sigma,
-      smooth: smooth,
+      datasigma: datasigma,
+      curvesigma: curvesigma,
       noise: noise,
       depth: depth,
       curvepoints: curvepoints,
@@ -224,7 +224,7 @@ class Client {
    * @param {number} persistenceLevel
    * @return {Promise}
    */
-  fetchMorseSmalePersistence(datasetId, category, fieldname, metric, persistence, knn, sigma, smooth, noise, depth, curvepoints, normalize) {
+  fetchMorseSmalePersistence(datasetId, category, fieldname, metric, persistence, knn, datasigma, curvesigma, noise, depth, curvepoints, normalize) {
     let command = {
       name: 'fetchMorseSmalePersistenceLevel',
       datasetId: datasetId,
@@ -233,8 +233,8 @@ class Client {
       metric: metric,
       persistence: persistence,
       knn: knn,
-      sigma: sigma,
-      smooth: smooth,
+      datasigma: datasigma,
+      curvesigma: curvesigma,
       noise: noise,
       depth: depth,
       curvepoints: curvepoints,

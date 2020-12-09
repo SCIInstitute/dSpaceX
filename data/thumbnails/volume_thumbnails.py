@@ -5,7 +5,7 @@ import PIL.Image
 from thumbnails import VolumeRenderer
 
 
-def generate_volume_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.25):
+def generate_volume_thumbnails(shape_directory, output_directory, resolution = [300,300], scale = 1.25, silouettes = True):
     """
     Generates thumbnails from voxels
     :param shape_directory: Directory where voxels are saved
@@ -17,7 +17,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, resolution = [
     padding = '0%dd' % len(str(len(shapes)))
 
     # instantiate volume renderer
-    ren = VolumeRenderer(scale = scale, default = shapes[0]) # default is needed to "warm up" the [vtk] thumbnail renderer
+    ren = VolumeRenderer(default=shapes[0], singleview=not silouettes) # default is needed to "warm up" the [vtk] thumbnail renderer
 
     # For each volume format generate thumbnail
     for index, shape_file in enumerate(shapes):
@@ -26,7 +26,7 @@ def generate_volume_thumbnails(shape_directory, output_directory, resolution = [
               ((100 * index / len(shapes)), index, len(shapes)), end='\r')
 
         ren.loadNewVolume(shape_file)
-        image = PIL.Image.fromarray(ren.getImage(resolution))
+        image = PIL.Image.fromarray(ren.getImage(resolution=resolution, scale=scale))
         filename = path.join(output_directory, format(shape_id, padding) + '.png')
         image.save(filename)
 

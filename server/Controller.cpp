@@ -265,10 +265,6 @@ void Controller::fetchKNeighbors(const Json::Value &request, Json::Value &respon
   if (k < 0) return setError(response, "invalid knn");
 
   auto metric = request["metric"].asString();
-  if (metric.empty()) {
-    metric = "l2";
-    std::cerr << "need to set a metric!\n";
-  } //<ctc> temp hack // return setError(response, "invalid distance metric");
 
   // TODO: cache results of this search if it takes too long to repeat
   int n = m_currentDataset->getDistanceMatrix(metric).N();
@@ -325,8 +321,8 @@ void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json:
   response["field"] = m_currentField;
   response["category"] = m_currentCategory.asString();
   response["neighborhoodSize"] = m_currentKNN;
-  response["sigma"] = m_currentSigma;
-  response["smoothing"] = m_currentSmoothing;
+  response["datasigma"] = m_currentSmoothDataSigma;
+  response["curvesigma"] = m_currentSmoothCurveSigma;
   response["crystalCurvepoints"] = m_currentNumCurvepoints;
   response["depth"] = m_currentPersistenceDepth;
   response["noise"] = m_currentAddNoise;
@@ -1044,7 +1040,7 @@ bool Controller::maybeLoadDataset(const Json::Value &request, Json::Value &respo
  * Check to see if parameters of request are valid to process data
  */
 bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                                         int curvepoints, double sigma, double smoothing, bool addnoise, int depth,
+                                         int curvepoints, double datasigma, double curvesigma, bool addnoise, int depth,
                                          bool normalize, Json::Value &response) {
 
   // category of the passed fieldname (design param or qoi)
@@ -1069,10 +1065,10 @@ bool Controller::verifyProcessDataParams(Fieldtype category, std::string fieldna
   if (knn < 0) {
     setError(response, "knn must be >= 0");
     return false;
-  } else if (sigma < 0) {
-    setError(response, "sigma must be >= 0");
+  } else if (datasigma < 0) {
+    setError(response, "datasigma must be >= 0");
     return false;
-  } else if (smoothing < 0) {
+  } else if (curvesigma < 0) {
     setError(response, "smooth must be >= 0");
     return false;
   } else if (depth <= 0 && depth != -1) {
@@ -1097,17 +1093,17 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
   auto knn         = request.isMember("knn")         ? request["knn"].asInt()                    : m_currentKNN;
   auto metric      = request.isMember("metric")      ? request["metric"].asString()              : m_currentDistanceMetric;
   auto curvepoints = request.isMember("curvepoints") ? request["curvepoints"].asInt()            : m_currentNumCurvepoints;
-  auto sigma       = request.isMember("sigma")       ? request["sigma"].asFloat()                : m_currentSigma;
-  auto smoothing   = request.isMember("smooth")      ? request["smooth"].asFloat()               : m_currentSmoothing;
+  auto datasigma   = request.isMember("datasigma")   ? request["datasigma"].asFloat()            : m_currentSmoothDataSigma;
+  auto curvesigma  = request.isMember("curvesigma")  ? request["curvesigma"].asFloat()           : m_currentSmoothCurveSigma;
   auto addnoise    = request.isMember("noise")       ? request["noise"].asBool()                 : m_currentAddNoise;
   auto depth       = request.isMember("depth")       ? request["depth"].asInt()                  : m_currentPersistenceDepth;
-  auto normalize   = request.isMember("normalize")   ? request["normalize"].asBool()              : m_currentNormalize;
+  auto normalize   = request.isMember("normalize")   ? request["normalize"].asBool()             : m_currentNormalize;
 
-  if (!verifyProcessDataParams(category, fieldname, knn, metric, curvepoints, sigma,
-                               smoothing, addnoise, depth, normalize, response))
+  if (!verifyProcessDataParams(category, fieldname, knn, metric, curvepoints, datasigma,
+                               curvesigma, addnoise, depth, normalize, response))
     return false; // response will contain the error
 
-  if (!processData(category, fieldname, knn, metric, curvepoints, sigma, smoothing, addnoise, depth, normalize)) {
+  if (!processData(category, fieldname, knn, metric, curvepoints, datasigma, curvesigma, addnoise, depth, normalize)) {
     setError(response, "failed to process data");
     return false;
   }
@@ -1117,15 +1113,15 @@ bool Controller::maybeProcessData(const Json::Value &request, Json::Value &respo
 
 /// Avoid regeneration of data if parameters haven't changed
 bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                                          int num_samples, double sigma, double smoothing, bool add_noise,
+                                          int num_samples, double datasigma, double curvesigma, bool add_noise,
                                           int num_persistences, bool normalize) {
   return !(m_currentCategory        == category &&
            m_currentField           == fieldname &&
            m_currentKNN             == knn &&
            m_currentDistanceMetric  == metric &&
            m_currentNumCurvepoints  == num_samples &&
-           m_currentSigma           == sigma &&
-           m_currentSmoothing       == smoothing &&
+           m_currentSmoothDataSigma == datasigma &&
+           m_currentSmoothCurveSigma== curvesigma &&
            m_currentAddNoise        == add_noise &&
            m_currentPersistenceDepth== num_persistences &&
            m_currentNormalize       == normalize);
@@ -1140,10 +1136,10 @@ bool Controller::processDataParamsChanged(Fieldtype category, std::string fieldn
  * false if processing failed.
  */
 bool Controller::processData(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                             int num_samples, double sigma, double smoothing, bool add_noise,
+                             int num_samples, double datasigma, double curvesigma, bool add_noise,
                              int num_persistences, bool normalize) {
   if (m_currentTopoData &&
-      !processDataParamsChanged(category, fieldname, knn, metric, num_samples, sigma, smoothing,
+      !processDataParamsChanged(category, fieldname, knn, metric, num_samples, datasigma, curvesigma,
                                 add_noise, num_persistences, normalize)) {
     return true;
   }
@@ -1182,8 +1178,8 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
                                        num_samples,      /* points along each crystal regression curve */
                                        num_persistences, /* generate this many at most; -1 generates all of 'em */
                                        add_noise,        /* adds very slight noise to field values */
-                                       sigma,            /* soften crystal regression curves */
-                                       smoothing)));      /* smooth topology */
+                                       curvesigma,       /* soften crystal regression curves */
+                                       datasigma)));     /* smooth data to compute topology */
     m_currentTopoData.reset(new LegacyTopologyDataImpl(m_currentVizData));
   } catch (const char *err) {
     std::cerr << "Controller::processData: processOnMetric failed: " << err << std::endl;
@@ -1199,8 +1195,8 @@ bool Controller::processData(Fieldtype category, std::string fieldname, int knn,
   m_currentDistanceMetric = metric;
   m_currentKNN = knn;
   m_currentNumCurvepoints = num_samples;
-  m_currentSigma = sigma;
-  m_currentSmoothing = smoothing;
+  m_currentSmoothDataSigma = datasigma;
+  m_currentSmoothCurveSigma = curvesigma;
   m_currentAddNoise = add_noise;
   m_currentPersistenceDepth = num_persistences;
   m_currentNormalize = normalize;

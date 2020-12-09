@@ -366,10 +366,10 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &modelsNode, const std::str
  * (technically, the M-S that partitioned the data with which these models were learned)
  */
 bool setMSParams(MSModelset& modelset, const YAML::Node& ms) {
-  if (ms["knn"] && ms["sigma"] && ms["smooth"] && ms["curvepoints"] && ms["depth"] && ms["noise"] && ms["normalize"]) {
+  if (ms["knn"] && ms["datasigma"] && ms["curvesigma"] && ms["curvepoints"] && ms["depth"] && ms["noise"] && ms["normalize"]) {
     auto knn         = ms["knn"].as<int>();
-    auto sigma       = ms["sigma"].as<double>();
-    auto smooth      = ms["smooth"].as<double>();
+    auto sigma       = ms["datasigma"].as<double>();
+    auto smooth      = ms["curvesigma"].as<double>();
     auto curvepoints = ms["curvepoints"].as<int>();
     auto depth       = ms["depth"].as<int>();
     auto noise       = ms["noise"].as<bool>();

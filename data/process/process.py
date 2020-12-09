@@ -121,8 +121,8 @@ def generate_model(config):
         'rowmajor': True,
         'ms': {
             'knn': partition_config['neighborhoodSize'],
-            'sigma': partition_config['sigma'],
-            'smooth': partition_config['smoothing'],
+            'datasigma': partition_config['datasigma'],
+            'curvesigma': partition_config['curvesigma'],
             'depth': partition_config['depth'],
             'noise': partition_config['noise'],
             'curvepoints': partition_config['crystalCurvepoints'],
@@ -162,29 +162,31 @@ def preprocess_data(config):
     print("current directory: " + os.getcwd())
     print("output directory: " + output_directory)
     
-    # FIXME: verify there are the same number of samples as specified (currently silently fails)
-    output_config = {'name': config['datasetName'], 'samples': {'count': config['numberSamples']}}
+    output_config = {}
+    cfg_filename = os.path.join(output_directory, 'config.yaml')
+    if os.path.exists(cfg_filename):
+        output_config = yaml.load(open(cfg_filename), Loader=yaml.FullLoader)
+    output_config['name'] = config['datasetName']
 
     # PARAMETERS AND QOIS
-    if 'parametersFile' not in config:
-        print('The parameters file is a required field. Please, update config and run again.')
+    print('Reading parameters and qois...')
+    if 'parametersFile' not in config or 'qoisFile' not in config:
+        print('Please specify both parametersFile and qoisFile in the config and run again.')
         sys.exit()
 
-    print('Reading parameters...')
     parameters_df = pd.read_csv(config['parametersFile'])
-    # TODO calculate summary statistics for each parameter (mean, mode, variance, these could be displayed in client)
     parameters_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_Parameters.csv'), index=False, header=True)
     output_config['parameters'] = {'file': config['datasetName'] + '_Parameters.csv'}
 
-    if 'qoisFile' not in config:
-        print('The QoIs file is a required field. Please, update config and run again.')
-        sys.exit()
-
-    print('Reading QoIs...')
     qois_df = pd.read_csv(config['qoisFile'])
-    # TODO calculate summary statistics for each qoi (mean, mode, variance, these could be displayed in client)
     qois_df.to_csv(os.path.join(output_directory, config['datasetName'] + '_QoIs.csv'), index=False, header=True)
     output_config['qois'] = {'file': config['datasetName'] + '_QoIs.csv'}
+
+    # calculate summary statistics for each parameter and qoi (mean, mode, variance, these could be displayed in client)
+    # TODO
+    
+    # NUM_SAMPLES
+    output_config['samples'] = {'count': len(qois_df)}
 
     # THUMBNAILS
     if config['generateThumbnails']:
@@ -205,7 +207,7 @@ def preprocess_data(config):
         output_config.update(embedding_config)
 
     print('Generating config.yaml for dataset...')
-    with open(os.path.join(output_directory, 'config.yaml'), 'w') as file:
+    with open(cfg_filename, 'w') as file:
         yaml.dump(output_config, file, default_flow_style=False, sort_keys=False, line_break=2)
     print('Data processing complete.')
     print('Run the dSpaceX server with: --datapath ' + os.path.abspath(output_directory))
@@ -240,21 +242,25 @@ def generate_thumbnails(input_config, output_directory):
                                                     ' Please, update config using mesh, image, or volume and run again')
         return
 
-    thumbnail_resolution = [300,300]
-    if 'thumbnail_resolution' in input_config:
-        thumbnail_resolution = input_config['thumbnail_resolution']
+    resolution = [300,300]
+    if 'thumbnailResolution' in input_config:
+        resolution = input_config['thumbnailResolution']
         
-    thumbnail_scale = 1.0
-    if 'thumbnail_scale' in input_config:
-        thumbnail_scale = input_config['thumbnail_scale']
+    scale = 1.0
+    if 'thumbnailScale' in input_config:
+        scale = input_config['thumbnailScale']
+
+    silouettes = True
+    if 'thumbnailSilouettes' in input_config:
+        silouettes = input_config['thumbnailSilouettes']
 
     # Generate thumbnails
     if shape_format == 'volume':
         print('Generating thumbnails from volume.')
-        generate_volume_thumbnails(shape_directory, output_directory, thumbnail_resolution, thumbnail_scale)
+        generate_volume_thumbnails(shape_directory, output_directory, resolution=resolution, scale=scale, silouettes=silouettes)
     elif shape_format == 'mesh':
         print('Generating thumbnails from mesh.')
-        generate_mesh_thumbnails(shape_directory, output_directory, thumbnail_resolution, thumbnail_scale)
+        generate_mesh_thumbnails(shape_directory, output_directory, resolution=resolution, scale=scale, silouettes=silouettes)
     elif shape_format == 'image':
         print('Generating thumbnails from image.')
         image_files = glob(shape_directory + '*.png')
@@ -418,9 +424,9 @@ def calculate_embeddings(metrics, input_config, output_directory):
         np.savetxt(os.path.join(output_directory, metric + '_isomap.csv'), isomap, delimiter=',')
 
         embedding_metric = []
+        embedding_metric.append({'name': 'Isomap', 'file': 'embeddings/' + metric + '_isomap.csv'})
         embedding_metric.append({'name': 't-SNE', 'file': 'embeddings/' + metric + '_tsne.csv'})
         embedding_metric.append({'name': 'MDS', 'file': 'embeddings/' + metric + '_mds.csv'})
-        embedding_metric.append({'name': 'Isomap', 'file': 'embeddings/' + metric + '_isomap.csv'})
         embeddings.append({'metric': metric, 'embeddings': embedding_metric})
 
     # Calculate any user specified embeddings next

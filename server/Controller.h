@@ -46,14 +46,14 @@ class Controller {
   bool maybeLoadDataset(const Json::Value &request, Json::Value &response);
   bool loadDataset(int datasetId);
   bool verifyProcessDataParams(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                               int curvepoints, double sigma, double smoothing, bool addnoise, int depth,
+                               int curvepoints, double datasigma, double curvesigma, bool addnoise, int depth,
                                bool normalize, Json::Value &response);
   bool processDataParamsChanged(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                                int num_samples, double sigma, double smoothing, bool add_noise,
+                                int num_samples, double datasigma, double curvesigma, bool add_noise,
                                 int num_persistences, bool normalize);
   bool maybeProcessData(const Json::Value &request, Json::Value &response);
   bool processData(Fieldtype category, std::string fieldname, int knn, std::string metric,
-                   int num_samples = 55, double sigma = 0.25, double smoothing = 15.0,
+                   int num_samples = 55, double datasigma = 0.01, double curvesigma = 0.5,
                    bool add_noise = true /* duplicate values risk erroroneous M-S */,
                    int num_persistences = -1 /* generates all persistence levels */,
                    bool normalize = true /* scale normalize field values */);
@@ -102,8 +102,8 @@ class Controller {
   int m_currentKNN{15};
   std::string m_currentDistanceMetric;
   int m_currentNumCurvepoints{50};
-  double m_currentSigma{0.25};
-  double m_currentSmoothing{15.0};
+  double m_currentSmoothDataSigma{0.01};
+  double m_currentSmoothCurveSigma{0.5};
   bool m_currentAddNoise{true};
   int m_currentPersistenceDepth{20};
   bool m_currentNormalize{true};

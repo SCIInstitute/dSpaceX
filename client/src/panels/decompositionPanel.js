@@ -59,12 +59,12 @@ class DecompositionPanel extends React.Component {
       },
 
       ms: {
-        knn: 15,
-        sigma: 0.25,
-        smooth: 15.0,
+        knn: 4,
+        datasigma: 0.0,
+        curvesigma: 0.5,
         curvepoints: 50,
         depth: 20,
-        noise: true,
+        noise: false,
         normalize: true,
         layout: 'pca2',
       },
@@ -173,10 +173,10 @@ class DecompositionPanel extends React.Component {
         let datasetId = this.state.datasetId;
         const metric = this.props.distanceMetric;
         const { fieldname, category } = this.state.selection;
-        const { knn, sigma, smooth, noise, depth, curvepoints, normalize } = this.state.ms;
+        const { knn, datasigma, curvesigma, noise, depth, curvepoints, normalize } = this.state.ms;
         //console.log('decompositionPanel.fetchDecomposition: fetching decomposition for '+fieldname+' from server...\n');
         await this.client.fetchMorseSmaleDecomposition(datasetId,
-                    category, fieldname, metric, knn, sigma, smooth, noise, depth, curvepoints, normalize)
+                    category, fieldname, metric, knn, datasigma, curvesigma, noise, depth, curvepoints, normalize)
           .then(function(result) {
             if (!result.error) {
               // console.log('decompositionPanel.fetchDecomposition succeeded: setting state (mp:'
@@ -279,20 +279,20 @@ class DecompositionPanel extends React.Component {
     }
   }
 
-  handleMSSigmaChange(event) {
+  handleMSSmoothDataSigmaChange(event) {
     let sigma = parseFloat(event.target.value);
     if (!isNaN(sigma)) {
       this.setState((prevState) => ({
-        ms: { ...prevState.ms, sigma:sigma },
+        ms: { ...prevState.ms, datasigma:sigma },
       }));
     }
   }
 
-  handleMSSmoothChange(event) {
-    let smooth = parseFloat(event.target.value);
-    if (!isNaN(smooth)) {
+  handleMSSmoothCurvesSigmaChange(event) {
+    let sigma = parseFloat(event.target.value);
+    if (!isNaN(sigma) && sigma > 0.0) {
       this.setState((prevState) => ({
-        ms: { ...prevState.ms, smooth:smooth },
+        ms: { ...prevState.ms, curvesigma:sigma },
       }));
     }
   }
@@ -697,11 +697,11 @@ class DecompositionPanel extends React.Component {
 
                   {/* Smooth */}
                   <TextField
-                    label="Regression Bandwidth"
-                    id="ms-smooth"
-                    defaultValue={this.state.ms.smooth}
+                    label="Data Smoothing Sigma"
+                    id="ms-datasigma"
+                    defaultValue={this.state.ms.datasigma}
                     size="small"
-                    onChange={this.handleMSSmoothChange.bind(this)}
+                    onChange={this.handleMSSmoothDataSigmaChange.bind(this)}
                   />
 
                   {/* Add noise */}
@@ -733,11 +733,11 @@ class DecompositionPanel extends React.Component {
 
                   {/* Sigma */}
                   <TextField
-                    label="Curve Smoothing"
-                    id="ms-sigma"
-                    defaultValue={this.state.ms.sigma}
+                    label="Curve Smoothing Sigma"
+                    id="ms-curvesigma"
+                    defaultValue={this.state.ms.curvesigma}
                     size="small"
-                    onChange={this.handleMSSigmaChange.bind(this)}
+                    onChange={this.handleMSSmoothCurvesSigmaChange.bind(this)}
                   />
 
                   { /* Buttons to recompute M-S and dump crystal partitions to disk */}
