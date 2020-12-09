@@ -256,7 +256,9 @@ class EmbeddingMorseSmaleWindow extends React.Component {
               <GridListTile key={tile.id} style={{ height:this.getTileHeight() }} >
                 <Paper className={classes.paper}>
                   <Typography>{'Design: ' + (parseInt(tile.id)+1)}</Typography>
-                  <Typography>{tile.val.toFixed(5)}</Typography>
+
+                  {/*<Typography>{tile.val.toFixed(5)}</Typography>*/}
+                  <Typography>{tile.val.toExponential(4)}</Typography>
 
                   <img alt={'Image:' + tile.id} key={tile.id}
                        height={this.scaledImageHeight()}
