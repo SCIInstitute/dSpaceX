@@ -8,9 +8,8 @@ import { withDSXContext } from '../dsxContext.js';
 import { withStyles } from '@material-ui/core/styles';
 import GalleryWindow from './galleryWindow';
 
-const minTileWidth      = 100;
-const minTileHeight     = 80;
-const tileWidthMargins  = 58;  // 5+5 image margin + 5+5 paper margin + 20 text + 18 fluff (ugh) 
+const tileHeight     = 160;  // TODO: make this able to be modified interactively (ideally drag the window, passed parameter of not)
+const tileWidthMargins  = 50;  // 5+5 image margin + 5+5 paper margin + 20 text + 10 fluff (ugh) 
 const tileHeightMargins = 60;  // 5+5 image margin + 5+5 paper margin + 40 text (ugh) 
 
 const styles = (theme) => ({
@@ -150,28 +149,14 @@ class EmbeddingMorseSmaleWindow extends React.Component {
    * Return best guess at tile width
    */
   getTileWidth() {
-    let images = this.state.drawerImages;
-    if (images && images.length > 0) {
-      let img = images[0].img;
-      let tile_width = Math.max(minTileWidth, img.width + tileWidthMargins);
-      return tile_width;
-    }
-
-    return minTileWidth;
+    return this.scaledImageWidth() + tileWidthMargins;
   }
 
   /**
    * Return best guess at tile height
    */
   getTileHeight() {
-    let images = this.state.drawerImages;
-    if (images && images.length > 0) {
-      let img = images[0].img;
-      let tile_height = Math.max(minTileHeight, img.height + tileHeightMargins);
-      return tile_height;
-    }
-
-    return minTileHeight;
+    return this.scaledImageHeight() + tileHeightMargins;
   }
 
   /**
@@ -182,25 +167,17 @@ class EmbeddingMorseSmaleWindow extends React.Component {
     if (images && images.length > 0) {
       let img = images[0].img;
       let aspect_ratio = img.width / img.height;
-      let img_height = Math.min(img.height, this.getTileHeight() - tileHeightMargins);
-      return img_height * aspect_ratio;
+      return this.scaledImageHeight() * aspect_ratio;
     }
 
-    return this.getTileWidth() - tileWidthMargins;
+    return 5; // should never get here, so make it obvious if we do
   }
 
   /**
    * Return scaled image height that fits in this tile 
    */
   scaledImageHeight() {
-    let images = this.state.drawerImages;
-    if (images && images.length > 0) {
-      let img = images[0].img;
-      let img_height = Math.min(img.height, this.getTileHeight() - tileHeightMargins);
-      return img_height;
-    }
-
-    return this.getTileHeight() - tileHeightMargins;
+    return tileHeight;
   }
 
   /**
