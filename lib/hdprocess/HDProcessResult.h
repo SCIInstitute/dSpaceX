@@ -3,7 +3,7 @@
 #include "flinalg/Linalg.h"
 #include "dataset/Precision.h"
 #include <vector>
-
+#include <map>
 
  /**
   * All output data generated from the HDProcessor. 
@@ -21,8 +21,9 @@ struct HDProcessResult {
   std::vector<FortranLinalg::DenseVector<int>> crystalPartitions;   // CrystalPartitions_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaValues; // ExtremaValues_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaWidths; // ExtremaWidths_[level].data.hdr
-  std::vector<int> extremaIndex; // samples to which each extrema is associated
-  
+  std::vector<int> extremaIndex;                                // samples to which each extrema is associated
+  std::vector<std::vector<std::pair<int,int>>> extrema; // max,min pairs of sample ids for each crystal of each plvl
+
   // Layout Data 
   FortranLinalg::DenseVector<Precision> LminPCA;       // PCAMin.data.hdr
   FortranLinalg::DenseVector<Precision> LmaxPCA;       // PCAMax.data.hdr  

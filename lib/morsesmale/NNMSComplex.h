@@ -185,8 +185,9 @@ class NNMSComplex {
 
     //Compute the MS crystals for the given persistence level. Neighboring
     //extrema with a absolute difference between saddle and lower exterma
-    //smaller than pLevel, are recursively joined into a single extrema.
+    //smaller than pLevel, are recursively joined into a single extrema.  
     void mergePersistence(TPrecision pLevel){
+      std::cout << "===mergePersistence "<< pLevel << std::endl;
       //compute merge chain 
       for(unsigned int i=0; i<merge.N(); i++){
         merge(i) = i;
@@ -217,11 +218,47 @@ class NNMSComplex {
 
       //compute crystals based on merge chain
       mergeCrystals();
+
+#if 0
+      int n = 0;
+      printf("extrema:\n");
+      for (int i=0; i<extrema.N(); i++) {
+        printf("%d: min: %d, max: %d\n", i, extremaIndex(merge(extrema(1,i)))+1, extremaIndex(merge(extrema(0,i)))+1);
+      }
       
+      printf("pcrystals:\n");
+      for (map_pi_i_it it = pcrystals.begin(); it != pcrystals.end(); ++it) {
+        std::pair<int, int> p = (*it).first;
+        auto min_xid = p.second;
+        auto max_xid = p.first;
+        auto min_sid = extremaIndex(merge(min_xid));
+        auto max_sid = extremaIndex(merge(max_xid));
+        auto cid = (*it).second;
+        printf("pcrystal %d: min: %d, max: %d\n", cid, min_sid+1, max_sid+1);
+      }
+#endif
     };
 
    
-
+  // get crystals as set of max/min pairs, managing all the tricky merge/index stuff
+  // (basically same as getCrystals below but takes into account the possibly merged extrema)
+  std::vector<std::pair<int,int>> getExtrema() {
+    std::vector<std::pair<int,int>> ret(pcrystals.size());
+    int cnt = 0;
+    for (map_pi_i_it it = pcrystals.begin(); it != pcrystals.end(); ++it) {
+      std::pair<int, int> p = (*it).first;
+      auto min_xid = p.second;
+      auto max_xid = p.first;
+      auto min_sid = extremaIndex(merge(min_xid));
+      auto max_sid = extremaIndex(merge(max_xid));
+      // auto min_sid = extremaIndex(min_xid);     // same as getCrystals below
+      // auto max_sid = extremaIndex(max_xid);
+      auto cid = (*it).second;
+      ret[cid] = std::pair<int,int>(max_sid, min_sid);
+      //assert(cid == cnt++);  // failed... cool, so crystal ids matter
+    }
+    return ret;
+  }
 
     //Get partioning accordinng to the crystals of the MS-complex for the
     //currently set persistence level
@@ -354,11 +391,11 @@ private:
         for (unsigned int k=1; k<KNN.M(); k++) {
           int j = KNN(k, i);
           double d = pow(KNND(k, i), gradient_exp);
-          double g = ys(j) - ys(i);  // <ctc> but this can be zero... (if d = 0 below)
+          double g = ys(j) - ys(i);
           if (d == 0 ) {
-            g = 0;   //<ctc> but what if d != 0, then is it okay for g to be zero?
+            g = 0;
           } else {
-            g = g / d; //<ctc> g shouldn't be zero... (or does it even matter? maybe it's implicit and the last or first is the winner regardless)
+            g = g / d;
           }
 
           if (G(0, i) < g) {
@@ -484,6 +521,11 @@ private:
         extremaIndex(index) = *it;
       }
 
+      // <ctc> printed same indices below and confirmed they are identical
+      // for(unsigned int i=0; i<extrema.N(); i++){      
+      //   printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
+      // }
+
       // Inital persistencies
       // Store as pairs of extrema such thats p.first merges to p.second (e.g.
       // p.second is the max/min with the larger/smaller function value
@@ -606,6 +648,30 @@ private:
         }
       }
       persistence = ptmp;
+
+#if 0
+      printf("\nROUND 2... FIGHT!\n");
+      for(unsigned int i=0; i<extrema.N(); i++){      
+        printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
+      }
+
+      int n = 0;
+      printf("\nStarting extrema:\n");
+      for (int i=0; i<extrema.N(); i++) {
+        printf("%d: min: %d, max: %d\n", i, extremaIndex(extrema(1,i))+1, extremaIndex(extrema(0,i))+1);
+      }
+      
+      printf("\nStarting crystals:\n");
+      for (map_pi_i_it it = crystals.begin(); it != crystals.end(); ++it) {
+        std::pair<int, int> p = (*it).first;
+        auto min_xid = p.second;
+        auto max_xid = p.first;
+        auto min_sid = extremaIndex(min_xid);
+        auto max_sid = extremaIndex(max_xid);
+        auto cid = (*it).second;
+        printf("crystal %d: min: %d, max: %d\n", cid, min_sid+1, max_sid+1);
+      }
+#endif
 
       // Initialize to 0 persistence
       mergePersistence(0);  

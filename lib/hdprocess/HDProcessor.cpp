@@ -116,6 +116,9 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   // bring along the extremaIndex in order to ensure shared samples are included with a crystal
   auto extremaIndex = msComplex.getExtremaIndex();
   std::copy(extremaIndex.data(), extremaIndex.data() + extremaIndex.N(), std::back_inserter(m_result->extremaIndex));
+
+  // initialize crystalMaps to be filled in as the complex is merged next
+  m_result->extrema.resize(persistence.N());
   
   // Compute inverse regression curves and additional information for each crystal
   for (unsigned int persistenceLevel = start; persistenceLevel < persistence.N(); persistenceLevel++){
@@ -296,6 +299,8 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   // Store Crystal Partitions in Result (which samples belong to which crystal)
   m_result->crystalPartitions[persistenceLevel] = Linalg<int>::Copy(crystalIDs);
 
+  // store crystals' extrema for this persistence level
+  m_result->extrema[persistenceLevel] = msComplex.getExtrema();
 
   crystalTmp.deallocate();   
 

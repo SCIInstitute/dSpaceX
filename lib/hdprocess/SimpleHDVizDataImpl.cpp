@@ -176,7 +176,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
 
   for (auto p = 0; p < num_persistences; p++) {
     auto num_samples = result->crystalPartitions[p].N();  // same for all persistences
-    auto num_crystals = result->crystals[p].N();
+    auto num_crystals = result->extrema[p].size();
     crystals[p].resize(num_crystals);
     extrema[p].resize(num_crystals);
 
@@ -185,25 +185,18 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
       crystals[p][result->crystalPartitions[p](id)].push_back(id);
     }
 
-    // add the extrema
-    for (auto c = 0; c < num_crystals; c++) {
-      auto max = result->crystals[p](0,c);
-      auto min = result->crystals[p](1,c);
-      auto max_id = result->extremaIndex[max];
-      auto min_id = result->extremaIndex[min];
+    // add the extrema (max/min pairs of sample ids)
+    extrema[p] = result->extrema[p];
 
-      // ...to the crystals
-      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), max_id) == crystals[p][c].end())
-        crystals[p][c].push_back(max_id);
-      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), min_id) == crystals[p][c].end())
-        crystals[p][c].push_back(min_id);
-
-      // ...to the extrema pairs for each crystal
-      extrema[p][c].first = max_id;
-      extrema[p][c].second = min_id;
+    // If missing, add the extrema to their corresponding crystals
+    for (auto c = 0; c < extrema[p].size(); c++) {
+      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].first) == crystals[p][c].end())
+        crystals[p][c].push_back(extrema[p][c].first);
+      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].second) == crystals[p][c].end())
+        crystals[p][c].push_back(extrema[p][c].second);
     }
   }
-  // celebrate 
+  // weep
 
   computeScaledLayouts();
   //
