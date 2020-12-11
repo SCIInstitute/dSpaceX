@@ -294,9 +294,12 @@ class Application extends React.Component {
    */
   onCrystalSelection(crystalSamples /*, todo: maxima, minima*/) {
     let selectedDesigns = new Set(crystalSamples);
+
+    // print designs for the newly selected crystal to help debug incorrect extrema issue (seems to be bad M-S computation)
     // let designsArray = Array.from(selectedDesigns.values());
     // designsArray.sort(function(a, b){return a - b});
     // console.log("selected shape ids: " + designsArray.toString());
+
     this.setState({ selectedDesigns: selectedDesigns, crystalDesigns: selectedDesigns });
   }
 
