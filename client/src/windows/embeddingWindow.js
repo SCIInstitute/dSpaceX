@@ -184,7 +184,7 @@ class EmbeddingWindow extends React.Component {
     this.idToObject = {};
 
     // renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true });
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true, failIfMajorPerformanceCaveat:true });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.renderer.sortObjects = false;
 

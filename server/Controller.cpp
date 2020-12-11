@@ -799,6 +799,9 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
     auto fieldval = minval + delta * i;
     response["fieldvals"].append(fieldval);
 
+    // add "sample ids" to response (multiplying them by 10 to make it a little more obvious it's from interpolation)
+    response["sampleids"].append((int)i * 10 - 1);
+
     // get new latent space coordinate for this field_val
     Eigen::RowVectorXf z_coord = model->getNewLatentSpaceValue(fieldvals, model->getZCoords(), fieldval, sigmaScale);
 

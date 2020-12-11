@@ -6,8 +6,24 @@ import { Vector3 } from 'three/src/math/Vector3.js';
 import { Vector2 } from 'three/src/math/Vector2.js';
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import React from 'react';
+import { withStyles } from '@material-ui/core/styles';
 import { withDSXContext } from '../dsxContext';
 import _ from 'lodash';
+
+const styles = (theme) => ({
+  ms_canvas: {
+    width: '100%',
+    height: '100%',
+  },
+  container: {
+    position: 'relative',
+  },
+  overlay: {
+    position: 'absolute',
+    left: '10px',
+    top: '10px',
+  },
+});
 
 /**
  * Creates Morse-Smale decomposition
@@ -32,13 +48,19 @@ class MorseSmaleWindow extends React.Component {
                    sprites: undefined,  // { nearestLesser, interpolated, nearestGreater }
                    p0: new Vector2(),   // projection of currently selected curve to normalized screen coordinates
                    p1: new Vector3(),
+                   percent: 0.5,
                  },
       validate: false,                  // when crystal selected, use model's z_coords to reconstruct original shapes
       diff_validate: false,             // return diff of these with original images
+
+      extremaRad: 0.05,
+      crystalRad: 0.02,
     };
 
     this.client = this.props.dsxContext.client;
 
+
+    // <ctc> get rid of any of these I can
     this.init = this.init.bind(this);
     this.createCamerasAndControls = this.createCamerasAndControls.bind(this);
     this.updateCamera = this.updateCamera.bind(this);
@@ -59,13 +81,7 @@ class MorseSmaleWindow extends React.Component {
     this.addRegressionCurvesToScene = this.addRegressionCurvesToScene.bind(this);
     this.addExtremaToScene = this.addExtremaToScene.bind(this);
 
-    this.resetScene = this.resetScene.bind(this);
-    this.resetBounds = this.resetBounds.bind(this);
     this.renderScene = this.renderScene.bind(this);
-
-    this.addSphere = this.addSphere.bind(this);
-    this.addLine = this.addLine.bind(this);
-    this.setImage = this.setImage.bind(this);
   }
 
   /**
@@ -100,6 +116,10 @@ class MorseSmaleWindow extends React.Component {
             || prevDecomposition.ms !== currentDecomposition.ms);
   }
 
+  hasModel() {
+    return this.props.decomposition !== null && this.props.decomposition.modelname !== "None";
+  }
+
   /**
    * Called by react when this component receives new props or context or
    * when the state changes.
@@ -111,6 +131,10 @@ class MorseSmaleWindow extends React.Component {
   componentDidUpdate(prevProps, prevState, prevContext) {
     if (this.props.decomposition === null) {
       return;
+    }
+
+    if (this.state !== prevState) {
+      console.log("MS: state changed");
     }
 
     if (prevProps.decomposition === null
@@ -131,6 +155,7 @@ class MorseSmaleWindow extends React.Component {
           this.addRegressionCurvesToScene(regressionResponse);
           this.addExtremaToScene(extremaResponse.extrema);
           this.pickCrystal(this.regressionCurves[0]); // automatically pick first crystal
+          this.updateDynamicModelEval(0.5); // select middle of crystal
           this.renderScene();
         }
         else {
@@ -139,13 +164,13 @@ class MorseSmaleWindow extends React.Component {
         }
       });
     }
-
-    // if model changed and crystal selected, re-select the crystal to evaluate new model
-    if (prevProps.decomposition &&
+    // if model changed and crystal selected, evaluate new model
+    else if (prevProps.decomposition &&
         prevProps.decomposition.modelname !== this.props.decomposition.modelname &&
         this.pickedCrystal !== undefined) {
       let crystalID = this.pickedCrystal.name;
       this.props.evalModelForCrystal(crystalID, this.numInterpolants, false, this.state.validate, this.state.diff_validate);
+      this.updateDynamicModelEval(this.state.evalModel.percent); 
     }
 
     // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)
@@ -188,7 +213,7 @@ class MorseSmaleWindow extends React.Component {
    */
   onMouseMove(event) {
     if (this.continuousInterpolation) {
-      this.handleContinuousInterpolationMouseMove(this.getPickPosition(event));
+      this.evalModel(this.getPercent(this.getPickPosition(event)));
     }
     else {
       // can release mousemove handler since orbit controls handles camera
@@ -242,6 +267,12 @@ class MorseSmaleWindow extends React.Component {
     let canvas = this.refs.msCanvas;
     let gl = canvas.getContext('webgl');
     let width = canvas.clientWidth, height = canvas.clientHeight;
+
+/*
+    // fieldval overlay used by dynamic model interpolation (todo: the div is causing the crystals view to turn tiny)
+    this.fieldvalNode = this.refs.fieldvalue;
+    this.fieldvalNode.textContent = "transyvania six five thousand";
+*/
 
     // scene
     this.scene = new THREE.Scene();
@@ -309,7 +340,7 @@ class MorseSmaleWindow extends React.Component {
   handleKeyDownEvent(event) {
     switch (event.key) {
     case 'v': // toggle orthogonal/perspective camera
-      this.toggleCamera();
+      this.toggleCamera();     // calls controls.reset, so if one works, this will too
       break;
     case 'r': // reset view
       this.controls.reset();   // resets camera to original position
@@ -328,8 +359,14 @@ class MorseSmaleWindow extends React.Component {
     case 'd': // return diff when validating
       this.state.diff_validate = !this.state.diff_validate;
       break;
+    case '=': // Increase thumbnail size
+    case '+':
+      this.setState({ extremaRad: this.state.extremaRad * 1.25 });  // <ctc> experiment w/ update based on setstate (todo: need to let componentDidUpdate call render, but also a conflict with embeddingWindow on keys, so a couple of fixmes here)
+      break;
+    case '-': // decrease thumbnail size
+      this.setState({ extremaRad: this.state.extremaRad * 0.75 });
+      break;
     }
-    this.renderScene();
   }
 
   /**
@@ -363,16 +400,16 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
-   * Handle mouse move for continuous interpolation
-   * @param {Point2} normalized screen space coordinate of pick
-   */
-  handleContinuousInterpolationMouseMove(normalizedPosition) {
-    // get current percent of selected pt along current crystal, and change position of crystalPos slider
-    let curve = this.pickedCrystal.geometry.parameters.path;
-    let percent = this.getPercent(normalizedPosition);
-    this.crystalPosObject.position.copy(curve.getPoint(percent).applyMatrix4(this.pickedCrystal.matrix));
-    this.renderScene();
-    this.evalModel(percent);
+    * Return position at given percent along currently selected crystal.
+    * @param {float} percent along crystal
+    * @return {THREE.Vector3}
+    */
+  getPosAlongSelectedCrystal(percent) {
+    if (this.pickedCrystal !== null) {
+      let curve = this.pickedCrystal.geometry.parameters.path;
+      return curve.getPoint(percent);
+    }
+    return new THREE.Vector3(0,0,0);
   }
 
   /*
@@ -380,7 +417,7 @@ class MorseSmaleWindow extends React.Component {
    * @param {data} raw base64 [png] image data
    */
   setImage(data) {
-    if (data !== undefined && this.props.decomposition.modelname !== 'None') {
+    if (data !== undefined && this.hasModel()) {
 
       let width = this.refs.msCanvas.clientWidth, height = this.refs.msCanvas.clientHeight;
       const aspect = width / height;
@@ -393,7 +430,13 @@ class MorseSmaleWindow extends React.Component {
           this.imageSprite.material.needsUpdate = true;
           this.imageSprite.scale.x = this.spriteScale;
           this.imageSprite.scale.y = texture.image.height / texture.image.width * this.spriteScale * aspect;
+
+          // update sprite
+          //this.renderSprites(); // TODO: renderSprites still clears canvas (React? THREE.js?) so render whole scene
+          //NOT EVEN THIS WORKS! it's because orbitcontrols has taken over updates (prolly why it always clears too)
+          // Right now you MUST move the mouse to update (FIXME)
           this.renderScene();
+
         }.bind(this));
     }
     else {
@@ -406,25 +449,32 @@ class MorseSmaleWindow extends React.Component {
    * @param {float} percent along current crystal to evaluate (in range [0,1])
    */
   async evalModel(percent) {
-    //console.log("evalModel("+percent+")");
     let crystalID = this.pickedCrystal.name;
+
+    // evalModel in progress, so set/replace next to be requested
     if (this.state.evalModel.inProgress) {
       this.state.evalModel.next = { crystalID, percent };
-      //console.log("evalModel in progress, setting next to("+percent+")");
     }
     else {
       this.state.evalModel.inProgress = true;
+      this.state.evalModel.percent = percent;
+      this.renderScene(); // need to do this right away to keep position object in place <ctc> make sure nothing else does it
       this.props.evalModelForCrystal(crystalID, 1 /*numSamples*/, false /*showOrig*/,
                                      false /*validate*/, false /* diff_validate */,
-                                     percent).then((image) => {
-        //console.log("evalModel("+percent+") complete! setting image");
-        this.setImage(image);
+                                     percent).then((result) => {
         this.state.evalModel.inProgress = false;
+
+        this.setImage(result);
+        console.log("dynamic evalModel("+percent+"): fieldval: "+result.val);
+
+        // TODO: display fieldval in it's container: this.fieldvalNode.textContent = result.val.toExponential(4);
+        // - https://webglfundamentals.org/webgl/lessons/webgl-text-html.html
+
+        // render the next if any
         if (this.state.evalModel.next !== undefined) {
           this.evalModel(this.state.evalModel.next.percent);
           this.state.evalModel.next = undefined;
         }
-        this.renderScene();
       });
     }
   }
@@ -505,6 +555,21 @@ class MorseSmaleWindow extends React.Component {
   }
 
   /**
+   * If a model is selected, update the dynamic interpolation slider position and sprite.
+   * @param {object} percent Distance along crystal at which to evaluate.
+   */
+  updateDynamicModelEval(percent) {
+    if (this.hasModel()) {
+      this.evalModel(percent);
+    }
+    else {
+      this.state.evalModel.percent = 0.5;
+      // <ctc> if there was never a model in the first place, this is a wasted render
+      this.renderScene(); // be sure scene still gets re-rendered so new crystal is highlighted <ctc> still always necessary?
+    }
+  }
+
+  /**
    * Pick level set of decomposition
    * @param {object} normalizedPosition pick position in normalized screen space <[-1,1], [-1,1]>
    * @return returns false if nothing picked and scene rotation can continue
@@ -529,15 +594,7 @@ class MorseSmaleWindow extends React.Component {
       }
 
       // interactive model evaluation
-      let hasModel = this.props.decomposition.modelname !== "None";
-      if (hasModel) {
-        this.crystalPosObject.visible = true;
-        this.handleContinuousInterpolationMouseMove(normalizedPosition);
-      }
-      else {
-        this.crystalPosObject.visible = false;
-        this.renderScene(); // be sure scene still gets re-rendered so new crystal is highlighted
-      }
+      this.updateDynamicModelEval(this.state.evalModel.percent);
     
       return true; // curve picked and now we can be sliding along it to dynamically interpolate model
     }
@@ -641,7 +698,7 @@ class MorseSmaleWindow extends React.Component {
       let extrusionSegments = 350;
       let colors = cr_color.getPoints(extrusionSegments); // "interpolate" colors
       let radialSegments = 10;
-      let radius = 0.02;  // TODO: should be relative to scene size (which needs adjusting as noted in a github issue #158)
+      let radius = this.state.crystalRad;
       let curveGeometry = new THREE.TubeBufferGeometry(cr_curve, extrusionSegments, radius, radialSegments, false /*closed curve*/);
       let count = curveGeometry.attributes.position.count; // geom size; we need to set a color per point in the geometry
       curveGeometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
@@ -684,8 +741,8 @@ class MorseSmaleWindow extends React.Component {
   addExtremaToScene(extrema) {
     extrema.forEach((extreme) => {
       let position = new THREE.Vector3().fromArray(extreme.position);
-      //todo: scale radius relative to this.bounds; ~0.05 (default) is good for bounds of size 1, 1, 1.
-      this.addSphere(this.scene, position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]));
+      this.addSphere(this.scene, position, new THREE.Color(extreme.color[0], extreme.color[1], extreme.color[2]),
+                     this.state.extremaRad);
     });
   }
 
@@ -705,7 +762,6 @@ class MorseSmaleWindow extends React.Component {
     this.spriteScale = 0.4;
     this.imageSprite = new THREE.Sprite();
     this.imageSprite.position.set(0.7,-0.7,0.0); // position of center of sprite
-    this.imageSprite.visible = false;
     this.uiScene.add(this.imageSprite);
 
     // for continuous interpolation of a selected crystal
@@ -836,18 +892,38 @@ class MorseSmaleWindow extends React.Component {
 
     this.regressionCurves = [];
     this.pickedCrystal = undefined;
-    this.crystalPosObject = this.addSphere(this.scene, new THREE.Vector3(), new THREE.Color('darkorange'), 0.03 /*radius*/);
+    this.crystalPosObject = this.addSphere(this.scene, new THREE.Vector3(), new THREE.Color('darkorange'),
+                                           this.state.extremaRad * 0.6);
     this.crystalPosObject.visible = false;
+    this.imageSprite.visible = false;
+
+    this.state.evalModel.inProgress = false;
+    this.state.evalModel.next = undefined;
+    this.state.evalModel.percent = 0.5;
 
     this.updateCamera(this.refs.msCanvas.width, this.refs.msCanvas.height, true /*resetPos*/);
+  }
+
+  /**
+   * Draws the 2d portion of the scene.
+   */
+  renderSprites() {
+    // FIXME: This shouldn't clear canvas but currently it does.
+    //        It means we always renderScene even when only this sprite needs updating.
+    this.renderer.render(this.uiScene, this.uiCamera);
   }
 
   /**
    * Draws the scene to the canvas.
    */
   renderScene() {
+    // let start = Date.now();  // time the render (it's fast, just commiting this to remember how :)
+
     var scene = Object.values(this.scene.children);
-    this.renderer.clear();
+    //this.renderer.clear();  // FIXME: canvas gets cleared regardless (why??); renderSprite issue. We *want* this here.
+
+    // update the crystalPosObject
+    this.updateCrystalPosObject();
 
     // render first...
     this.renderer.render(this.scene, this.camera);
@@ -864,14 +940,22 @@ class MorseSmaleWindow extends React.Component {
       for (var item of scene) {
         item.visible = true;
       }
-
-      // and re-hide the crystalPosObject if we're not using it
-      let hasModel = this.props.decomposition.modelname !== "None";
-      this.crystalPosObject.visible = hasModel;
     }
+    // let end = Date.now();
+    // console.log("Rendered M-S Crystals in: " + (end - start).toString() + " ms");
 
-    // ...and finally, the UI
-    this.renderer.render(this.uiScene, this.uiCamera);
+    // ...and finally, redraw the sprite
+    this.renderSprites();
+  }
+
+  updateCrystalPosObject() {
+    this.crystalPosObject.visible = this.hasModel() && this.pickedCrystal;
+
+    // set crystalPosObject position
+    if (this.pickedCrystal) {
+      let pos = this.getPosAlongSelectedCrystal(this.state.evalModel.percent);
+      this.crystalPosObject.position.copy(pos.applyMatrix4(this.pickedCrystal.matrix));
+    }
   }
 
   /**
@@ -885,8 +969,19 @@ class MorseSmaleWindow extends React.Component {
     };
 
     return (
-        <canvas ref='msCanvas' style={style} />);
+        <canvas ref='msCanvas' style={style} />
+    );
+
+    /*
+    const { classes } = this.props;  // come from styles dict at the top using withStyles (below)
+    return (
+      <div className='container'>
+        <canvas ref='msCanvas' className={classes.ms_style} />
+        <div ref='fieldvalue' className={classes.overlay} />
+      </div>
+    );
+    */
   }
 }
 
-export default withDSXContext(MorseSmaleWindow);
+export default withDSXContext(withStyles(styles)(MorseSmaleWindow));

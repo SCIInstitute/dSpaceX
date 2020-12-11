@@ -12,6 +12,7 @@ const tileHeight     = 160;  // TODO: make this able to be modified interactivel
 const tileWidthMargins  = 50;  // 5+5 image margin + 5+5 paper margin + 20 text + 10 fluff (ugh) 
 const tileHeightMargins = 60;  // 5+5 image margin + 5+5 paper margin + 40 text (ugh) 
 
+// these are accessed through `this.props.classes` when bound to the class using withStyles
 const styles = (theme) => ({
   embeddingMorseSmaleWorkspace: {
     background:'#ffffff',
@@ -48,6 +49,8 @@ const styles = (theme) => ({
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
     gridGap: '0em',
+    // height:'100px',   // TODO: this ensures the drawer is present, so un-hack the way we're currently showing it
+    // flex:'auto',
   },
   gridlistRoot: {
     display: 'flex',
