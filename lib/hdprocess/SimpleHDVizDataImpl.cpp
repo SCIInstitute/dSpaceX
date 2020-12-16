@@ -188,10 +188,6 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     // add the extrema (max/min pairs of sample ids)
     extrema[p] = result->extrema[p];
 
-    /*
-      <ctc> 2020.12.09 - something is wrong with the ms decomposition and an incorrect sample is a minima. Removing for now.
-
-
     // If missing, add the extrema to their corresponding crystals
     for (auto c = 0; c < extrema[p].size(); c++) {
       if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].first) == crystals[p][c].end())
@@ -199,7 +195,6 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
       if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].second) == crystals[p][c].end())
         crystals[p][c].push_back(extrema[p][c].second);
     }
-    */
   }
   // weep
 

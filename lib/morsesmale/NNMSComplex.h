@@ -219,7 +219,7 @@ class NNMSComplex {
       //compute crystals based on merge chain
       mergeCrystals();
 
-#if 0
+#if 1
       int n = 0;
       printf("extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
