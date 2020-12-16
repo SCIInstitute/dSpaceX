@@ -223,7 +223,7 @@ class NNMSComplex {
       int n = 0;
       printf("extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
-        printf("%d: min: %d, max: %d\n", i, extremaIndex(merge(extrema(1,i)))+1, extremaIndex(merge(extrema(0,i)))+1);
+        printf("%d: min: %d, max: %d\n", i+1, extremaIndex(merge(extrema(1,i)))+1, extremaIndex(merge(extrema(0,i)))+1);
       }
       
       printf("pcrystals:\n");
@@ -234,7 +234,7 @@ class NNMSComplex {
         auto min_sid = extremaIndex(merge(min_xid));
         auto max_sid = extremaIndex(merge(max_xid));
         auto cid = (*it).second;
-        printf("pcrystal %d: min: %d, max: %d\n", cid, min_sid+1, max_sid+1);
+        printf("pcrystal %d: min: %d, max: %d\n", cid+1, min_sid+1, max_sid+1);
       }
 #endif
     };
@@ -523,7 +523,7 @@ private:
 
       // <ctc> printed same indices below and confirmed they are identical
       // for(unsigned int i=0; i<extrema.N(); i++){      
-      //   printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
+      //   printf("index %d: min: %d, max: %d \n", i+1, extremaIndex(extrema(1,i+1)), extremaIndex(extrema(0,i+1)));
       // }
 
       // Inital persistencies
@@ -652,13 +652,13 @@ private:
 #if 0
       printf("\nROUND 2... FIGHT!\n");
       for(unsigned int i=0; i<extrema.N(); i++){      
-        printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
+        printf("index %d: min: %d, max: %d \n", i+1, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
       }
 
       int n = 0;
       printf("\nStarting extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
-        printf("%d: min: %d, max: %d\n", i, extremaIndex(extrema(1,i))+1, extremaIndex(extrema(0,i))+1);
+        printf("%d: min: %d, max: %d\n", i+1, extremaIndex(extrema(1,i))+1, extremaIndex(extrema(0,i))+1);
       }
       
       printf("\nStarting crystals:\n");
@@ -669,7 +669,7 @@ private:
         auto min_sid = extremaIndex(min_xid);
         auto max_sid = extremaIndex(max_xid);
         auto cid = (*it).second;
-        printf("crystal %d: min: %d, max: %d\n", cid, min_sid+1, max_sid+1);
+        printf("crystal %d: min: %d, max: %d\n", cid+1, min_sid+1, max_sid+1);
       }
 #endif
 
