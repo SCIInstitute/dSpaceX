@@ -209,6 +209,7 @@ class Application extends React.Component {
         distanceMetrics: distancesMap,
         embeddings: embeddingList.embeddings,
       });
+      this.addWindow();
     });
   }
 

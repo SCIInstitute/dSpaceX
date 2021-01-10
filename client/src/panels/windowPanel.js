@@ -25,7 +25,7 @@ class WindowPanel extends React.Component {
     super(props);
     this.state = {
       id: this.props.config.id,
-      dataViewType: this.props.config.dataViewType,
+      dataViewType: this.props.config.id == 0 ? 'graph' : undefined, // by default first window will be embedding/morsesmale
       tableAttributeGroup: this.props.config.tableAttributeGroup,
       decomposition: null,
       embeddingAlgorithm: this.props.embeddings[0] ? this.props.embeddings[0].name.trim() : 'None',
@@ -54,6 +54,14 @@ class WindowPanel extends React.Component {
     this.getTableOptions = this.getTableOptions.bind(this);
     this.getGraphOptions = this.getGraphOptions.bind(this);
     this.getScatterPlotOptions = this.getScatterPlotOptions.bind(this);
+  }
+
+  componentDidMount() {
+    console.log('windowPanel mounted');
+    if (this.props.onConfigChange) {
+      console.log('calling props.onConfigChange...');
+      this.props.onConfigChange(this.state);
+    }
   }
 
   /**
