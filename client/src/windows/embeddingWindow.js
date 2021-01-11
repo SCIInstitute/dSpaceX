@@ -204,14 +204,15 @@ class EmbeddingWindow extends React.Component {
                                     persistenceLevel, category, fieldname)
       ]).then((results) => {
         const [embeddingResult, colorsResult] = results;
-          let adjacency = embeddingResult.embedding.adjacency;
-          let layout = embeddingResult.embedding.layout;
-          this.state.colors = colorsResult.colors;
-          this.updateColors();
-          this.updateLocations(layout);
-          this.addEdgesToScene(adjacency, layout);
-          this.renderScene();
-        });
+        let adjacency = embeddingResult.embedding.adjacency;
+        let layout = embeddingResult.embedding.layout;
+        this.state.colors = colorsResult.colors;
+        this.updateColors();
+        this.updateLocations(layout);
+        this.addEdgesToScene(adjacency, layout);
+        this.state.fetchInProgress = false;
+        this.renderScene();
+      });
       this.state.fetchInProgress = true;
       return;
     }
@@ -317,19 +318,17 @@ class EmbeddingWindow extends React.Component {
     // -> it doesn't. BufferGeometry implies a sequence but knn connectivity is a more general graph
  
     let edges = new THREE.Group();
-    if (this.state.renderEdges) {
-      adjacencyMatrix.forEach((edge) => {
-        let endPoint1 = sampleCoordinates[edge[0]];
-        let endPoint2 = sampleCoordinates[edge[1]];
+    adjacencyMatrix.forEach((edge) => {
+      let endPoint1 = sampleCoordinates[edge[0]];
+      let endPoint2 = sampleCoordinates[edge[1]];
 
-        let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
-        let lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 1.5));
-        lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 1.5));
-        let line = new THREE.Line(lineGeometry, lineMaterial);
-        this.edges.add(line);
-      });
-    }
+      let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
+      let lineGeometry = new THREE.Geometry();
+      lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 1.5));
+      lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 1.5));
+      let line = new THREE.Line(lineGeometry, lineMaterial);
+      edges.add(line);
+    });
     this.scene.add(edges);
     edges.visible = false;
     edges.translateZ(-2.0);
