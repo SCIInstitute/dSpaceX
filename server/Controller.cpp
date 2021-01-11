@@ -406,7 +406,7 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
 }
 
 /**
- * This fetches the graph embedding layout for a given persistence level
+ * This fetches the 2d embedding layout for the nodes for a field in a given distance metric
  * @param request
  * @param response
  */

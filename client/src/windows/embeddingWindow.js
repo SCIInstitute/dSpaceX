@@ -20,7 +20,7 @@ class EmbeddingWindow extends React.Component {
       renderThumbnails: false,
       colorThumbnails: false,
       thumbnailScale: 0.25,
-      nodeSize: 0.01,
+      nodeSize: 0.025,
       selectingDesign: false,
     };
 
@@ -106,6 +106,7 @@ class EmbeddingWindow extends React.Component {
 
     // Decomposition is loaded for the first time
     // Or has been updated so we need to load the data
+    // <ctc> fixme: selecting a different crystal shouldn't need to reload textures, edges, etc
     if (prevProps.decomposition === null
       || this.isNewDecomposition(prevProps.decomposition, this.props.decomposition)
       || prevProps.embedding !== this.props.embedding
@@ -126,15 +127,19 @@ class EmbeddingWindow extends React.Component {
         this.textures = this.buildTexture(this.thumbnails);
         this.addEdgesToScene(this.adjacency, this.layout);
         this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
+        //this.camera.updateProjectionMatrix();
         this.renderScene();
       });
+      console.log("new decomposition (SLOW)");
     }
     // Selected designs changed or state has changed
     else if (prevProps.selectedDesigns !== this.props.selectedDesigns || prevState !== this.state) {
       this.resetScene();
       this.addEdgesToScene(this.adjacency, this.layout);
       this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
+      //this.camera.updateProjectionMatrix();
       this.renderScene();
+      console.log("updated decomposition (FAST)");
     }
 
     // awkward, but force a resize if a drawer gets added (temporary fix for github issue #109)
@@ -172,10 +177,10 @@ class EmbeddingWindow extends React.Component {
     let sx = width / height;
     let sy = 1;
     this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
-    this.camera.position.set(0, 0, 1);
+    this.camera.clearViewOffset();
 
     // world
-    this.scene = new THREE.Scene();
+    this.resetScene();
 
     // picking scene
     this.pickingScene = new THREE.Scene();
@@ -216,6 +221,14 @@ class EmbeddingWindow extends React.Component {
    * @param {array} sampleCoordinates - sample coordinates
    */
   addEdgesToScene(adjacencyMatrix, sampleCoordinates) {
+    // <ctc> maybe preallocate the edges? Naw, hard to know and max number (node_count * knn * ...)
+    //       but if scene is updated when decomposition is, then preallocate is fine, or it doesn't make a diff
+    //       right now it's hella slow though, so do something
+
+    // note: using BufferGeometry all points but the first and last will be connected, so less memory and maybe faster rendering.
+    //       But I don't think knn edges work like this.
+    // -> it doesn't. BufferGeometry implies a sequence but knn connectivity is a more general graph
+ 
     if (this.state.renderEdges) {
       adjacencyMatrix.forEach((edge) => {
         let endPoint1 = sampleCoordinates[edge[0]];
@@ -226,9 +239,10 @@ class EmbeddingWindow extends React.Component {
         lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 0));
         lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 0));
         let line = new THREE.Line(lineGeometry, lineMaterial);
-        this.scene.add(line);
+        this.edgesScene.add(line);
       });
     }
+    console.log("DONE adding edges to scene.");
   }
 
   /**
@@ -240,10 +254,44 @@ class EmbeddingWindow extends React.Component {
    * @param {array} textures - texture for drawing thumbnails
    */
   addNodesOrThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures) {
+
+    this.nodeCoordinates = nodeCoordinates;
+
+    // <ctc> todo:
+    // - add both nodes and thumbnails (and edges) when dataset metric is selected
+    // - update their positions when an embedding is selected
+    // - update their colors when a crystal is selected
+
     if (this.state.renderThumbnails) {
       this.addThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures);
-    } else {
+
+      // Color based on QoI if enabled, if not enabled selected design is colored orange
+      // to match the gallery view.
+      this.thumbnailsScene.children.forEach((child, id) => {
+        // set position
+        child.position.x = this.nodeCoordinates[id][0];
+        child.position.y = this.nodeCoordinates[id][1];
+
+        // set color
+        if (this.props.selectedDesigns.has(id)) {
+          child.material.color = this.state.colorThumbnails ?
+            { r:nodeColors[id][0], g:nodeColors[id][1], b:nodeColors[id][2] } : { r:1.0, g:1.0, b:1.0 };
+        }
+        else {
+          child.material.color = { r:0.7, g:0.7, b:0.7 };
+        }
+        child.material.needsUpdate = true;
+      });
+    }
+    else {
       this.addNodesToScene(nodeCoordinates, nodeColors);
+
+      // color selected nodes
+      this.nodesScene.children.forEach((child, id) => {
+        child.material.color = this.props.selectedDesigns.has(id) ?
+          { r:nodeColors[id][0], g:nodeColors[id][1], b:nodeColors[id][2] } : { r:0.9, g:0.9, b:0.9 };
+        child.material.needsUpdate = true;
+      });
     }
   }
 
@@ -257,37 +305,64 @@ class EmbeddingWindow extends React.Component {
       console.log("adding " + nodeCoordinates.length.toString() + " nodes to scene");
     else
       console.log("called addNodesToScene with null nodeCoordinates");
+    
+    // A sprite is a plane that always faces towards the camera, generally with a partially transparent texture applied.
+
+    //const map = new THREE.TextureLoader().load( '/Users/cam/Desktop/circle_sprite_grey.jpeg' );
+    const map = new THREE.TextureLoader().load( 'images/circle_outline_small.png' );
+    //const defaultmaterial = new THREE.SpriteMaterial( { map: map, color: 0xE9E9E9 } );
 
     nodeCoordinates.forEach((coord, index) => {
+      //console.log("adding node at " + coord.toString());
+
+      //let material = Object.assign({}, defaultmaterial); // <ctc> verify javascript aliases rather than copies on assignment (it does, so need a new material for each sprite)
+      let material = new THREE.SpriteMaterial( { map: map, color: 0xE9E9E9 } );
+      // material.needsUpdate = true;
+      // if (this.props.selectedDesigns.size === 0 || this.props.selectedDesigns.has(index)) {
+      //   // <ctc> or just material.color = nodeColors[index]? i.e., does each sprite need to have a separate material or can they share?
+      //   material = new THREE.SpriteMaterial( { map: map, color: 
+      //                                          new THREE.Color(nodeColors[index].x, nodeColors[index].y, nodeColors[index].z) } );
+      //   //material.color = nodeColors[index];
+      // }
+      const sprite = new THREE.Sprite(material);
+      sprite.position.x = coord[0];
+      sprite.position.y = coord[1];
+      sprite.visible = true;
+      sprite.scale.x = this.state.nodeSize;
+      sprite.scale.y = this.state.nodeSize; //  texture.image.height / texture.image.width * this.spriteScale * aspect;
+      sprite.name = index; // <ctc>, does it need a name? (I think it's needed for design selection)
+      this.nodesScene.add(sprite);
+      
       // Add Circle
-      let nodeGeometry = new THREE.CircleGeometry(this.state.nodeSize, 32);
+      //let nodeGeometry = new THREE.CircleGeometry(this.state.nodeSize, 32);
 
       // If design is selected color, else grey
-      let nodeMaterial;
-      if (this.props.selectedDesigns.size === 0 || this.props.selectedDesigns.has(index)) {
-        let color = new THREE.Color();
-        color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
-        nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
-      } else {
-        nodeMaterial = new THREE.MeshBasicMaterial({ color:0xE9E9E9 });
-      }
+      // let nodeMaterial;
+      // if (this.props.selectedDesigns.size === 0 || this.props.selectedDesigns.has(index)) {
+      //   let color = new THREE.Color();
+      //   color.setRGB(nodeColors[index][0], nodeColors[index][1], nodeColors[index][2]);
+      //   nodeMaterial = new THREE.MeshBasicMaterial({ color:color });
+      // } else {
+      //   nodeMaterial = new THREE.MeshBasicMaterial({ color:0xE9E9E9 });
+      // }
 
-      let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
-      nodeMesh.translateX(coord[0]);
-      nodeMesh.translateY(coord[1]);
-      nodeMesh.name = index;
+      // let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+      // nodeMesh.translateX(coord[0]);
+      // nodeMesh.translateY(coord[1]);
+      // nodeMesh.name = index;
 
       // Outline Circle
-      let edges = new THREE.EdgesGeometry(nodeGeometry);
-      let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
-      line.translateX(coord[0]);
-      line.translateY(coord[1]);
-      line.name = 'line'+index;
+      // let edges = new THREE.EdgesGeometry(nodeGeometry);
+      // let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
+      // line.translateX(coord[0]);
+      // line.translateY(coord[1]);
+      // line.name = 'line'+index;
 
-      this.scene.add(line);
-      this.scene.add(nodeMesh);
+      // this.scene.add(line);
+      // this.scene.add(nodeMesh);
 
       // Add to picking Scene is is off by one so it is distinguishable from black background.
+/* <ctc> no clue...
       let id = index + 1;
       this.idToObject[id] = nodeMesh;
       const pickingMaterial = new THREE.MeshPhongMaterial({
@@ -302,7 +377,9 @@ class EmbeddingWindow extends React.Component {
       const pickingNode = new THREE.Mesh(nodeGeometry, pickingMaterial);
       this.pickingScene.add(pickingNode);
       pickingNode.position.copy(nodeMesh.position);
-    });
+*/    });
+
+    console.log("DONE adding nodes to scene.");
   }
 
   /**
@@ -313,6 +390,50 @@ class EmbeddingWindow extends React.Component {
    * @param {array} textures - textures to be used
    */
   addThumbnailsToScene(nodeCoordinates, nodeColors, thumbnails, textures) {
+    if (nodeCoordinates)
+      console.log("adding " + nodeCoordinates.length.toString() + " thumbnails to scene");
+    else
+      console.log("called addThumnbnailssToScene with null nodeCoordinates"); // <ctc> happens when you press 't' too soon
+    
+    let width = this.refs.embeddingCanvas.clientWidth;
+    let height = this.refs.embeddingCanvas.clientHeight;
+    const aspect = width / height;
+    let textureLoader = new THREE.TextureLoader();
+
+    nodeCoordinates.forEach((coord, index) => {
+      console.log("adding thumbnail " + index.toString());
+      const texture = new THREE.TextureLoader().load('data:image/png;base64,' + thumbnails[index].rawData);
+      //const texture = textures[index];
+      //const texture = new THREE.TextureLoader().load( 'images/circle_outline_small.png' );
+      let material = new THREE.SpriteMaterial( { map: texture, color: 0xFFFFFF } );
+      let sprite = new THREE.Sprite(material);
+      sprite.visible = true;
+      sprite.scale.x = this.state.thumbnailScale;
+      sprite.scale.y = this.state.thumbnailScale;
+      //sprite.scale.y = texture.image.height / texture.image.width * this.thumbnailScale * aspect;
+      sprite.name = index; // needed for design selection
+      this.thumbnailsScene.add(sprite);
+    });
+                            
+/* <ctc> this will be good to use on dataset load, but it doesn't set positions and things around it aren't ready to do it right
+    nodeCoordinates.forEach((coord, index) => {
+      // load the new image sent from the server
+      textureLoader.load(
+        'data:image/png;base64,' + thumbnails[index].rawData, function(texture) {
+          console.log("adding thumbnail " + index.toString());
+          let material = new THREE.SpriteMaterial( { map: texture, color: 0xFFFFFF } );
+          let sprite = new THREE.Sprite(material);
+          sprite.visible = true;
+          sprite.material.needsUpdate = true;
+          sprite.scale.x = this.thumbnailScale;
+          sprite.scale.y = texture.image.height / texture.image.width * this.thumbnailScale * aspect;
+          sprite.name = index; // needed for design selection
+          this.thumbnailsScene.add(sprite);
+        }.bind(this));
+    });      
+*/
+    
+/*
     const canvas = this.refs.embeddingCanvas;
     const canvasWidth = canvas.clientWidth;
     const canvasHeight = canvas.clientHeight;
@@ -351,16 +472,47 @@ class EmbeddingWindow extends React.Component {
       line.translateX(coord[0]);
       line.translateY(coord[1]);
 
-      this.scene.add(line);
-      this.scene.add(nodeMesh);
+      this.thumbnailsScene.add(line);
+      this.thumbnailsScene.add(nodeMesh);
     });
+*/
+    console.log("DONE adding thumbnails to scene.");
   }
 
   /**
    * Draw the scene to the canvas
    */
   renderScene() {
-    this.renderer.render(this.scene, this.camera);
+    if (this.state.renderThumbnails) {
+      this.renderer.render(this.thumbnailsScene, this.camera);
+    }
+    else {
+      this.renderer.render(this.nodesScene, this.camera);
+    }
+    // <ctc> these should be rendered first to be behind sprites, but sprites are... well, I don't get 'em or they're broken
+    if (this.state.renderEdges) {
+      this.renderer.render(this.edgesScene, this.camera);
+    }
+  }
+
+  /**
+   * updateCamera
+   */
+  updateCamera(width, height, resetPos = false) {
+    // Resize camera
+    let sx = width / height;
+    let sy = 1;         // setting sx/sy consistently has most consistent result, esp when window is *slowly* resized
+    this.camera.left = -1*sx;
+    this.camera.right = sx;
+    this.camera.top = sy;
+    this.camera.bottom = -1*sy;
+
+    if (resetPos) {
+      this.camera.position.set(0, 0, 1);
+      this.camera.zoom = 1.0;
+      //this.camera.clearViewOffset();
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   /**
@@ -368,9 +520,10 @@ class EmbeddingWindow extends React.Component {
    * the old scene children.
    */
   resetScene() {
-    while (this.scene.children.length > 0) {
-      this.scene.remove(this.scene.children[0]);
-    }
+    this.edgesScene = new THREE.Scene();
+    this.nodesScene = new THREE.Scene();
+    this.thumbnailsScene = new THREE.Scene();
+    //this.updateCamera(this.refs.embeddingCanvas.width, this.refs.embeddingCanvas.height, true /*resetPos*/);
   }
 
   /**
@@ -382,18 +535,8 @@ class EmbeddingWindow extends React.Component {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
 
-    // Resize renderer
     this.renderer.setSize(width, height, false);
-
-    // Resize camera
-    let sx = width / height;
-    let sy = 1;         // setting sx/sy consistently has most consistent result, esp when window is *slowly* resized
-    this.camera.left = -1*sx;
-    this.camera.right = sx;
-    this.camera.top = sy;
-    this.camera.bottom = -1*sy;
-    this.camera.updateProjectionMatrix();
-
+    this.updateCamera(width, height, false /*resetPos*/);
     this.renderScene();
   };
 
@@ -531,7 +674,7 @@ class EmbeddingWindow extends React.Component {
           this.setState({ thumbnailScale:newScale });
         }
         else {
-          this.setState({ nodeSize : this.state.nodeSize + 0.002 });
+          this.setState({ nodeSize : this.state.nodeSize + 0.005 });
         }
         break;
       case '-': // decrease thumbnail size
@@ -543,14 +686,14 @@ class EmbeddingWindow extends React.Component {
           this.setState({ thumbnailScale:newScale });
         }
         else {
-          this.setState({ nodeSize : Math.max(0.001, this.state.nodeSize - 0.002) });
+          this.setState({ nodeSize : Math.max(0.005, this.state.nodeSize - 0.005) });
         }
         break;
       case 'c': // enable color for thumbnail
         this.setState({ colorThumbnails:!this.state.colorThumbnails });
         break;
     }
-    this.renderScene();
+    //this.renderScene(); //setState calls componentDidUpdate which renders scene
   }
 
   /**
