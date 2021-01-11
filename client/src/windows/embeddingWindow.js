@@ -35,7 +35,7 @@ class EmbeddingWindow extends React.Component {
     this.client = this.props.dsxContext.client;
 
     this.init = this.init.bind(this);
-    this.buildTexture = this.buildTexture.bind(this);
+    //this.buildTexture = this.buildTexture.bind(this);
     this.addEdgesToScene = this.addEdgesToScene.bind(this);
     this.addNodesOrThumbnailsToScene = this.addNodesOrThumbnailsToScene.bind(this);
     this.addNodesToScene = this.addNodesToScene.bind(this);
@@ -124,7 +124,7 @@ class EmbeddingWindow extends React.Component {
         this.layout = graphResult.embedding.layout;
         this.colors = graphResult.colors;
         this.thumbnails = thumbnailResult.thumbnails;
-        this.textures = this.buildTexture(this.thumbnails);
+        this.textures = undefined;// this.buildTexture(this.thumbnails);
         this.addEdgesToScene(this.adjacency, this.layout);
         this.addNodesOrThumbnailsToScene(this.layout, this.colors, this.thumbnails, this.textures);
         //this.camera.updateProjectionMatrix();
@@ -169,15 +169,13 @@ class EmbeddingWindow extends React.Component {
     let canvas = this.refs.embeddingCanvas;
     let gl = canvas.getContext('webgl');
 
-    gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    // gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 
     // camera
     let width = canvas.clientWidth;
     let height = canvas.clientHeight;
-    let sx = width / height;
-    let sy = 1;
-    this.camera = new THREE.OrthographicCamera(-1*sx, sx, sy, -1*sy, -1, 1);
-    this.camera.clearViewOffset();
+    this.camera = new THREE.OrthographicCamera();
+    this.updateCamera(width, height, true);
 
     // world
     this.resetScene();
@@ -189,11 +187,13 @@ class EmbeddingWindow extends React.Component {
     this.idToObject = {};
 
     // renderer
-    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true, failIfMajorPerformanceCaveat:true });
+    this.renderer = new THREE.WebGLRenderer({ canvas:canvas, context:gl, antialias:true, alpha:true, premultipliedAlpha:false });
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
-    this.renderer.sortObjects = false;
+    //this.renderer.sortObjects = false;
+    this.renderer.autoClear = false;
+    this.renderer.setClearColor(new THREE.Color(0xFF0000), 0.5);
 
-    this.renderScene();
+    //this.renderScene();
   }
 
   /**
@@ -201,6 +201,7 @@ class EmbeddingWindow extends React.Component {
    * @param {array} thumbnails - raw thumbnail data
    * @return {array} textures - list of textures
    */
+/*
   buildTexture(thumbnails) {
     let textures = [];
     thumbnails.forEach((thumbnail) => {
@@ -214,7 +215,7 @@ class EmbeddingWindow extends React.Component {
     });
     return textures;
   }
-
+*/
   /**
    * Add graph edges to scene
    * @param {array} adjacencyMatrix - sample indexes with edges between them
@@ -229,6 +230,7 @@ class EmbeddingWindow extends React.Component {
     //       But I don't think knn edges work like this.
     // -> it doesn't. BufferGeometry implies a sequence but knn connectivity is a more general graph
  
+    this.edgesGroup = new THREE.Group();
     if (this.state.renderEdges) {
       adjacencyMatrix.forEach((edge) => {
         let endPoint1 = sampleCoordinates[edge[0]];
@@ -236,12 +238,16 @@ class EmbeddingWindow extends React.Component {
 
         let lineMaterial = new THREE.LineBasicMaterial({ color:0x5C5C5C, linewidth:0.001 });
         let lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 0));
-        lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 0));
+        lineGeometry.vertices.push(new THREE.Vector3(endPoint1[0], endPoint1[1], 1.5));
+        lineGeometry.vertices.push(new THREE.Vector3(endPoint2[0], endPoint2[1], 1.5));
         let line = new THREE.Line(lineGeometry, lineMaterial);
-        this.edgesScene.add(line);
+        this.edgesGroup.add(line);
       });
     }
+    this.scene.add(this.edgesGroup);
+    this.edgesGroup.visible = false;
+    this.edgesGroup.translateZ(-2.0);
+
     console.log("DONE adding edges to scene.");
   }
 
@@ -267,10 +273,11 @@ class EmbeddingWindow extends React.Component {
 
       // Color based on QoI if enabled, if not enabled selected design is colored orange
       // to match the gallery view.
-      this.thumbnailsScene.children.forEach((child, id) => {
+      this.thumbnailsGroup.children.forEach((child, id) => {
         // set position
         child.position.x = this.nodeCoordinates[id][0];
         child.position.y = this.nodeCoordinates[id][1];
+        child.position.z = 0.5;
 
         // set color
         if (this.props.selectedDesigns.has(id)) {
@@ -287,7 +294,7 @@ class EmbeddingWindow extends React.Component {
       this.addNodesToScene(nodeCoordinates, nodeColors);
 
       // color selected nodes
-      this.nodesScene.children.forEach((child, id) => {
+      this.nodesGroup.children.forEach((child, id) => {
         child.material.color = this.props.selectedDesigns.has(id) ?
           { r:nodeColors[id][0], g:nodeColors[id][1], b:nodeColors[id][2] } : { r:0.9, g:0.9, b:0.9 };
         child.material.needsUpdate = true;
@@ -312,6 +319,7 @@ class EmbeddingWindow extends React.Component {
     const map = new THREE.TextureLoader().load( 'images/circle_outline_small.png' );
     //const defaultmaterial = new THREE.SpriteMaterial( { map: map, color: 0xE9E9E9 } );
 
+    this.nodesGroup = new THREE.Group();
     nodeCoordinates.forEach((coord, index) => {
       //console.log("adding node at " + coord.toString());
 
@@ -327,12 +335,16 @@ class EmbeddingWindow extends React.Component {
       const sprite = new THREE.Sprite(material);
       sprite.position.x = coord[0];
       sprite.position.y = coord[1];
+      sprite.position.z = 0.5;
       sprite.visible = true;
       sprite.scale.x = this.state.nodeSize;
       sprite.scale.y = this.state.nodeSize; //  texture.image.height / texture.image.width * this.spriteScale * aspect;
       sprite.name = index; // <ctc>, does it need a name? (I think it's needed for design selection)
-      this.nodesScene.add(sprite);
-      
+      this.nodesGroup.add(sprite);
+    });
+    this.spritesScene.add(this.nodesGroup);
+    this.nodesGroup.visible = false;
+
       // Add Circle
       //let nodeGeometry = new THREE.CircleGeometry(this.state.nodeSize, 32);
 
@@ -377,7 +389,8 @@ class EmbeddingWindow extends React.Component {
       const pickingNode = new THREE.Mesh(nodeGeometry, pickingMaterial);
       this.pickingScene.add(pickingNode);
       pickingNode.position.copy(nodeMesh.position);
-*/    });
+    });
+*/
 
     console.log("DONE adding nodes to scene.");
   }
@@ -400,21 +413,21 @@ class EmbeddingWindow extends React.Component {
     const aspect = width / height;
     let textureLoader = new THREE.TextureLoader();
 
+    this.thumbnailsGroup = new THREE.Group();
     nodeCoordinates.forEach((coord, index) => {
-      console.log("adding thumbnail " + index.toString());
       const texture = new THREE.TextureLoader().load('data:image/png;base64,' + thumbnails[index].rawData);
-      //const texture = textures[index];
-      //const texture = new THREE.TextureLoader().load( 'images/circle_outline_small.png' );
       let material = new THREE.SpriteMaterial( { map: texture, color: 0xFFFFFF } );
       let sprite = new THREE.Sprite(material);
       sprite.visible = true;
       sprite.scale.x = this.state.thumbnailScale;
       sprite.scale.y = this.state.thumbnailScale;
-      //sprite.scale.y = texture.image.height / texture.image.width * this.thumbnailScale * aspect;
       sprite.name = index; // needed for design selection
-      this.thumbnailsScene.add(sprite);
+      this.thumbnailsGroup.add(sprite);
     });
-                            
+    //this.scene.add(this.thumbnailsGroup);
+    this.spritesScene.add(this.thumbnailsGroup);
+    this.thumbnailsGroup.visible = false;
+
 /* <ctc> this will be good to use on dataset load, but it doesn't set positions and things around it aren't ready to do it right
     nodeCoordinates.forEach((coord, index) => {
       // load the new image sent from the server
@@ -433,6 +446,36 @@ class EmbeddingWindow extends React.Component {
     });      
 */
     
+/*
+    // <ctc> debug by adding a piece of geometry on bottom and on top
+    const nodeGeometry = new THREE.BoxGeometry(0.3, 0.1, 0);
+    const nodeMaterial = new THREE.MeshBasicMaterial({ color:0xFFFFFF, map:textures[0] });
+
+    let nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+    nodeMesh.translateX(nodeCoordinates[0][0]);
+    nodeMesh.translateY(nodeCoordinates[0][1]);
+    nodeMesh.translateZ(-1.0); // bottom
+    let edges = new THREE.EdgesGeometry(nodeGeometry);
+    let line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
+    line.translateX(nodeCoordinates[0][0]);
+    line.translateY(nodeCoordinates[0][1]);
+    line.translateZ(-1.0);
+    this.scene.add(line);
+    this.scene.add(nodeMesh);
+
+    nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+    nodeMesh.translateX(nodeCoordinates[12][0]);
+    nodeMesh.translateY(nodeCoordinates[12][1]);
+    nodeMesh.translateZ(1.0); // top
+    edges = new THREE.EdgesGeometry(nodeGeometry);
+    line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x000000 }));
+    line.translateX(nodeCoordinates[12][0]);
+    line.translateY(nodeCoordinates[12][1]);
+    line.translateZ(1.0);
+    this.scene.add(line);
+    this.scene.add(nodeMesh);
+*/
+
 /*
     const canvas = this.refs.embeddingCanvas;
     const canvasWidth = canvas.clientWidth;
@@ -483,16 +526,14 @@ class EmbeddingWindow extends React.Component {
    * Draw the scene to the canvas
    */
   renderScene() {
-    if (this.state.renderThumbnails) {
-      this.renderer.render(this.thumbnailsScene, this.camera);
-    }
-    else {
-      this.renderer.render(this.nodesScene, this.camera);
-    }
-    // <ctc> these should be rendered first to be behind sprites, but sprites are... well, I don't get 'em or they're broken
-    if (this.state.renderEdges) {
-      this.renderer.render(this.edgesScene, this.camera);
-    }
+    this.edgesGroup.visible = this.state.renderEdges;
+    this.thumbnailsGroup.visible = this.state.renderThumbnails;
+    this.nodesGroup.visible = !this.thumbnailsGroup.visible;
+
+    // this.renderer.render(this.thumbnailsScene, this.camera);
+    // this.renderer.render(this.nodesScene, this.camera);
+    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.spritesScene, this.camera);
   }
 
   /**
@@ -506,6 +547,8 @@ class EmbeddingWindow extends React.Component {
     this.camera.right = sx;
     this.camera.top = sy;
     this.camera.bottom = -1*sy;
+    this.camera.near   = -1;
+    this.camera.far    = 2;
 
     if (resetPos) {
       this.camera.position.set(0, 0, 1);
@@ -520,9 +563,18 @@ class EmbeddingWindow extends React.Component {
    * the old scene children.
    */
   resetScene() {
-    this.edgesScene = new THREE.Scene();
-    this.nodesScene = new THREE.Scene();
-    this.thumbnailsScene = new THREE.Scene();
+    console.log("resetting scenes");
+
+    this.edgesGroup = new THREE.Group();
+    this.thumbnailsGroup = new THREE.Group();
+    this.nodesGroup = new THREE.Group();
+
+    this.scene = new THREE.Scene();
+    // this.nodesScene = new THREE.Scene();
+    // this.thumbnailsScene = new THREE.Scene();
+    this.spritesScene = new THREE.Scene();
+
+    //<ctc> working around too many bugs due to re-adding geometry every update. Doing this causes... but whatever
     //this.updateCamera(this.refs.embeddingCanvas.width, this.refs.embeddingCanvas.height, true /*resetPos*/);
   }
 

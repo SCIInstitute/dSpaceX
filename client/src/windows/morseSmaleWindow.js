@@ -808,7 +808,7 @@ class MorseSmaleWindow extends React.Component {
     this.perspCamera.up.set(0, 0, 1);
     this.perspCamera.add(new THREE.PointLight(0xffffff));
     this.perspCamera.name = "camera";
-    this.updatePerspCamera(width, height, fov, this.state.boundingBox);
+    this.updatePerspCamera(width, height, fov, this.state.boundingBox);  // <ctc> this huh??
 
     this.perspControls = new OrbitControls(this.perspCamera, this.renderer.domElement);
     this.perspControls.enabled = false;
