@@ -78,6 +78,7 @@ void Controller::configureCommandHandlers() {
   m_commandMap.insert({"fetchMorseSmalePersistenceLevel", std::bind(&Controller::fetchMorseSmalePersistenceLevel, this, _1, _2)});
   m_commandMap.insert({"fetchEmbeddingsList", std::bind(&Controller::fetchEmbeddingsList, this, _1, _2)});
   m_commandMap.insert({"fetchSingleEmbedding", std::bind(&Controller::fetchSingleEmbedding, this, _1, _2)});
+  m_commandMap.insert({"fetchNodeColors", std::bind(&Controller::fetchNodeColors, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleRegression", std::bind(&Controller::fetchMorseSmaleRegression, this, _1, _2)});
   m_commandMap.insert({"fetchMorseSmaleExtrema", std::bind(&Controller::fetchMorseSmaleExtrema, this, _1, _2)});
   m_commandMap.insert({"fetchCrystal", std::bind(&Controller::fetchCrystal, this, _1, _2)});
@@ -406,7 +407,8 @@ void Controller::fetchMorseSmalePersistenceLevel(const Json::Value &request, Jso
 }
 
 /**
- * This fetches the 2d embedding layout for the nodes for a field in a given distance metric
+ * This fetches the 2d embedding layout for the nodes for a field in a given distance metric.
+ * It is composed of node positions and node connectivity.
  * @param request
  * @param response
  */
@@ -419,10 +421,6 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
 
   if (!maybeProcessData(request, response))
     return; // response will contain the error
-
-  // get requested persistence level
-  int persistence = getPersistence(request, response);
-  if (persistence < 0) return; // response will contain the error
 
   auto metric = request["metric"].asString();
 
@@ -475,6 +473,24 @@ void Controller::fetchSingleEmbedding(const Json::Value &request, Json::Value &r
     }
     response["embedding"]["adjacency"] = adjacency;
   }
+}
+
+/**
+ * This fetches the colors of nodes based on the current field's values.
+ */
+void Controller::fetchNodeColors(const Json::Value &request, Json::Value &response) {
+  int embeddingId = request["embeddingId"].asInt();
+  if (embeddingId < 0) return setError(response, "invalid embeddingId");
+
+  if (!maybeLoadDataset(request, response))
+    return setError(response, "invalid datasetId");
+
+  if (!maybeProcessData(request, response))
+    return; // response will contain the error
+
+  // get requested persistence level
+  int persistence = getPersistence(request, response);
+  if (persistence < 0) return; // response will contain the error
 
   // get the vector of values for the requested field
   Eigen::Map<Eigen::VectorXf> fieldvals = m_currentDataset->getFieldvalues(m_currentField, m_currentCategory, m_currentNormalize);

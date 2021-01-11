@@ -244,22 +244,42 @@ class Client {
   }
 
   /**
-   * Grab the graph embedding.
+   * Get the node colors for the selected field
    * @param {string} datasetId
    * @param {string} embeddingId
-   * @param {number} k
    * @param {number} persistenceLevel
    * @param {string} category
    * @param {string} fieldName
    * @return {Promise}
    */
-  fetchSingleEmbedding(datasetId, metric, embeddingId, k, persistenceLevel, category, fieldName) {
+  fetchNodeColors(datasetId, metric, embeddingId, persistenceLevel, category, fieldName) {
+    let command = {
+      name: 'fetchNodeColors',
+      datasetId: datasetId,
+      metric: metric,
+      embeddingId: embeddingId,
+      persistence: persistenceLevel,
+      category: category,
+      fieldName: fieldName,
+    };
+    return this._createCommandPromise(command);
+  }
+
+  /**
+   * Grab the graph embedding.
+   * @param {string} datasetId
+   * @param {string} embeddingId
+   * @param {number} persistenceLevel
+   * @param {string} category
+   * @param {string} fieldName
+   * @return {Promise}
+   */
+  fetchSingleEmbedding(datasetId, metric, embeddingId, persistenceLevel, category, fieldName) {
     let command = {
       name: 'fetchSingleEmbedding',
       datasetId: datasetId,
       metric: metric,
       embeddingId: embeddingId,
-      k: k,
       persistence: persistenceLevel,
       category: category,
       fieldName: fieldName,

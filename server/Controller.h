@@ -71,6 +71,7 @@ class Controller {
   void fetchCrystal(const Json::Value &request, Json::Value &response);
   void fetchEmbeddingsList(const Json::Value &request, Json::Value &response);
   void fetchSingleEmbedding(const Json::Value &request, Json::Value &response);
+  void fetchNodeColors(const Json::Value &request, Json::Value &response);
   void fetchParameter(const Json::Value &request, Json::Value &response);
   void fetchQoi(const Json::Value &request, Json::Value &response);
   void fetchThumbnails(const Json::Value &request, Json::Value &response);

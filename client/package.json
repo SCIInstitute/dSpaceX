@@ -42,7 +42,8 @@
     "raw-loader": "^4.0.1",
     "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12",
-    "webpack-dev-server": "^3.11.0"
+    "webpack-dev-server": "^3.11.0",
+    "auto-bind": "^4.0.0"
   },
   "dependencies": {
     "@material-ui/core": "^4.11.0",
