@@ -111,17 +111,11 @@ class EmbeddingWindow extends React.Component {
         thumbnails.visible = false;
         nodes.visible = false;
 
-        //this.spritesScene.clear();
         while (this.spritesScene.children.length > 0) { 
-          console.log("removing a spriteScene child...");
           this.spritesScene.remove(this.spritesScene.children[0]); 
         }
-        console.log("cleaned");
         this.spritesScene.add(thumbnails);
         this.spritesScene.add(nodes);
-    //     console.log("got thumbnails! Returning...");
-    // return { thumbnails, nodes };
-       console.log("got thumbnails! Setting state...");
         this.setState({ thumbnails, nodes, fetchInProgress:false });
       });
     console.log("leaving getThumbnails function");
@@ -325,6 +319,10 @@ class EmbeddingWindow extends React.Component {
       let line = new THREE.Line(lineGeometry, lineMaterial);
       edges.add(line);
     });
+
+    while (this.scene.children.length > 0) { 
+      this.scene.remove(this.scene.children[0]); 
+    }
     this.scene.add(edges);
     edges.visible = false;
     edges.translateZ(-2.0);
