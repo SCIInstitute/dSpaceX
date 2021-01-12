@@ -359,13 +359,19 @@ class MorseSmaleWindow extends React.Component {
     case 'd': // return diff when validating
       this.state.diff_validate = !this.state.diff_validate;
       break;
+/*
+    // scaling extrema, updated using setstate
+    // todo: let componentDidUpdate call render
+    //       use same keys to grow/shrink crystal tubes
+    //       conflict with embeddingWindow on keys, so currently disabled
     case '=': // Increase thumbnail size
     case '+':
-      this.setState({ extremaRad: this.state.extremaRad * 1.25 });  // <ctc> experiment w/ update based on setstate (todo: need to let componentDidUpdate call render, but also a conflict with embeddingWindow on keys, so a couple of fixmes here)
+      this.setState({ extremaRad: this.state.extremaRad * 1.25 });
       break;
     case '-': // decrease thumbnail size
       this.setState({ extremaRad: this.state.extremaRad * 0.75 });
       break;
+*/
     }
   }
 

@@ -33,8 +33,6 @@ class EmbeddingWindow extends React.Component {
     };
 
     // Used to zoom and translate embedding
-    this.maxScale = 10;
-    this.minScale = 0.05;
     this.zoomRate = 1.1;
     this.previousX = 0;
     this.previousY = 0;
@@ -278,9 +276,7 @@ class EmbeddingWindow extends React.Component {
     this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     //this.renderer.sortObjects = false;
     this.renderer.autoClear = false;
-    this.renderer.setClearColor(new THREE.Color(0xFF0000), 0.5);
-
-    //this.renderScene();
+    //this.renderer.setClearColor(new THREE.Color(0xFF0000), 0.5);
   }
 
   /**
@@ -377,6 +373,15 @@ class EmbeddingWindow extends React.Component {
       child.position.x = layout[id][0];
       child.position.y = layout[id][1];
       child.position.z = 0.55;
+    });
+  }
+
+  /**
+   * Updates scale of given sprites.
+   */
+  updateScale(sprites, scale) {
+    sprites.forEach((sprite, id) => {
+      sprite.scale.x = sprite.scale.y = scale;
     });
   }
 
@@ -663,6 +668,7 @@ class EmbeddingWindow extends React.Component {
 
     // this.renderer.render(this.thumbnailsScene, this.camera);
     // this.renderer.render(this.nodesScene, this.camera);
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
     this.renderer.render(this.spritesScene, this.camera);
   }
@@ -685,8 +691,8 @@ class EmbeddingWindow extends React.Component {
       this.camera.position.set(0, 0, 1);
       this.camera.zoom = 1.0;
       //this.camera.clearViewOffset();
-      this.camera.updateProjectionMatrix();
     }
+    this.camera.updateProjectionMatrix();
   }
 
   /**
@@ -717,9 +723,10 @@ class EmbeddingWindow extends React.Component {
   resizeCanvas = () => {
     let width = this.refs.embeddingCanvas.clientWidth;
     let height = this.refs.embeddingCanvas.clientHeight;
+    console.log("embedding resize canvas: " + width.toString() + " x " + height.toString());
 
-    this.renderer.setSize(width, height, false);
     this.updateCamera(width, height, false /*resetPos*/);
+    this.renderer.setSize(width, height, false);
     this.renderScene();
   };
 
@@ -730,10 +737,10 @@ class EmbeddingWindow extends React.Component {
    */
   handleMouseScrollEvent(event) {
     event.preventDefault(); // combined with non-passive event binding, doesn't scroll window when zooming
-    if (event.deltaY > 0 && this.camera.zoom > -this.maxScale) {
+    if (event.deltaY > 0 && this.camera.zoom > -10.0) {
       this.camera.zoom = this.camera.zoom / this.zoomRate;
     }
-    if (event.deltaY < 0 && this.camera.zoom < this.maxScale*10.0) {
+    if (event.deltaY < 0 && this.camera.zoom < 100.0) {
       this.camera.zoom = this.camera.zoom * this.zoomRate;
     }
     this.camera.updateProjectionMatrix();
@@ -834,7 +841,6 @@ class EmbeddingWindow extends React.Component {
    * @param {object} event
    */
   handleKeyDownEvent(event) {
-    let newScale;
     switch (event.key) {
       case 'e': // Enable/disable edges
         this.setState({ renderEdges:!this.state.renderEdges });
@@ -850,26 +856,26 @@ class EmbeddingWindow extends React.Component {
       case '=': // Increase thumbnail size
       case '+':
         if (this.state.renderThumbnails) {
-          newScale = this.state.thumbnailScale + 0.05;
-          if (newScale > this.maxScale) {
-            newScale = this.maxScale;
-          }
-          this.setState({ thumbnailScale:newScale });
+          const newScale = this.state.thumbnailScale + 0.005;
+          this.updateScale(this.state.thumbnails.children, newScale);
+          this.setState({ thumbnailScale: newScale });
         }
         else {
-          this.setState({ nodeSize : this.state.nodeSize + 0.005 });
+          const newSize = this.state.nodeSize + 0.005;
+          this.updateScale(this.state.nodes.children, newSize);
+          this.setState({ nodeSize : newSize });
         }
         break;
       case '-': // decrease thumbnail size
         if (this.state.renderThumbnails) {
-          newScale = this.state.thumbnailScale - 0.05;
-          if (newScale < this.minScale) {
-            newScale = this.minScale;
-          }
-          this.setState({ thumbnailScale:newScale });
+          const newScale = Math.max(0.001, this.state.thumbnailScale - 0.015);
+          this.updateScale(this.state.thumbnails.children, newScale);
+          this.setState({ thumbnailScale: newScale });
         }
         else {
-          this.setState({ nodeSize : Math.max(0.005, this.state.nodeSize - 0.005) });
+          const newSize = Math.max(0.001, this.state.nodeSize - 0.005);
+          this.updateScale(this.state.nodes.children, newSize);
+          this.setState({ nodeSize : newSize });
         }
         break;
       case 'c': // enable color for thumbnail
