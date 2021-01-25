@@ -223,7 +223,7 @@ class NNMSComplex {
       int n = 0;
       printf("extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
-        printf("%d: min: %d, max: %d\n", i+1, extremaIndex(merge(extrema(1,i)))+1, extremaIndex(merge(extrema(0,i)))+1);
+        printf("%d: min: %d, max: %d\n", i, extremaIndex(merge(extrema(1,i))), extremaIndex(merge(extrema(0,i))));
       }
       
       printf("pcrystals:\n");
@@ -234,7 +234,7 @@ class NNMSComplex {
         auto min_sid = extremaIndex(merge(min_xid));
         auto max_sid = extremaIndex(merge(max_xid));
         auto cid = (*it).second;
-        printf("pcrystal %d: min: %d, max: %d\n", cid+1, min_sid+1, max_sid+1);
+        printf("pcrystal %d: min: %d, max: %d\n", cid, min_sid, max_sid);
       }
 #endif
     };
@@ -326,7 +326,7 @@ class NNMSComplex {
 
     //get persistencies
     FortranLinalg::DenseVector<TPrecision> getPersistence(){
-      FortranLinalg::DenseVector<TPrecision> pers(persistence.size()+1);
+      FortranLinalg::DenseVector<TPrecision> pers(persistence.size()+1);  // <ctc> why size + 1? Results change if not
       getPersistence(pers);
       return pers;
     };
@@ -388,7 +388,10 @@ private:
 
       // Compute steepest asc/descending neighbors
       for (unsigned int i = 0; i < m_sampleCount; i++) {
-        for (unsigned int k=1; k<KNN.M(); k++) {
+        std::cout << "neighbors of sample " << i << ": ";
+        //for (unsigned int k=1; k<KNN.M(); k++) { //<ctc> no idea why this was k=1; affects results
+        for (unsigned int k=0; k<KNN.M(); k++) {
+          std::cout << KNN(k,i) << " ";
           int j = KNN(k, i);
           double d = pow(KNND(k, i), gradient_exp);
           double g = ys(j) - ys(i);
@@ -413,7 +416,13 @@ private:
             KNNG(1, j) = i;
           }
         }
+        std::cout << "\n";
       }
+
+      for (int i=0; i<m_sampleCount; i++) {
+        std::cout << "idx: " << i << ", dec: " << descending(i) << ", asc: " << ascending(i) << "\n";
+      }
+      
       //if(smooth){
       // ys.deallocate();
       //}
@@ -523,7 +532,7 @@ private:
 
       // <ctc> printed same indices below and confirmed they are identical
       // for(unsigned int i=0; i<extrema.N(); i++){      
-      //   printf("index %d: min: %d, max: %d \n", i+1, extremaIndex(extrema(1,i+1)), extremaIndex(extrema(0,i+1)));
+      //   printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
       // }
 
       // Inital persistencies
@@ -533,7 +542,8 @@ private:
       for(int e=0; e<2; e++){
         for(unsigned int i=0; i < extrema.N(); i++){
           int e1 = extrema(e, i);
-          for(unsigned int k=1; k < KNN.M(); k++){
+          // for(unsigned int k=1; k < KNN.M(); k++){  //<ctc> no idea why this was k=1; affects results
+          for(unsigned int k=0; k < KNN.M(); k++){
             int e2 = extrema(e, KNN(k, i));
             if(e1 != e2){
               std::pair<int, int> p;
@@ -652,13 +662,13 @@ private:
 #if 0
       printf("\nROUND 2... FIGHT!\n");
       for(unsigned int i=0; i<extrema.N(); i++){      
-        printf("index %d: min: %d, max: %d \n", i+1, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
+        printf("index %d: min: %d, max: %d \n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
       }
 
       int n = 0;
       printf("\nStarting extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
-        printf("%d: min: %d, max: %d\n", i+1, extremaIndex(extrema(1,i))+1, extremaIndex(extrema(0,i))+1);
+        printf("%d: min: %d, max: %d\n", i, extremaIndex(extrema(1,i)), extremaIndex(extrema(0,i)));
       }
       
       printf("\nStarting crystals:\n");
@@ -669,7 +679,7 @@ private:
         auto min_sid = extremaIndex(min_xid);
         auto max_sid = extremaIndex(max_xid);
         auto cid = (*it).second;
-        printf("crystal %d: min: %d, max: %d\n", cid+1, min_sid+1, max_sid+1);
+        printf("crystal %d: min: %d, max: %d\n", cid, min_sid, max_sid);
       }
 #endif
 

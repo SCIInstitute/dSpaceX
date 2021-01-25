@@ -162,7 +162,7 @@ void Controller::handleText(void *wsi, const std::string &text) {
     reader.parse(text, request);
     int messageId = request["id"].asInt();
     std::string commandName = request["name"].asString();
-    std::cout << "[" << messageId << "] " << commandName << "..." << std::endl;
+    //std::cout << "[" << messageId << "] " << commandName << "..." << std::endl;
 
     Json::Value response(Json::objectValue);
     response["id"] = messageId;
@@ -174,8 +174,8 @@ void Controller::handleText(void *wsi, const std::string &text) {
       command(request, response);
       time_point<Clock> end = Clock::now();
       milliseconds diff = duration_cast<milliseconds>(end - start);
-      std::cout << "[" << messageId << "] " << commandName << " completed in "
-                << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+      //std::cout << "[" << messageId << "] " << commandName << " completed in "
+      //          << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
     } else {
       std::cout << "Error: Unrecognized Command: " << commandName << std::endl;
     }
@@ -310,7 +310,7 @@ void Controller::fetchMorseSmaleDecomposition(const Json::Value &request, Json::
     std::shared_ptr<MorseSmaleComplex> complex = m_currentTopoData->getComplex(level);
     int size = complex->getCrystals().size();
     response["complexSizes"].append(size);
-    std::cout << "Controller::fetchMorseSmaleDecomposition persistence " << level << " num crystals: " << size << std::endl;
+    //std::cout << "Controller::fetchMorseSmaleDecomposition persistence " << level << " num crystals: " << size << std::endl;
   }
 }
 
@@ -616,7 +616,8 @@ void Controller::fetchCrystal(const Json::Value &request, Json::Value &response)
 
   // the crystal id to look for in this persistence level
   int crystalID = request["crystalID"].asInt();
-
+  std::cout << "selected crystal " << crystalID << std::endl;
+  
   // ALL samples belonging to this crystal, including its extrema
   response["crystalSamples"] = Json::Value(Json::arrayValue);
   for (auto id: m_currentVizData->getAllCrystals()[persistence][crystalID]) {
@@ -758,7 +759,7 @@ void Controller::fetchNImagesForCrystal(const Json::Value &request, Json::Value 
   auto model(modelset ? modelset->getModel(persistence_idx, crystalId) : nullptr);
 
   milliseconds diff = duration_cast<milliseconds>(Clock::now() - start);
-  std::cout << "model loaded in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
+  //std::cout << "model loaded in " << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
 
 
   // if there isn't a model or original images requested just show its original samples' images 

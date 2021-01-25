@@ -76,14 +76,15 @@ std::ostream& operator<<(std::ostream &out, const InputFormat &f)
   return out; 
 } 
 
+bool verboseLoad = false;
 std::unique_ptr<Dataset> DatasetLoader::loadDataset(const std::string &basePath) {
   YAML::Node config = YAML::LoadFile(basePath);
   DatasetBuilder builder;
 
-  std::cout << "Reading " << basePath << std::endl;
+  if (verboseLoad) std::cout << "Reading " << basePath << std::endl;
 
   std::string name = DatasetLoader::parseName(config);
-  std::cout << "name: " << name << std::endl;
+  if (verboseLoad) std::cout << "name: " << name << std::endl;
   builder.withName(name);
 
   int sampleCount = DatasetLoader::parseSampleCount(config);
@@ -170,7 +171,7 @@ std::vector<FieldNameValuePair> DatasetLoader::parseFields(const YAML::Node &nod
     throw std::runtime_error("Node missing 'file' field.");
   }
   auto filename = node["file"].as<std::string>();
-  std::cout << "fields filename: " << filename << std::endl;
+  if (verboseLoad) std::cout << "fields filename: " << filename << std::endl;
 
   auto format = InputFormat(filename);
   if (format != InputFormat::CSV) {
@@ -179,7 +180,7 @@ std::vector<FieldNameValuePair> DatasetLoader::parseFields(const YAML::Node &nod
   auto columnNames = HDProcess::loadCSVColumnNames(filepath(basePath, filename));
 
   for (auto name : columnNames) {
-    std::cout << "Loading field: " << name << std::endl;
+    if (verboseLoad) std::cout << "Loading field: " << name << std::endl;
     auto field = HDProcess::loadCSVColumn(filepath(basePath, filename), name);
     fields.push_back(FieldNameValuePair(name, field));
   }
@@ -236,7 +237,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(const YAML::Node &embeddingNode, con
     throw std::runtime_error("Embedding missing 'name' field.");
   }
   std::string name = embeddingNode["name"].as<std::string>();
-  std::cout << "Embedding name: " << name << std::endl;
+  if (verboseLoad) std::cout << "Embedding name: " << name << std::endl;
 
   if (!embeddingNode["file"]) {
     throw std::runtime_error("Embedding missing 'file' field.");
@@ -244,7 +245,7 @@ EmbeddingPair DatasetLoader::parseEmbedding(const YAML::Node &embeddingNode, con
   std::string filename = embeddingNode["file"].as<std::string>();
 
   auto format = InputFormat(filename);
-  std::cout << "Loading " << format << " from embedding filename: " << filename << std::endl;
+  if (verboseLoad) std::cout << "Loading " << format << " from embedding filename: " << filename << std::endl;
   FortranLinalg::DenseMatrix<Precision> embedding;
   switch (format.type) {
     case InputFormat::LINALG_DENSEMATRIX:
@@ -330,7 +331,7 @@ std::vector<ModelMapPair> DatasetLoader::parseMetricModelsets(const YAML::Node &
 ModelMap DatasetLoader::parseModels(const YAML::Node &modelsNode, const std::string &basePath)
 {
   ModelMap modelsets;
-  std::cout << "Reading " << modelsNode.size() << " model sets..." << std::endl;
+  if (verboseLoad) std::cout << "Reading " << modelsNode.size() << " model sets..." << std::endl;
 
   for (auto i = 0; i < modelsNode.size(); i++) {
     const YAML::Node &modelsetNode = modelsNode[i];
@@ -341,7 +342,7 @@ ModelMap DatasetLoader::parseModels(const YAML::Node &modelsNode, const std::str
     
     time_point<Clock> end = Clock::now();
     milliseconds diff = duration_cast<milliseconds>(end - start);
-    std::cout << "Loaded " << i << "th modelset of current metric in "
+    if (verboseLoad) std::cout << "Loaded " << i << "th modelset of current metric in "
               << static_cast<float>(diff.count())/1000.0f << "s" << std::endl;
       
     if (!modelset) {
@@ -374,7 +375,7 @@ bool setMSParams(MSModelset& modelset, const YAML::Node& ms) {
     auto depth       = ms["depth"].as<int>();
     auto noise       = ms["noise"].as<bool>();
     auto normalize   = ms["normalize"].as<bool>();
-    std::cout << "\tknn:         " << knn         << std::endl
+    if (verboseLoad) std::cout << "\tknn:         " << knn         << std::endl
               << "\tsigma:       " << sigma       << std::endl
               << "\tsmooth:      " << smooth      << std::endl
               << "\tcurvepoints: " << curvepoints << std::endl
@@ -406,7 +407,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModelset(const YAML::Node& model
     return nullptr;
   }
   Model::Type modelType = Model::strToType(modelNode["type"].as<std::string>());
-  std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
+  if (verboseLoad) std::cout << "Reading a " << modelType << " model for '" << fieldname << "' field." << std::endl;
 
   std::vector<std::string> python_evaluator;
   if (modelNode["python_evaluator"]) {
@@ -430,7 +431,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModelset(const YAML::Node& model
   }
   std::string partitions = modelNode["partitions"].as<std::string>();
   auto partitions_format = InputFormat(partitions);
-  std::cout << "Partitions file format: " << partitions_format << std::endl;
+  if (verboseLoad) std::cout << "Partitions file format: " << partitions_format << std::endl;
   if (partitions_format != InputFormat::CSV) {
     std::cerr << "Partitions must be provided as a CSV (TODO: handle .bins)\n";
     return nullptr;
@@ -475,7 +476,7 @@ std::unique_ptr<MSModelset> DatasetLoader::parseModelset(const YAML::Node& model
 
   // create the modelset and read its M-S computation parameters (MUST be specified or misalignment of results)
   auto ms_of_models(std::make_unique<MSModelset>(modelType, fieldname, nsamples, npersistences, rotate));
-  std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << " samples using:\n";
+  if (verboseLoad) std::cout << "Models for each crystal of top " << npersistences << "plvls of M-S computed from " << nsamples << " samples using:\n";
   if (!(modelNode["ms"] && setMSParams(*ms_of_models, modelNode["ms"]))) {
     std::cerr << "Error: model missing M-S computation parameters used for its crystal partitions.\n";
     return nullptr;
@@ -591,7 +592,7 @@ std::vector<DistancePair> DatasetLoader::parseDistances(const YAML::Node &config
     std::string filename = node["file"].as<std::string>();
 
     auto format = InputFormat(filename);
-    std::cout << "Loading " << format << " from distances filename " << filename << std::endl;
+    if (verboseLoad) std::cout << "Loading " << format << " from distances filename " << filename << std::endl;
     switch (format.type) {
       case InputFormat::LINALG_DENSEMATRIX:
         distances.push_back(DistancePair(metric, FortranLinalg::LinalgIO<Precision>::readMatrix(filepath(basePath, filename))));

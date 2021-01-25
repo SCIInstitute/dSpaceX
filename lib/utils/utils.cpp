@@ -63,7 +63,7 @@ FortranLinalg::DenseVector<Precision> normalize(const FortranLinalg::DenseVector
   Eigen::Map<Eigen::Matrix<Precision, Eigen::Dynamic, 1>> _ret(ret.data(), ret.N());
   _ret = _values;
 
-  auto showStats(true);
+  auto showStats(false);
   if (showStats) {
     std::cout << "Raw field stats:\n";
     displayFieldStats(_ret);

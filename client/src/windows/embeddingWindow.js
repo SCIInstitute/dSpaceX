@@ -19,11 +19,11 @@ class EmbeddingWindow extends React.Component {
 
     this.state = {
       drawerAdded: false,               // when parent component adds a drawer, resize isn't called, so force it
-      renderEdges: false,
+      renderEdges: true,// <ctc> false by default, but this helps debugging tiny 5x5 ellipsoid dataset
       renderThumbnails: false,
       colorThumbnails: false,
       thumbnailScale: 0.25,
-      nodeSize: 0.025,
+      nodeSize: 0.075,  // <ctc> 0.025 preferred overall, but this helps debugging tiny 5x5 ellipsoid dataset
       selectingDesign: false,
       thumbnails: undefined,
       nodes: undefined,
@@ -273,26 +273,6 @@ class EmbeddingWindow extends React.Component {
     //this.renderer.setClearColor(new THREE.Color(0xFF0000), 0.5);
   }
 
-  /**
-   * Build texture for thumbnails
-   * @param {array} thumbnails - raw thumbnail data
-   * @return {array} textures - list of textures
-   */
-/*
-  buildTexture(thumbnails) {
-    let textures = [];
-    thumbnails.forEach((thumbnail) => {
-      const image = new Image();
-      image.src = 'data:image/jpeg;base64, ' + thumbnail.rawData;
-      const texture = new THREE.Texture();
-      texture.image = image;
-      texture.needsUpdate = true;
-      texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
-      textures.push(texture);
-    });
-    return textures;
-  }
-*/
   /**
    * Add graph edges to scene
    * @param {array} adjacencyMatrix - sample indexes with edges between them
