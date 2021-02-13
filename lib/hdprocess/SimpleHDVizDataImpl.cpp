@@ -1,5 +1,8 @@
 #include "SimpleHDVizDataImpl.h"
+#include "dataset/ValueIndexPair.h"
 #include <stdexcept>
+
+using namespace dspacex;
 
 // TODO: Move these constants into a shared location.
 const std::string k_defaultPath = "./";
@@ -7,13 +10,26 @@ const std::string k_defaultPersistenceDataHeaderFilename = "Persistence.data.hdr
 const std::string k_defaultPersistenceStartHeaderFilename = "PersistenceStart.data.hdr";
 const std::string k_defaultGeomDataHeaderFilename = "Geom.data.hdr";
 const std::string k_defaultParameterNamesFilename = "names.txt";
-const int k_defaultSamplesCount = 50;
 
 /**
  * SimpleHDVizDataImpl constuctor
  */
 SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result) : m_data(result) {
-  m_numberOfSamples = k_defaultSamplesCount;
+  assert(result != nullptr);
+  auto num_samples = result->crystalPartitions[result->crystalPartitions.size()-1].size();  // same for all (computed) persistences (the top N levels)
+
+  // the vector of values for the field
+  auto& fieldvals = result->Y;
+
+  // create vector of sample ids and their fieldvalues
+  m_samples.resize(num_samples);
+  for (int i = 0; i < num_samples; i++) {
+    ValueIndexPair sample;
+    sample.idx = i;
+    sample.val = fieldvals[i];
+    m_samples[i] = sample;
+  }
+
 
   // TEMP DEBUG CODE
 
@@ -76,11 +92,11 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     extremaNormalized[level] = ez;
 
     auto yc = m_data->fmean[level];    
-    auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getCrystals(level).N());
+    auto z = std::vector<FortranLinalg::DenseVector<Precision>>(getCrystals(level).cols());
     auto yw = m_data->mdists[level];
     widthMin[level] = std::numeric_limits<Precision>::max();
     widthMax[level] = std::numeric_limits<Precision>::min();
-    for (unsigned int i=0; i < getCrystals(level).N(); i++) {      
+    for (unsigned int i=0; i < getCrystals(level).cols(); i++) {
       z[i] = FortranLinalg::DenseVector<Precision>(yc[i].N());
       FortranLinalg::Linalg<Precision>::Subtract(yc[i], efmin[level], z[i]);
       FortranLinalg::Linalg<Precision>::Scale(z[i], 1.f/(efmax[level]- efmin[level]), z[i]);            
@@ -96,8 +112,8 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     }
     meanNormalized[level] = z;
 
-    widthScaled[level].resize(getCrystals(level).N());
-    for (unsigned int i=0; i < getCrystals(level).N(); i++) { 
+    widthScaled[level].resize(getCrystals(level).cols());
+    for (unsigned int i=0; i < getCrystals(level).cols(); i++) {
       auto width = FortranLinalg::Linalg<Precision>::Copy(yw[i]);
       FortranLinalg::Linalg<Precision>::Scale(width, 0.3/ widthMax[level], width);
       FortranLinalg::Linalg<Precision>::Add(width, 0.03, width);
@@ -119,7 +135,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     // Set up Density Color Maps
     Precision densityMax = std::numeric_limits<Precision>::min();
     auto density = getDensity(level);
-    for (unsigned int i=0; i < getCrystals(level).N(); i++) {      
+    for (unsigned int i=0; i < getCrystals(level).cols(); i++) {
       for(unsigned int k=0; k < density[i].N(); k++){      
         if(density[i](k) > densityMax){
           densityMax = density[i](k);
@@ -147,7 +163,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     gRmin[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
     gRmax[level] = FortranLinalg::Linalg<Precision>::ExtractColumn(m_data->gradR[level][0], 0);
 
-    for(unsigned int e = 0; e < getCrystals(level).N(); e++){
+    for(unsigned int e = 0; e < getCrystals(level).cols(); e++){
       for(unsigned int i = 0; i < m_data->R[level][e].N(); i++){
         for(unsigned int j = 0; j < m_data->R[level][e].M(); j++){
           if(Rsmin[level](j) > m_data->R[level][e](j, i) - m_data->Rvar[level][e](j, i)){
@@ -168,35 +184,90 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
     }
   }
 
-  // get the set of points belonging to each crystal, appending the extrema samples if missing
-  // use crystals _partitions_ (to which extrema they belong) to compile sets of samples for each.
+
+  // Construct set of points belonging to each crystal, appending any that are missing (extrema and "ridgeline")
+  // NOTE: the reason extrema may be missing is crystalPartitions is a 1:1 mapping between sample and crystal,
+  //       yet mins, maxes, and ridgelines can be shared between crystals
   auto num_persistences = result->crystals.size();
-  crystals.resize(num_persistences);
-  extrema.resize(num_persistences);
+  m_crystals.resize(num_persistences);
+  m_extrema.resize(num_persistences);
 
+  // print crystal helper
+  auto printCrystal = [](auto crystal, int persistence=-1, int crystal_id=-1) {
+                        std::cout << "p" << persistence << "c" << crystal_id << ":\n\t";
+                        for (auto i: crystal) printf("%2d (%0.2f), ", i.idx, i.val);
+                        std::cout << std::endl; };
+
+  // construct arrays of samples and their values for each crystal of each persistence
   for (auto p = 0; p < num_persistences; p++) {
-    auto num_samples = result->crystalPartitions[p].N();  // same for all persistences
-    auto num_crystals = result->extrema[p].size();
-    crystals[p].resize(num_crystals);
-    extrema[p].resize(num_crystals);
+    auto num_crystals = result->extrema[p].size();  // m_extrema contains pairs of extrema for each crystal
+    if (num_crystals == 0) continue; // only the top N persistence levels were calculated
+    
+    // add the extrema (vector of each crystal's max/min pairs of sample ids)
+    m_extrema[p].resize(num_crystals);
+    m_extrema[p] = result->extrema[p];
 
-    // add the sample id to its crystal
+    // add each sample to its crystal
+    m_crystals[p].resize(num_crystals);
     for (auto id = 0; id < num_samples; id++) {
-      crystals[p][result->crystalPartitions[p](id)].push_back(id);
+      // use crystalsPartitions (to which crystal each sample belongs) to insert samples
+      m_crystals[p][result->crystalPartitions[p][id]].push_back(m_samples[id]);
     }
 
-    // add the extrema (max/min pairs of sample ids)
-    extrema[p] = result->extrema[p];
+    // sort crystal samples and add any that are missing
+    // 0. sort crystal samples by value
+    // 1. identify extrema of crystal and ensure they're included
+    // 2/3. if nodes[1 /*minima-1*/] isn't one of minima's neighbors...
+    //  - walk down from that node until we reach minima
+    // 2/3. if nodes[n-2 /*maxima-1*/] isn't one of maxima's neighbors...
+    //  - walk up from that node until we reach maxima
+    for (auto c = 0; c < num_crystals; c++) {
+      auto& crystal = m_crystals[p][c];
 
-    // If missing, add the extrema to their corresponding crystals
-    for (auto c = 0; c < extrema[p].size(); c++) {
-      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].first) == crystals[p][c].end())
-        crystals[p][c].push_back(extrema[p][c].first);
-      if (std::find(crystals[p][c].begin(), crystals[p][c].end(), extrema[p][c].second) == crystals[p][c].end())
-        crystals[p][c].push_back(extrema[p][c].second);
+      // 0. sort each crystal by increasing fieldvalue
+      std::sort(crystal.begin(), crystal.end(), ValueIndexPair::compare);
+
+      // 1. add the extrema to their corresponding crystals if missing
+      auto maxidx = m_extrema[p][c].first;
+      auto minidx = m_extrema[p][c].second;
+      if (crystal[crystal.size()-1].idx != maxidx)
+        crystal.push_back(m_samples[maxidx]);
+      if (crystal[0].idx != minidx)
+        crystal.insert(crystal.begin(), m_samples[minidx]);
+
+      // before augmentation with missing samples
+      //printCrystal(crystal, p, c);
+      
+      // 2/3. Add shared "ridgeline" members of each crystal so paths between extrema is unbroken
+      assert(crystal.size() >= 2);
+      auto min_sample = crystal[0];
+      auto max_sample = crystal[crystal.size() - 1];
+
+      // smallest to min
+      auto current = crystal[1];
+      while (result->knng(1, current.idx) != -1 && result->knng(1, current.idx) != min_sample.idx) {
+        // std::cout << current.idx << "'s sheerest neighbors (asc:dec): " << result->knng(1, current.idx)
+        //           << ":" << result->knng(0, current.idx) << std::endl;
+
+        // add current's neighbor of steepest descent and continue
+        auto next = m_samples[result->knng(1, current.idx)];
+        crystal.insert(crystal.begin()+1, next);
+        current = next;
+      }
+
+      // largest to max
+      current = crystal[crystal.size() - 2];
+      while (result->knng(0, current.idx) != -1 && result->knng(0, current.idx) != max_sample.idx) {
+        // add current's neighbor of steepest ascent and continue
+        auto next = m_samples[result->knng(0, current.idx)];
+        crystal.insert(crystal.end()-1, next);
+        current = next;
+      }
+
+      // after augmentation to verify
+      //printCrystal(crystal, p, c);
     }
   }
-  // weep
 
   computeScaledLayouts();
   //
@@ -213,9 +284,9 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
 
   for (unsigned int level = getMinPersistenceLevel(); level < m_data->scaledPersistence.N(); level++) {    
     // Resize vectors
-    scaledIsoLayout[level].resize(m_data->crystals[level].N());
-    scaledPCALayout[level].resize(m_data->crystals[level].N());
-    scaledPCA2Layout[level].resize(m_data->crystals[level].N());
+    scaledIsoLayout[level].resize(m_data->crystals[level].cols());
+    scaledPCALayout[level].resize(m_data->crystals[level].cols());
+    scaledPCA2Layout[level].resize(m_data->crystals[level].cols());
 
     // Copy extrema layout matrices
     scaledIsoExtremaLayout[level] = 
@@ -254,10 +325,7 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
     FortranLinalg::Linalg<Precision>::AddColumnwise(scaledPCA2ExtremaLayout[level], pca2Diff, scaledPCA2ExtremaLayout[level]);
     FortranLinalg::Linalg<Precision>::Scale(scaledPCA2ExtremaLayout[level], 2.f/rPCA2, scaledPCA2ExtremaLayout[level]);
 
-    // TODO: These values should be the same for all levels, but we should enforce that somehow.
-    m_numberOfSamples = m_data->IsoLayout[level][0].N(); 
-
-    for (unsigned int crystal = 0; crystal < m_data->crystals[level].N(); crystal++) { 
+    for (unsigned int crystal = 0; crystal < m_data->crystals[level].cols(); crystal++) {
       // copy layout matrices
       scaledIsoLayout[level][crystal] = 
           FortranLinalg::Linalg<Precision>::Copy(m_data->IsoLayout[level][crystal]);
@@ -279,18 +347,11 @@ void SimpleHDVizDataImpl::computeScaledLayouts() {
   }  
 }
 
-/**
- *
- */
-int SimpleHDVizDataImpl::getNumberOfSamples() {
-  return m_numberOfSamples;
-}
-
 FortranLinalg::DenseMatrix<Precision>& SimpleHDVizDataImpl::getX() {
   return m_data->X;
 }
 
-FortranLinalg::DenseVector<Precision>& SimpleHDVizDataImpl::getY() {
+const std::vector<Precision>& SimpleHDVizDataImpl::getY() const {
   return m_data->Y;
 }
 
@@ -304,7 +365,7 @@ FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getNearestNeighbors() {
 /**
  *
  */
-FortranLinalg::DenseMatrix<int>& SimpleHDVizDataImpl::getCrystals(int persistenceLevel) {  
+const Eigen::MatrixXi& SimpleHDVizDataImpl::getCrystals(int persistenceLevel) const {
   return m_data->crystals[persistenceLevel];
 }    
 

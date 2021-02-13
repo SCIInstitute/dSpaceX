@@ -48,13 +48,13 @@ std::unique_ptr<HDProcessResult>  HDProcessor::processOnMetric(
   // Store persistence levels
   persistence = msComplex.getPersistence();
 
-  // Store Nearest Neighbors
+  // Store Nearest Neighbors and their paths of steepest ascent/descent
   m_result->knn = msComplex.getNearestNeighbors();
-  
+  m_result->knng = msComplex.getSteepestAscDec();
   
   // Save Field function values  
   m_result->X = Linalg<Precision>::Copy(Xall);
-  m_result->Y = Linalg<Precision>::Copy(yall);  
+  m_result->Y = std::vector<Precision>(yall.data(), yall.data() + yall.N());
 
   // Scale persistence to be in [0,1]
   DenseVector<Precision> pScaled(persistence.N());
@@ -170,7 +170,7 @@ std::unique_ptr<HDProcessResult>  HDProcessor::process(
   
   // Save geometry and function
   m_result->X = Linalg<Precision>::Copy(Xall);
-  m_result->Y = Linalg<Precision>::Copy(yall);  
+  m_result->Y = std::vector<Precision>(yall.data(), yall.data() + yall.N());
 
   // Scale persistence to be in [0,1]
   // TODO: Is this just doing a normalization?
@@ -295,9 +295,12 @@ void HDProcessor::computeAnalysisForLevel(NNMSComplex<Precision> &msComplex,
   } 
 
   // Store Crystals in Result
-  m_result->crystals[persistenceLevel] = Linalg<int>::Copy(crystalTmp);
+  m_result->crystals[persistenceLevel].resize(crystalTmp.N(), crystalTmp.M());
+  Eigen::Map<Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>> map(crystalTmp.data(), crystalTmp.M(), crystalTmp.N());
+  m_result->crystals[persistenceLevel] = map;
+
   // Store Crystal Partitions in Result (which samples belong to which crystal)
-  m_result->crystalPartitions[persistenceLevel] = Linalg<int>::Copy(crystalIDs);
+  m_result->crystalPartitions[persistenceLevel].assign(crystalIDs.data(), crystalIDs.data() + crystalIDs.N());
 
   // store crystals' extrema for this persistence level
   m_result->extrema[persistenceLevel] = msComplex.getExtrema();

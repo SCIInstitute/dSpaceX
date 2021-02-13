@@ -16,12 +16,13 @@ class SimpleHDVizDataImpl : public HDVizData {
 
     // Morse-Smale edge information.
     FortranLinalg::DenseMatrix<Precision>& getX();
-    FortranLinalg::DenseVector<Precision>& getY();
+    const std::vector<Precision>& getY() const;
     FortranLinalg::DenseMatrix<int>& getNearestNeighbors();
-    FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel);
+    const Eigen::MatrixXi& getCrystals(int persistenceLevel) const;
   
-    const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() { return extrema; }
-    const std::vector<std::vector<std::vector<int>>>& getAllCrystals() { return crystals; }
+    const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() const { return m_extrema; }
+    const std::vector<std::vector<std::vector<dspacex::ValueIndexPair>>>& getAllCrystals() const { return m_crystals; }
+    const std::vector<dspacex::ValueIndexPair>& getAllSamples() const { return m_samples; }
 
     FortranLinalg::DenseVector<Precision>& getPersistence();
     FortranLinalg::DenseVector<std::string>& getNames();
@@ -36,8 +37,11 @@ class SimpleHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     
+    // Number of samples.
+    int getNumberOfSamples() { return m_samples.size(); }
+       
     // Number of samples used for layouts.
-    int getNumberOfSamples();   
+    int getNumberOfLayoutSamples() { return m_data->IsoLayout[m_data->IsoLayout.size()-1][0].N(); } // use the largest persistence's layout to get size since not all persistence exist
        
     // Cell reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);
@@ -77,8 +81,6 @@ class SimpleHDVizDataImpl : public HDVizData {
   private:
     std::shared_ptr<HDProcessResult> m_data;
     
-    int m_numberOfSamples;
-
     // Computed visualization helper data
     std::vector<FortranLinalg::DenseVector<Precision>> extremaNormalized;
     std::vector<FortranLinalg::DenseVector<Precision>> extremaWidthScaled;
@@ -107,7 +109,8 @@ class SimpleHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCAExtremaLayout;
     std::vector<FortranLinalg::DenseMatrix<Precision>> scaledPCA2ExtremaLayout;
 
-  std::vector<std::vector<std::vector<int>>> crystals;   // samples in each crystal of each persistence level
-  std::vector<std::vector<std::pair<int, int>>> extrema; // max (first) and min sample of each crystal's extrema
+  std::vector<std::vector<std::vector<dspacex::ValueIndexPair>>> m_crystals; // samples in each crystal of each persistence
+  std::vector<std::vector<std::pair<int, int>>> m_extrema; // max (first) and min sample id of each crystal's extrema
+  std::vector<dspacex::ValueIndexPair> m_samples; // all samples ids and their corresponding field values, sorted by fieldvalue
 };
 

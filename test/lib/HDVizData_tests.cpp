@@ -88,6 +88,7 @@ TEST(HDVizData, compare) {
   HDVizData *simpleData = new SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult>(HDProcessResultSerializer::read(data_dir)));
 
   ASSERT_EQ(cachedData->getNumberOfSamples(), simpleData->getNumberOfSamples());
+  ASSERT_EQ(cachedData->getNumberOfLayoutSamples(), simpleData->getNumberOfLayoutSamples());
   
   // Compare Persistence
   ASSERT_EQ(cachedData->getPersistence().N(), simpleData->getPersistence().N());

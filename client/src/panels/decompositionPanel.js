@@ -758,7 +758,7 @@ class DecompositionPanel extends React.Component {
                          disabled={!this.props.enabled}
                          style={{ width: '100%',
                          boxSizing: 'border-box' }}>
-              <InputLabel htmlFor='layout-field'>Layout</InputLabel>
+              <InputLabel htmlFor='layout-field'>Crystals Layout</InputLabel>
               <Select ref="curveLayout"
                       disabled={!this.props.enabled || !this.props.dataset}
                       value={this.state.ms.layout}

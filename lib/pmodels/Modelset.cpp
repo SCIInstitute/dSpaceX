@@ -74,6 +74,8 @@ const std::vector<Precision>& MSModelset::getCrystalFieldvals(int p, int c) {
       sample.local_idx = i++;
     }
 
+    // <ctc> todo: maybe this is already done now by the SimpleHDVizDataImpl ctor
+
     // sort samples by increasing fieldvalue
     std::sort(crystal.samples.begin(), crystal.samples.end(), ValueIndexPair::compare);
     

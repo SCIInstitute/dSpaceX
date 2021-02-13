@@ -11,7 +11,7 @@ LegacyTopologyDataImpl::LegacyTopologyDataImpl(std::shared_ptr<HDVizData> data) 
 
     for (auto crystalIndex = 0; crystalIndex < crystals.size(); crystalIndex++) {      
       auto extrema = data->getAllExtrema()[level][crystalIndex];
-      std::shared_ptr<Crystal> crystal(new LegacyCrystalImpl(extrema.second, extrema.first, std::vector<int>(crystals[crystalIndex])));
+      std::shared_ptr<Crystal> crystal(new LegacyCrystalImpl(extrema.second, extrema.first, std::vector<dspacex::ValueIndexPair>(crystals[crystalIndex])));
       lcrystals.push_back(crystal);
     }
 

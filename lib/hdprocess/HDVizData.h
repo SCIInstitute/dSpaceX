@@ -6,6 +6,7 @@
 #include "flinalg/Linalg.h"
 #include "dataset/Precision.h"
 #include "HDVizLayout.h"
+#include "dataset/ValueIndexPair.h"
 
 #include <string>
 #include <vector>
@@ -17,17 +18,20 @@ class HDVizData {
   
     // Morse-Smale edge information.
     virtual FortranLinalg::DenseMatrix<Precision>& getX() = 0;
-    virtual FortranLinalg::DenseVector<Precision>& getY() = 0;
+  virtual const std::vector<Precision>& getY() const = 0;
     virtual FortranLinalg::DenseMatrix<int>& getNearestNeighbors() = 0;
 
     // returns extrema indices (max, min) for each crystal
-    virtual FortranLinalg::DenseMatrix<int>& getCrystals(int persistenceLevel) = 0;
+  virtual const Eigen::MatrixXi& getCrystals(int persistenceLevel) const = 0;
 
     // return ALL sample ids for each crystal (including its extrema) of each persistence level
-    virtual const std::vector<std::vector<std::vector<int>>>& getAllCrystals() = 0;
+    virtual const std::vector<std::vector<std::vector<dspacex::ValueIndexPair>>>& getAllCrystals() const = 0;
 
     // return max (first) and min (second) for each crystal of each persistence level
-    virtual const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() = 0;
+    virtual const std::vector<std::vector<std::pair<int, int>>>& getAllExtrema() const = 0;
+  
+    // return all samples of this dataset and their associated values
+    virtual const std::vector<dspacex::ValueIndexPair>& getAllSamples() const = 0;
 
     virtual FortranLinalg::DenseVector<Precision>& getPersistence() = 0;
     virtual FortranLinalg::DenseVector<std::string>& getNames() = 0;
@@ -43,6 +47,9 @@ class HDVizData {
         HDVizLayout layout, int persistenceLevel) = 0;
     
     // Number of samples used for layouts.
+    virtual int getNumberOfLayoutSamples() = 0;
+
+    // Number of samples
     virtual int getNumberOfSamples() = 0;
            
     // Cell reconstruction

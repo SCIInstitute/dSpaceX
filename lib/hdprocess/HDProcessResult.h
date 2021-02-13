@@ -9,16 +9,17 @@
   * All output data generated from the HDProcessor. 
   */
 struct HDProcessResult {
-  FortranLinalg::DenseMatrix<int> knn;
+  FortranLinalg::DenseMatrix<int> knn;  // nearest neighbors of each node
+  Eigen::MatrixXi knng; // steepest ascending(0)/descending(1) neighbor of each node
   FortranLinalg::DenseVector<Precision> scaledPersistence; // Persistence.data.hdr
   FortranLinalg::DenseVector<Precision> minLevel;          // PersistenceStart.data.hdr
   FortranLinalg::DenseMatrix<Precision> X;                 // Geom.data.hdr
-  FortranLinalg::DenseVector<Precision> Y;                 // Function.data.hdr
+  std::vector<Precision> Y;                                // Function.data.hdr (field value)
   FortranLinalg::DenseVector<int> regressionSampleCount;   
 
   // loadData
-  std::vector<FortranLinalg::DenseMatrix<int>> crystals;            // Crystals_[level].data.hdr
-  std::vector<FortranLinalg::DenseVector<int>> crystalPartitions;   // CrystalPartitions_[level].data.hdr
+  std::vector<Eigen::MatrixXi> crystals;            // Crystals_[level].data.hdr
+  std::vector<std::vector<int>> crystalPartitions;   // CrystalPartitions_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaValues; // ExtremaValues_[level].data.hdr
   std::vector<FortranLinalg::DenseVector<Precision>> extremaWidths; // ExtremaWidths_[level].data.hdr
   std::vector<int> extremaIndex;                                // samples to which each extrema is associated

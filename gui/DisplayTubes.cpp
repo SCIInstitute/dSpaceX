@@ -534,8 +534,8 @@ void DisplayTubes<TPrecision>::motion(int x, int y) {
         if (state->selectedPoint < 0 ) {
           state->selectedPoint = 0;
         }
-        if (state->selectedPoint >= data->getNumberOfSamples() ) {
-          state->selectedPoint = data->getNumberOfSamples() - 1;
+        if (state->selectedPoint >= data->getNumberOfLayoutSamples() ) {
+          state->selectedPoint = data->getNumberOfLayoutSamples() - 1;
         }
         notifyChange();
       } else {
@@ -746,9 +746,9 @@ void DisplayTubes<TPrecision>::setupOrtho(int w, int h) {
 template<typename TPrecision>
 void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
-  gleDouble points[data->getNumberOfSamples()+2][3];
-  float colors[data->getNumberOfSamples()+2][4];
-  gleDouble radii[data->getNumberOfSamples()+2];
+  gleDouble points[data->getNumberOfLayoutSamples()+2][3];
+  float colors[data->getNumberOfLayoutSamples()+2][4];
+  gleDouble radii[data->getNumberOfLayoutSamples()+2];
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
   auto extremaValues = data->getExtremaValues(state->currentLevel);
@@ -776,21 +776,21 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
-    radii[data->getNumberOfSamples()+1] = radii[data->getNumberOfSamples()];
+    radii[data->getNumberOfLayoutSamples()+1] = radii[data->getNumberOfLayoutSamples()];
     for (unsigned int m = 0; m < 3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
-      points[data->getNumberOfSamples() + 1][m] = 
-          points[data->getNumberOfSamples()][m] + 
-          points[data->getNumberOfSamples()][m] - 
-          points[data->getNumberOfSamples() - 1][m];
+      points[data->getNumberOfLayoutSamples() + 1][m] = 
+          points[data->getNumberOfLayoutSamples()][m] + 
+          points[data->getNumberOfLayoutSamples()][m] - 
+          points[data->getNumberOfLayoutSamples() - 1][m];
     }
     for (unsigned int m = 0; m < 4; m++) {
       colors[0][m] = colors[1][m];
-      colors[data->getNumberOfSamples() + 1][m] = 
-          colors[data->getNumberOfSamples()][m];
+      colors[data->getNumberOfLayoutSamples() + 1][m] = 
+          colors[data->getNumberOfLayoutSamples()][m];
     }
     glPushName(i);
-    glePolyCone_c4f(data->getNumberOfSamples() + 2, points, colors, radii);
+    glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, colors, radii);
     glPopName();     
   } 
 
@@ -834,17 +834,17 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
-    radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
+    radii[data->getNumberOfLayoutSamples() + 1] = radii[data->getNumberOfLayoutSamples()];
     for (unsigned int m=0; m<3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
-      points[data->getNumberOfSamples()+1][m] = 
-          points[data->getNumberOfSamples()][m] + 
-          points[data->getNumberOfSamples()][m] - 
-          points[data->getNumberOfSamples() - 1][m];
+      points[data->getNumberOfLayoutSamples()+1][m] = 
+          points[data->getNumberOfLayoutSamples()][m] + 
+          points[data->getNumberOfLayoutSamples()][m] - 
+          points[data->getNumberOfLayoutSamples() - 1][m];
     }
     for (unsigned int m = 0; m < 4; m++) {
       colors[0][m] = colors[1][m];
-      colors[data->getNumberOfSamples()+1][m] = colors[data->getNumberOfSamples()][m];
+      colors[data->getNumberOfLayoutSamples()+1][m] = colors[data->getNumberOfLayoutSamples()][m];
     }
 
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -852,12 +852,12 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2, 0.1);
-    glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+    glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
     glDisable(GL_POLYGON_OFFSET_FILL);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     glDepthMask(GL_FALSE);
-    glePolyCone_c4f(data->getNumberOfSamples() + 2, points, colors, radii);
+    glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, colors, radii);
     glPopName();     
     glDepthMask(GL_TRUE);
   }  
@@ -875,13 +875,13 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
       radii[k+1] = 0.02;    
     }     
     radii[0] = radii[1];
-    radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
+    radii[data->getNumberOfLayoutSamples() + 1] = radii[data->getNumberOfLayoutSamples()];
     for (unsigned int m = 0; m < 3; m++) {
       points[0][m] = points[1][m]+ points[2][m] - points[1][m];
-      points[data->getNumberOfSamples() + 1][m] = 
-          points[data->getNumberOfSamples()][m] + 
-          points[data->getNumberOfSamples()][m] - 
-          points[data->getNumberOfSamples() - 1][m];
+      points[data->getNumberOfLayoutSamples() + 1][m] = 
+          points[data->getNumberOfLayoutSamples()][m] + 
+          points[data->getNumberOfLayoutSamples()][m] - 
+          points[data->getNumberOfLayoutSamples() - 1][m];
     }
 
 
@@ -890,12 +890,12 @@ void DisplayTubes<TPrecision>::renderTubes(bool selectedOnly) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(2, 0.1);
-    glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+    glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
     glDisable(GL_POLYGON_OFFSET_FILL);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     glDepthMask(GL_FALSE);
-    glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+    glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
     glPopName();     
     glDepthMask(GL_TRUE);
   }   
@@ -942,9 +942,9 @@ void DisplayTubes<TPrecision>::renderWidths() {
   glStencilFunc(GL_ALWAYS, 1, 1);
   glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60);
 
-  gleDouble points[data->getNumberOfSamples() + 2][3];
-  gleDouble radii[data->getNumberOfSamples() + 2];
-  float colors[data->getNumberOfSamples() + 2][4];
+  gleDouble points[data->getNumberOfLayoutSamples() + 2][3];
+  gleDouble radii[data->getNumberOfLayoutSamples() + 2];
+  float colors[data->getNumberOfLayoutSamples() + 2][4];
 
   auto layout = data->getLayout(state->currentLayout, state->currentLevel);
   auto extremaValues = data->getExtremaValues(state->currentLevel);
@@ -968,13 +968,13 @@ void DisplayTubes<TPrecision>::renderWidths() {
         radii[k+1] = scale*data->getWidthScaled(state->currentLevel)[i](k); 
       }    
       radii[0] = radii[1];
-      radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
+      radii[data->getNumberOfLayoutSamples() + 1] = radii[data->getNumberOfLayoutSamples()];
       for (unsigned int m=0; m<3; m++) {
         points[0][m] = points[1][m]+ points[2][m] - points[1][m];
-        points[data->getNumberOfSamples() + 1][m] = 
-            points[data->getNumberOfSamples()][m] + 
-            points[data->getNumberOfSamples()][m] - 
-            points[data->getNumberOfSamples() - 1][m];
+        points[data->getNumberOfLayoutSamples() + 1][m] = 
+            points[data->getNumberOfLayoutSamples()][m] + 
+            points[data->getNumberOfLayoutSamples()][m] - 
+            points[data->getNumberOfLayoutSamples() - 1][m];
       }
 
       glColor4f(0.8, 0.8, 0.8, 0.1);
@@ -987,7 +987,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glEnable(GL_POLYGON_OFFSET_FILL);
       glPolygonOffset(2, 0.1);
 
-      glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+      glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(
@@ -1015,7 +1015,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glDepthMask(GL_FALSE);
       glDepthFunc(GL_LEQUAL);
 
-      glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+      glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(
@@ -1065,7 +1065,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       }    
       for (unsigned int m = 0; m < 4; m++){
         colors[0][m] = colors[1][m];
-        colors[data->getNumberOfSamples() + 1][m] = colors[data->getNumberOfSamples()][m];
+        colors[data->getNumberOfLayoutSamples() + 1][m] = colors[data->getNumberOfLayoutSamples()][m];
       }
 
       for (unsigned int k = 0; k < layout[i].N(); k++) {
@@ -1076,13 +1076,13 @@ void DisplayTubes<TPrecision>::renderWidths() {
         radii[k+1] = scale*data->getWidthScaled(state->currentLevel)[i](k); 
       }    
       radii[0] = radii[1];
-      radii[data->getNumberOfSamples() + 1] = radii[data->getNumberOfSamples()];
+      radii[data->getNumberOfLayoutSamples() + 1] = radii[data->getNumberOfLayoutSamples()];
       for (unsigned int m = 0; m < 3; m++) {
         points[0][m] = points[1][m]+ points[2][m] - points[1][m];
-        points[data->getNumberOfSamples() + 1][m] = 
-            points[data->getNumberOfSamples()][m] + 
-            points[data->getNumberOfSamples()][m] - 
-            points[data->getNumberOfSamples() - 1][m];
+        points[data->getNumberOfLayoutSamples() + 1][m] = 
+            points[data->getNumberOfLayoutSamples()][m] + 
+            points[data->getNumberOfLayoutSamples()][m] - 
+            points[data->getNumberOfLayoutSamples() - 1][m];
       }
 
 
@@ -1094,7 +1094,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glEnable(GL_BLEND);
       glDisable(GL_DEPTH_TEST);
 
-      glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+      glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(
@@ -1116,7 +1116,7 @@ void DisplayTubes<TPrecision>::renderWidths() {
       glEnable(GL_DEPTH_TEST);
 
 
-      for (int k = 0; k < data->getNumberOfSamples() + 2; k++) {
+      for (int k = 0; k < data->getNumberOfLayoutSamples() + 2; k++) {
         radii[k] += scale*0.025/zoom;
       }
 
@@ -1124,15 +1124,15 @@ void DisplayTubes<TPrecision>::renderWidths() {
 
       //draw outlines
 
-      glePolyCone_c4f(data->getNumberOfSamples() + 2, points, colors, radii);      
+      glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, colors, radii);      
 
       if (extremaValues(i1) < extremaValues(i2)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else {
-        glColor4f(colors[data->getNumberOfSamples()][0], 
-            colors[data->getNumberOfSamples()][1], 
-            colors[data->getNumberOfSamples()][2],
-            colors[data->getNumberOfSamples()][3]);
+        glColor4f(colors[data->getNumberOfLayoutSamples()][0], 
+            colors[data->getNumberOfLayoutSamples()][1], 
+            colors[data->getNumberOfLayoutSamples()][2],
+            colors[data->getNumberOfLayoutSamples()][3]);
       }
       glPushMatrix();
       glTranslatef(
@@ -1145,13 +1145,13 @@ void DisplayTubes<TPrecision>::renderWidths() {
       if (extremaValues(i2) < extremaValues(i1)) {
         glColor4f(colors[0][0], colors[0][1], colors[0][2], colors[0][3]);
       } else{
-        glColor4f(colors[data->getNumberOfSamples()][0], 
-            colors[data->getNumberOfSamples()][1], 
-            colors[data->getNumberOfSamples()][2],
-            colors[data->getNumberOfSamples()][3]);
+        glColor4f(colors[data->getNumberOfLayoutSamples()][0], 
+            colors[data->getNumberOfLayoutSamples()][1], 
+            colors[data->getNumberOfLayoutSamples()][2],
+            colors[data->getNumberOfLayoutSamples()][3]);
       }
 
-      glePolyCone_c4f(data->getNumberOfSamples() + 2, points, nullptr, radii);
+      glePolyCone_c4f(data->getNumberOfLayoutSamples() + 2, points, nullptr, radii);
 
       glPushMatrix();
       glTranslatef(

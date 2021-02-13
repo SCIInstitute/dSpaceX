@@ -31,8 +31,11 @@ class FileCachedHDVizDataImpl : public HDVizData {
     FortranLinalg::DenseMatrix<Precision>& getExtremaLayout(
         HDVizLayout layout, int persistenceLevel);
     
+    // Number of samples.
+    int getNumberOfSamples() { return nSamples; }
+       
     // Number of samples used for layouts.
-    int getNumberOfSamples();   
+    int getNumberOfLayoutSamples() { return nLayoutSamples; }
        
     // Cell reconstruction
     std::vector<FortranLinalg::DenseMatrix<Precision>>& getReconstruction(int persistenceLevel);
@@ -89,7 +92,10 @@ class FileCachedHDVizDataImpl : public HDVizData {
     std::vector<FortranLinalg::DenseMatrix<Precision>> L;   // Point Positions
 
     // Number of smaples per cell for rendering.
-    int nSamples;
+    int nLayoutSamples{-1};
+
+    // Number of smaples in dataset
+    int nSamples{-1};
 
     FortranLinalg::DenseVector<std::string> m_names;
     int minLevel;

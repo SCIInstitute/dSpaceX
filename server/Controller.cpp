@@ -342,8 +342,8 @@ void Controller::exportMorseSmaleDecomposition(const Json::Value &request, Json:
     for (auto c = 0; c < crystals[p].size(); ++c) {
       Json::Value crystal = Json::Value(Json::objectValue);
       crystal["ids"] = Json::Value(Json::arrayValue);
-      for (auto id: crystals[p][c]) {
-        crystal["ids"].append(id);
+      for (auto vip: crystals[p][c]) {
+        crystal["ids"].append(vip.idx);
       }
       
       Json::Value extremanode = Json::Value(Json::objectValue);
@@ -524,13 +524,13 @@ void Controller::fetchMorseSmaleRegression(const Json::Value &request, Json::Val
   // Get points for regression line
   auto layoutType = HDVizLayout(request["layout"].asString());
   auto layout = m_currentVizData->getLayout(layoutType, persistence);
-  int rows = m_currentVizData->getNumberOfSamples();
+  int rows = m_currentVizData->getNumberOfLayoutSamples();
   double points[rows][3];
   double colors[rows][3];
 
   // For each crystal
   response["curves"] = Json::Value(Json::arrayValue);
-  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistence).N(); i++) {
+  for (unsigned int i = 0; i < m_currentVizData->getCrystals(persistence).cols(); i++) {
 
     // Get all the points and node colors
     for (unsigned int n = 0; n < layout[i].N(); ++n) {
@@ -620,8 +620,8 @@ void Controller::fetchCrystal(const Json::Value &request, Json::Value &response)
   
   // ALL samples belonging to this crystal, including its extrema
   response["crystalSamples"] = Json::Value(Json::arrayValue);
-  for (auto id: m_currentVizData->getAllCrystals()[persistence][crystalID]) {
-    response["crystalSamples"].append(id);
+  for (auto vip: m_currentVizData->getAllCrystals()[persistence][crystalID]) {
+    response["crystalSamples"].append(vip.idx);
   }
 
   // the sample ids of this crystal's extrema
@@ -979,18 +979,8 @@ std::vector<ValueIndexPair> Controller::getSamples(Fieldtype category, const std
 
   // create a vector of global sample ids and their fieldvalue for the samples from which this crystal is comprised
   auto crystal = m_currentVizData->getAllCrystals()[persistence][crystalid];
-  for (auto i: crystal) {
-    ValueIndexPair sample;
-    sample.idx = i;
-    sample.val = fieldvals(i);
-    fieldvalues_and_indices.push_back(sample);
-  }
 
-  // sort it by increasing fieldvalue
-  if (sort)
-    std::sort(fieldvalues_and_indices.begin(), fieldvalues_and_indices.end(), ValueIndexPair::compare);
-
-  return fieldvalues_and_indices;
+  return crystal;
 }
 
 /**

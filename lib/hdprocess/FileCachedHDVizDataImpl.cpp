@@ -84,10 +84,6 @@ FortranLinalg::DenseVector<std::string>& FileCachedHDVizDataImpl::getNames() {
   return m_names;
 }
 
-int FileCachedHDVizDataImpl::getNumberOfSamples() {
-  return nSamples;
-}
-
 FortranLinalg::DenseVector<Precision>& FileCachedHDVizDataImpl::getExtremaValues(
     int persistenceLevel) {
   maybeSwapLevelCache(persistenceLevel);
@@ -300,7 +296,7 @@ void FileCachedHDVizDataImpl::loadLayout(std::string type, std::string extFile,
   FortranLinalg::Linalg<Precision>::AddColumnwise(eL, diff, eL);
   FortranLinalg::Linalg<Precision>::Scale(eL, 2.f/r, eL);
 
-  nSamples = L[0].N();
+  nLayoutSamples = L[0].N();
 };
 
 void FileCachedHDVizDataImpl::loadData(int level) {

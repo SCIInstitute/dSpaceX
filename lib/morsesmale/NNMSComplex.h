@@ -219,7 +219,7 @@ class NNMSComplex {
       //compute crystals based on merge chain
       mergeCrystals();
 
-#if 1
+#if 0
       int n = 0;
       printf("extrema:\n");
       for (int i=0; i<extrema.N(); i++) {
@@ -339,6 +339,13 @@ class NNMSComplex {
       pers(index) = std::numeric_limits<TPrecision>::max();
     };
 
+    Eigen::MatrixXi getSteepestAscDec() {
+      Eigen::MatrixXi knng(KNNG.N(), KNNG.M());
+      Eigen::Map<Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>> map(KNNG.data(), KNNG.M(), KNNG.N());
+      knng = map;
+      return knng;
+    }
+
     FortranLinalg::DenseMatrix<int> getNearestNeighbors() {
       FortranLinalg::DenseMatrix<int> knn;
       knn = FortranLinalg::Linalg<int>::Copy(KNN);
@@ -388,17 +395,16 @@ private:
 
       // Compute steepest asc/descending neighbors
       for (unsigned int i = 0; i < m_sampleCount; i++) {
-        std::cout << "neighbors of sample " << i << ": ";
-        //for (unsigned int k=1; k<KNN.M(); k++) { //<ctc> no idea why this was k=1; affects results
+        //std::cout << "neighbors of sample " << i << ": ";
         for (unsigned int k=0; k<KNN.M(); k++) {
-          std::cout << KNN(k,i) << " ";
+          //std::cout << KNN(k,i) << " ";
           int j = KNN(k, i);
-          double d = pow(KNND(k, i), gradient_exp);
-          double g = ys(j) - ys(i);
+          double d = pow(KNND(k, i), gradient_exp);   // prevents longer connections from dominating 
+          double g = ys(j) - ys(i);  // gradient computed
           if (d == 0 ) {
             g = 0;
           } else {
-            g = g / d;
+            g = g / d;  // d is distance between nodes, g is gradient, so we want to cache these steepest ascending/descending paths between nodes in order to use them to save the "extra" members of a crystal to show to the users 
           }
 
           if (G(0, i) < g) {
@@ -416,18 +422,18 @@ private:
             KNNG(1, j) = i;
           }
         }
-        std::cout << "\n";
+        //std::cout << "\n";
       }
 
-      for (int i=0; i<m_sampleCount; i++) {
-        std::cout << "idx: " << i << ", dec: " << descending(i) << ", asc: " << ascending(i) << "\n";
-      }
+      // print each samples neighbors of steepest ascent/descent and its value
+      // std::cout << "idx asc dec val\n";
+      // for (int i=0; i<m_sampleCount; i++) {
+      //   printf("%02d %02d %02d %0.6f\n", i, ascending(i), descending(i), ys(i));
+      // }
       
       //if(smooth){
       // ys.deallocate();
       //}
-
-
 
       //compute for each point its minimum and maximum based on
       //steepest ascent/descent
@@ -491,7 +497,7 @@ private:
               ext = nExt;
               nExt++;
               if (e==0) {
-                std::cout << i <<"th sample wins! gotta max: " << extIndex <<std::endl;
+                //std::cout << i <<"th sample wins! gotta max: " << extIndex <<std::endl;
                 nMax++;
               }
             }

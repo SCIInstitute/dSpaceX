@@ -1,3 +1,4 @@
+#if 0 // <ctc> started converting system to use Eigen::Matrix instead of proprietary Linalg library and broke this
 #include "HDProcessResultSerializer.h"
 
 #include "flinalg/Linalg.h"
@@ -60,14 +61,14 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
     result->extremaWidths[level] = LinalgIO<Precision>::readVector(path + extremaWidthsFilename);
 
     // Resize Stores for Regression Information
-    result->R[level].resize(result->crystals[level].N());
-    result->gradR[level].resize(result->crystals[level].N());
-    result->Rvar[level].resize(result->crystals[level].N());
-    result->mdists[level].resize(result->crystals[level].N());  
-    result->fmean[level].resize(result->crystals[level].N());  
-    result->spdf[level].resize(result->crystals[level].N());  
+    result->R[level].resize(result->crystals[level].cols());
+    result->gradR[level].resize(result->crystals[level].cols());
+    result->Rvar[level].resize(result->crystals[level].cols());
+    result->mdists[level].resize(result->crystals[level].cols());
+    result->fmean[level].resize(result->crystals[level].cols());
+    result->spdf[level].resize(result->crystals[level].cols());
 
-    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].cols(); crystalIndex++) {
       std::string crystalFilePrefix =
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex);
       std::string crystalIdFilename = crystalFilePrefix + "_Rs.data.hdr";
@@ -110,11 +111,11 @@ HDProcessResult* HDProcessResultSerializer::read(std::string path) {
 
 
     // Resize Layouts
-    result->PCALayout[level].resize(result->crystals[level].N());
-    result->PCA2Layout[level].resize(result->crystals[level].N());
-    result->IsoLayout[level].resize(result->crystals[level].N());
+    result->PCALayout[level].resize(result->crystals[level].cols());
+    result->PCA2Layout[level].resize(result->crystals[level].cols());
+    result->IsoLayout[level].resize(result->crystals[level].cols());
 
-    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].N(); crystalIndex++) {
+    for (unsigned int crystalIndex = 0; crystalIndex < result->crystals[level].cols(); crystalIndex++) {
       std::string PCALayoutFilename = 
           "ps_" + std::to_string(level) + "_crystal_" + std::to_string(crystalIndex) + "_layout.data.hdr";
       result->PCALayout[level][crystalIndex] = LinalgIO<Precision>::readMatrix(path + PCALayoutFilename);
@@ -208,3 +209,4 @@ void HDProcessResultSerializer::write(HDProcessResult *result, std::string path)
     }
   }
 }
+#endif
