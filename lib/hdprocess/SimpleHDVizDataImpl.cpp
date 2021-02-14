@@ -236,6 +236,9 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
       if (crystal[0].idx != minidx)
         crystal.insert(crystal.begin(), m_samples[minidx]);
 
+      auto min_sample = m_samples[minidx];
+      auto max_sample = m_samples[maxidx];
+
       // before augmentation with missing samples
       std::cout << "before: ";
       printCrystal(crystal, p, c);
@@ -243,8 +246,6 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
 #if 0 /* elegant but insufficient */
       // 2/3. Add shared "ridgeline" members of each crystal so paths between extrema is unbroken
       assert(crystal.size() >= 2);
-      auto min_sample = crystal[0];
-      auto max_sample = crystal[crystal.size() - 1];
 
       // smallest to min
       auto current = crystal[1];
@@ -266,6 +267,7 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
         crystal.insert(crystal.end()-1, next);
         current = next;
       }
+
 #else /* brute force */
       // copy crystal to a set (todo: use a set in the first place)
       std::set<ValueIndexPair, ValueIndexPairCmp> cry(crystal.begin(), crystal.end());
@@ -274,30 +276,30 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
         auto& sample = *it;
 
         auto dec = result->knng(0, sample.idx);
-        if (dec != -1 && dec != maxidx) {
+        auto new_sample = m_samples[dec];
+        assert(new_sample.idx == dec);
+        if (dec != -1 && new_sample.val < max_sample.val) {
 #if 1     // print lots of debug output version
-          auto new_sample = m_samples[dec];
-          assert(new_sample.idx == dec);
           std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
           if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
           std::cout << std::endl;
           cry.insert(it, new_sample);
 #else
-          cry.insert(it, m_samples[dec]);
+          cry.insert(it, new_sample);
 #endif
         }
 
         auto asc = result->knng(1, sample.idx);
-        if (asc != -1 && asc != minidx) {
+        new_sample = m_samples[asc];
+        assert(new_sample.idx == asc);
+        if (asc != -1 && new_sample.val > min_sample.val) {
 #if 1     // print lots of debug output version
-          auto new_sample = m_samples[asc];
-          assert(new_sample.idx == asc);
           std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
           if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
           std::cout << std::endl;
           cry.insert(it, new_sample);
 #else
-          cry.insert(it, m_samples[dec]);
+          cry.insert(it, new_sample);
 #endif
         }
       }
