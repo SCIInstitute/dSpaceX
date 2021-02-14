@@ -275,33 +275,26 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
       for (auto it = cry.begin(); it != cry.end(); it++) {
         auto& sample = *it;
 
-        auto dec = result->knng(0, sample.idx);
-        auto new_sample = m_samples[dec];
-        assert(new_sample.idx == dec);
-        if (dec != -1 && new_sample.val < max_sample.val) {
-#if 1     // print lots of debug output version
-          std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
-          if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
-          std::cout << std::endl;
-          cry.insert(it, new_sample);
-#else
-          cry.insert(it, new_sample);
-#endif
-        }
+        auto decidx = result->knng(0, sample.idx);
+        auto ascidx = result->knng(1, sample.idx);
+        if (decidx == -1 || ascidx == -1) continue; // don't add anything from an extrema
 
-        auto asc = result->knng(1, sample.idx);
-        new_sample = m_samples[asc];
-        assert(new_sample.idx == asc);
-        if (asc != -1 && new_sample.val > min_sample.val) {
-#if 1     // print lots of debug output version
-          std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
-          if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
-          std::cout << std::endl;
-          cry.insert(it, new_sample);
+        auto newdec_sample = m_samples[decidx];
+        auto newasc_sample = m_samples[ascidx];
+#if 1   // print lots of debug output version
+        std::cout << "inserting " << newasc_sample.idx << " from " << sample.idx << "... ";
+        if (cry.find(newasc_sample) != cry.end()) std::cout << "(it's already there)";
+        std::cout << std::endl;
+        cry.insert(it, newasc_sample);
+
+        std::cout << "inserting " << newdec_sample.idx << " from " << sample.idx << "... ";
+        if (cry.find(newdec_sample) != cry.end()) std::cout << "(it's already there)";
+        std::cout << std::endl;
+        cry.insert(it, newdec_sample);
 #else
-          cry.insert(it, new_sample);
+        cry.insert(it, m_samples[decidx];
+        cry.insert(it, m_samples[ascidx];
 #endif
-        }
       }
 
       // copy back to crystal (todo: use a set in the first place)
