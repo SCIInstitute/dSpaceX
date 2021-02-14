@@ -22,6 +22,12 @@ completely safe)_ Install Anaconda and the **dSpaceX** dependencies using:
 source ./conda_installs.sh
 ```
 
+Note: as of the latest version of OSX, some packages (e.g., cmake) need updating.  
+Updating all seems to work, but the `conda_installs.sh` should really be updated to specify versions.
+```bash
+conda  update --all
+```
+
 Accept the cryptography license terms and default installation path.  
 
 ### Install *Google Chrome*
