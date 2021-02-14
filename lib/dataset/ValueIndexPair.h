@@ -15,4 +15,11 @@ struct ValueIndexPair
   static bool compare(const ValueIndexPair &p, const ValueIndexPair &q) { return p.val < q.val; }
 };
 
+// https://stackoverflow.com/a/46128321/207044 (for the set used to store crystals, until we're up to c++20)
+struct ValueIndexPairCmp {
+  bool operator()(const ValueIndexPair& lhs, const ValueIndexPair& rhs) const {
+    return ValueIndexPair::compare(lhs, rhs);
+  }
+};
+
 } // dspacex

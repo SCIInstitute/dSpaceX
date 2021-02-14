@@ -1,6 +1,7 @@
 #include "SimpleHDVizDataImpl.h"
 #include "dataset/ValueIndexPair.h"
 #include <stdexcept>
+#include <set>
 
 using namespace dspacex;
 
@@ -236,8 +237,10 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
         crystal.insert(crystal.begin(), m_samples[minidx]);
 
       // before augmentation with missing samples
-      //printCrystal(crystal, p, c);
+      std::cout << "before: ";
+      printCrystal(crystal, p, c);
       
+#if 0 /* elegant but insufficient */
       // 2/3. Add shared "ridgeline" members of each crystal so paths between extrema is unbroken
       assert(crystal.size() >= 2);
       auto min_sample = crystal[0];
@@ -263,9 +266,49 @@ SimpleHDVizDataImpl::SimpleHDVizDataImpl(std::shared_ptr<HDProcessResult> result
         crystal.insert(crystal.end()-1, next);
         current = next;
       }
+#else /* brute force */
+      // copy crystal to a set (todo: use a set in the first place)
+      std::set<ValueIndexPair, ValueIndexPairCmp> cry(crystal.begin(), crystal.end());
+      // trace every sample but the extrema to its min or max, adding missing samples along the way
+      for (auto it = cry.begin(); it != cry.end(); it++) {
+        auto& sample = *it;
 
+        auto dec = result->knng(0, sample.idx);
+        if (dec != -1 && dec != maxidx) {
+#if 1     // print lots of debug output version
+          auto new_sample = m_samples[dec];
+          assert(new_sample.idx == dec);
+          std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
+          if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
+          std::cout << std::endl;
+          cry.insert(it, new_sample);
+#else
+          cry.insert(it, m_samples[dec]);
+#endif
+        }
+
+        auto asc = result->knng(1, sample.idx);
+        if (asc != -1 && asc != minidx) {
+#if 1     // print lots of debug output version
+          auto new_sample = m_samples[asc];
+          assert(new_sample.idx == asc);
+          std::cout << "inserting " << new_sample.idx << " from " << sample.idx << "... ";
+          if (cry.find(new_sample) != cry.end()) std::cout << "(it's already there)";
+          std::cout << std::endl;
+          cry.insert(it, new_sample);
+#else
+          cry.insert(it, m_samples[dec]);
+#endif
+        }
+      }
+
+      // copy back to crystal (todo: use a set in the first place)
+      crystal.assign(cry.begin(), cry.end());
+#endif
+      
       // after augmentation to verify
-      //printCrystal(crystal, p, c);
+      std::cout << "after: ";
+      printCrystal(crystal, p, c);
     }
   }
 
