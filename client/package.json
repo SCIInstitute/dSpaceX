@@ -69,6 +69,6 @@
     "react-dom": "^16.13.1",
     "react-resize-detector": "^4.2.3",
     "style-loader": "^0.23.1",
-    "three": "^0.115.0"
+    "three": "^0.125.0"
   }
 }
